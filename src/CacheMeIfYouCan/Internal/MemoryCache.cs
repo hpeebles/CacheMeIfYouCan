@@ -6,6 +6,7 @@ namespace CacheMeIfYouCan.Internal
 {
     internal class MemoryCache<T> : ICache<T>
     {
+        private const string Type = "Memory";
         private readonly MemoryCache _cache;
         
         public MemoryCache(long maxItems)
@@ -16,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
         public Task<GetFromCacheResult<T>> Get(string key)
         {
             var result = _cache.TryGetValue(key, out ValueWithExpiry<T> value)
-                ? new GetFromCacheResult<T>(value, value.Expiry - DateTimeOffset.UtcNow, CacheType.Memory)
+                ? new GetFromCacheResult<T>(value, value.Expiry - DateTimeOffset.UtcNow, Type)
                 : GetFromCacheResult<T>.NotFound;
 
             return Task.FromResult(result);

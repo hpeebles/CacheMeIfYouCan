@@ -6,21 +6,22 @@
         public readonly T Value;
         public readonly Outcome Outcome;
         public readonly long Duration;
+        public readonly string CacheType;
 
-        public FunctionCacheGetResult(string key, T value, Outcome outcome, long duration)
+        public FunctionCacheGetResult(string key, T value, Outcome outcome, long duration, string cacheType)
         {
             Key = key;
             Value = value;
             Outcome = outcome;
             Duration = duration;
+            CacheType = cacheType;
         }
     }
     
     public enum Outcome
     {
-        FromMemory,
-        FromRedis,
-        Fetch,
-        Error
+        Error,
+        FromCache,
+        Fetch
     }
 }

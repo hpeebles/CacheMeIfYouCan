@@ -15,9 +15,9 @@ namespace CacheMeIfYouCan
         public bool Success;
         public T Value;
         public TimeSpan TimeToLive;
-        public CacheType CacheType;
+        public string CacheType;
 
-        public GetFromCacheResult(T value, TimeSpan timeToLive, CacheType cacheType)
+        public GetFromCacheResult(T value, TimeSpan timeToLive, string cacheType)
         {
             Success = true;
             Value = value;
@@ -26,13 +26,5 @@ namespace CacheMeIfYouCan
         }
 
         public static GetFromCacheResult<T> NotFound => new GetFromCacheResult<T>();
-    }
-
-    public enum CacheType
-    {
-        None,
-        Memory,
-        Redis,
-        Other = 100
     }
 }

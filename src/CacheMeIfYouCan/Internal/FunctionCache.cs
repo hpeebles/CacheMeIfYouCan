@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly bool _preFetchEnabled;
         private readonly ILogger _logger;
         private readonly Func<T> _defaultValueFactory;
+        private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<T>> _onResult;
         private readonly Action<FunctionCacheFetchResult<T>> _onFetch;
         private readonly ConcurrentDictionary<string, Task<T>> _activeFetches;
@@ -35,6 +36,7 @@ namespace CacheMeIfYouCan.Internal
             _preFetchEnabled = preFetchEnabled;
             _logger = logger;
             _defaultValueFactory = defaultValueFactory;
+            _continueOnException = defaultValueFactory != null;
             _onResult = onResult;
             _onFetch = onFetch;
             _activeFetches = new ConcurrentDictionary<string, Task<T>>();
@@ -44,44 +46,37 @@ namespace CacheMeIfYouCan.Internal
         public async Task<T> Get(string key)
         {
             var start = Stopwatch.GetTimestamp();
-            Result result;
+            var result = new Result();
             try
             {
                 result = await GetImpl(key);
-                
-                if (_onResult != null)
-                {
-                    var duration = Stopwatch.GetTimestamp() - start;
-
-                    _onResult(new FunctionCacheGetResult<T>(key, result.Value, result.Outcome, duration));
-                }
                 
                 return result.Value;
             }
             catch (Exception ex)
             {
-                result = new Result();
-                
                 if (_logger != null)
-                    _logger.Error(ex, $"Unabled to get value. Key: '{key}'");
+                    _logger.Error(ex, $"Unable to get value. Key: '{key}'");
 
                 var defaultValue = _defaultValueFactory == null
                     ? default(T)
                     : _defaultValueFactory();
 
-                result = new Result(defaultValue, Outcome.Error);
+                result = new Result(defaultValue, Outcome.Error, null);
 
+                if (_continueOnException)
+                    return defaultValue;
+
+                throw;
+            }
+            finally
+            {
                 if (_onResult != null)
                 {
                     var duration = Stopwatch.GetTimestamp() - start;
 
-                    _onResult(new FunctionCacheGetResult<T>(key, result.Value, result.Outcome, duration));
+                    _onResult(new FunctionCacheGetResult<T>(key, result.Value, result.Outcome, duration, result.CacheType));
                 }
-                
-                if (_defaultValueFactory != null)
-                    return _defaultValueFactory();
-                
-                throw;
             }
         }
 
@@ -89,15 +84,15 @@ namespace CacheMeIfYouCan.Internal
         {
             T value;
             Outcome outcome;
+            string cacheType;
 
             var getFromCacheResult = await _cache.Get(key);
             
             if (getFromCacheResult.Success)
             {
                 value = getFromCacheResult.Value;
-                outcome = getFromCacheResult.CacheType == CacheType.Memory
-                    ? Outcome.FromMemory
-                    : Outcome.FromRedis;
+                outcome = Outcome.FromCache;
+                cacheType = getFromCacheResult.CacheType;
 
                 if (_preFetchEnabled && ShouldPreFetch(getFromCacheResult.TimeToLive))
                     Task.Run(() => Fetch(key));
@@ -105,11 +100,11 @@ namespace CacheMeIfYouCan.Internal
             else
             {
                 value = await Fetch(key);
-                
                 outcome = Outcome.Fetch;
+                cacheType = null;
             }
             
-            return new Result(value, outcome);
+            return new Result(value, outcome, cacheType);
         }
 
         private bool ShouldPreFetch(TimeSpan timeToLive)
@@ -146,11 +141,13 @@ namespace CacheMeIfYouCan.Internal
         {
             public readonly T Value;
             public readonly Outcome Outcome;
+            public readonly string CacheType;
 
-            public Result(T value, Outcome outcome)
+            public Result(T value, Outcome outcome, string cacheType)
             {
                 Value = value;
                 Outcome = outcome;
+                CacheType = cacheType;
             }
         }
     }
