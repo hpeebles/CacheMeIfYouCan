@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "CacheMeIfYouCan\CacheMeIfYouCan.csproj", "{B652806F-9349-4B41-B0CA-73C8EE62D8F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{E9CBDD4F-2703-45EE-A59F-6B093F972BB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{A769CDA7-E93C-486C-BF5B-3868A2225924}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B652806F-9349-4B41-B0CA-73C8EE62D8F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B652806F-9349-4B41-B0CA-73C8EE62D8F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B652806F-9349-4B41-B0CA-73C8EE62D8F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B652806F-9349-4B41-B0CA-73C8EE62D8F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9CBDD4F-2703-45EE-A59F-6B093F972BB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9CBDD4F-2703-45EE-A59F-6B093F972BB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9CBDD4F-2703-45EE-A59F-6B093F972BB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9CBDD4F-2703-45EE-A59F-6B093F972BB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
