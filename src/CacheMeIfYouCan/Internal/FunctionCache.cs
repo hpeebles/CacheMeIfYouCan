@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly ICache<T> _cache;
         private readonly Func<string, Task<T>> _func;
         private readonly TimeSpan _timeToLive;
-        private readonly bool _preFetchEnabled;
+        private readonly bool _earlyFetchEnabled;
         private readonly ILogger _logger;
         private readonly Func<T> _defaultValueFactory;
         private readonly bool _continueOnException;
@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Internal
             Func<string, Task<T>> func,
             ICache<T> cache,
             TimeSpan timeToLive,
-            bool preFetchEnabled,
+            bool earlyFetchEnabled,
             ILogger logger,
             Func<T> defaultValueFactory,
             Action<FunctionCacheGetResult<T>> onResult,
@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Internal
             _func = func;
             _cache = cache;
             _timeToLive = timeToLive;
-            _preFetchEnabled = preFetchEnabled;
+            _earlyFetchEnabled = earlyFetchEnabled;
             _logger = logger;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
@@ -94,8 +94,8 @@ namespace CacheMeIfYouCan.Internal
                 outcome = Outcome.FromCache;
                 cacheType = getFromCacheResult.CacheType;
 
-                if (_preFetchEnabled && ShouldPreFetch(getFromCacheResult.TimeToLive))
-                    Task.Run(() => Fetch(key));
+                if (_earlyFetchEnabled && ShouldFetchEarly(getFromCacheResult.TimeToLive))
+                    Task.Run(() => Fetch(key, getFromCacheResult.TimeToLive));
             }
             else
             {
@@ -107,34 +107,56 @@ namespace CacheMeIfYouCan.Internal
             return new Result(value, outcome, cacheType);
         }
 
-        private bool ShouldPreFetch(TimeSpan timeToLive)
+        private async Task<T> Fetch(string key, TimeSpan? existingTtl = null)
         {
-            return false;
+            var start = Stopwatch.GetTimestamp();
+            var duplicate = true;
+            var value = default(T);
+            var error = false;
+            
+            try
+            {
+                value = await _activeFetches.GetOrAdd(
+                    key,
+                    async k =>
+                    {
+                        duplicate = false;
+                        
+                        var fetchedValue = await _func(k);
+
+                        await _cache.Set(k, fetchedValue, _timeToLive);
+
+                        _activeFetches.TryRemove(k, out _);
+
+                        return fetchedValue;
+                    });
+            }
+            catch (Exception ex)
+            {
+                if (_logger != null)
+                    _logger.Error(ex, $"Unable to fetch value. Key: '{key}'");
+                    
+                error = true;
+                throw;
+            }
+            finally
+            {
+                var duration = Stopwatch.GetTimestamp() - start;
+
+                _averageFetchDuration += (duration - _averageFetchDuration) / 10;
+                
+                if (_onFetch != null)
+                    _onFetch(new FunctionCacheFetchResult<T>(key, value, !error, duration, duplicate, existingTtl));
+            }
+
+            return value;
         }
 
-        private async Task<T> Fetch(string key)
+        private bool ShouldFetchEarly(TimeSpan timeToLive)
         {
-            return await _activeFetches.GetOrAdd(
-                key,
-                async k =>
-                {
-                    var start = Stopwatch.GetTimestamp();
-                    
-                    var value = await _func(k);
+            var random = _rng.NextDouble();
 
-                    await _cache.Set(k, value, _timeToLive);
-
-                    _activeFetches.TryRemove(k, out _);
-
-                    var duration = Stopwatch.GetTimestamp() - start;
-
-                    if (_onFetch != null)
-                        _onFetch(new FunctionCacheFetchResult<T>(k, value, true, duration));
-                    
-                    _averageFetchDuration += (duration - _averageFetchDuration) / 10;
-                    
-                    return value;
-                });
+            return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
         }
 
         private struct Result

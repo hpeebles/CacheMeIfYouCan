@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Internal
         public TimeSpan? TimeToLive;
         public long? MaxItemsInMemoryCache;
         public int? MaxConcurrentFetches;
-        public bool? PreFetchEnabled;
+        public bool? EarlyFetchEnabled;
         public ILogger Logger;
     }
 }

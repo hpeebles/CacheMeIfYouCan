@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan
         public static TimeSpan TimeToLive = TimeSpan.FromHours(1);
         public static int MaxItemsInMemoryCache = 1000000;
         public static int MaxConcurrentFetches = 100;
-        public static bool PreFetchEnabled = true;
+        public static bool EarlyFetchEnabled = true;
         public static ILogger Logger = null;
     }
 }

@@ -44,9 +44,9 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public FunctionCacheConfigurationManager<T> WithPreFetch(bool enabled = true)
+        public FunctionCacheConfigurationManager<T> WithEarlyFetch(bool enabled = true)
         {
-            _config.PreFetchEnabled = enabled;
+            _config.EarlyFetchEnabled = enabled;
             return this;
         }
 
@@ -112,7 +112,7 @@ namespace CacheMeIfYouCan
                     _inputFunc,
                     cache,
                     config.TimeToLive,
-                    config.PreFetchEnabled,
+                    config.EarlyFetchEnabled,
                     config.Logger,
                     _defaultValueFactory,
                     onResult,

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,14 +13,14 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task SubsequentCallsAreCached()
         {
-            Func<string, Task<string>> echo = Echo;
+            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromSeconds(1));
 
-            var fetchCount = 0;
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
             
             var cachedEcho = echo
                 .Cached()
                 .For(TimeSpan.FromMinutes(1))
-                .OnFetch(x => fetchCount++)
+                .OnFetch(fetches.Add)
                 .Build();
 
             var first = true;
@@ -39,20 +41,20 @@ namespace CacheMeIfYouCan.Tests
                 }
             }
             
-            Assert.Equal(1, fetchCount);
+            Assert.Single(fetches);
         }
 
         [Fact]
         public async Task AtMostOneActiveFetchPerKey()
         {
-            Func<string, Task<string>> echo = Echo;
+            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromSeconds(1));
 
-            var fetchCount = 0;
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
 
             var cachedEcho = echo
                 .Cached()
                 .For(TimeSpan.FromMinutes(1))
-                .OnFetch(x => fetchCount++)
+                .OnFetch(fetches.Add)
                 .Build();
 
             async Task<TimeSpan> MeasureDuration()
@@ -73,13 +75,49 @@ namespace CacheMeIfYouCan.Tests
                 .Select(t => t.Result)
                 .ToList();
             
-            Assert.Equal(1, fetchCount);
+            Assert.Equal(1, fetches.Count(f => !f.Duplicate));
             Assert.True(timings.All(t => t > TimeSpan.FromSeconds(0.5)));
         }
 
-        private async Task<string> Echo(string key)
+        [Fact]
+        public async Task WithEarlyFetchEnabledValuesAreFetchedEarly()
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromMilliseconds(100));
+
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+
+            var cachedEcho = echo
+                .Cached()
+                .For(TimeSpan.FromSeconds(1))
+                .OnFetch(fetches.Add)
+                .Build();
+
+            async Task<TimeSpan> MeasureDuration()
+            {
+                var timer = Stopwatch.StartNew();
+                await cachedEcho("test!");
+                return timer.Elapsed;
+            }
+
+            var tasks = new List<Task>();
+            foreach (var id in Enumerable.Range(0, 250))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(10));
+                tasks.Add(MeasureDuration());
+            }
+
+            await Task.WhenAll(tasks);
+
+            var earlyFetches = fetches
+                .Where(f => f.ExistingTtl.HasValue)
+                .ToList();
+            
+            Assert.NotEmpty(earlyFetches);
+        }
+
+        private async Task<string> Echo(string key, TimeSpan delay)
+        {
+            await Task.Delay(delay);
 
             return key;
         }
