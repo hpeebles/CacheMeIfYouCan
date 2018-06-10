@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Internal
         public readonly long MaxItemsInMemoryCache;
         public readonly int MaxConcurrentFetches;
         public readonly bool EarlyFetchEnabled;
-        public readonly ILogger Logger;
+        public readonly Action<FunctionCacheErrorEvent> OnError;
         
         internal CacheConfig(CacheConfigOverrides config)
         {
@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Internal
             MaxItemsInMemoryCache = config.MaxItemsInMemoryCache ?? DefaultCacheSettings.MaxItemsInMemoryCache;
             MaxConcurrentFetches = config.MaxConcurrentFetches ?? DefaultCacheSettings.MaxConcurrentFetches;
             EarlyFetchEnabled = config.EarlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled;
-            Logger = config.Logger ?? DefaultCacheSettings.Logger;
+            OnError = config.OnError ?? DefaultCacheSettings.OnError;
         }
     }
 }

@@ -8,7 +8,7 @@
         public readonly long Duration;
         public readonly string CacheType;
 
-        public FunctionCacheGetResult(string key, T value, Outcome outcome, long duration, string cacheType)
+        internal FunctionCacheGetResult(string key, T value, Outcome outcome, long duration, string cacheType)
         {
             Key = key;
             Value = value;

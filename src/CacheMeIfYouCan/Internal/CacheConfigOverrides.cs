@@ -8,6 +8,6 @@ namespace CacheMeIfYouCan.Internal
         public long? MaxItemsInMemoryCache;
         public int? MaxConcurrentFetches;
         public bool? EarlyFetchEnabled;
-        public ILogger Logger;
+        public Action<FunctionCacheErrorEvent> OnError;
     }
 }

@@ -11,11 +11,11 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<string, Task<T>> _func;
         private readonly TimeSpan _timeToLive;
         private readonly bool _earlyFetchEnabled;
-        private readonly ILogger _logger;
         private readonly Func<T> _defaultValueFactory;
         private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<T>> _onResult;
         private readonly Action<FunctionCacheFetchResult<T>> _onFetch;
+        private readonly Action<FunctionCacheErrorEvent> _onError;
         private readonly ConcurrentDictionary<string, Task<T>> _activeFetches;
         private readonly Random _rng;
         private long _averageFetchDuration;
@@ -25,20 +25,20 @@ namespace CacheMeIfYouCan.Internal
             ICache<T> cache,
             TimeSpan timeToLive,
             bool earlyFetchEnabled,
-            ILogger logger,
             Func<T> defaultValueFactory,
             Action<FunctionCacheGetResult<T>> onResult,
-            Action<FunctionCacheFetchResult<T>> onFetch)
+            Action<FunctionCacheFetchResult<T>> onFetch,
+            Action<FunctionCacheErrorEvent> onError)
         {
             _func = func;
             _cache = cache;
             _timeToLive = timeToLive;
             _earlyFetchEnabled = earlyFetchEnabled;
-            _logger = logger;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
             _onResult = onResult;
             _onFetch = onFetch;
+            _onError = onError;
             _activeFetches = new ConcurrentDictionary<string, Task<T>>();
             _rng = new Random();
         }
@@ -55,8 +55,14 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                if (_logger != null)
-                    _logger.Error(ex, $"Unable to get value. Key: '{key}'");
+                if (_onError != null)
+                {
+                    var message = _continueOnException
+                        ? "Unable to get value. Default value being returned"
+                        : "Unable to get value";
+
+                    _onError(new FunctionCacheErrorEvent(message, key, ex));
+                }
 
                 var defaultValue = _defaultValueFactory == null
                     ? default(T)
@@ -110,8 +116,8 @@ namespace CacheMeIfYouCan.Internal
         private async Task<T> Fetch(string key, TimeSpan? existingTtl = null)
         {
             var start = Stopwatch.GetTimestamp();
-            var duplicate = true;
             var value = default(T);
+            var duplicate = true;
             var error = false;
             
             try
@@ -133,9 +139,10 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                if (_logger != null)
-                    _logger.Error(ex, $"Unable to fetch value. Key: '{key}'");
-                    
+                if (_onError != null)
+                    _onError(new FunctionCacheErrorEvent("Unable to fetch value", key, ex));
+
+                duplicate = false;
                 error = true;
                 throw;
             }

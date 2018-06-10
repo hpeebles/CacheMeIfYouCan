@@ -8,6 +8,6 @@ namespace CacheMeIfYouCan
         public static int MaxItemsInMemoryCache = 1000000;
         public static int MaxConcurrentFetches = 100;
         public static bool EarlyFetchEnabled = true;
-        public static ILogger Logger = null;
+        public static Action<FunctionCacheErrorEvent> OnError = null;
     }
 }

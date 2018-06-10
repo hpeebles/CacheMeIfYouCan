@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan
         public readonly bool Duplicate;
         public readonly TimeSpan? ExistingTtl;
 
-        public FunctionCacheFetchResult(string key, T value, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
+        internal FunctionCacheFetchResult(string key, T value, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
         {
             Key = key;
             Value = value;

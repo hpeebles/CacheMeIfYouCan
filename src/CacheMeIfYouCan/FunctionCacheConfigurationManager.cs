@@ -50,12 +50,6 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public FunctionCacheConfigurationManager<T> WithLogger(ILogger logger)
-        {
-            _config.Logger = logger;
-            return this;
-        }
-
         public FunctionCacheConfigurationManager<T> ContinueOnException(T defaultValue = default(T))
         {
             return ContinueOnException(() => defaultValue);
@@ -82,6 +76,12 @@ namespace CacheMeIfYouCan
         public FunctionCacheConfigurationManager<T> OnFetch(Action<FunctionCacheFetchResult<T>> onFetch)
         {
             _onFetch.Add(onFetch);
+            return this;
+        }
+
+        public FunctionCacheConfigurationManager<T> OnError(Action<FunctionCacheErrorEvent> onError)
+        {
+            _config.OnError = onError;
             return this;
         }
 
@@ -113,10 +113,10 @@ namespace CacheMeIfYouCan
                     cache,
                     config.TimeToLive,
                     config.EarlyFetchEnabled,
-                    config.Logger,
                     _defaultValueFactory,
                     onResult,
-                    onFetch);
+                    onFetch,
+                    config.OnError);
                 
                 _cachedFunc = functionCache.Get;
                 

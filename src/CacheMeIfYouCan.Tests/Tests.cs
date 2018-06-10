@@ -13,8 +13,8 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task SubsequentCallsAreCached()
         {
-            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromSeconds(1));
-
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            
             var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
             
             var cachedEcho = echo
@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task AtMostOneActiveFetchPerKey()
         {
-            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
             var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
 
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task WithEarlyFetchEnabledValuesAreFetchedEarly()
         {
-            Func<string, Task<string>> echo = x => Echo(x, TimeSpan.FromMilliseconds(100));
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100));
 
             var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
 
@@ -115,11 +115,73 @@ namespace CacheMeIfYouCan.Tests
             Assert.NotEmpty(earlyFetches);
         }
 
-        private async Task<string> Echo(string key, TimeSpan delay)
+        [Fact]
+        public async Task OnErrorCacheStillContinuesAsNormal()
         {
-            await Task.Delay(delay);
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100), x => x.Equals("error!"));
 
-            return key;
+            var errors = new ConcurrentBag<FunctionCacheErrorEvent>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+
+            var cachedEcho = echo
+                .Cached()
+                .For(TimeSpan.FromMinutes(1))
+                .OnError(errors.Add)
+                .OnFetch(fetches.Add)
+                .Build();
+            
+            var keys = new[] { "one", "error!", "two" };
+
+            var results = new List<KeyValuePair<string, string>>();
+
+            var loopCount = 5;
+            var thrownErrorsCount = 0;
+            
+            for (var i = 0; i < loopCount; i++)
+            {
+                foreach (var key in keys)
+                {
+                    try
+                    {
+                        var value = await cachedEcho(key);
+
+                        results.Add(new KeyValuePair<string, string>(key, value));
+                    }
+                    catch
+                    {
+                        thrownErrorsCount++;
+                    }
+                }
+            }
+            
+            Assert.Equal(loopCount * 2, errors.Count);
+            Assert.True(errors.All(k => k.Key == "error!"));
+            Assert.Equal(loopCount, thrownErrorsCount);
+            Assert.Equal(loopCount, results.Count(kv => kv.Key == "one"));
+            Assert.Equal(loopCount, results.Count(kv => kv.Key == "two"));
+            Assert.Equal(0, results.Count(kv => kv.Key == "error!"));
+            Assert.Equal(2, fetches.Count(f => f.Success));
+            Assert.Equal(0, fetches.Count(f => f.Duplicate));
+        }
+
+        [Fact]
+        public async Task DefaultValueIsReturnedOnException()
+        {
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100), x => x.Equals("error!"));
+
+            var errors = new ConcurrentBag<FunctionCacheErrorEvent>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .For(TimeSpan.FromMinutes(1))
+                .OnError(errors.Add)
+                .ContinueOnException("defaultValue")
+                .Build();
+
+            var value = await cachedEcho("error!");
+
+            Assert.Equal("defaultValue", value);
+            Assert.Equal(2, errors.Count);
         }
     }
 }
