@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Internal
             
             _cache.Set(key, new ValueWithExpiry<T>(value, expiry), expiry);
             
-            return Task.CompletedTask;
+            return Task.FromResult<object>(null);
         }
     }
 }
