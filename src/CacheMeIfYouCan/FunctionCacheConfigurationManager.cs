@@ -32,9 +32,9 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public FunctionCacheConfigurationManager<T> WithMaxItemsInMemoryCache(long maxItems)
+        public FunctionCacheConfigurationManager<T> WithMaxMemoryCacheMaxSizeMB(int maxSizeMB)
         {
-            _config.MaxItemsInMemoryCache = maxItems;
+            _config.MemoryCacheMaxSizeMB = maxSizeMB;
             return this;
         }
 
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan
                 var config = new CacheConfig(_config);
 
                 var cacheFactoryFunc = _cacheFactoryFunc == null
-                    ? () => MemoryCacheBuilder.Build<T>(config.MaxItemsInMemoryCache)
+                    ? () => MemoryCacheBuilder.Build<T>(config.MemoryCacheMaxSizeMB)
                     : _cacheFactoryFunc;
                 
                 var cache = cacheFactoryFunc();

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
+using System.Runtime.Caching;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -9,16 +10,25 @@ namespace CacheMeIfYouCan.Internal
         private const string Type = "Memory";
         private readonly MemoryCache _cache;
         
-        public MemoryCache(long maxItems)
+        public MemoryCache(int maxSizeMB)
         {
-            _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = maxItems });
+            var config = new NameValueCollection
+            {
+                { "cacheMemoryLimitMegabytes", maxSizeMB.ToString() }
+            };
+            
+            _cache = new MemoryCache(Guid.NewGuid().ToString(), config);
         }
 
         public Task<GetFromCacheResult<T>> Get(string key)
         {
-            var result = _cache.TryGetValue(key, out ValueWithExpiry<T> value)
-                ? new GetFromCacheResult<T>(value, value.Expiry - DateTimeOffset.UtcNow, Type)
-                : GetFromCacheResult<T>.NotFound;
+            var valueObj = _cache.Get(key);
+
+            GetFromCacheResult<T> result;
+            if (valueObj is ValueWithExpiry<T> value)
+                result = new GetFromCacheResult<T>(value, value.Expiry - DateTimeOffset.UtcNow, Type);
+            else
+                result = GetFromCacheResult<T>.NotFound;
 
             return Task.FromResult(result);
         }
@@ -26,14 +36,8 @@ namespace CacheMeIfYouCan.Internal
         public Task Set(string key, T value, TimeSpan timeToLive)
         {
             var expiry = DateTime.UtcNow + timeToLive;
-
-            var options = new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = expiry,
-                Size = 1
-            };
             
-            _cache.Set(key, new ValueWithExpiry<T>(value, expiry), options);
+            _cache.Set(key, new ValueWithExpiry<T>(value, expiry), expiry);
             
             return Task.CompletedTask;
         }
