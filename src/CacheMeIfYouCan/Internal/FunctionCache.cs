@@ -7,8 +7,8 @@ namespace CacheMeIfYouCan.Internal
 {
     internal class FunctionCache<T>
     {
-        private readonly ICache<T> _cache;
         private readonly Func<string, Task<T>> _func;
+        private readonly ICache<T> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly bool _earlyFetchEnabled;
         private readonly Func<T> _defaultValueFactory;
@@ -50,30 +50,10 @@ namespace CacheMeIfYouCan.Internal
             try
             {
                 result = await GetImpl(key);
-                
-                return result.Value;
             }
             catch (Exception ex)
             {
-                if (_onError != null)
-                {
-                    var message = _continueOnException
-                        ? "Unable to get value. Default value being returned"
-                        : "Unable to get value";
-
-                    _onError(new FunctionCacheErrorEvent(message, key, ex));
-                }
-
-                var defaultValue = _defaultValueFactory == null
-                    ? default(T)
-                    : _defaultValueFactory();
-
-                result = new Result(defaultValue, Outcome.Error, null);
-
-                if (_continueOnException)
-                    return defaultValue;
-
-                throw;
+                result = HandleError(key, ex);
             }
             finally
             {
@@ -84,6 +64,8 @@ namespace CacheMeIfYouCan.Internal
                     _onResult(new FunctionCacheGetResult<T>(key, result.Value, result.Outcome, duration, result.CacheType));
                 }
             }
+
+            return result.Value;
         }
 
         private async Task<Result> GetImpl(string key)
@@ -101,7 +83,7 @@ namespace CacheMeIfYouCan.Internal
                 cacheType = getFromCacheResult.CacheType;
 
                 if (_earlyFetchEnabled && ShouldFetchEarly(getFromCacheResult.TimeToLive))
-                    Task.Run(() => Fetch(key, getFromCacheResult.TimeToLive));
+                    TriggerEarlyFetch(key, getFromCacheResult.TimeToLive);
             }
             else
             {
@@ -148,15 +130,51 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                var duration = Stopwatch.GetTimestamp() - start;
-
-                _averageFetchDuration += (duration - _averageFetchDuration) / 10;
-                
                 if (_onFetch != null)
+                {
+                    var duration = Stopwatch.GetTimestamp() - start;
+
+                    _averageFetchDuration += (duration - _averageFetchDuration) / 10;
+
                     _onFetch(new FunctionCacheFetchResult<T>(key, value, !error, duration, duplicate, existingTtl));
+                }
             }
 
             return value;
+        }
+        
+        private void TriggerEarlyFetch(string key, TimeSpan timeToLive)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await Fetch(key, timeToLive);
+                }
+                catch // any exceptions that reach here will already have been handled
+                { }
+            });
+        }
+
+        private Result HandleError(string key, Exception ex)
+        {
+            if (_onError != null)
+            {
+                var message = _continueOnException
+                    ? "Unable to get value. Default value being returned"
+                    : "Unable to get value";
+
+                _onError(new FunctionCacheErrorEvent(message, key, ex));
+            }
+
+            var defaultValue = _defaultValueFactory == null
+                ? default(T)
+                : _defaultValueFactory();
+
+            if (!_continueOnException)
+                throw ex;
+            
+            return new Result(defaultValue, Outcome.Error, null);
         }
 
         private bool ShouldFetchEarly(TimeSpan timeToLive)
