@@ -9,21 +9,23 @@ namespace CacheMeIfYouCan
     public class FunctionCacheConfigurationManager<T>
     {
         private readonly Func<string, Task<T>> _inputFunc;
+        private readonly string _cacheName;
         private readonly CacheConfigOverrides _config;
+        private readonly IList<Action<FunctionCacheGetResult<T>>> _onResult;
+        private readonly IList<Action<FunctionCacheFetchResult<T>>> _onFetch;
         private readonly object _lock;
         private Func<ICache<T>> _cacheFactoryFunc;
         private Func<T> _defaultValueFactory;
-        private IList<Action<FunctionCacheGetResult<T>>> _onResult;
-        private IList<Action<FunctionCacheFetchResult<T>>> _onFetch;
         private Func<string, Task<T>> _cachedFunc;
         
-        internal FunctionCacheConfigurationManager(Func<string, Task<T>> inputFunc)
+        internal FunctionCacheConfigurationManager(Func<string, Task<T>> inputFunc, string cacheName)
         {
             _inputFunc = inputFunc;
+            _cacheName = cacheName;
             _config = new CacheConfigOverrides();
-            _lock = new object();
             _onResult = new List<Action<FunctionCacheGetResult<T>>>();
             _onFetch = new List<Action<FunctionCacheFetchResult<T>>>();
+            _lock = new object();
         }
 
         public FunctionCacheConfigurationManager<T> For(TimeSpan timeToLive)
@@ -110,6 +112,7 @@ namespace CacheMeIfYouCan
                 
                 var functionCache = new FunctionCache<T>(
                     _inputFunc,
+                    _cacheName,
                     cache,
                     config.TimeToLive,
                     config.EarlyFetchEnabled,

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "Ca
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{A769CDA7-E93C-486C-BF5B-3868A2225924}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Prometheus", "CacheMeIfYouCan.Prometheus\CacheMeIfYouCan.Prometheus.csproj", "{EAF605CE-ED91-4DB8-9EFE-A6C41FE7C744}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A769CDA7-E93C-486C-BF5B-3868A2225924}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAF605CE-ED91-4DB8-9EFE-A6C41FE7C744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF605CE-ED91-4DB8-9EFE-A6C41FE7C744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF605CE-ED91-4DB8-9EFE-A6C41FE7C744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF605CE-ED91-4DB8-9EFE-A6C41FE7C744}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

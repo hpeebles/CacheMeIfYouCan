@@ -8,6 +8,7 @@ namespace CacheMeIfYouCan.Internal
     internal class FunctionCache<T>
     {
         private readonly Func<string, Task<T>> _func;
+        private readonly string _cacheName;
         private readonly ICache<T> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly bool _earlyFetchEnabled;
@@ -22,6 +23,7 @@ namespace CacheMeIfYouCan.Internal
         
         public FunctionCache(
             Func<string, Task<T>> func,
+            string cacheName,
             ICache<T> cache,
             TimeSpan timeToLive,
             bool earlyFetchEnabled,
@@ -31,6 +33,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheErrorEvent> onError)
         {
             _func = func;
+            _cacheName = cacheName;
             _cache = cache;
             _timeToLive = timeToLive;
             _earlyFetchEnabled = earlyFetchEnabled;
@@ -61,7 +64,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     var duration = Stopwatch.GetTimestamp() - start;
 
-                    _onResult(new FunctionCacheGetResult<T>(key, result.Value, result.Outcome, duration, result.CacheType));
+                    _onResult(new FunctionCacheGetResult<T>(_cacheName, key, result.Value, result.Outcome, duration, result.CacheType));
                 }
             }
 
@@ -136,7 +139,7 @@ namespace CacheMeIfYouCan.Internal
 
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
-                    _onFetch(new FunctionCacheFetchResult<T>(key, value, !error, duration, duplicate, existingTtl));
+                    _onFetch(new FunctionCacheFetchResult<T>(_cacheName, key, value, !error, duration, duplicate, existingTtl));
                 }
             }
 
