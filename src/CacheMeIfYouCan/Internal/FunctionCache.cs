@@ -5,51 +5,56 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class FunctionCache<T>
+    internal class FunctionCache<TK, TV>
     {
-        private readonly Func<string, Task<T>> _func;
+        private readonly Func<TK, Task<TV>> _func;
         private readonly string _cacheName;
-        private readonly ICache<T> _cache;
+        private readonly ICache<TV> _cache;
         private readonly TimeSpan _timeToLive;
+        private readonly Func<TK, string> _keySerializer;
         private readonly bool _earlyFetchEnabled;
-        private readonly Func<T> _defaultValueFactory;
+        private readonly Func<TV> _defaultValueFactory;
         private readonly bool _continueOnException;
-        private readonly Action<FunctionCacheGetResult<T>> _onResult;
-        private readonly Action<FunctionCacheFetchResult<T>> _onFetch;
-        private readonly Action<FunctionCacheErrorEvent> _onError;
-        private readonly ConcurrentDictionary<string, Task<T>> _activeFetches;
+        private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
+        private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
+        private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
+        private readonly ConcurrentDictionary<string, Task<TV>> _activeFetches;
         private readonly Random _rng;
         private long _averageFetchDuration;
         
         public FunctionCache(
-            Func<string, Task<T>> func,
+            Func<TK, Task<TV>> func,
             string cacheName,
-            ICache<T> cache,
+            ICache<TV> cache,
             TimeSpan timeToLive,
+            Func<TK, string> keySerializer,
             bool earlyFetchEnabled,
-            Func<T> defaultValueFactory,
-            Action<FunctionCacheGetResult<T>> onResult,
-            Action<FunctionCacheFetchResult<T>> onFetch,
-            Action<FunctionCacheErrorEvent> onError)
+            Func<TV> defaultValueFactory,
+            Action<FunctionCacheGetResult<TK, TV>> onResult,
+            Action<FunctionCacheFetchResult<TK, TV>> onFetch,
+            Action<FunctionCacheErrorEvent<TK>> onError)
         {
             _func = func;
             _cacheName = cacheName;
             _cache = cache;
             _timeToLive = timeToLive;
+            _keySerializer = keySerializer;
             _earlyFetchEnabled = earlyFetchEnabled;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
             _onResult = onResult;
             _onFetch = onFetch;
             _onError = onError;
-            _activeFetches = new ConcurrentDictionary<string, Task<T>>();
+            _activeFetches = new ConcurrentDictionary<string, Task<TV>>();
             _rng = new Random();
         }
 
-        public async Task<T> Get(string key)
+        public async Task<TV> Get(TK keyObj)
         {
             var start = Stopwatch.GetTimestamp();
             var result = new Result();
+            var key = new Key(keyObj, _keySerializer(keyObj));
+            
             try
             {
                 result = await GetImpl(key);
@@ -64,20 +69,20 @@ namespace CacheMeIfYouCan.Internal
                 {
                     var duration = Stopwatch.GetTimestamp() - start;
 
-                    _onResult(new FunctionCacheGetResult<T>(_cacheName, key, result.Value, result.Outcome, duration, result.CacheType));
+                    _onResult(new FunctionCacheGetResult<TK, TV>(_cacheName, key.AsObject, result.Value, key.AsString, result.Outcome, duration, result.CacheType));
                 }
             }
 
             return result.Value;
         }
 
-        private async Task<Result> GetImpl(string key)
+        private async Task<Result> GetImpl(Key key)
         {
-            T value;
+            TV value;
             Outcome outcome;
             string cacheType;
 
-            var getFromCacheResult = await _cache.Get(key);
+            var getFromCacheResult = await _cache.Get(key.AsString);
             
             if (getFromCacheResult.Success)
             {
@@ -98,22 +103,22 @@ namespace CacheMeIfYouCan.Internal
             return new Result(value, outcome, cacheType);
         }
 
-        private async Task<T> Fetch(string key, TimeSpan? existingTtl = null)
+        private async Task<TV> Fetch(Key key, TimeSpan? existingTtl = null)
         {
             var start = Stopwatch.GetTimestamp();
-            var value = default(T);
+            var value = default(TV);
             var duplicate = true;
             var error = false;
             
             try
             {
                 value = await _activeFetches.GetOrAdd(
-                    key,
+                    key.AsString,
                     async k =>
                     {
                         duplicate = false;
                         
-                        var fetchedValue = await _func(k);
+                        var fetchedValue = await _func(key.AsObject);
 
                         await _cache.Set(k, fetchedValue, _timeToLive);
 
@@ -124,10 +129,10 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                _activeFetches.TryRemove(key, out _);
+                _activeFetches.TryRemove(key.AsString, out _);
                 
                 if (_onError != null)
-                    _onError(new FunctionCacheErrorEvent("Unable to fetch value", key, ex));
+                    _onError(new FunctionCacheErrorEvent<TK>("Unable to fetch value", key.AsObject, key.AsString, ex));
 
                 duplicate = false;
                 error = true;
@@ -141,14 +146,14 @@ namespace CacheMeIfYouCan.Internal
 
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
-                    _onFetch(new FunctionCacheFetchResult<T>(_cacheName, key, value, !error, duration, duplicate, existingTtl));
+                    _onFetch(new FunctionCacheFetchResult<TK, TV>(_cacheName, key.AsObject, value, key.AsString, !error, duration, duplicate, existingTtl));
                 }
             }
 
             return value;
         }
         
-        private void TriggerEarlyFetch(string key, TimeSpan timeToLive)
+        private void TriggerEarlyFetch(Key key, TimeSpan timeToLive)
         {
             Task.Run(async () =>
             {
@@ -161,7 +166,7 @@ namespace CacheMeIfYouCan.Internal
             });
         }
 
-        private Result HandleError(string key, Exception ex)
+        private Result HandleError(Key key, Exception ex)
         {
             if (_onError != null)
             {
@@ -169,11 +174,11 @@ namespace CacheMeIfYouCan.Internal
                     ? "Unable to get value. Default value being returned"
                     : "Unable to get value";
 
-                _onError(new FunctionCacheErrorEvent(message, key, ex));
+                _onError(new FunctionCacheErrorEvent<TK>(message, key.AsObject, key.AsString, ex));
             }
 
             var defaultValue = _defaultValueFactory == null
-                ? default(T)
+                ? default(TV)
                 : _defaultValueFactory();
 
             if (!_continueOnException)
@@ -189,13 +194,25 @@ namespace CacheMeIfYouCan.Internal
             return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
         }
 
+        private struct Key
+        {
+            public readonly TK AsObject;
+            public readonly string AsString;
+
+            public Key(TK key, string keyString)
+            {
+                AsObject = key;
+                AsString = keyString;
+            }
+        }
+
         private struct Result
         {
-            public readonly T Value;
+            public readonly TV Value;
             public readonly Outcome Outcome;
             public readonly string CacheType;
 
-            public Result(T value, Outcome outcome, string cacheType)
+            public Result(TV value, Outcome outcome, string cacheType)
             {
                 Value = value;
                 Outcome = outcome;

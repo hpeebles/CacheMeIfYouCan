@@ -5,16 +5,16 @@ namespace CacheMeIfYouCan
     public abstract class FunctionCacheFetchResult
     {
         public readonly string CacheName;
-        public readonly string Key;
+        public readonly string KeyString;
         public readonly bool Success;
         public readonly long Duration;
         public readonly bool Duplicate;
         public readonly TimeSpan? ExistingTtl;
 
-        internal FunctionCacheFetchResult(string cacheName, string key, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
+        protected internal FunctionCacheFetchResult(string cacheName, string keyString, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
         {
             CacheName = cacheName;
-            Key = key;
+            KeyString = keyString;
             Success = success;
             Duration = duration;
             Duplicate = duplicate;
@@ -22,13 +22,15 @@ namespace CacheMeIfYouCan
         }
     }
     
-    public class FunctionCacheFetchResult<T> : FunctionCacheFetchResult
+    public class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
     {
-        public readonly T Value;
+        public readonly TK Key;
+        public readonly TV Value;
 
-        internal FunctionCacheFetchResult(string cacheName, string key, T value, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
-            : base(cacheName, key, success, duration, duplicate, existingTtl)
+        internal FunctionCacheFetchResult(string cacheName, TK key, TV value, string keyString, bool success, long duration, bool duplicate, TimeSpan? existingTtl)
+            : base(cacheName, keyString, success, duration, duplicate, existingTtl)
         {
+            Key = key;
             Value = value;
         }
     }

@@ -2,9 +2,9 @@
 {
     public static class FunctionCacheConfigurationManagerRedisExtensions
     {
-        public static FunctionCacheConfigurationManager<T> WithRedis<T>(this FunctionCacheConfigurationManager<T> configManager, RedisConfig<T> config)
+        public static FunctionCacheConfigurationManager<TK, TV> WithRedis<TK, TV>(this FunctionCacheConfigurationManager<TK, TV> configManager, RedisConfig<TV> config)
         {
-            configManager.WithCacheFactory(() => RedisCacheBuilder.Build<T>(config));
+            configManager.WithCacheFactory(() => RedisCacheBuilder.Build(config));
             return configManager;
         }
     }

@@ -15,11 +15,10 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
             
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMinutes(1))
                 .OnFetch(fetches.Add)
                 .Build();
 
@@ -49,11 +48,10 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMinutes(1))
                 .OnFetch(fetches.Add)
                 .Build();
 
@@ -84,7 +82,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100));
 
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
 
             var cachedEcho = echo
                 .Cached()
@@ -120,12 +118,11 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100), x => x.Equals("error!"));
 
-            var errors = new ConcurrentBag<FunctionCacheErrorEvent>();
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string>>();
+            var errors = new ConcurrentBag<FunctionCacheErrorEvent<string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMinutes(1))
                 .OnError(errors.Add)
                 .OnFetch(fetches.Add)
                 .Build();
@@ -182,6 +179,43 @@ namespace CacheMeIfYouCan.Tests
 
             Assert.Equal("defaultValue", value);
             Assert.Equal(2, errors.Count);
+        }
+
+        [Fact]
+        public async Task GenericTypeIsSerilizedCorrectly()
+        {
+            Func<List<int>, int> func = x => x.Sum();
+
+            var results1 = new List<FunctionCacheGetResult<List<int>, int>>();
+            var results2 = new List<FunctionCacheGetResult<List<int>, int>>();
+            
+            var cachedFuncWithNoSerializer = func
+                .Cached()
+                .OnResult(results1.Add)
+                .Build();
+            
+            var cachedFuncWithSerializer = func
+                .Cached()
+                .WithKeySerializer(x => String.Join(",", x))
+                .OnResult(results2.Add)
+                .Build();
+            
+            var key1 = new List<int> { 1 };
+            var key2 = new List<int> { 2, 3 };
+            var key3 = new List<int> { 2, 3 };
+            
+            await cachedFuncWithNoSerializer(key1);
+            await cachedFuncWithNoSerializer(key2);
+            await cachedFuncWithSerializer(key1);
+            await cachedFuncWithSerializer(key2);
+            await cachedFuncWithSerializer(key3);
+            
+            Assert.Equal(results1[0].Value, results1[1].Value);
+            Assert.Equal(Outcome.FromCache, results1[1].Outcome);
+            
+            Assert.Equal(Outcome.Fetch, results2[1].Outcome);
+            Assert.Equal(Outcome.FromCache, results2[2].Outcome);
+            Assert.Equal(results2[1].Value, results2[2].Value);
         }
     }
 }

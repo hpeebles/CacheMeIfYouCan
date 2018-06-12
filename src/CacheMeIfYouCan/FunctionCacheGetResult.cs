@@ -3,28 +3,30 @@
     public abstract class FunctionCacheGetResult
     {
         public readonly string CacheName;
-        public readonly string Key;
+        public readonly string KeyString;
         public readonly Outcome Outcome;
         public readonly long Duration;
         public readonly string CacheType;
 
-        internal FunctionCacheGetResult(string cacheName, string key, Outcome outcome, long duration, string cacheType)
+        protected internal FunctionCacheGetResult(string cacheName, string keyString, Outcome outcome, long duration, string cacheType)
         {
             CacheName = cacheName;
-            Key = key;
+            KeyString = keyString;
             Outcome = outcome;
             Duration = duration;
             CacheType = cacheType;
         }
     }
 
-    public class FunctionCacheGetResult<T> : FunctionCacheGetResult
+    public class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
     {
-        public readonly T Value;
+        public readonly TK Key;
+        public readonly TV Value;
 
-        internal FunctionCacheGetResult(string cacheName, string key, T value, Outcome outcome, long duration, string cacheType)
-            : base(cacheName, key, outcome, duration, cacheType)
+        internal FunctionCacheGetResult(string cacheName, TK key, TV value, string keyString, Outcome outcome, long duration, string cacheType)
+            : base(cacheName, keyString, outcome, duration, cacheType)
         {
+            Key = key;
             Value = value;
         }
     }

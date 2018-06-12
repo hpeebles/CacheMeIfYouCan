@@ -8,6 +8,5 @@ namespace CacheMeIfYouCan.Internal
         public int? MemoryCacheMaxSizeMB;
         public int? MaxConcurrentFetches;
         public bool? EarlyFetchEnabled;
-        public Action<FunctionCacheErrorEvent> OnError;
     }
 }

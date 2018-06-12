@@ -2,17 +2,28 @@
 
 namespace CacheMeIfYouCan
 {
-    public struct FunctionCacheErrorEvent
+    public abstract class FunctionCacheErrorEvent
     {
         public readonly string Message;
-        public readonly string Key;
+        public readonly string KeyString;
         public readonly Exception Exception;
 
-        internal FunctionCacheErrorEvent(string message, string key, Exception exception)
+        protected internal FunctionCacheErrorEvent(string message, string keyString, Exception exception)
         {
             Message = message;
-            Key = key;
+            KeyString = keyString;
             Exception = exception;
+        }
+    }
+
+    public class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent
+    {
+        public readonly TK Key;
+
+        internal FunctionCacheErrorEvent(string message, TK key, string keyString, Exception exception)
+            : base(message, keyString, exception)
+        {
+            Key = key;
         }
     }
 }
