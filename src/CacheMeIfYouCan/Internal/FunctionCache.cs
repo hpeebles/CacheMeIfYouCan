@@ -124,6 +124,8 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
+                _activeFetches.TryRemove(key, out _);
+                
                 if (_onError != null)
                     _onError(new FunctionCacheErrorEvent("Unable to fetch value", key, ex));
 
