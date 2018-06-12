@@ -122,15 +122,11 @@ namespace CacheMeIfYouCan.Internal
 
                         await _cache.Set(k, fetchedValue, _timeToLive);
 
-                        _activeFetches.TryRemove(k, out _);
-
                         return fetchedValue;
                     });
             }
             catch (Exception ex)
             {
-                _activeFetches.TryRemove(key.AsString, out _);
-                
                 if (_onError != null)
                     _onError(new FunctionCacheErrorEvent<TK>("Unable to fetch value", key.AsObject, key.AsString, ex));
 
@@ -140,6 +136,8 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
+                _activeFetches.TryRemove(key.AsString, out _);
+                
                 if (_onFetch != null)
                 {
                     var duration = Stopwatch.GetTimestamp() - start;
