@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan
         private readonly IList<Action<FunctionCacheErrorEvent<TK>>> _onError;
         private readonly object _lock;
         private Func<TK, string> _keySerializer;
-        private Func<ICache<TV>> _cacheFactoryFunc;
+        private Func<MemoryCache<TV>, ICache<TV>> _cacheFactoryFunc;
         private Func<TV> _defaultValueFactory;
         private Func<TK, Task<TV>> _cachedFunc;
         
@@ -79,6 +79,12 @@ namespace CacheMeIfYouCan
 
         public FunctionCacheConfigurationManager<TK, TV> WithCacheFactory(Func<ICache<TV>> cacheFactoryFunc)
         {
+            _cacheFactoryFunc = memoryCache => cacheFactoryFunc();
+            return this;
+        }
+
+        public FunctionCacheConfigurationManager<TK, TV> WithCacheFactory(Func<MemoryCache<TV>, ICache<TV>> cacheFactoryFunc)
+        {
             _cacheFactoryFunc = cacheFactoryFunc;
             return this;
         }
@@ -110,11 +116,11 @@ namespace CacheMeIfYouCan
 
                 var config = new CacheConfig(_config);
 
-                var cacheFactoryFunc = _cacheFactoryFunc == null
-                    ? () => MemoryCacheBuilder.Build<TV>(config.MemoryCacheMaxSizeMB)
-                    : _cacheFactoryFunc;
-                
-                var cache = cacheFactoryFunc();
+                var memoryCache = MemoryCacheBuilder.Build<TV>(config.MemoryCacheMaxSizeMB);
+
+                var cache = _cacheFactoryFunc == null
+                    ? memoryCache
+                    : _cacheFactoryFunc(memoryCache);
 
                 var functionCache = new FunctionCache<TK, TV>(
                     _inputFunc,

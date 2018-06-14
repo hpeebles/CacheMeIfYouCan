@@ -2,15 +2,16 @@
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using System.Runtime.Caching;
+using CacheMeIfYouCan.Internal;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan
 {
-    internal class MemoryCache<T> : ICache<T>
+    public class MemoryCache<T> : ICache<T>
     {
         private const string Type = "Memory";
         private readonly MemoryCache _cache;
         
-        public MemoryCache(int maxSizeMB)
+        internal MemoryCache(int maxSizeMB)
         {
             var config = new NameValueCollection
             {
@@ -40,6 +41,11 @@ namespace CacheMeIfYouCan.Internal
             _cache.Set(key, new ValueWithExpiry<T>(value, expiry), expiry);
             
             return Task.FromResult<object>(null);
+        }
+
+        public void Remove(string key)
+        {
+            _cache.Remove(key);
         }
     }
 }

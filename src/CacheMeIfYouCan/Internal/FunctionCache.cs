@@ -159,7 +159,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     await Fetch(key, timeToLive);
                 }
-                catch // any exceptions that reach here will already have been handled
+                catch // Any exceptions that reach here will already have been handled
                 { }
             });
         }

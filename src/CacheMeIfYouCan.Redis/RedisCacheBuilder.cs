@@ -1,10 +1,19 @@
-﻿namespace CacheMeIfYouCan.Redis
+﻿using StackExchange.Redis;
+
+namespace CacheMeIfYouCan.Redis
 {
     internal static class RedisCacheBuilder
     {
-        public static ICache<T> Build<T>(RedisConfig<T> config)
+        public static ICache<T> Build<T>(RedisConfig<T> config, MemoryCache<T> memoryCache)
         {
-            return null;
+            var options = new ConfigurationOptions();
+            
+            foreach (var endpoint in config.Endpoints)
+                options.EndPoints.Add(endpoint);
+            
+            var multiplexer = ConnectionMultiplexer.Connect(options);
+
+            return new RedisCache<T>(multiplexer, config, memoryCache);
         }
     }
 }
