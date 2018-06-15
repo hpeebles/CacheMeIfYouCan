@@ -18,6 +18,7 @@ namespace CacheMeIfYouCan
         private Func<TK, string> _keySerializer;
         private Func<MemoryCache<TV>, ICache<TV>> _cacheFactoryFunc;
         private Func<TV> _defaultValueFactory;
+        private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private Func<TK, Task<TV>> _cachedFunc;
         
         internal FunctionCacheConfigurationManager(Func<TK, Task<TV>> inputFunc, string cacheName)
@@ -107,6 +108,25 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public FunctionCacheConfigurationManager<TK, TV> WithKeysToKeepAlive(IList<TK> keysToKeepAlive)
+        {
+            return WithKeysToKeepAlive(() => keysToKeepAlive);
+        }
+
+        public FunctionCacheConfigurationManager<TK, TV> WithKeysToKeepAlive(Func<IList<TK>> keysToKeepAliveFunc)
+        {
+            return WithKeysToKeepAlive(() => Task.FromResult(keysToKeepAliveFunc()));
+        }
+        
+        // If you have lots of keys, make the function return them in priority order as keys are refreshed in that order.
+        // Any that have not yet been processed when a new cycle is due will be ignored in order to ensure the highest
+        // priority keys are always in the cache.
+        public FunctionCacheConfigurationManager<TK, TV> WithKeysToKeepAlive(Func<Task<IList<TK>>> keysToKeepAliveFunc)
+        {
+            _keysToKeepAliveFunc = keysToKeepAliveFunc;
+            return this;
+        } 
+
         public Func<TK, Task<TV>> Build()
         {
             lock (_lock)
@@ -132,7 +152,8 @@ namespace CacheMeIfYouCan
                     _defaultValueFactory,
                     AggregateActions(_onResult),
                     AggregateActions(_onFetch),
-                    AggregateActions(_onError));
+                    AggregateActions(_onError),
+                    _keysToKeepAliveFunc);
                 
                 _cachedFunc = functionCache.Get;
                 

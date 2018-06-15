@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
         private readonly ConcurrentDictionary<string, Task<TV>> _activeFetches;
         private readonly Random _rng;
+        private readonly KeyRenewer<TK> _keyRenewer;
         private long _averageFetchDuration;
         
         public FunctionCache(
@@ -32,7 +34,8 @@ namespace CacheMeIfYouCan.Internal
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
-            Action<FunctionCacheErrorEvent<TK>> onError)
+            Action<FunctionCacheErrorEvent<TK>> onError,
+            Func<Task<IList<TK>>> keysToKeepAliveFunc)
         {
             _func = func;
             _cacheName = cacheName;
@@ -47,13 +50,32 @@ namespace CacheMeIfYouCan.Internal
             _onError = onError;
             _activeFetches = new ConcurrentDictionary<string, Task<TV>>();
             _rng = new Random();
+
+            if (keysToKeepAliveFunc != null)
+            {
+                async Task<TimeSpan?> GetTimeToLive(string key)
+                {
+                    var result = await _cache.Get(key);
+
+                    return result.Success ? (TimeSpan?) result.TimeToLive : null;
+                }
+
+                Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
+                {
+                    return Fetch(new Key<TK>(key, _keySerializer(key)), existingTimeToLive);
+                }
+
+                _keyRenewer = new KeyRenewer<TK>(_timeToLive, GetTimeToLive, RefreshKey, keysToKeepAliveFunc, _keySerializer);
+
+                Task.Run(_keyRenewer.Run);
+            }
         }
 
         public async Task<TV> Get(TK keyObj)
         {
             var start = Stopwatch.GetTimestamp();
-            var result = new Result();
-            var key = new Key(keyObj, _keySerializer(keyObj));
+            var result = new Result<TV>();
+            var key = new Key<TK>(keyObj, _keySerializer(keyObj));
             
             try
             {
@@ -76,7 +98,7 @@ namespace CacheMeIfYouCan.Internal
             return result.Value;
         }
 
-        private async Task<Result> GetImpl(Key key)
+        private async Task<Result<TV>> GetImpl(Key<TK> key)
         {
             TV value;
             Outcome outcome;
@@ -100,10 +122,10 @@ namespace CacheMeIfYouCan.Internal
                 cacheType = null;
             }
             
-            return new Result(value, outcome, cacheType);
+            return new Result<TV>(value, outcome, cacheType);
         }
 
-        private async Task<TV> Fetch(Key key, TimeSpan? existingTtl = null)
+        private async Task<TV> Fetch(Key<TK> key, TimeSpan? existingTtl = null)
         {
             var start = Stopwatch.GetTimestamp();
             var value = default(TV);
@@ -151,7 +173,7 @@ namespace CacheMeIfYouCan.Internal
             return value;
         }
         
-        private void TriggerEarlyFetch(Key key, TimeSpan timeToLive)
+        private void TriggerEarlyFetch(Key<TK> key, TimeSpan timeToLive)
         {
             Task.Run(async () =>
             {
@@ -164,7 +186,7 @@ namespace CacheMeIfYouCan.Internal
             });
         }
 
-        private Result HandleError(Key key, Exception ex)
+        private Result<TV> HandleError(Key<TK> key, Exception ex)
         {
             if (_onError != null)
             {
@@ -182,7 +204,7 @@ namespace CacheMeIfYouCan.Internal
             if (!_continueOnException)
                 throw ex;
             
-            return new Result(defaultValue, Outcome.Error, null);
+            return new Result<TV>(defaultValue, Outcome.Error, null);
         }
 
         private bool ShouldFetchEarly(TimeSpan timeToLive)
@@ -190,32 +212,6 @@ namespace CacheMeIfYouCan.Internal
             var random = _rng.NextDouble();
 
             return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
-        }
-
-        private struct Key
-        {
-            public readonly TK AsObject;
-            public readonly string AsString;
-
-            public Key(TK key, string keyString)
-            {
-                AsObject = key;
-                AsString = keyString;
-            }
-        }
-
-        private struct Result
-        {
-            public readonly TV Value;
-            public readonly Outcome Outcome;
-            public readonly string CacheType;
-
-            public Result(TV value, Outcome outcome, string cacheType)
-            {
-                Value = value;
-                Outcome = outcome;
-                CacheType = cacheType;
-            }
         }
     }
 }
