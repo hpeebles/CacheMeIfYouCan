@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     public class Fetch
     {
@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
             var cachedEcho = echo
                 .Cached()
@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100));
 
-            var fetches = new ConcurrentBag<FunctionCacheFetchResult<string, string>>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
             var cachedEcho = echo
                 .Cached()

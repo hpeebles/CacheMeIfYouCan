@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
@@ -9,22 +10,27 @@ namespace CacheMeIfYouCan.Redis
         private const string CacheType = "Redis";
         private readonly IConnectionMultiplexer _multiplexer;
         private readonly int _database;
+        private readonly string _keySpacePrefix;
+        private readonly MemoryCache<T> _memoryCache;
         private readonly Func<T, string> _serializer;
         private readonly Func<string, T> _deserializer;
-        private readonly string _keySpacePrefix;
         private readonly Func<string, string> _toRedisKey;
         private readonly Func<string, string> _fromRedisKey;
-        private readonly MemoryCache<T> _memoryCache;
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
         
-        public RedisCache(IConnectionMultiplexer multiplexer, RedisConfig<T> config, MemoryCache<T> memoryCache)
+        public RedisCache(
+            IConnectionMultiplexer multiplexer,
+            RedisConfig config,
+            MemoryCache<T> memoryCache,
+            Func<T, string> serializer,
+            Func<string, T> deserializer)
         {
             _multiplexer = multiplexer;
             _database = config.Database;
-            _serializer = config.Serializer;
-            _deserializer = config.Deserializer;
             _keySpacePrefix = config.KeySpacePrefix;
-
+            _serializer = serializer;
+            _deserializer = deserializer;
+            
             if (String.IsNullOrWhiteSpace(config.KeySpacePrefix))
             {
                 _toRedisKey = k => k;

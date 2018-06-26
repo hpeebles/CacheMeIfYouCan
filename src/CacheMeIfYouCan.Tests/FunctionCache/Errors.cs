@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     public class Errors
     {
@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
 
-            var errors = new List<FunctionCacheErrorEvent<string>>();
+            var errors = new List<FunctionCacheErrorEvent>();
             
             var cachedEcho = echo
                 .Cached()
@@ -31,8 +31,8 @@ namespace CacheMeIfYouCan.Tests
                 {
                     await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
-                    Assert.Equal(key, errors[errors.Count - 1].Key);
-                    Assert.Equal(key, errors[errors.Count - 2].Key);
+                    Assert.Equal(key, errors[errors.Count - 1].KeyString);
+                    Assert.Equal(key, errors[errors.Count - 2].KeyString);
                 }
                 else
                 {
@@ -98,8 +98,8 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => x.Equals("error!"));
 
-            var errors = new List<FunctionCacheErrorEvent<string>>();
-            var fetches = new List<FunctionCacheFetchResult<string, string>>();
+            var errors = new List<FunctionCacheErrorEvent>();
+            var fetches = new List<FunctionCacheFetchResult>();
 
             var cachedEcho = echo
                 .Cached()
@@ -132,7 +132,7 @@ namespace CacheMeIfYouCan.Tests
             }
 
             Assert.Equal(loopCount * 2, errors.Count);
-            Assert.True(errors.All(k => k.Key == "error!"));
+            Assert.True(errors.All(k => k.KeyString == "error!"));
             Assert.Equal(loopCount, thrownErrorsCount);
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "one"));
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "two"));

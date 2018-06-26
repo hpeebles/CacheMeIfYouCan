@@ -4,7 +4,7 @@ using Histogram = Prometheus.Histogram;
 
 namespace CacheMeIfYouCan.Prometheus
 {
-    public static class MetricsTracker
+    internal static class MetricsTracker
     {
         private static readonly Histogram RequestDurationsMs;
         private static readonly Histogram FetchDurationsMs;
@@ -12,15 +12,15 @@ namespace CacheMeIfYouCan.Prometheus
         
         static MetricsTracker()
         {
-            RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, "name", "outcome", "cache_type");
-            FetchDurationsMs = Metrics.CreateHistogram("FetchDurationsMs", null, null, "name", "success", "duplicate", "is_early_fetch");
-            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("EarlyFetchTimeToLivesMs", null, null, "name", "success");
+            RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, "interface", "function", "outcome", "cache_type");
+            FetchDurationsMs = Metrics.CreateHistogram("FetchDurationsMs", null, null, "interface", "function", "success", "duplicate", "is_early_fetch");
+            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("EarlyFetchTimeToLivesMs", null, null, "interface", "function", "success");
         }
 
         public static void OnResult(FunctionCacheGetResult result)
         {
             RequestDurationsMs
-                .Labels(result.CacheName ?? String.Empty, result.Outcome.ToString(), result.CacheType ?? String.Empty)
+                .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Outcome.ToString(), result.CacheType ?? String.Empty)
                 .Observe(ConvertToMilliseconds(result.Duration));
         }
         
@@ -29,13 +29,13 @@ namespace CacheMeIfYouCan.Prometheus
             var isEarlyFetch = result.ExistingTtl.HasValue;
             
             FetchDurationsMs
-                .Labels(result.CacheName ?? String.Empty, result.Success.ToString(), result.Duplicate.ToString(), isEarlyFetch.ToString())
+                .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Success.ToString(), result.Duplicate.ToString(), isEarlyFetch.ToString())
                 .Observe(ConvertToMilliseconds(result.Duration));
 
             if (isEarlyFetch)
             {
                 EarlyFetchTimeToLivesMs
-                    .Labels(result.CacheName ?? String.Empty, result.Success.ToString())
+                    .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Success.ToString())
                     .Observe(result.ExistingTtl.Value.TotalMilliseconds);
             }
         }

@@ -9,7 +9,8 @@ namespace CacheMeIfYouCan.Internal
     internal class FunctionCache<TK, TV>
     {
         private readonly Func<TK, Task<TV>> _func;
-        private readonly string _cacheName;
+        private readonly string _interfaceName;
+        private readonly string _functionName;
         private readonly ICache<TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
@@ -26,7 +27,8 @@ namespace CacheMeIfYouCan.Internal
         
         public FunctionCache(
             Func<TK, Task<TV>> func,
-            string cacheName,
+            string interfaceName,
+            string functionName,
             ICache<TV> cache,
             TimeSpan timeToLive,
             Func<TK, string> keySerializer,
@@ -38,7 +40,8 @@ namespace CacheMeIfYouCan.Internal
             Func<Task<IList<TK>>> keysToKeepAliveFunc)
         {
             _func = func;
-            _cacheName = cacheName;
+            _interfaceName = interfaceName;
+            _functionName = functionName;
             _cache = cache;
             _timeToLive = timeToLive;
             _keySerializer = keySerializer;
@@ -65,7 +68,12 @@ namespace CacheMeIfYouCan.Internal
                     return Fetch(new Key<TK>(key, _keySerializer(key)), existingTimeToLive);
                 }
 
-                _keyRenewer = new KeyRenewer<TK>(_timeToLive, GetTimeToLive, RefreshKey, keysToKeepAliveFunc, _keySerializer);
+                _keyRenewer = new KeyRenewer<TK>(
+                    _timeToLive,
+                    GetTimeToLive,
+                    RefreshKey,
+                    keysToKeepAliveFunc,
+                    _keySerializer);
 
                 Task.Run(_keyRenewer.Run);
             }
@@ -91,7 +99,15 @@ namespace CacheMeIfYouCan.Internal
                 {
                     var duration = Stopwatch.GetTimestamp() - start;
 
-                    _onResult(new FunctionCacheGetResult<TK, TV>(_cacheName, key.AsObject, result.Value, key.AsString, result.Outcome, duration, result.CacheType));
+                    _onResult(new FunctionCacheGetResult<TK, TV>(
+                        _interfaceName,
+                        _functionName,
+                        key.AsObject,
+                        result.Value,
+                        key.AsString,
+                        result.Outcome,
+                        duration,
+                        result.CacheType));
                 }
             }
 
@@ -150,7 +166,15 @@ namespace CacheMeIfYouCan.Internal
             catch (Exception ex)
             {
                 if (_onError != null)
-                    _onError(new FunctionCacheErrorEvent<TK>("Unable to fetch value", key.AsObject, key.AsString, ex));
+                {
+                    _onError(new FunctionCacheErrorEvent<TK>(
+                        _interfaceName,
+                        _functionName,
+                        key.AsObject,
+                        key.AsString,
+                        "Unable to fetch value",
+                        ex));
+                }
 
                 duplicate = false;
                 error = true;
@@ -166,7 +190,16 @@ namespace CacheMeIfYouCan.Internal
 
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
-                    _onFetch(new FunctionCacheFetchResult<TK, TV>(_cacheName, key.AsObject, value, key.AsString, !error, duration, duplicate, existingTtl));
+                    _onFetch(new FunctionCacheFetchResult<TK, TV>(
+                        _interfaceName,
+                        _functionName,
+                        key.AsObject,
+                        value,
+                        key.AsString,
+                        !error,
+                        duration,
+                        duplicate,
+                        existingTtl));
                 }
             }
 
@@ -194,7 +227,13 @@ namespace CacheMeIfYouCan.Internal
                     ? "Unable to get value. Default value being returned"
                     : "Unable to get value";
 
-                _onError(new FunctionCacheErrorEvent<TK>(message, key.AsObject, key.AsString, ex));
+                _onError(new FunctionCacheErrorEvent<TK>(
+                    _interfaceName,
+                    _functionName,
+                    key.AsObject,
+                    key.AsString,
+                    message,
+                    ex));
             }
 
             var defaultValue = _defaultValueFactory == null

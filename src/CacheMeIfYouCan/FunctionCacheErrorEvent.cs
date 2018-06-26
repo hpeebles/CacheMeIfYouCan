@@ -4,14 +4,23 @@ namespace CacheMeIfYouCan
 {
     public abstract class FunctionCacheErrorEvent
     {
-        public readonly string Message;
+        public readonly string InterfaceName;
+        public readonly string FunctionName;
         public readonly string KeyString;
+        public readonly string Message;
         public readonly Exception Exception;
 
-        protected internal FunctionCacheErrorEvent(string message, string keyString, Exception exception)
+        protected internal FunctionCacheErrorEvent(
+            string interfaceName,
+            string functionName,
+            string keyString,
+            string message, 
+            Exception exception)
         {
-            Message = message;
+            InterfaceName = interfaceName;
+            FunctionName = functionName;
             KeyString = keyString;
+            Message = message;
             Exception = exception;
         }
     }
@@ -20,8 +29,14 @@ namespace CacheMeIfYouCan
     {
         public readonly TK Key;
 
-        internal FunctionCacheErrorEvent(string message, TK key, string keyString, Exception exception)
-            : base(message, keyString, exception)
+        internal FunctionCacheErrorEvent(
+            string interfaceName,
+            string functionName,
+            TK key,
+            string keyString,
+            string message,
+            Exception exception)
+            : base(interfaceName, functionName, keyString, message, exception)
         {
             Key = key;
         }

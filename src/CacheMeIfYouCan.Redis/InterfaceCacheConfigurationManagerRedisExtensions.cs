@@ -2,10 +2,10 @@
 
 namespace CacheMeIfYouCan.Redis
 {
-    public static class FunctionCacheConfigurationManagerRedisExtensions
+    public static class InterfaceCacheConfigurationManagerRedisExtensions
     {
-        public static FunctionCacheConfigurationManager<TK, TV> WithRedis<TK, TV>(
-            this FunctionCacheConfigurationManager<TK, TV> configManager,
+        public static CachedProxyConfigurationManager<T> WithRedis<T>(
+            this CachedProxyConfigurationManager<T> configManager,
             Action<RedisConfig> configAction)
         {
             var config = new RedisConfig();

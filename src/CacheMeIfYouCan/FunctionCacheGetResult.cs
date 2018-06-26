@@ -2,15 +2,23 @@
 {
     public abstract class FunctionCacheGetResult
     {
-        public readonly string CacheName;
+        public readonly string InterfaceName;
+        public readonly string FunctionName;
         public readonly string KeyString;
         public readonly Outcome Outcome;
         public readonly long Duration;
         public readonly string CacheType;
 
-        protected internal FunctionCacheGetResult(string cacheName, string keyString, Outcome outcome, long duration, string cacheType)
+        protected internal FunctionCacheGetResult(
+            string interfaceName,
+            string functionName,
+            string keyString,
+            Outcome outcome,
+            long duration,
+            string cacheType)
         {
-            CacheName = cacheName;
+            InterfaceName = interfaceName;
+            FunctionName = functionName;
             KeyString = keyString;
             Outcome = outcome;
             Duration = duration;
@@ -23,8 +31,16 @@
         public readonly TK Key;
         public readonly TV Value;
 
-        internal FunctionCacheGetResult(string cacheName, TK key, TV value, string keyString, Outcome outcome, long duration, string cacheType)
-            : base(cacheName, keyString, outcome, duration, cacheType)
+        internal FunctionCacheGetResult(
+            string interfaceName,
+            string functionName,
+            TK key,
+            TV value,
+            string keyString,
+            Outcome outcome,
+            long duration,
+            string cacheType)
+            : base(interfaceName, functionName, keyString, outcome, duration, cacheType)
         {
             Key = key;
             Value = value;

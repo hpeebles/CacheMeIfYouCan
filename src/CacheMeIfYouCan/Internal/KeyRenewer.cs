@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 var nextLoopCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(_timeToLive.TotalMilliseconds * 0.9));
                 
-                // This token will cancel when its time to start the next loop or the process is cancelled
+                // This token will cancel when either its time to start the next loop or the process is cancelled
                 var token = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, nextLoopCts.Token).Token;
                 try
                 {

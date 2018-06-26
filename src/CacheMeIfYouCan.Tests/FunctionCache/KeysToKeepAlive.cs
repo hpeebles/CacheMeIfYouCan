@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     public class KeysToKeepAlive
     {
@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
 
-            var results = new ConcurrentBag<FunctionCacheGetResult<string, string>>();
+            var results = new ConcurrentBag<FunctionCacheGetResult>();
 
             var keys = Enumerable
                 .Range(0, 100)
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
 
-            var results = new ConcurrentBag<FunctionCacheGetResult<string, string>>();
+            var results = new ConcurrentBag<FunctionCacheGetResult>();
 
             var index = 0;
             
