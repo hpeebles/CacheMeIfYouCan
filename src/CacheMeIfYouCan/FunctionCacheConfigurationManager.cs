@@ -55,6 +55,17 @@ namespace CacheMeIfYouCan
                 
                 if (interfaceConfig.OnError != null)
                     _onError = interfaceConfig.OnError;
+
+                if (interfaceConfig.FunctionCacheConfigActions != null)
+                {
+                    var key = new MethodInfoKey(functionName, typeof(TK).FullName);
+
+                    if (interfaceConfig.FunctionCacheConfigActions.TryGetValue(key, out var actionObj) &&
+                        actionObj is Action<FunctionCacheConfigurationManager<TK, TV>> action)
+                    {
+                            action(this);
+                    }
+                }
             }
         }
 

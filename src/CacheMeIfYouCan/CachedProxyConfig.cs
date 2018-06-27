@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
@@ -13,6 +15,7 @@ namespace CacheMeIfYouCan
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
         public readonly Action<FunctionCacheErrorEvent> OnError;
+        public readonly IDictionary<MethodInfoKey, object> FunctionCacheConfigActions;
         
         public CachedProxyConfig(
             string interfaceName,
@@ -23,7 +26,8 @@ namespace CacheMeIfYouCan
             ICacheFactory cacheFactory,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
-            Action<FunctionCacheErrorEvent> onError)
+            Action<FunctionCacheErrorEvent> onError,
+            IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceName = interfaceName;
             Serializers = serializers;
@@ -34,6 +38,7 @@ namespace CacheMeIfYouCan
             OnResult = onResult;
             OnFetch = onFetch;
             OnError = onError;
+            FunctionCacheConfigActions = functionCacheConfigActions;
         }
     }
 }

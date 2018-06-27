@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
@@ -16,12 +20,14 @@ namespace CacheMeIfYouCan
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
         private Action<FunctionCacheErrorEvent> _onError;
+        private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl, string name)
         {
             _impl = impl;
             _name = name;
             _serializers = new Serializers();
+            _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
         public CachedProxyConfigurationManager<T> For(TimeSpan timeToLive)
@@ -90,6 +96,19 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public CachedProxyConfigurationManager<T> ConfigureFor<TK, TV>(
+            Expression<Func<T, Func<TK, Task<TV>>>> expression,
+            Action<FunctionCacheConfigurationManager<TK, TV>> configAction)
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+
         public T Build()
         {
             var config = new CachedProxyConfig(
@@ -101,9 +120,18 @@ namespace CacheMeIfYouCan
                 _cacheFactory,
                 _onResult,
                 _onFetch,
-                _onError);
+                _onError,
+                _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);
+        }
+        
+        private static MethodInfo GetMethodInfo(LambdaExpression expression)
+        {
+            var unaryExpression = (UnaryExpression)expression.Body;
+            var methodCallExpression = (MethodCallExpression)unaryExpression.Operand;
+            var methodCallObject = (ConstantExpression)methodCallExpression.Object;
+            return (MethodInfo)methodCallObject.Value;
         }
     }
 }
