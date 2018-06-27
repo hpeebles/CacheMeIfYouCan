@@ -88,6 +88,13 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public FunctionCacheConfigurationManager<TK, TV> WithValueSerializer(ISerializer serializer)
+        {
+            _valueSerializer = serializer.Serialize;
+            _valueDeserializer = serializer.Deserialize<TV>;
+            return this;
+        }
+
         public FunctionCacheConfigurationManager<TK, TV> WithMaxMemoryCacheMaxSizeMB(int maxSizeMB)
         {
             _memoryCacheMaxSizeMB = maxSizeMB;

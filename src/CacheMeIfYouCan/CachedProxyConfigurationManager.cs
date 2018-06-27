@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -38,7 +37,7 @@ namespace CacheMeIfYouCan
         
         public CachedProxyConfigurationManager<T> WithSerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer = null)
         {
-            _serializers.Set(serializer);
+            _serializers.Set(serializer, deserializer);
             return this;
         }
         
