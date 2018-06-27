@@ -54,5 +54,26 @@ namespace CacheMeIfYouCan
         }
 
         public void SetDefault(ISerializer serializer) => _default = serializer;
+        public void SetDefault(Func<object, string> serializer) => _default = new SerializeOnlySerializer(serializer);
+        
+        private class SerializeOnlySerializer : ISerializer
+        {
+            private readonly Func<object, string> _serializer;
+
+            public SerializeOnlySerializer(Func<object, string> serializer)
+            {
+                _serializer = serializer;
+            }
+
+            public string Serialize<T>(T value)
+            {
+                return _serializer(value);
+            }
+
+            public T Deserialize<T>(string value)
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

@@ -47,6 +47,18 @@ namespace CacheMeIfYouCan
             _serializers.Set<TField>(serializer);
             return this;
         }
+        
+        public CachedProxyConfigurationManager<T> WithDefaultSerializer(Func<object, string> serializer)
+        {
+            _serializers.SetDefault(serializer);
+            return this;
+        }
+
+        public CachedProxyConfigurationManager<T> WithDefaultSerializer(ISerializer serializer)
+        {
+            _serializers.SetDefault(serializer);
+            return this;
+        }
 
         public CachedProxyConfigurationManager<T> WithMaxMemoryCacheMaxSizeMB(int maxSizeMB)
         {
