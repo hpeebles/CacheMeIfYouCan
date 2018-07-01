@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan
 {
     internal class CachedProxyConfig
     {
-        public readonly string InterfaceName;
+        public readonly Type InterfaceType;
         public readonly Serializers Serializers;
         public readonly TimeSpan TimeToLive;
         public readonly int MemoryCacheMaxSizeMB;
@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan
         public readonly IDictionary<MethodInfoKey, object> FunctionCacheConfigActions;
         
         public CachedProxyConfig(
-            string interfaceName,
+            Type interfaceType,
             Serializers serializers,
             TimeSpan timeToLive,
             int memoryCacheMaxSizeMb,
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan
             Action<FunctionCacheErrorEvent> onError,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
-            InterfaceName = interfaceName;
+            InterfaceType = interfaceType;
             Serializers = serializers;
             TimeToLive = timeToLive;
             MemoryCacheMaxSizeMB = memoryCacheMaxSizeMb;

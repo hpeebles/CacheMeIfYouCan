@@ -6,9 +6,9 @@ namespace CacheMeIfYouCan.Redis
     {
         public static CachedProxyConfigurationManager<T> WithRedis<T>(
             this CachedProxyConfigurationManager<T> configManager,
-            Action<RedisConfig> configAction)
+            Action<RedisCacheFactoryConfig> configAction)
         {
-            var config = new RedisConfig();
+            var config = new RedisCacheFactoryConfig();
 
             configAction(config);
             

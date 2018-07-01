@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace CacheMeIfYouCan.Tests
+﻿namespace CacheMeIfYouCan.Tests
 {
     public class TestCacheFactory : ICacheFactory
     {
-        public ICache<T> Build<T>(MemoryCache<T> memoryCache = null, Func<T, string> serializer = null, Func<string, T> deserializer = null)
+        public ICache<T> Build<T>(CacheFactoryConfig<T> config)
         {
-            return new TestCache<T>(serializer, deserializer);
+            return new TestCache<T>(config.Serializer, config.Deserializer);
         }
     }
 }

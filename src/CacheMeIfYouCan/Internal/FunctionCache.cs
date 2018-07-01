@@ -9,8 +9,7 @@ namespace CacheMeIfYouCan.Internal
     internal class FunctionCache<TK, TV>
     {
         private readonly Func<TK, Task<TV>> _func;
-        private readonly string _interfaceName;
-        private readonly string _functionName;
+        private readonly FunctionInfo _functionInfo;
         private readonly ICache<TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
@@ -27,8 +26,7 @@ namespace CacheMeIfYouCan.Internal
         
         public FunctionCache(
             Func<TK, Task<TV>> func,
-            string interfaceName,
-            string functionName,
+            FunctionInfo functionInfo,
             ICache<TV> cache,
             TimeSpan timeToLive,
             Func<TK, string> keySerializer,
@@ -40,8 +38,7 @@ namespace CacheMeIfYouCan.Internal
             Func<Task<IList<TK>>> keysToKeepAliveFunc)
         {
             _func = func;
-            _interfaceName = interfaceName;
-            _functionName = functionName;
+            _functionInfo = functionInfo;
             _cache = cache;
             _timeToLive = timeToLive;
             _keySerializer = keySerializer;
@@ -100,8 +97,7 @@ namespace CacheMeIfYouCan.Internal
                     var duration = Stopwatch.GetTimestamp() - start;
 
                     _onResult(new FunctionCacheGetResult<TK, TV>(
-                        _interfaceName,
-                        _functionName,
+                        _functionInfo,
                         key.AsObject,
                         result.Value,
                         key.AsString,
@@ -168,8 +164,7 @@ namespace CacheMeIfYouCan.Internal
                 if (_onError != null)
                 {
                     _onError(new FunctionCacheErrorEvent<TK>(
-                        _interfaceName,
-                        _functionName,
+                        _functionInfo,
                         key.AsObject,
                         key.AsString,
                         "Unable to fetch value",
@@ -191,8 +186,7 @@ namespace CacheMeIfYouCan.Internal
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
                     _onFetch(new FunctionCacheFetchResult<TK, TV>(
-                        _interfaceName,
-                        _functionName,
+                        _functionInfo,
                         key.AsObject,
                         value,
                         key.AsString,
@@ -228,8 +222,7 @@ namespace CacheMeIfYouCan.Internal
                     : "Unable to get value";
 
                 _onError(new FunctionCacheErrorEvent<TK>(
-                    _interfaceName,
-                    _functionName,
+                    _functionInfo,
                     key.AsObject,
                     key.AsString,
                     message,

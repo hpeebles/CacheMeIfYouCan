@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan
     public class FunctionCacheConfigurationManager<TK, TV>
     {
         private readonly Func<TK, Task<TV>> _inputFunc;
-        private readonly string _interfaceName;
+        private readonly Type _interfaceType;
         private readonly string _functionName;
         private TimeSpan? _timeToLive;
         private int? _memoryCacheMaxSizeMB;
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan
         private Func<TK, string> _keySerializer;
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
-        private Func<MemoryCache<TV>, Func<TV, string>, Func<string, TV>, ICache<TV>> _cacheFactoryFunc;
+        private Func<CacheFactoryConfig<TV>, ICache<TV>> _cacheFactoryFunc;
         private Func<TV> _defaultValueFactory;
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private Func<TK, Task<TV>> _cachedFunc;
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan
 
             if (interfaceConfig != null)
             {
-                _interfaceName = interfaceConfig.InterfaceName;
+                _interfaceType = interfaceConfig.InterfaceType;
                 _keySerializer = interfaceConfig.Serializers.GetSerializer<TK>();
                 _valueSerializer = interfaceConfig.Serializers.GetSerializer<TV>();
                 _valueDeserializer = interfaceConfig.Serializers.GetDeserializer<TV>();
@@ -43,9 +43,7 @@ namespace CacheMeIfYouCan
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
 
                 if (interfaceConfig.CacheFactory != null)
-                {
-                    _cacheFactoryFunc = (memoryCache, serializer, deserializer) => interfaceConfig.CacheFactory.Build(memoryCache, serializer, deserializer);
-                }
+                    _cacheFactoryFunc = interfaceConfig.CacheFactory.Build;
                 
                 if (interfaceConfig.OnResult != null)
                     _onResult = interfaceConfig.OnResult;
@@ -120,7 +118,7 @@ namespace CacheMeIfYouCan
 
         public FunctionCacheConfigurationManager<TK, TV> WithCacheFactory(Func<ICache<TV>> cacheFactoryFunc)
         {
-            _cacheFactoryFunc = (m, s, d) => cacheFactoryFunc();
+            _cacheFactoryFunc = c => cacheFactoryFunc();
             return this;
         }
         
@@ -182,7 +180,8 @@ namespace CacheMeIfYouCan
         public Func<TK, Task<TV>> Build()
         {
             var memoryCache = MemoryCacheBuilder.Build<TV>(_memoryCacheMaxSizeMB ?? DefaultCacheSettings.MemoryCacheMaxSizeMB);
-
+            var functionInfo = new FunctionInfo(_interfaceType, _functionName, typeof(TK), typeof(TV));
+            
             ICache<TV> cache;
             if (_cacheFactoryFunc == null)
             {
@@ -190,16 +189,20 @@ namespace CacheMeIfYouCan
             }
             else
             {
-                var valueSerializer = _valueSerializer ?? DefaultCacheSettings.Serializers.GetSerializer<TV>();
-                var valueDeserializer = _valueDeserializer ?? DefaultCacheSettings.Serializers.GetDeserializer<TV>();
-
-                cache = _cacheFactoryFunc(memoryCache, valueSerializer, valueDeserializer);
+                var parameters = new CacheFactoryConfig<TV>
+                {
+                    MemoryCache = memoryCache,
+                    FunctionInfo = functionInfo,
+                    Serializer = _valueSerializer ?? DefaultCacheSettings.Serializers.GetSerializer<TV>(),
+                    Deserializer = _valueDeserializer ?? DefaultCacheSettings.Serializers.GetDeserializer<TV>()
+                };
+                
+                cache = _cacheFactoryFunc(parameters);
             }
 
             var functionCache = new FunctionCache<TK, TV>(
                 _inputFunc,
-                _interfaceName,
-                _functionName,
+                functionInfo,
                 cache,
                 _timeToLive ?? DefaultCacheSettings.TimeToLive,
                 _keySerializer ?? DefaultCacheSettings.Serializers.GetSerializer<TK>() ?? ToStringSerializer,

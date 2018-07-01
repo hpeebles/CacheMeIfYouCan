@@ -19,23 +19,28 @@ namespace CacheMeIfYouCan.Prometheus
 
         public static void OnResult(FunctionCacheGetResult result)
         {
+            var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
+            var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
+            
             RequestDurationsMs
-                .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Outcome.ToString(), result.CacheType ?? String.Empty)
+                .Labels(interfaceName, functionName, result.Outcome.ToString(), result.CacheType ?? String.Empty)
                 .Observe(ConvertToMilliseconds(result.Duration));
         }
         
         public static void OnFetch(FunctionCacheFetchResult result)
         {
+            var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
+            var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
             var isEarlyFetch = result.ExistingTtl.HasValue;
             
             FetchDurationsMs
-                .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Success.ToString(), result.Duplicate.ToString(), isEarlyFetch.ToString())
+                .Labels(interfaceName, functionName, result.Success.ToString(), result.Duplicate.ToString(), isEarlyFetch.ToString())
                 .Observe(ConvertToMilliseconds(result.Duration));
 
             if (isEarlyFetch)
             {
                 EarlyFetchTimeToLivesMs
-                    .Labels(result.InterfaceName ?? String.Empty, result.FunctionName ?? String.Empty, result.Success.ToString())
+                    .Labels(interfaceName, functionName, result.Success.ToString())
                     .Observe(result.ExistingTtl.Value.TotalMilliseconds);
             }
         }

@@ -1,27 +1,34 @@
-﻿using System;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
     internal class RedisCacheFactory : ICacheFactory
     {
-        private readonly RedisConfig _config;
+        private readonly RedisCacheFactoryConfig _redisConfig;
 
-        public RedisCacheFactory(RedisConfig config)
+        public RedisCacheFactory(RedisCacheFactoryConfig redisConfig)
         {
-            _config = config;
+            _redisConfig = redisConfig;
         }
 
-        public ICache<T> Build<T>(MemoryCache<T> memoryCache, Func<T, string> serializer, Func<string, T> deserializer)
+        public ICache<T> Build<T>(CacheFactoryConfig<T> config)
         {
             var options = new ConfigurationOptions();
             
-            foreach (var endpoint in _config.Endpoints)
+            foreach (var endpoint in _redisConfig.Endpoints)
                 options.EndPoints.Add(endpoint);
             
             var multiplexer = ConnectionMultiplexer.Connect(options);
 
-            return new RedisCache<T>(multiplexer, _config, memoryCache, serializer, deserializer);
+            var keySpacePrefix = _redisConfig.KeySpacePrefixFunc?.Invoke(config.FunctionInfo);
+            
+            return new RedisCache<T>(
+                multiplexer,
+                _redisConfig.Database,
+                config.MemoryCache,
+                keySpacePrefix,
+                config.Serializer,
+                config.Deserializer);
         }
     }
 }

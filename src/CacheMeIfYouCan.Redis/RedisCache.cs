@@ -20,31 +20,32 @@ namespace CacheMeIfYouCan.Redis
         
         public RedisCache(
             IConnectionMultiplexer multiplexer,
-            RedisConfig config,
+            int database,
             MemoryCache<T> memoryCache,
+            string keySpacePrefix,
             Func<T, string> serializer,
             Func<string, T> deserializer)
         {
             _multiplexer = multiplexer;
-            _database = config.Database;
-            _keySpacePrefix = config.KeySpacePrefix;
+            _database = database;
+            _memoryCache = memoryCache;
+            _keySpacePrefix = keySpacePrefix;
             _serializer = serializer;
             _deserializer = deserializer;
             
-            if (String.IsNullOrWhiteSpace(config.KeySpacePrefix))
+            if (String.IsNullOrWhiteSpace(keySpacePrefix))
             {
                 _toRedisKey = k => k;
                 _fromRedisKey = k => k;
             }
             else
             {
-                _toRedisKey = k => $"{config.KeySpacePrefix}_{k}";
-                _fromRedisKey = k => k.Substring(config.KeySpacePrefix.Length + 1);
+                _toRedisKey = k => $"{keySpacePrefix}_{k}";
+                _fromRedisKey = k => k.Substring(keySpacePrefix.Length + 1);
             }
 
-            if (config.MemoryCacheEnabled)
+            if (_memoryCache != null)
             {
-                _memoryCache = memoryCache;
                 _recentlySetKeysManager = new RecentlySetKeysManager();
 
                 // All Redis instances must have keyevent notifications enabled (eg. 'notify-keyspace-events AE')
@@ -59,7 +60,7 @@ namespace CacheMeIfYouCan.Redis
                 };
 
                 foreach (var keyEvent in keyEvents)
-                    subscriber.Subscribe($"__keyevent@{config.Database}__:{keyEvent}", (c, k) => RemoveKeyFromMemoryIfNotRecentlySet(k));
+                    subscriber.Subscribe($"__keyevent@{_database}__:{keyEvent}", (c, k) => RemoveKeyFromMemoryIfNotRecentlySet(k));
             }
         }
 

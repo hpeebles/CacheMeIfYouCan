@@ -123,12 +123,12 @@ namespace CacheMeIfYouCan
         public T Build()
         {
             var config = new CachedProxyConfig(
-                _name,
+                typeof(T),
                 _serializers,
                 _timeToLive ?? DefaultCacheSettings.TimeToLive,
                 _memoryCacheMaxSizeMB ?? DefaultCacheSettings.MemoryCacheMaxSizeMB,
                 _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,
-                _cacheFactory,
+                _cacheFactory ?? DefaultCacheSettings.CacheFactory,
                 _onResult,
                 _onFetch,
                 _onError,

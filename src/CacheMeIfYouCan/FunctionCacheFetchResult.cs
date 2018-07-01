@@ -4,8 +4,7 @@ namespace CacheMeIfYouCan
 {
     public abstract class FunctionCacheFetchResult
     {
-        public readonly string InterfaceName;
-        public readonly string FunctionName;
+        public readonly FunctionInfo FunctionInfo;
         public readonly string KeyString;
         public readonly bool Success;
         public readonly long Duration;
@@ -13,16 +12,14 @@ namespace CacheMeIfYouCan
         public readonly TimeSpan? ExistingTtl;
 
         protected internal FunctionCacheFetchResult(
-            string interfaceName,
-            string functionName,
+            FunctionInfo functionInfo,
             string keyString,
             bool success,
             long duration,
             bool duplicate,
             TimeSpan? existingTtl)
         {
-            InterfaceName = interfaceName;
-            FunctionName = functionName;
+            FunctionInfo = functionInfo;
             KeyString = keyString;
             Success = success;
             Duration = duration;
@@ -37,8 +34,7 @@ namespace CacheMeIfYouCan
         public readonly TV Value;
 
         internal FunctionCacheFetchResult(
-            string interfaceName,
-            string functionName,
+            FunctionInfo functionInfo,
             TK key,
             TV value,
             string keyString,
@@ -46,7 +42,7 @@ namespace CacheMeIfYouCan
             long duration,
             bool duplicate,
             TimeSpan? existingTtl)
-            : base(interfaceName, functionName, keyString, success, duration, duplicate, existingTtl)
+            : base(functionInfo, keyString, success, duration, duplicate, existingTtl)
         {
             Key = key;
             Value = value;
