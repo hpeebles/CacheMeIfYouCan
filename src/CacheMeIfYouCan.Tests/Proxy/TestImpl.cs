@@ -14,9 +14,9 @@ namespace CacheMeIfYouCan.Tests.Proxy
             return Task.FromResult(key.ToString());
         }
 
-        public Task<double> DoubleToDouble(double key)
+        public Task<int> LongToInt(long key)
         {
-            return Task.FromResult(key * 2);
+            return Task.FromResult((int) key * 2);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
     public class Serializers
     {
         [Fact]
-        public async Task SetSerializer()
+        public async Task SetKeySerializer()
         {
             ITest impl = new TestImpl();
 
@@ -16,27 +16,28 @@ namespace CacheMeIfYouCan.Tests.Proxy
             var proxy = impl
                 .Cached()
                 .WithCacheFactory(new TestCacheFactory())
-                .WithDefaultSerializer(serializerA)
-                .WithSerializer<string>(serializerB)
+                .WithDefaultKeySerializer(serializerA)
+                .WithKeySerializer<string>(serializerB)
                 .Build();
 
-            await proxy.DoubleToDouble(123);
-            Assert.Equal(2, serializerA.SerializeCount);
-            Assert.Equal(0, serializerA.DeserializeCount);
+            await proxy.LongToInt(123);
+            Assert.Equal(1, serializerA.SerializeCount);
             
             serializerA.ResetCounts();
             
             for (var i = 1; i < 10; i++)
             {
-                await proxy.DoubleToDouble(123);
+                await proxy.LongToInt(123);
 
                 Assert.Equal(i, serializerA.SerializeCount);
-                Assert.Equal(i, serializerA.DeserializeCount);
             }
             
+            serializerA.ResetCounts();
+            
+            Assert.Equal(0, serializerB.SerializeCount);
+            
             await proxy.StringToString("abc");
-            Assert.Equal(2, serializerB.SerializeCount);
-            Assert.Equal(0, serializerB.DeserializeCount);
+            Assert.Equal(1, serializerB.SerializeCount);
             
             serializerB.ResetCounts();
             
@@ -45,8 +46,59 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 await proxy.StringToString("abc");
 
                 Assert.Equal(i, serializerB.SerializeCount);
+            }
+            
+            Assert.Equal(0, serializerA.SerializeCount);
+        }
+        
+        [Fact]
+        public async Task SetValueSerializer()
+        {
+            ITest impl = new TestImpl();
+
+            var serializerA = new TestSerializer();
+            var serializerB = new TestSerializer();
+
+            var proxy = impl
+                .Cached()
+                .WithCacheFactory(new TestCacheFactory())
+                .WithDefaultValueSerializer(serializerA)
+                .WithValueSerializer<string>(serializerB)
+                .Build();
+
+            await proxy.LongToInt(123);
+            Assert.Equal(1, serializerA.SerializeCount);
+            
+            serializerA.ResetCounts();
+            
+            for (var i = 1; i < 10; i++)
+            {
+                await proxy.LongToInt(123);
+
+                Assert.Equal(0, serializerA.SerializeCount);
+                Assert.Equal(i, serializerA.DeserializeCount);
+            }
+            
+            serializerA.ResetCounts();
+            
+            Assert.Equal(0, serializerB.SerializeCount);
+            Assert.Equal(0, serializerB.DeserializeCount);
+            
+            await proxy.StringToString("abc");
+            Assert.Equal(1, serializerB.SerializeCount);
+            
+            serializerB.ResetCounts();
+            
+            for (var i = 1; i < 10; i++)
+            {
+                await proxy.StringToString("abc");
+
+                Assert.Equal(0, serializerB.SerializeCount);
                 Assert.Equal(i, serializerB.DeserializeCount);
             }
+            
+            Assert.Equal(0, serializerA.SerializeCount);
+            Assert.Equal(0, serializerA.DeserializeCount);
         }
     }
 }

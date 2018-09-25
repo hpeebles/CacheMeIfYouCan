@@ -8,6 +8,7 @@ namespace CacheMeIfYouCan
         public static int MemoryCacheMaxSizeMB = 1024;
         public static bool EarlyFetchEnabled = true;
         public static ICacheFactory CacheFactory;
-        public static readonly Serializers Serializers = new Serializers();
+        public static readonly KeySerializers KeySerializers = new KeySerializers();
+        public static readonly ValueSerializers ValueSerializers = new ValueSerializers();
     }
 }

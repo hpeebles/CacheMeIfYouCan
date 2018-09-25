@@ -11,7 +11,8 @@ namespace CacheMeIfYouCan
     {
         private readonly T _impl;
         private readonly string _name;
-        private readonly Serializers _serializers;
+        private readonly KeySerializers _keySerializers;
+        private readonly ValueSerializers _valueSerializers;
         private TimeSpan? _timeToLive;
         private int? _memoryCacheMaxSizeMB;
         private bool? _earlyFetchEnabled;
@@ -25,7 +26,8 @@ namespace CacheMeIfYouCan
         {
             _impl = impl;
             _name = name;
-            _serializers = new Serializers();
+            _keySerializers = new KeySerializers();
+            _valueSerializers = new ValueSerializers();
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -35,27 +37,57 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithSerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer = null)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(Func<TField, string> serializer)
         {
-            _serializers.Set(serializer, deserializer);
+            _keySerializers.Set(serializer);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithSerializer<TField>(ISerializer serializer)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(IKeySerializer serializer)
         {
-            _serializers.Set<TField>(serializer);
+            _keySerializers.Set<TField>(serializer);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithDefaultSerializer(Func<object, string> serializer)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(IKeySerializer<TField> serializer)
         {
-            _serializers.SetDefault(serializer);
+            _keySerializers.Set(serializer);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(Func<object, string> serializer)
+        {
+            _keySerializers.SetDefault(serializer);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(IKeySerializer serializer)
+        {
+            _keySerializers.SetDefault(serializer);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer)
+        {
+            _valueSerializers.Set(serializer, deserializer);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(ISerializer serializer)
+        {
+            _valueSerializers.Set<TField>(serializer);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(ISerializer<TField> serializer)
+        {
+            _valueSerializers.Set(serializer);
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> WithDefaultSerializer(ISerializer serializer)
+        public CachedProxyConfigurationManager<T> WithDefaultValueSerializer(ISerializer serializer)
         {
-            _serializers.SetDefault(serializer);
+            _valueSerializers.SetDefault(serializer);
             return this;
         }
 
@@ -124,7 +156,8 @@ namespace CacheMeIfYouCan
         {
             var config = new CachedProxyConfig(
                 typeof(T),
-                _serializers,
+                _keySerializers,
+                _valueSerializers,
                 _timeToLive ?? DefaultCacheSettings.TimeToLive,
                 _memoryCacheMaxSizeMB ?? DefaultCacheSettings.MemoryCacheMaxSizeMB,
                 _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,

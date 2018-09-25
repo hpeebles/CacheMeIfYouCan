@@ -8,6 +8,6 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
         Task<string> IntToString(int key);
 
-        Task<double> DoubleToDouble(double key);
+        Task<int> LongToInt(long key);
     }
 }

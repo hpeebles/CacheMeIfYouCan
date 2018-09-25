@@ -35,9 +35,9 @@ namespace CacheMeIfYouCan
             if (interfaceConfig != null)
             {
                 _interfaceType = interfaceConfig.InterfaceType;
-                _keySerializer = interfaceConfig.Serializers.GetSerializer<TK>();
-                _valueSerializer = interfaceConfig.Serializers.GetSerializer<TV>();
-                _valueDeserializer = interfaceConfig.Serializers.GetDeserializer<TV>();
+                _keySerializer = interfaceConfig.KeySerializers.Get<TK>();
+                _valueSerializer = interfaceConfig.ValueSerializers.GetSerializer<TV>();
+                _valueDeserializer = interfaceConfig.ValueSerializers.GetDeserializer<TV>();
                 _timeToLive = interfaceConfig.TimeToLive;
                 _memoryCacheMaxSizeMB = interfaceConfig.MemoryCacheMaxSizeMB;
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan
                     if (interfaceConfig.FunctionCacheConfigActions.TryGetValue(key, out var actionObj) &&
                         actionObj is Action<FunctionCacheConfigurationManager<TK, TV>> action)
                     {
-                            action(this);
+                        action(this);
                     }
                 }
             }
@@ -79,6 +79,18 @@ namespace CacheMeIfYouCan
             return this;
         }
         
+        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(IKeySerializer serializer)
+        {
+            _keySerializer = serializer.Serialize;
+            return this;
+        }
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(IKeySerializer<TK> serializer)
+        {
+            _keySerializer = serializer.Serialize;
+            return this;
+        }
+        
         public FunctionCacheConfigurationManager<TK, TV> WithValueSerializer(Func<TV, string> serializer, Func<string, TV> deserializer)
         {
             _valueSerializer = serializer;
@@ -90,6 +102,13 @@ namespace CacheMeIfYouCan
         {
             _valueSerializer = serializer.Serialize;
             _valueDeserializer = serializer.Deserialize<TV>;
+            return this;
+        }
+
+        public FunctionCacheConfigurationManager<TK, TV> WithValueSerializer(ISerializer<TV> serializer)
+        {
+            _valueSerializer = serializer.Serialize;
+            _valueDeserializer = serializer.Deserialize;
             return this;
         }
 
@@ -193,8 +212,8 @@ namespace CacheMeIfYouCan
                 {
                     MemoryCache = memoryCache,
                     FunctionInfo = functionInfo,
-                    Serializer = _valueSerializer ?? DefaultCacheSettings.Serializers.GetSerializer<TV>(),
-                    Deserializer = _valueDeserializer ?? DefaultCacheSettings.Serializers.GetDeserializer<TV>()
+                    Serializer = _valueSerializer ?? DefaultCacheSettings.ValueSerializers.GetSerializer<TV>(),
+                    Deserializer = _valueDeserializer ?? DefaultCacheSettings.ValueSerializers.GetDeserializer<TV>()
                 };
                 
                 cache = _cacheFactoryFunc(parameters);
@@ -205,7 +224,7 @@ namespace CacheMeIfYouCan
                 functionInfo,
                 cache,
                 _timeToLive ?? DefaultCacheSettings.TimeToLive,
-                _keySerializer ?? DefaultCacheSettings.Serializers.GetSerializer<TK>() ?? ToStringSerializer,
+                _keySerializer ?? DefaultCacheSettings.KeySerializers.Get<TK>(),
                 _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
@@ -216,11 +235,6 @@ namespace CacheMeIfYouCan
             _cachedFunc = functionCache.Get;
             
             return _cachedFunc;
-        }
-
-        private static string ToStringSerializer(TK key)
-        {
-            return key.ToString();
         }
         
         public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)

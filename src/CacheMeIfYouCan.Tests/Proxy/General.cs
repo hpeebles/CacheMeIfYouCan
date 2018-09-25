@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             var randomInt = _rng.Next(1000);
             Assert.Equal(randomInt.ToString(), await proxy.IntToString(randomInt));
 
-            var randomDouble = _rng.NextDouble();
-            Assert.Equal(randomDouble * 2, await proxy.DoubleToDouble(randomDouble));
+            var randomLong = _rng.Next(1000);
+            Assert.Equal(randomLong * 2, await proxy.LongToInt(randomLong));
         }
 
         [Fact]

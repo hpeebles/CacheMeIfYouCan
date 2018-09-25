@@ -18,7 +18,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 .For(TimeSpan.FromMilliseconds(100))
                 .OnResult(x => lastResult = x)
                 .ConfigureFor<int, string>(x => x.IntToString, c => c.For(TimeSpan.FromSeconds(1)))
-                .ConfigureFor<double, double>(x => x.DoubleToDouble, c => c.For(TimeSpan.FromSeconds(2)))
+                .ConfigureFor<long, int>(x => x.LongToInt, c => c.For(TimeSpan.FromSeconds(2)))
+                .WithDefaultKeySerializer(x => x.ToString())
                 .Build();
 
             await proxy.StringToString("123");
@@ -27,7 +28,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             await proxy.IntToString(123);
             Assert.Equal(Outcome.Fetch, lastResult.Outcome);
             
-            await proxy.DoubleToDouble(123);
+            await proxy.LongToInt(123);
             Assert.Equal(Outcome.Fetch, lastResult.Outcome);
 
             await proxy.StringToString("123");
@@ -36,7 +37,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             await proxy.IntToString(123);
             Assert.Equal(Outcome.FromCache, lastResult.Outcome);
             
-            await proxy.DoubleToDouble(123);
+            await proxy.LongToInt(123);
             Assert.Equal(Outcome.FromCache, lastResult.Outcome);
 
             await Task.Delay(TimeSpan.FromMilliseconds(500));
@@ -47,7 +48,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             await proxy.IntToString(123);
             Assert.Equal(Outcome.FromCache, lastResult.Outcome);
             
-            await proxy.DoubleToDouble(123);
+            await proxy.LongToInt(123);
             Assert.Equal(Outcome.FromCache, lastResult.Outcome);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
@@ -55,12 +56,12 @@ namespace CacheMeIfYouCan.Tests.Proxy
             await proxy.IntToString(123);
             Assert.Equal(Outcome.Fetch, lastResult.Outcome);
             
-            await proxy.DoubleToDouble(123);
+            await proxy.LongToInt(123);
             Assert.Equal(Outcome.FromCache, lastResult.Outcome);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            await proxy.DoubleToDouble(123);
+            await proxy.LongToInt(123);
             Assert.Equal(Outcome.Fetch, lastResult.Outcome);
         }
     }

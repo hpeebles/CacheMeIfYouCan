@@ -9,15 +9,16 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
     public class Generic
     {
         [Fact]
-        public async Task KeyIsSerilizedCorrectly()
+        public async Task KeyIsSerializedCorrectly()
         {
             Func<List<int>, int> func = x => x.Sum();
 
             var results1 = new List<FunctionCacheGetResult<List<int>, int>>();
             var results2 = new List<FunctionCacheGetResult<List<int>, int>>();
             
-            var cachedFuncWithNoSerializer = func
+            var cachedFuncWithConstantSerializer = func
                 .Cached()
+                .WithKeySerializer(x => "test")
                 .OnResult(results1.Add)
                 .Build();
             
@@ -31,8 +32,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var key2 = new List<int> { 2, 3 };
             var key3 = new List<int> { 2, 3 };
             
-            await cachedFuncWithNoSerializer(key1);
-            await cachedFuncWithNoSerializer(key2);
+            await cachedFuncWithConstantSerializer(key1);
+            await cachedFuncWithConstantSerializer(key2);
             await cachedFuncWithSerializer(key1);
             await cachedFuncWithSerializer(key2);
             await cachedFuncWithSerializer(key3);
