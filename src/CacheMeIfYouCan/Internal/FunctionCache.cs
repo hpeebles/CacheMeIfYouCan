@@ -45,9 +45,9 @@ namespace CacheMeIfYouCan.Internal
             _earlyFetchEnabled = earlyFetchEnabled;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
-            _onResult = onResult;
-            _onFetch = onFetch;
-            _onError = onError;
+            _onResult = onResult ?? DefaultCacheSettings.OnResult;
+            _onFetch = onFetch ?? DefaultCacheSettings.OnFetch;
+            _onError = onError ?? DefaultCacheSettings.OnError;
             _activeFetches = new ConcurrentDictionary<string, Task<TV>>();
             _rng = new Random();
 
