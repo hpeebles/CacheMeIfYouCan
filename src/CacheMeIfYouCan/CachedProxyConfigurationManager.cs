@@ -28,6 +28,9 @@ namespace CacheMeIfYouCan
             _name = name;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
+            _onResult = DefaultCacheSettings.OnResult;
+            _onFetch = DefaultCacheSettings.OnFetch;
+            _onError = DefaultCacheSettings.OnError;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -109,7 +112,7 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnResult(Action<FunctionCacheGetResult> onResult, bool append = true)
+        public CachedProxyConfigurationManager<T> OnResult(Action<FunctionCacheGetResult> onResult, bool append = false)
         {
             if (_onResult == null || !append)
                 _onResult = onResult;
@@ -119,7 +122,7 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnFetch(Action<FunctionCacheFetchResult> onFetch, bool append = true)
+        public CachedProxyConfigurationManager<T> OnFetch(Action<FunctionCacheFetchResult> onFetch, bool append = false)
         {
             if (_onFetch == null || !append)
                 _onFetch = onFetch;
@@ -129,7 +132,7 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> OnError(Action<FunctionCacheErrorEvent> onError, bool append = true)
+        public CachedProxyConfigurationManager<T> OnError(Action<FunctionCacheErrorEvent> onError, bool append = false)
         {
             if (_onError == null || !append)
                 _onError = onError;

@@ -65,6 +65,12 @@ namespace CacheMeIfYouCan
                     }
                 }
             }
+            else
+            {
+                _onResult = DefaultCacheSettings.OnResult;
+                _onFetch = DefaultCacheSettings.OnFetch;
+                _onError = DefaultCacheSettings.OnError;
+            }
         }
 
         public FunctionCacheConfigurationManager<TK, TV> For(TimeSpan timeToLive)
@@ -147,7 +153,7 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> OnResult(Action<FunctionCacheGetResult<TK, TV>> onResult, bool append = true)
+        public FunctionCacheConfigurationManager<TK, TV> OnResult(Action<FunctionCacheGetResult<TK, TV>> onResult, bool append = false)
         {
             if (_onResult == null || !append)
                 _onResult = onResult;
@@ -157,7 +163,7 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> OnFetch(Action<FunctionCacheFetchResult<TK, TV>> onFetch, bool append = true)
+        public FunctionCacheConfigurationManager<TK, TV> OnFetch(Action<FunctionCacheFetchResult<TK, TV>> onFetch, bool append = false)
         {
             if (_onFetch == null || !append)
                 _onFetch = onFetch;
@@ -167,7 +173,7 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public FunctionCacheConfigurationManager<TK, TV> OnError(Action<FunctionCacheErrorEvent<TK>> onError, bool append = true)
+        public FunctionCacheConfigurationManager<TK, TV> OnError(Action<FunctionCacheErrorEvent<TK>> onError, bool append = false)
         {
             if (_onError == null || !append)
                 _onError = onError;
