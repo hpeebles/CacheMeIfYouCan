@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class KeyRenewer<TK> : IDisposable
+    internal class KeysToKeepAliveProcessor<TK> : IDisposable
     {
         private readonly TimeSpan _timeToLive;
         private readonly Func<string, Task<TimeSpan?>> _getTimeToLiveFunc;
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly object _lock;
         private readonly TimeSpan _targetRefreshTimeToLive;
 
-        public KeyRenewer(TimeSpan timeToLive, Func<string, Task<TimeSpan?>> getTimeToLive, Func<TK, TimeSpan?, Task> refreshKey, Func<Task<IList<TK>>> keysToKeepAliveFunc, Func<TK, string> keySerializer)
+        public KeysToKeepAliveProcessor(TimeSpan timeToLive, Func<string, Task<TimeSpan?>> getTimeToLive, Func<TK, TimeSpan?, Task> refreshKey, Func<Task<IList<TK>>> keysToKeepAliveFunc, Func<TK, string> keySerializer)
         {
             _timeToLive = timeToLive;
             _getTimeToLiveFunc = getTimeToLive;
@@ -46,23 +46,27 @@ namespace CacheMeIfYouCan.Internal
             while (!_cts.IsCancellationRequested)
             {
                 var nextLoopCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(_timeToLive.TotalMilliseconds * 0.9));
-                
-                // This token will cancel when either its time to start the next loop or the process is cancelled
-                var token = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, nextLoopCts.Token).Token;
-                try
-                {
-                    await SetExpiryDates(token);
-                }
-                catch
-                { }
 
-                token.WaitHandle.WaitOne();
+                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, nextLoopCts.Token))
+                {
+                    // This token will cancel when either its time to start the next loop or the process is cancelled
+                    var token = cts.Token;
+                    try
+                    {
+                        await SetExpiryDates(token);
+                    }
+                    catch
+                    { }
+
+                    token.WaitHandle.WaitOne();
+                }
             }
         }
 
         public void Dispose()
         {
             _cts?.Cancel();
+            _cts?.Dispose();
         }
 
         private async Task RunKeyRefreshTask()
@@ -74,7 +78,7 @@ namespace CacheMeIfYouCan.Internal
                     KeyValuePair<DateTime, List<Key<TK>>>? nextKeysToExpire;
                     lock (_lock)
                     {
-                        if (_keyExpiryDates.Count > 0)
+                        if (_keyExpiryDates.Any())
                             nextKeysToExpire = _keyExpiryDates.First();
                         else
                             nextKeysToExpire = null;

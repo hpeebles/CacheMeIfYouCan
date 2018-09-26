@@ -10,6 +10,7 @@ namespace CacheMeIfYouCan
         public readonly long Start;
         public readonly long Duration;
         public readonly bool Duplicate;
+        public readonly FetchReason Reason;
         public readonly TimeSpan? ExistingTtl;
 
         protected internal FunctionCacheFetchResult(
@@ -19,6 +20,7 @@ namespace CacheMeIfYouCan
             long start,
             long duration,
             bool duplicate,
+            FetchReason reason,
             TimeSpan? existingTtl)
         {
             FunctionInfo = functionInfo;
@@ -27,6 +29,7 @@ namespace CacheMeIfYouCan
             Start = start;
             Duration = duration;
             Duplicate = duplicate;
+            Reason = reason;
             ExistingTtl = existingTtl;
         }
     }
@@ -45,11 +48,19 @@ namespace CacheMeIfYouCan
             long start,
             long duration,
             bool duplicate,
+            FetchReason reason,
             TimeSpan? existingTtl)
-            : base(functionInfo, keyString, success, start, duration, duplicate, existingTtl)
+            : base(functionInfo, keyString, success, start, duration, duplicate, reason, existingTtl)
         {
             Key = key;
             Value = value;
         }
+    }
+
+    public enum FetchReason
+    {
+        OnDemand, // Due to requested key not being in cache, will block client
+        EarlyFetch, // Due to requested key being in cache but about to expire, will not block client
+        KeysToKeepAliveFunc // Due to the KeysToKeepAlive process triggering a fetch
     }
 }

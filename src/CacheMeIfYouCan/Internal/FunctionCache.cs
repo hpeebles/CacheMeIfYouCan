@@ -21,7 +21,6 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
         private readonly ConcurrentDictionary<string, Task<TV>> _activeFetches;
         private readonly Random _rng;
-        private readonly KeyRenewer<TK> _keyRenewer;
         private long _averageFetchDuration;
         
         public FunctionCache(
@@ -62,17 +61,17 @@ namespace CacheMeIfYouCan.Internal
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
                 {
-                    return Fetch(new Key<TK>(key, _keySerializer(key)), existingTimeToLive);
+                    return Fetch(new Key<TK>(key, _keySerializer(key)), FetchReason.KeysToKeepAliveFunc, existingTimeToLive);
                 }
 
-                _keyRenewer = new KeyRenewer<TK>(
+                var keysToKeepAliveProcessor = new KeysToKeepAliveProcessor<TK>(
                     _timeToLive,
                     GetTimeToLive,
                     RefreshKey,
                     keysToKeepAliveFunc,
                     _keySerializer);
 
-                Task.Run(_keyRenewer.Run);
+                Task.Run(keysToKeepAliveProcessor.Run);
             }
         }
 
@@ -130,7 +129,7 @@ namespace CacheMeIfYouCan.Internal
             }
             else
             {
-                value = await Fetch(key);
+                value = await Fetch(key, FetchReason.OnDemand);
                 outcome = Outcome.Fetch;
                 cacheType = null;
             }
@@ -138,7 +137,7 @@ namespace CacheMeIfYouCan.Internal
             return new Result<TV>(value, outcome, cacheType);
         }
 
-        private async Task<TV> Fetch(Key<TK> key, TimeSpan? existingTtl = null)
+        private async Task<TV> Fetch(Key<TK> key, FetchReason reason, TimeSpan? existingTtl = null)
         {
             var start = Stopwatch.GetTimestamp();
             var value = default(TV);
@@ -196,6 +195,7 @@ namespace CacheMeIfYouCan.Internal
                         start,
                         duration,
                         duplicate,
+                        reason,
                         existingTtl));
                 }
             }
@@ -209,7 +209,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 try
                 {
-                    await Fetch(key, timeToLive);
+                    await Fetch(key, FetchReason.EarlyFetch, timeToLive);
                 }
                 catch // Any exceptions that reach here will already have been handled
                 { }
