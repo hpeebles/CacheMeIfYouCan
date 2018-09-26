@@ -13,8 +13,8 @@ namespace CacheMeIfYouCan.Prometheus
         static MetricsTracker()
         {
             RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, "interface", "function", "outcome", "cache_type");
-            FetchDurationsMs = Metrics.CreateHistogram("FetchDurationsMs", null, null, "interface", "function", "success", "duplicate", "is_early_fetch");
-            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("EarlyFetchTimeToLivesMs", null, null, "interface", "function", "success");
+            FetchDurationsMs = Metrics.CreateHistogram("FetchDurationsMs", null, null, "interface", "function", "success", "duplicate", "reason");
+            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("EarlyFetchTimeToLivesMs", null, null, "interface", "function", "success", "reason");
         }
 
         public static void OnResult(FunctionCacheGetResult result)
@@ -31,16 +31,15 @@ namespace CacheMeIfYouCan.Prometheus
         {
             var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
             var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
-            var isEarlyFetch = result.ExistingTtl.HasValue;
             
             FetchDurationsMs
-                .Labels(interfaceName, functionName, result.Success.ToString(), result.Duplicate.ToString(), isEarlyFetch.ToString())
+                .Labels(interfaceName, functionName, result.Success.ToString(), result.Duplicate.ToString(), result.Reason.ToString())
                 .Observe(ConvertToMilliseconds(result.Duration));
 
-            if (isEarlyFetch)
+            if (result.ExistingTtl.HasValue)
             {
                 EarlyFetchTimeToLivesMs
-                    .Labels(interfaceName, functionName, result.Success.ToString())
+                    .Labels(interfaceName, functionName, result.Success.ToString(), result.Reason.ToString())
                     .Observe(result.ExistingTtl.Value.TotalMilliseconds);
             }
         }
