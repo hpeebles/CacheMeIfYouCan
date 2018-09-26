@@ -102,6 +102,7 @@ namespace CacheMeIfYouCan.Internal
                         result.Value,
                         key.AsString,
                         result.Outcome,
+                        start,
                         duration,
                         result.CacheType));
                 }
@@ -167,6 +168,7 @@ namespace CacheMeIfYouCan.Internal
                         _functionInfo,
                         key.AsObject,
                         key.AsString,
+                        start,
                         "Unable to fetch value",
                         ex));
                 }
@@ -191,6 +193,7 @@ namespace CacheMeIfYouCan.Internal
                         value,
                         key.AsString,
                         !error,
+                        start,
                         duration,
                         duplicate,
                         existingTtl));
@@ -225,6 +228,7 @@ namespace CacheMeIfYouCan.Internal
                     _functionInfo,
                     key.AsObject,
                     key.AsString,
+                    Stopwatch.GetTimestamp(),
                     message,
                     ex));
             }

@@ -6,17 +6,20 @@ namespace CacheMeIfYouCan
     {
         public readonly FunctionInfo FunctionInfo;
         public readonly string KeyString;
+        public readonly long Timestamp;
         public readonly string Message;
         public readonly Exception Exception;
 
         protected internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
             string keyString,
-            string message, 
+            long timestamp,
+            string message,
             Exception exception)
         {
             FunctionInfo = functionInfo;
             KeyString = keyString;
+            Timestamp = timestamp;
             Message = message;
             Exception = exception;
         }
@@ -30,9 +33,10 @@ namespace CacheMeIfYouCan
             FunctionInfo functionInfo,
             TK key,
             string keyString,
+            long timestamp,
             string message,
             Exception exception)
-            : base(functionInfo, keyString, message, exception)
+            : base(functionInfo, keyString, timestamp, message, exception)
         {
             Key = key;
         }

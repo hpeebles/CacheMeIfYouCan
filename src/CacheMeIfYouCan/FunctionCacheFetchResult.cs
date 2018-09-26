@@ -7,6 +7,7 @@ namespace CacheMeIfYouCan
         public readonly FunctionInfo FunctionInfo;
         public readonly string KeyString;
         public readonly bool Success;
+        public readonly long Start;
         public readonly long Duration;
         public readonly bool Duplicate;
         public readonly TimeSpan? ExistingTtl;
@@ -15,6 +16,7 @@ namespace CacheMeIfYouCan
             FunctionInfo functionInfo,
             string keyString,
             bool success,
+            long start,
             long duration,
             bool duplicate,
             TimeSpan? existingTtl)
@@ -22,6 +24,7 @@ namespace CacheMeIfYouCan
             FunctionInfo = functionInfo;
             KeyString = keyString;
             Success = success;
+            Start = start;
             Duration = duration;
             Duplicate = duplicate;
             ExistingTtl = existingTtl;
@@ -39,10 +42,11 @@ namespace CacheMeIfYouCan
             TV value,
             string keyString,
             bool success,
+            long start,
             long duration,
             bool duplicate,
             TimeSpan? existingTtl)
-            : base(functionInfo, keyString, success, duration, duplicate, existingTtl)
+            : base(functionInfo, keyString, success, start, duration, duplicate, existingTtl)
         {
             Key = key;
             Value = value;
