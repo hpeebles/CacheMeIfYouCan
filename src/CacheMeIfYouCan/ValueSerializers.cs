@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
@@ -18,10 +17,7 @@ namespace CacheMeIfYouCan
             if (_default != null)
                 return x => _default.Serialize(x);
 
-            if (ProvidedSerializers.TryGetSerializer<T>(out serializer))
-                return serializer;
-
-            throw new Exception($"No serializer defined for type '{typeof(T).FullName}'");
+            return null;
         }
 
         public Func<string, T> GetDeserializer<T>()
@@ -32,10 +28,7 @@ namespace CacheMeIfYouCan
             if (_default != null)
                 return x => _default.Deserialize<T>(x);
 
-            if (ProvidedSerializers.TryGetDeserializer<T>(out deserializer))
-                return deserializer;
-            
-            throw new Exception($"No serializer defined for type '{typeof(T).FullName}'");
+            return null;
         }
 
         public void Set<T>(Func<T, string> serializer, Func<string, T> deserializer)

@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnResultIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(1));
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
 
             var results = new List<FunctionCacheGetResult>();
 
@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnFetchIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(1));
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
 
             var results = new List<FunctionCacheFetchResult>();
 

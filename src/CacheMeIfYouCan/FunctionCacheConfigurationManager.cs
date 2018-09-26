@@ -212,8 +212,8 @@ namespace CacheMeIfYouCan
                 {
                     MemoryCache = memoryCache,
                     FunctionInfo = functionInfo,
-                    Serializer = _valueSerializer ?? DefaultCacheSettings.ValueSerializers.GetSerializer<TV>(),
-                    Deserializer = _valueDeserializer ?? DefaultCacheSettings.ValueSerializers.GetDeserializer<TV>()
+                    Serializer = GetValueSerializer(),
+                    Deserializer = GetValueDeserializer()
                 };
                 
                 cache = _cacheFactoryFunc(parameters);
@@ -224,7 +224,7 @@ namespace CacheMeIfYouCan
                 functionInfo,
                 cache,
                 _timeToLive ?? DefaultCacheSettings.TimeToLive,
-                _keySerializer ?? DefaultCacheSettings.KeySerializers.Get<TK>(),
+                _keySerializer ?? GetKeySerializer(),
                 _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
@@ -240,6 +240,36 @@ namespace CacheMeIfYouCan
         public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
         {
             return cacheConfig.Build();
+        }
+
+        private Func<TK, string> GetKeySerializer()
+        {
+            var serializer = _keySerializer ?? DefaultCacheSettings.KeySerializers.Get<TK>();
+            
+            if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
+                throw new Exception($"No key serializer defined for type '{typeof(TK).FullName}'");
+
+            return serializer;
+        }
+        
+        private Func<TV, string> GetValueSerializer()
+        {
+            var serializer = _valueSerializer ?? DefaultCacheSettings.ValueSerializers.GetSerializer<TV>();
+            
+            if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
+                throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
+
+            return serializer;
+        }
+        
+        private Func<string, TV> GetValueDeserializer()
+        {
+            var deserializer = _valueDeserializer ?? DefaultCacheSettings.ValueSerializers.GetDeserializer<TV>();
+            
+            if (deserializer == null && !ProvidedSerializers.TryGetDeserializer(out deserializer))
+                throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
+
+            return deserializer;
         }
     }
 }
