@@ -16,6 +16,7 @@ namespace CacheMeIfYouCan
         private TimeSpan? _timeToLive;
         private int? _memoryCacheMaxSizeMB;
         private bool? _earlyFetchEnabled;
+        private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private Action<FunctionCacheErrorEvent<TK>> _onError;
@@ -41,6 +42,7 @@ namespace CacheMeIfYouCan
                 _timeToLive = interfaceConfig.TimeToLive;
                 _memoryCacheMaxSizeMB = interfaceConfig.MemoryCacheMaxSizeMB;
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
+                _disableCache = interfaceConfig.DisableCache;
 
                 if (interfaceConfig.CacheFactory != null)
                     _cacheFactoryFunc = interfaceConfig.CacheFactory.Build;
@@ -130,6 +132,12 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public FunctionCacheConfigurationManager<TK, TV> DisableCache(bool disableCache = true)
+        {
+            _disableCache = disableCache;
+            return this;
+        }
+
         public FunctionCacheConfigurationManager<TK, TV> ContinueOnException(TV defaultValue = default(TV))
         {
             return ContinueOnException(() => defaultValue);
@@ -208,7 +216,11 @@ namespace CacheMeIfYouCan
             var functionInfo = new FunctionInfo(_interfaceType, _functionName, typeof(TK), typeof(TV));
             
             ICache<TV> cache;
-            if (_cacheFactoryFunc == null)
+            if (_disableCache ?? DefaultCacheSettings.DisableCache)
+            {
+                cache = null;
+            }
+            else if (_cacheFactoryFunc == null)
             {
                 cache = memoryCache;
             }

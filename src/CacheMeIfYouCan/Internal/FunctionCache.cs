@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Internal
             _activeFetches = new ConcurrentDictionary<string, Task<TV>>();
             _rng = new Random();
 
-            if (keysToKeepAliveFunc != null)
+            if (_cache != null && keysToKeepAliveFunc != null)
             {
                 async Task<TimeSpan?> GetTimeToLive(string key)
                 {
@@ -116,7 +116,11 @@ namespace CacheMeIfYouCan.Internal
             Outcome outcome;
             string cacheType;
 
-            var getFromCacheResult = await _cache.Get(key.AsString);
+            GetFromCacheResult<TV> getFromCacheResult;
+            if (_cache != null)
+                getFromCacheResult = await _cache.Get(key.AsString);
+            else
+                getFromCacheResult = GetFromCacheResult<TV>.NotFound;
             
             if (getFromCacheResult.Success)
             {
@@ -154,7 +158,8 @@ namespace CacheMeIfYouCan.Internal
                         
                         var fetchedValue = await _func(key.AsObject);
 
-                        await _cache.Set(k, fetchedValue, _timeToLive);
+                        if (_cache != null)
+                            await _cache.Set(k, fetchedValue, _timeToLive);
 
                         return fetchedValue;
                     });

@@ -7,6 +7,7 @@ namespace CacheMeIfYouCan
         public static TimeSpan TimeToLive = TimeSpan.FromHours(1);
         public static int MemoryCacheMaxSizeMB = 1024;
         public static bool EarlyFetchEnabled = true;
+        public static bool DisableCache;
         public static ICacheFactory CacheFactory;
         public static Action<FunctionCacheGetResult> OnResult;
         public static Action<FunctionCacheFetchResult> OnFetch;

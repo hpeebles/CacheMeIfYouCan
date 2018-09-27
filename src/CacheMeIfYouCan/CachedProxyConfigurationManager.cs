@@ -16,6 +16,7 @@ namespace CacheMeIfYouCan
         private TimeSpan? _timeToLive;
         private int? _memoryCacheMaxSizeMB;
         private bool? _earlyFetchEnabled;
+        private bool? _disableCache;
         private ICacheFactory _cacheFactory;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
@@ -106,6 +107,12 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public CachedProxyConfigurationManager<T> DisableCache(bool disableCache = true)
+        {
+            _disableCache = disableCache;
+            return this;
+        }
+
         public CachedProxyConfigurationManager<T> WithCacheFactory(ICacheFactory cacheFactory)
         {
             _cacheFactory = cacheFactory;
@@ -161,10 +168,11 @@ namespace CacheMeIfYouCan
                 typeof(T),
                 _keySerializers,
                 _valueSerializers,
-                _timeToLive ?? DefaultCacheSettings.TimeToLive,
-                _memoryCacheMaxSizeMB ?? DefaultCacheSettings.MemoryCacheMaxSizeMB,
-                _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,
-                _cacheFactory ?? DefaultCacheSettings.CacheFactory,
+                _timeToLive,
+                _memoryCacheMaxSizeMB,
+                _earlyFetchEnabled,
+                _disableCache,
+                _cacheFactory,
                 _onResult,
                 _onFetch,
                 _onError,

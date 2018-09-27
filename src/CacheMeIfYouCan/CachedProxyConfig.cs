@@ -9,9 +9,10 @@ namespace CacheMeIfYouCan
         public readonly Type InterfaceType;
         public readonly KeySerializers KeySerializers;
         public readonly ValueSerializers ValueSerializers;
-        public readonly TimeSpan TimeToLive;
-        public readonly int MemoryCacheMaxSizeMB;
-        public readonly bool EarlyFetchEnabled;
+        public readonly TimeSpan? TimeToLive;
+        public readonly int? MemoryCacheMaxSizeMB;
+        public readonly bool? EarlyFetchEnabled;
+        public readonly bool? DisableCache;
         public readonly ICacheFactory CacheFactory;
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
@@ -22,9 +23,10 @@ namespace CacheMeIfYouCan
             Type interfaceType,
             KeySerializers keySerializers,
             ValueSerializers valueSerializers,
-            TimeSpan timeToLive,
-            int memoryCacheMaxSizeMb,
-            bool earlyFetchEnabled,
+            TimeSpan? timeToLive,
+            int? memoryCacheMaxSizeMb,
+            bool? earlyFetchEnabled,
+            bool? disableCache,
             ICacheFactory cacheFactory,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
@@ -37,6 +39,7 @@ namespace CacheMeIfYouCan
             TimeToLive = timeToLive;
             MemoryCacheMaxSizeMB = memoryCacheMaxSizeMb;
             EarlyFetchEnabled = earlyFetchEnabled;
+            DisableCache = disableCache;
             CacheFactory = cacheFactory;
             OnResult = onResult;
             OnFetch = onFetch;
