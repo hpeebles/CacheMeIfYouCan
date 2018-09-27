@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal class RedisCacheFactory : ICacheFactory
+    public class RedisCacheFactory : ICacheFactory
     {
         private readonly RedisCacheFactoryConfig _redisConfig;
 
