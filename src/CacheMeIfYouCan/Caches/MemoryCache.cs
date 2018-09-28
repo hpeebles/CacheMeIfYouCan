@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Caches
 {
     public class MemoryCache<TK, TV> : ILocalCache<TK, TV>
     {
-        private const string Type = "Memory";
+        private const string Type = "memory";
         private readonly MemoryCache _cache;
         
         internal MemoryCache(int maxSizeMB = 100)

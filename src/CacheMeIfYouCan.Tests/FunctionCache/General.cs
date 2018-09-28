@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
@@ -10,8 +11,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     public class General
     {
-        [Fact]
-        public async Task SubsequentCallsAreCached()
+        [Theory]
+        [InlineData("memory")]
+        [InlineData("dictionary")]
+        public async Task SubsequentCallsAreCached(string cacheType)
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
             
@@ -19,6 +22,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
+                .WithLocalCacheFactory(GetCacheFactory(cacheType))
                 .OnFetch(fetches.Add)
                 .Build();
 
@@ -43,8 +47,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Single(fetches);
         }
 
-        [Fact]
-        public async Task ShortTimeToLiveExpiresCorrectly()
+        [Theory]
+        [InlineData("memory")]
+        [InlineData("dictionary")]
+        public async Task ShortTimeToLiveExpiresCorrectly(string cacheType)
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
             
@@ -53,6 +59,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var cachedEcho = echo
                 .Cached()
                 .For(TimeSpan.FromMilliseconds(1))
+                .WithLocalCacheFactory(GetCacheFactory(cacheType))
                 .OnResult(results.Add)
                 .Build();
             
@@ -65,6 +72,21 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Assert.Equal(10, results.Count);
             Assert.True(results.All(r => r.Outcome == Outcome.Fetch));
+        }
+
+        private static ILocalCacheFactory GetCacheFactory(string cacheType)
+        {
+            switch (cacheType)
+            {
+                case "memory":
+                    return new MemoryCacheFactory();
+                
+                case "dictionary":
+                    return new DictionaryCacheFactory();
+                
+                default:
+                    throw new Exception($"CacheType '{cacheType}' not recognised");
+            }
         }
     }
 }

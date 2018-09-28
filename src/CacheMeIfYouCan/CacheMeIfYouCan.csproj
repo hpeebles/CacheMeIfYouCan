@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <Version>0.0.13-beta</Version>
+    <Version>0.0.14-beta</Version>
     <PackageTags>Cache;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Reactive" Version="4.1.0" />
     <PackageReference Include="System.Runtime.Caching" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="System.Reactive" Version="3.1.1" />
     <Reference Include="System.Runtime.Caching" />
   </ItemGroup>
   <ItemGroup>

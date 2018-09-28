@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Redis
 {
     internal class RedisCache<TK, TV> : ICache<TK, TV>
     {
-        private const string CacheType = "Redis";
+        private const string CacheType = "redis";
         private readonly IConnectionMultiplexer _multiplexer;
         private readonly int _database;
         private readonly string _keySpacePrefix;
