@@ -255,11 +255,10 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICache<TK, TV> cache = null;
-            IKeyDictionary<TK, Task<TV>> activeFetchesDictionary;
-            IKeySetFactory<TK> keySetFactory = null;
+            IEqualityComparer<Key<TK>> keyComparer;
             if (_disableCache ?? DefaultCacheConfig.Configuration.DisableCache)
             {
-                activeFetchesDictionary = new EmptyKeyDictionary<TK, Task<TV>>();
+                keyComparer = new NoMatchesComparer<Key<TK>>();
             }
             else
             {
@@ -281,13 +280,9 @@ namespace CacheMeIfYouCan.Configuration
                     cacheConfig,
                     out var requiresStringKeys);
 
-                activeFetchesDictionary = requiresStringKeys
-                    ? (IKeyDictionary<TK, Task<TV>>) new StringKeyDictionary<TK, Task<TV>>()
-                    : new GenericKeyDictionary<TK, Task<TV>>();
-
-                keySetFactory = requiresStringKeys
-                    ? (IKeySetFactory<TK>) new StringKeySetFactory<TK>()
-                    : new GenericKeySetFactory<TK>();
+                keyComparer = requiresStringKeys
+                    ? (IEqualityComparer<Key<TK>>)new StringKeyComparer<TK>()
+                    : new GenericKeyComparer<TK>();
             }
 
             var functionCache = new FunctionCache<TK, TV>(
@@ -301,9 +296,8 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onError,
-                activeFetchesDictionary,
-                _keysToKeepAliveFunc,
-                keySetFactory);
+                keyComparer,
+                _keysToKeepAliveFunc);
             
             _cachedFunc = functionCache.Get;
             

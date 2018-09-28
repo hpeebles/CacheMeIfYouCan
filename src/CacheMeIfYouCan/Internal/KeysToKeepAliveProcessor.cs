@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<TK, TimeSpan?, Task> _refreshKey;
         private readonly Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private readonly Func<TK, string> _keySerializer;
-        private readonly IKeySetFactory<TK> _keySetFactory;
+        private readonly IEqualityComparer<Key<TK>> _keyComparer;
         private readonly SortedDictionary<DateTime, List<Key<TK>>> _keyExpiryDates;
         private readonly AutoResetEvent _nextKeyToExpireChanged;
         private readonly CancellationTokenSource _cts;
@@ -27,14 +27,14 @@ namespace CacheMeIfYouCan.Internal
             Func<TK, TimeSpan?, Task> refreshKey,
             Func<Task<IList<TK>>> keysToKeepAliveFunc,
             Func<TK, string> keySerializer,
-            IKeySetFactory<TK> keySetFactory)
+            IEqualityComparer<Key<TK>> keyComparer)
         {
             _timeToLive = timeToLive;
             _getTimeToLiveFunc = getTimeToLive;
             _refreshKey = refreshKey;
             _keysToKeepAliveFunc = keysToKeepAliveFunc;
             _keySerializer = keySerializer;
-            _keySetFactory = keySetFactory;
+            _keyComparer = keyComparer;
             _keyExpiryDates = new SortedDictionary<DateTime, List<Key<TK>>>();
             _nextKeyToExpireChanged = new AutoResetEvent(false);
             _cts = new CancellationTokenSource();
@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan.Internal
         {
             var keyObjects = await _keysToKeepAliveFunc();
 
-            var keysSet = _keySetFactory.New();
+            var keysSet = new HashSet<Key<TK>>(_keyComparer);
             
             var keys = keyObjects
                 .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))

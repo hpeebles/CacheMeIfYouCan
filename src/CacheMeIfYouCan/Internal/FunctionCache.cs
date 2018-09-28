@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
-        private readonly IKeyDictionary<TK, Task<TV>> _activeFetchesDictionary;
+        private readonly ConcurrentDictionary<Key<TK>, Task<TV>> _activeFetches;
         private readonly Random _rng;
         private long _averageFetchDuration;
         
@@ -35,9 +36,8 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheErrorEvent<TK>> onError,
-            IKeyDictionary<TK, Task<TV>> activeFetchesDictionary,
-            Func<Task<IList<TK>>> keysToKeepAliveFunc,
-            IKeySetFactory<TK> keySetFactory)
+            IEqualityComparer<Key<TK>> keyComparer,
+            Func<Task<IList<TK>>> keysToKeepAliveFunc)
         {
             _func = func;
             _functionInfo = functionInfo;
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Internal
             _onResult = onResult;
             _onFetch = onFetch;
             _onError = onError;
-            _activeFetchesDictionary = activeFetchesDictionary;
+            _activeFetches = new ConcurrentDictionary<Key<TK>, Task<TV>>(keyComparer);
             _rng = new Random();
 
             if (_cache != null && keysToKeepAliveFunc != null)
@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan.Internal
                     RefreshKey,
                     keysToKeepAliveFunc,
                     _keySerializer,
-                    keySetFactory);
+                    keyComparer);
 
                 Task.Run(keysToKeepAliveProcessor.Run);
             }
@@ -156,7 +156,7 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
-                value = await _activeFetchesDictionary.GetOrAdd(
+                value = await _activeFetches.GetOrAdd(
                     key,
                     async k =>
                     {
@@ -188,7 +188,7 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                _activeFetchesDictionary.Remove(key);
+                _activeFetches.TryRemove(key, out _);
                 
                 if (_onFetch != null)
                 {
