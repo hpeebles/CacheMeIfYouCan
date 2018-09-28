@@ -18,7 +18,12 @@ namespace CacheMeIfYouCan.Caches
             }
 
             var localCache = localCacheFactory?.Build();
-            var remoteCache = remoteCacheFactory?.Build(config);
+
+            Action<Key<TK>> removeFromLocalCacheAction = null;
+            if (localCache != null)
+                removeFromLocalCacheAction = localCache.Remove;
+
+            var remoteCache = remoteCacheFactory?.Build(config, removeFromLocalCacheAction);
 
             if (localCache != null)
             {

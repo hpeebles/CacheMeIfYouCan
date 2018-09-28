@@ -1,45 +1,57 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reactive.Linq;
 
 namespace CacheMeIfYouCan.Redis
 {
     // This holds all of the keys that have been set recently by this client.
-    // We can then use this to determine whether to remove keys or not on receipt on key event messages.
-    internal class RecentlySetKeysManager
+    // We can then use this to determine whether to remove keys or not on receipt of key event messages.
+    internal class RecentlySetKeysManager : IDisposable
     {
-        private readonly ConcurrentDictionary<string, DateTime> _dictionary = new ConcurrentDictionary<string, DateTime>();
-        private readonly Queue<KeyValuePair<string, DateTime>> _queue = new Queue<KeyValuePair<string, DateTime>>();
-        private readonly TimeSpan _recentWindow = TimeSpan.FromSeconds(5);
+        private readonly ConcurrentDictionary<string, long> _dictionary = new ConcurrentDictionary<string, long>();
+        private readonly Queue<KeyValuePair<string, long>> _queue = new Queue<KeyValuePair<string, long>>();
+        private readonly long _recentWindow = TimeSpan.FromSeconds(5).Ticks;
         private readonly object _lock = new object();
-        private DateTime _lastPruned;
+
+        // Every second we prune keys which are no longer relevant, disposing of this field is the only way to stop that process
+        private readonly IDisposable _keyRemoverProcess;
+
+        public RecentlySetKeysManager()
+        {
+            _keyRemoverProcess = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Subscribe(_ => Prune());
+        }
 
         public void Mark(string key)
         {
-            var now = DateTime.UtcNow;
+            var now = Stopwatch.GetTimestamp();
 
             if (!_dictionary.TryAdd(key, now))
                 return;
             
             lock (_lock)
-                _queue.Enqueue(new KeyValuePair<string, DateTime>(key, now));
-            
-            if (DateTime.UtcNow - _lastPruned > TimeSpan.FromMinutes(1)) // to stop the collections from growing infinitely
-                Prune();
+                _queue.Enqueue(new KeyValuePair<string, long>(key, now));
         }
 
         public bool IsRecentlySet(string key)
         {
-            Prune();
+            return _dictionary.TryGetValue(key, out var timestamp) && IsRecent(timestamp);
+        }
 
-            return _dictionary.ContainsKey(key);
+        public void Dispose()
+        {
+            _keyRemoverProcess?.Dispose();
         }
 
         private void Prune()
         {
             lock (_lock)
             {
-                while (_queue.Count > 0)
+                while (_queue.Any())
                 {
                     var next = _queue.Peek();
 
@@ -50,13 +62,11 @@ namespace CacheMeIfYouCan.Redis
                     _dictionary.TryRemove(next.Key, out _);
                 }
             }
-
-            _lastPruned = DateTime.UtcNow;
         }
 
-        private bool IsRecent(DateTime date)
+        private bool IsRecent(long timestamp)
         {
-            return DateTime.UtcNow - date < _recentWindow;
+            return Stopwatch.GetTimestamp() - timestamp < _recentWindow;
         }
     }
 }

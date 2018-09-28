@@ -9,13 +9,15 @@ namespace CacheMeIfYouCan.Tests
     {
         private readonly Func<TV, string> _serializer;
         private readonly Func<string, TV> _deserializer;
+        private readonly Action<Key<string>> _removeKeyFromLocalCacheAction;
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
         public readonly string CacheType = "test";
 
-        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer)
+        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer, Action<Key<string>> removeKeyFromLocalCacheAction = null)
         {
             _serializer = serializer;
             _deserializer = deserializer;
+            _removeKeyFromLocalCacheAction = removeKeyFromLocalCacheAction;
         }
 
         public Task<GetFromCacheResult<TV>> Get(Key<TK> key)
@@ -45,6 +47,12 @@ namespace CacheMeIfYouCan.Tests
             }
 
             return Task.CompletedTask;
+        }
+
+        public void OnKeyChangedRemotely(string key)
+        {
+            Values.TryRemove(key, out _);
+            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, new Lazy<string>(key)));
         }
     }
 }

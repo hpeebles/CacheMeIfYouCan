@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly Func<string, TK> _keyDeserializer;
         private readonly Func<TV, string> _serializer;
         private readonly Func<string, TV> _deserializer;
-        private readonly Action<Key<TK>> _removeFromLocalCacheCallback;
+        private readonly Action<Key<TK>> _removeFromLocalCacheAction;
         private readonly Func<string, string> _toRedisKey;
         private readonly Func<string, string> _fromRedisKey;
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Redis
             Func<string, TK> keyDeserializer,
             Func<TV, string> serializer,
             Func<string, TV> deserializer,
-            Action<Key<TK>> removeFromLocalCacheCallback = null)
+            Action<Key<TK>> removeFromLocalCacheAction = null)
         {
             _multiplexer = multiplexer;
             _database = database;
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Redis
             _keyDeserializer = keyDeserializer;
             _serializer = serializer;
             _deserializer = deserializer;
-            _removeFromLocalCacheCallback = removeFromLocalCacheCallback;
+            _removeFromLocalCacheAction = removeFromLocalCacheAction;
             
             if (String.IsNullOrWhiteSpace(keySpacePrefix))
             {
@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Redis
                 _fromRedisKey = k => k.Substring(keySpacePrefix.Length + 1);
             }
 
-            if (_removeFromLocalCacheCallback != null)
+            if (_removeFromLocalCacheAction != null)
             {
                 _recentlySetKeysManager = new RecentlySetKeysManager();
 
@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Redis
 
             var key = new Key<TK>(_keyDeserializer(stringKey), stringKey);
 
-            _removeFromLocalCacheCallback(key);
+            _removeFromLocalCacheAction(key);
         }
 
         private IDatabase GetDatabase()
