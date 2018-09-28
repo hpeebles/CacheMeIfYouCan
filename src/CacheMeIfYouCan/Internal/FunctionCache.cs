@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
@@ -48,9 +47,9 @@ namespace CacheMeIfYouCan.Internal
             _earlyFetchEnabled = earlyFetchEnabled;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
-            _onResult = onResult ?? DefaultCacheSettings.OnResult;
-            _onFetch = onFetch ?? DefaultCacheSettings.OnFetch;
-            _onError = onError ?? DefaultCacheSettings.OnError;
+            _onResult = onResult;
+            _onFetch = onFetch;
+            _onError = onError;
             _activeFetchesDictionary = activeFetchesDictionary;
             _rng = new Random();
 

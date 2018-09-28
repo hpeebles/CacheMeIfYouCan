@@ -32,9 +32,9 @@ namespace CacheMeIfYouCan.Configuration
             _name = name;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
-            _onResult = DefaultCacheSettings.OnResult;
-            _onFetch = DefaultCacheSettings.OnFetch;
-            _onError = DefaultCacheSettings.OnError;
+            _onResult = DefaultCacheConfig.Configuration.OnResult;
+            _onFetch = DefaultCacheConfig.Configuration.OnFetch;
+            _onError = DefaultCacheConfig.Configuration.OnError;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 

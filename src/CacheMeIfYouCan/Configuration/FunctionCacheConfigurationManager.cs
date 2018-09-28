@@ -75,9 +75,9 @@ namespace CacheMeIfYouCan.Configuration
             }
             else
             {
-                _onResult = DefaultCacheSettings.OnResult;
-                _onFetch = DefaultCacheSettings.OnFetch;
-                _onError = DefaultCacheSettings.OnError;
+                _onResult = DefaultCacheConfig.Configuration.OnResult;
+                _onFetch = DefaultCacheConfig.Configuration.OnFetch;
+                _onError = DefaultCacheConfig.Configuration.OnError;
             }
         }
 
@@ -257,7 +257,7 @@ namespace CacheMeIfYouCan.Configuration
             ICache<TK, TV> cache = null;
             IKeyDictionary<TK, Task<TV>> activeFetchesDictionary;
             IKeySetFactory<TK> keySetFactory = null;
-            if (_disableCache ?? DefaultCacheSettings.DisableCache)
+            if (_disableCache ?? DefaultCacheConfig.Configuration.DisableCache)
             {
                 activeFetchesDictionary = new EmptyKeyDictionary<TK, Task<TV>>();
             }
@@ -266,14 +266,14 @@ namespace CacheMeIfYouCan.Configuration
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
                 if (_localCacheFactory != null)
                     localCacheFactory = _localCacheFactory;
-                else if (DefaultCacheSettings.LocalCacheFactory != null)
-                    localCacheFactory = new LocalCacheFactoryWrapper<TK, TV>(DefaultCacheSettings.LocalCacheFactory);
+                else if (DefaultCacheConfig.Configuration.LocalCacheFactory != null)
+                    localCacheFactory = new LocalCacheFactoryWrapper<TK, TV>(DefaultCacheConfig.Configuration.LocalCacheFactory);
 
                 ICacheFactory<TK, TV> remoteCacheFactory = null;
                 if (_remoteCacheFactory != null)
                     remoteCacheFactory = _remoteCacheFactory;
-                else if (DefaultCacheSettings.RemoteCacheFactory != null)
-                    remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(DefaultCacheSettings.RemoteCacheFactory);
+                else if (DefaultCacheConfig.Configuration.RemoteCacheFactory != null)
+                    remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(DefaultCacheConfig.Configuration.RemoteCacheFactory);
                 
                 cache = CacheBuilder.Build(
                     localCacheFactory,
@@ -294,9 +294,9 @@ namespace CacheMeIfYouCan.Configuration
                 _inputFunc,
                 functionInfo,
                 cache,
-                _timeToLive ?? DefaultCacheSettings.TimeToLive,
+                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
                 _keySerializer ?? GetKeySerializer(),
-                _earlyFetchEnabled ?? DefaultCacheSettings.EarlyFetchEnabled,
+                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
@@ -317,7 +317,7 @@ namespace CacheMeIfYouCan.Configuration
 
         private Func<TK, string> GetKeySerializer()
         {
-            var serializer = _keySerializer ?? DefaultCacheSettings.KeySerializers.GetSerializer<TK>();
+            var serializer = _keySerializer ?? DefaultCacheConfig.Configuration.KeySerializers.GetSerializer<TK>();
             
             if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
                 throw new Exception($"No key serializer defined for type '{typeof(TK).FullName}'");
@@ -327,7 +327,7 @@ namespace CacheMeIfYouCan.Configuration
 
         private Func<string, TK> GetKeyDeserializer()
         {
-            var deserializer = _keyDeserializer ?? DefaultCacheSettings.KeySerializers.GetDeserializer<TK>();
+            var deserializer = _keyDeserializer ?? DefaultCacheConfig.Configuration.KeySerializers.GetDeserializer<TK>();
 
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
@@ -337,7 +337,7 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<TV, string> GetValueSerializer()
         {
-            var serializer = _valueSerializer ?? DefaultCacheSettings.ValueSerializers.GetSerializer<TV>();
+            var serializer = _valueSerializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetSerializer<TV>();
             
             if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
                 throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
@@ -347,7 +347,7 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<string, TV> GetValueDeserializer()
         {
-            var deserializer = _valueDeserializer ?? DefaultCacheSettings.ValueSerializers.GetDeserializer<TV>();
+            var deserializer = _valueDeserializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetDeserializer<TV>();
             
             if (deserializer == null && !ProvidedSerializers.TryGetDeserializer(out deserializer))
                 throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");

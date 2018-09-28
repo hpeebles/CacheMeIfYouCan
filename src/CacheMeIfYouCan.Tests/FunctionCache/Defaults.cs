@@ -9,6 +9,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     public class Defaults
     {
+        private const string KeyPrefix = "DefaultsTests";
+        
         [Fact]
         public async Task DefaultOnResultIsTriggered()
         {
@@ -16,7 +18,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheGetResult>();
 
-            DefaultCacheSettings.OnResult = results.Add;
+            DefaultCacheConfig.Configuration.OnResult = x =>
+            {
+                if (x.KeyString.Value.StartsWith(KeyPrefix))
+                    results.Add(x);
+            };
             
             var cachedEcho = echo
                 .Cached()
@@ -24,13 +30,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             for (var i = 1; i < 10; i++)
             {
-                var key = Guid.NewGuid().ToString();
+                var key = GetRandomKey();
 
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
             
-            DefaultCacheSettings.OnResult = null;
+            DefaultCacheConfig.Configuration.OnResult = null;
         }
         
         [Fact]
@@ -40,7 +46,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheFetchResult>();
 
-            DefaultCacheSettings.OnFetch = results.Add;
+            DefaultCacheConfig.Configuration.OnFetch = x =>
+            {
+                if (x.KeyString.Value.StartsWith(KeyPrefix))
+                    results.Add(x);
+            };
             
             var cachedEcho = echo
                 .Cached()
@@ -48,13 +58,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             for (var i = 1; i < 10; i++)
             {
-                var key = Guid.NewGuid().ToString();
+                var key = GetRandomKey();
 
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
 
-            DefaultCacheSettings.OnFetch = null;
+            DefaultCacheConfig.Configuration.OnFetch = null;
         }
         
         [Fact]
@@ -66,7 +76,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var errors = new List<FunctionCacheErrorEvent>();
 
-            DefaultCacheSettings.OnError = errors.Add;
+            DefaultCacheConfig.Configuration.OnError = x =>
+            {
+                if (x.KeyString.Value.StartsWith(KeyPrefix))
+                    errors.Add(x);
+            };
             
             var cachedEcho = echo
                 .Cached()
@@ -75,7 +89,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var previousErrorCount = 0;
             for (var i = 0; i < 10; i++)
             {
-                var key = Guid.NewGuid().ToString();
+                var key = GetRandomKey();
                 
                 if (i % 2 == 0)
                 {
@@ -90,7 +104,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            DefaultCacheSettings.OnError = null;
+            DefaultCacheConfig.Configuration.OnError = null;
+        }
+
+        private static string GetRandomKey()
+        {
+            return KeyPrefix + Guid.NewGuid();
         }
     }
 }
