@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -31,8 +32,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 {
                     await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
-                    Assert.Equal(key, errors[errors.Count - 1].KeyString);
-                    Assert.Equal(key, errors[errors.Count - 2].KeyString);
+                    Assert.Equal(key, errors[errors.Count - 1].KeyString.Value);
+                    Assert.Equal(key, errors[errors.Count - 2].KeyString.Value);
                 }
                 else
                 {
@@ -132,7 +133,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             Assert.Equal(loopCount * 2, errors.Count);
-            Assert.True(errors.All(k => k.KeyString == "error!"));
+            Assert.True(errors.All(k => k.KeyString.Value == "error!"));
             Assert.Equal(loopCount, thrownErrorsCount);
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "one"));
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "two"));

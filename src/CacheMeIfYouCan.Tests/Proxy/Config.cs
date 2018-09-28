@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy

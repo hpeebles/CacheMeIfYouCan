@@ -3,10 +3,11 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Internal
 {
-    public class CachedProxyFactory
+    internal class CachedProxyFactory
     {
         private static readonly ModuleBuilder ModuleBuilder;
         

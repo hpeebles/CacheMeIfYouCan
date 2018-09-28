@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Configuration
 {
     internal class CachedProxyConfig
     {
@@ -10,10 +13,10 @@ namespace CacheMeIfYouCan
         public readonly KeySerializers KeySerializers;
         public readonly ValueSerializers ValueSerializers;
         public readonly TimeSpan? TimeToLive;
-        public readonly int? MemoryCacheMaxSizeMB;
         public readonly bool? EarlyFetchEnabled;
         public readonly bool? DisableCache;
-        public readonly ICacheFactory CacheFactory;
+        public readonly ILocalCacheFactory LocalCacheFactory;
+        public readonly ICacheFactory RemoteCacheFactory;
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
         public readonly Action<FunctionCacheErrorEvent> OnError;
@@ -24,10 +27,10 @@ namespace CacheMeIfYouCan
             KeySerializers keySerializers,
             ValueSerializers valueSerializers,
             TimeSpan? timeToLive,
-            int? memoryCacheMaxSizeMb,
             bool? earlyFetchEnabled,
             bool? disableCache,
-            ICacheFactory cacheFactory,
+            ILocalCacheFactory localCacheFactory,
+            ICacheFactory remoteCacheFactory,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
             Action<FunctionCacheErrorEvent> onError,
@@ -37,10 +40,10 @@ namespace CacheMeIfYouCan
             KeySerializers = keySerializers;
             ValueSerializers = valueSerializers;
             TimeToLive = timeToLive;
-            MemoryCacheMaxSizeMB = memoryCacheMaxSizeMb;
             EarlyFetchEnabled = earlyFetchEnabled;
             DisableCache = disableCache;
-            CacheFactory = cacheFactory;
+            LocalCacheFactory = localCacheFactory;
+            RemoteCacheFactory = remoteCacheFactory;
             OnResult = onResult;
             OnFetch = onFetch;
             OnError = onError;

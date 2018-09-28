@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -27,6 +29,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
+            
+            DefaultCacheSettings.OnResult = null;
         }
         
         [Fact]
@@ -49,6 +53,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
+
+            DefaultCacheSettings.OnFetch = null;
         }
         
         [Fact]
@@ -75,14 +81,16 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 {
                     await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
-                    Assert.Equal(key, errors[errors.Count - 1].KeyString);
-                    Assert.Equal(key, errors[errors.Count - 2].KeyString);
+                    Assert.Equal(key, errors[errors.Count - 1].KeyString.Value);
+                    Assert.Equal(key, errors[errors.Count - 2].KeyString.Value);
                 }
                 else
                 {
                     Assert.Equal(key, await cachedEcho(key));
                 }
             }
+            
+            DefaultCacheSettings.OnError = null;
         }
     }
 }

@@ -10,23 +10,31 @@ namespace CacheMeIfYouCan.Internal
     internal class KeysToKeepAliveProcessor<TK> : IDisposable
     {
         private readonly TimeSpan _timeToLive;
-        private readonly Func<string, Task<TimeSpan?>> _getTimeToLiveFunc;
+        private readonly Func<Key<TK>, Task<TimeSpan?>> _getTimeToLiveFunc;
         private readonly Func<TK, TimeSpan?, Task> _refreshKey;
         private readonly Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private readonly Func<TK, string> _keySerializer;
+        private readonly IKeySetFactory<TK> _keySetFactory;
         private readonly SortedDictionary<DateTime, List<Key<TK>>> _keyExpiryDates;
         private readonly AutoResetEvent _nextKeyToExpireChanged;
         private readonly CancellationTokenSource _cts;
         private readonly object _lock;
         private readonly TimeSpan _targetRefreshTimeToLive;
 
-        public KeysToKeepAliveProcessor(TimeSpan timeToLive, Func<string, Task<TimeSpan?>> getTimeToLive, Func<TK, TimeSpan?, Task> refreshKey, Func<Task<IList<TK>>> keysToKeepAliveFunc, Func<TK, string> keySerializer)
+        public KeysToKeepAliveProcessor(
+            TimeSpan timeToLive,
+            Func<Key<TK>, Task<TimeSpan?>> getTimeToLive,
+            Func<TK, TimeSpan?, Task> refreshKey,
+            Func<Task<IList<TK>>> keysToKeepAliveFunc,
+            Func<TK, string> keySerializer,
+            IKeySetFactory<TK> keySetFactory)
         {
             _timeToLive = timeToLive;
             _getTimeToLiveFunc = getTimeToLive;
             _refreshKey = refreshKey;
             _keysToKeepAliveFunc = keysToKeepAliveFunc;
             _keySerializer = keySerializer;
+            _keySetFactory = keySetFactory;
             _keyExpiryDates = new SortedDictionary<DateTime, List<Key<TK>>>();
             _nextKeyToExpireChanged = new AutoResetEvent(false);
             _cts = new CancellationTokenSource();
@@ -137,11 +145,11 @@ namespace CacheMeIfYouCan.Internal
         {
             var keyObjects = await _keysToKeepAliveFunc();
 
-            var keysSet = new HashSet<string>();
+            var keysSet = _keySetFactory.New();
             
             var keys = keyObjects
-                .Select(k => new Key<TK>(k, _keySerializer(k)))
-                .Where(k => keysSet.Add(k.AsString))
+                .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
+                .Where(keysSet.Add)
                 .ToList();
 
             // Remove all keys that are no longer in the set of keys to keep alive
@@ -150,7 +158,7 @@ namespace CacheMeIfYouCan.Internal
                 var expiryDatesToRemove = new List<DateTime>();
                 foreach (var kv in _keyExpiryDates)
                 {
-                    if (kv.Value.RemoveAll(k => !keysSet.Contains(k.AsString)) > 0 && !kv.Value.Any())
+                    if (kv.Value.RemoveAll(k => !keysSet.Contains(k)) > 0 && !kv.Value.Any())
                         expiryDatesToRemove.Add(kv.Key);
                 }
 
@@ -167,7 +175,7 @@ namespace CacheMeIfYouCan.Internal
 
                 try
                 {
-                    var timeToLive = await _getTimeToLiveFunc(key.AsString);
+                    var timeToLive = await _getTimeToLiveFunc(key);
 
                     if (!timeToLive.HasValue)
                     {

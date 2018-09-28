@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Notifications;
 using Prometheus;
 using Histogram = Prometheus.Histogram;
 

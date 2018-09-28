@@ -1,9 +1,11 @@
-﻿namespace CacheMeIfYouCan
+﻿using System;
+
+namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheGetResult
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly string KeyString;
+        public readonly Lazy<string> KeyString;
         public readonly Outcome Outcome;
         public readonly long Start;
         public readonly long Duration;
@@ -11,7 +13,7 @@
 
         protected internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
-            string keyString,
+            Lazy<string> keyString,
             Outcome outcome,
             long start,
             long duration,
@@ -33,14 +35,13 @@
 
         internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
-            TK key,
+            Key<TK> key,
             TV value,
-            string keyString,
             Outcome outcome,
             long start,
             long duration,
             string cacheType)
-            : base(functionInfo, keyString, outcome, start, duration, cacheType)
+            : base(functionInfo, key.AsString, outcome, start, duration, cacheType)
         {
             Key = key;
             Value = value;

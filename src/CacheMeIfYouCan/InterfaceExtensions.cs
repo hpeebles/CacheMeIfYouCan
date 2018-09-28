@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan
 {
@@ -7,7 +8,7 @@ namespace CacheMeIfYouCan
         public static CachedProxyConfigurationManager<T> Cached<T>(this T impl, string name = null) where T : class
         {
             if (!typeof(T).IsInterface)
-                throw new Exception("Type T must be an interface");
+                throw new Exception($"Type '{typeof(T).FullName}' is not an interface");
             
             return new CachedProxyConfigurationManager<T>(impl, name ?? typeof(T).Name);
         }

@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             var proxy = impl
                 .Cached()
-                .WithCacheFactory(new TestCacheFactory())
+                .WithRemoteCacheFactory(new TestCacheFactory())
                 .WithDefaultKeySerializer(serializerA)
                 .WithKeySerializer<string>(serializerB)
                 .Build();
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             var proxy = impl
                 .Cached()
-                .WithCacheFactory(new TestCacheFactory())
+                .WithRemoteCacheFactory(new TestCacheFactory())
                 .WithDefaultValueSerializer(serializerA)
                 .WithValueSerializer<string>(serializerB)
                 .Build();

@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Serializers;
 
 [assembly: InternalsVisibleTo("ProxyFactoryAsm")]
 [assembly: InternalsVisibleTo("CacheMeIfYouCan.Tests")]
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Configuration
 {
     public class FunctionCacheConfigurationManager<TK, TV>
     {
@@ -14,16 +17,17 @@ namespace CacheMeIfYouCan
         private readonly Type _interfaceType;
         private readonly string _functionName;
         private TimeSpan? _timeToLive;
-        private int? _memoryCacheMaxSizeMB;
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private Action<FunctionCacheErrorEvent<TK>> _onError;
         private Func<TK, string> _keySerializer;
+        private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
-        private Func<CacheFactoryConfig<TV>, ICache<TV>> _cacheFactoryFunc;
+        private ILocalCacheFactory<TK, TV> _localCacheFactory;
+        private ICacheFactory<TK, TV> _remoteCacheFactory;
         private Func<TV> _defaultValueFactory;
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private Func<TK, Task<TV>> _cachedFunc;
@@ -36,17 +40,19 @@ namespace CacheMeIfYouCan
             if (interfaceConfig != null)
             {
                 _interfaceType = interfaceConfig.InterfaceType;
-                _keySerializer = interfaceConfig.KeySerializers.Get<TK>();
+                _keySerializer = interfaceConfig.KeySerializers.GetSerializer<TK>();
                 _valueSerializer = interfaceConfig.ValueSerializers.GetSerializer<TV>();
                 _valueDeserializer = interfaceConfig.ValueSerializers.GetDeserializer<TV>();
                 _timeToLive = interfaceConfig.TimeToLive;
-                _memoryCacheMaxSizeMB = interfaceConfig.MemoryCacheMaxSizeMB;
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
                 _disableCache = interfaceConfig.DisableCache;
 
-                if (interfaceConfig.CacheFactory != null)
-                    _cacheFactoryFunc = interfaceConfig.CacheFactory.Build;
-                
+                if (interfaceConfig.LocalCacheFactory != null)
+                    _localCacheFactory = new LocalCacheFactoryWrapper<TK, TV>(interfaceConfig.LocalCacheFactory);
+                                
+                if (interfaceConfig.RemoteCacheFactory != null)
+                    _remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(interfaceConfig.RemoteCacheFactory);
+
                 if (interfaceConfig.OnResult != null)
                     _onResult = interfaceConfig.OnResult;
                 
@@ -81,21 +87,24 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(Func<TK, string> serializer)
+        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(Func<TK, string> serializer, Func<string, TK> deserializer = null)
         {
             _keySerializer = serializer;
+            _keyDeserializer = deserializer;
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(IKeySerializer serializer)
+        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(ISerializer serializer)
         {
             _keySerializer = serializer.Serialize;
+            _keyDeserializer = serializer.Deserialize<TK>;
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(IKeySerializer<TK> serializer)
+        public FunctionCacheConfigurationManager<TK, TV> WithKeySerializer(ISerializer<TK> serializer)
         {
             _keySerializer = serializer.Serialize;
+            _keyDeserializer = serializer.Deserialize;
             return this;
         }
         
@@ -117,12 +126,6 @@ namespace CacheMeIfYouCan
         {
             _valueSerializer = serializer.Serialize;
             _valueDeserializer = serializer.Deserialize;
-            return this;
-        }
-
-        public FunctionCacheConfigurationManager<TK, TV> WithMaxMemoryCacheMaxSizeMB(int maxSizeMB)
-        {
-            _memoryCacheMaxSizeMB = maxSizeMB;
             return this;
         }
 
@@ -148,16 +151,46 @@ namespace CacheMeIfYouCan
             _defaultValueFactory = defaultValueFactory;
             return this;
         }
-
-        public FunctionCacheConfigurationManager<TK, TV> WithCacheFactory(Func<ICache<TV>> cacheFactoryFunc)
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithLocalCacheFactory(ILocalCacheFactory cacheFactory)
         {
-            _cacheFactoryFunc = c => cacheFactoryFunc();
+            _localCacheFactory = new LocalCacheFactoryWrapper<TK, TV>(cacheFactory);
+            return this;
+        }
+
+        public FunctionCacheConfigurationManager<TK, TV> WithLocalCacheFactory(Func<ILocalCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        {
+            _localCacheFactory = new LocalCacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
             return this;
         }
         
-        public FunctionCacheConfigurationManager<TK, TV> WithCacheFactory(ICacheFactory cacheFactory)
+        public FunctionCacheConfigurationManager<TK, TV> WithLocalCache(ILocalCache<TK, TV> cache, bool requiresStringKeys = true)
         {
-            _cacheFactoryFunc = cacheFactory.Build;
+            _localCacheFactory = new LocalCacheFactoryFuncWrapper<TK, TV>(() => cache, requiresStringKeys);
+            return this;
+        }
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithRemoteCacheFactory(ICacheFactory cacheFactory)
+        {
+            _remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(cacheFactory);
+            return this;
+        }
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        {
+            _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>((c, _) => cacheFactoryFunc(c), requiresStringKeys);
+            return this;
+        }
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, Action<Key<TK>>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        {
+            _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
+            return this;
+        }
+        
+        public FunctionCacheConfigurationManager<TK, TV> WithRemoteCache(ICache<TK, TV> cache, bool requiresStringKeys = true)
+        {
+            _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>((c, _) => cache, requiresStringKeys);
             return this;
         }
         
@@ -212,29 +245,49 @@ namespace CacheMeIfYouCan
 
         public Func<TK, Task<TV>> Build()
         {
-            var memoryCache = MemoryCacheBuilder.Build<TV>(_memoryCacheMaxSizeMB ?? DefaultCacheSettings.MemoryCacheMaxSizeMB);
             var functionInfo = new FunctionInfo(_interfaceType, _functionName, typeof(TK), typeof(TV));
-            
-            ICache<TV> cache;
+            var cacheConfig = new CacheFactoryConfig<TK, TV>
+            {
+                FunctionInfo = functionInfo,
+                KeyDeserializer = GetKeyDeserializer(),
+                ValueSerializer = GetValueSerializer(),
+                ValueDeserializer = GetValueDeserializer()
+            };
+
+            ICache<TK, TV> cache = null;
+            IKeyDictionary<TK, Task<TV>> activeFetchesDictionary;
+            IKeySetFactory<TK> keySetFactory = null;
             if (_disableCache ?? DefaultCacheSettings.DisableCache)
             {
-                cache = null;
-            }
-            else if (_cacheFactoryFunc == null)
-            {
-                cache = memoryCache;
+                activeFetchesDictionary = new EmptyKeyDictionary<TK, Task<TV>>();
             }
             else
             {
-                var parameters = new CacheFactoryConfig<TV>
-                {
-                    MemoryCache = memoryCache,
-                    FunctionInfo = functionInfo,
-                    Serializer = GetValueSerializer(),
-                    Deserializer = GetValueDeserializer()
-                };
+                ILocalCacheFactory<TK, TV> localCacheFactory = null;
+                if (_localCacheFactory != null)
+                    localCacheFactory = _localCacheFactory;
+                else if (DefaultCacheSettings.LocalCacheFactory != null)
+                    localCacheFactory = new LocalCacheFactoryWrapper<TK, TV>(DefaultCacheSettings.LocalCacheFactory);
+
+                ICacheFactory<TK, TV> remoteCacheFactory = null;
+                if (_remoteCacheFactory != null)
+                    remoteCacheFactory = _remoteCacheFactory;
+                else if (DefaultCacheSettings.RemoteCacheFactory != null)
+                    remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(DefaultCacheSettings.RemoteCacheFactory);
                 
-                cache = _cacheFactoryFunc(parameters);
+                cache = CacheBuilder.Build(
+                    localCacheFactory,
+                    remoteCacheFactory,
+                    cacheConfig,
+                    out var requiresStringKeys);
+
+                activeFetchesDictionary = requiresStringKeys
+                    ? (IKeyDictionary<TK, Task<TV>>) new StringKeyDictionary<TK, Task<TV>>()
+                    : new GenericKeyDictionary<TK, Task<TV>>();
+
+                keySetFactory = requiresStringKeys
+                    ? (IKeySetFactory<TK>) new StringKeySetFactory<TK>()
+                    : new GenericKeySetFactory<TK>();
             }
 
             var functionCache = new FunctionCache<TK, TV>(
@@ -248,7 +301,9 @@ namespace CacheMeIfYouCan
                 _onResult,
                 _onFetch,
                 _onError,
-                _keysToKeepAliveFunc);
+                activeFetchesDictionary,
+                _keysToKeepAliveFunc,
+                keySetFactory);
             
             _cachedFunc = functionCache.Get;
             
@@ -262,12 +317,22 @@ namespace CacheMeIfYouCan
 
         private Func<TK, string> GetKeySerializer()
         {
-            var serializer = _keySerializer ?? DefaultCacheSettings.KeySerializers.Get<TK>();
+            var serializer = _keySerializer ?? DefaultCacheSettings.KeySerializers.GetSerializer<TK>();
             
             if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
                 throw new Exception($"No key serializer defined for type '{typeof(TK).FullName}'");
 
             return serializer;
+        }
+
+        private Func<string, TK> GetKeyDeserializer()
+        {
+            var deserializer = _keyDeserializer ?? DefaultCacheSettings.KeySerializers.GetDeserializer<TK>();
+
+            if (deserializer == null)
+                ProvidedSerializers.TryGetDeserializer(out deserializer);
+
+            return deserializer;
         }
         
         private Func<TV, string> GetValueSerializer()

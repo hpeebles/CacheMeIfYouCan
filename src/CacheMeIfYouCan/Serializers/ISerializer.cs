@@ -1,7 +1,9 @@
-﻿namespace CacheMeIfYouCan
+﻿namespace CacheMeIfYouCan.Serializers
 {
-    public interface ISerializer : IKeySerializer
+    public interface ISerializer
     {
+        string Serialize<T>(T value);
+
         T Deserialize<T>(string value);
     }
 

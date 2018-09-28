@@ -1,10 +1,15 @@
-﻿namespace CacheMeIfYouCan.Tests
+﻿using System;
+using CacheMeIfYouCan.Caches;
+
+namespace CacheMeIfYouCan.Tests
 {
     public class TestCacheFactory : ICacheFactory
     {
-        public ICache<T> Build<T>(CacheFactoryConfig<T> config)
+        public bool RequiresStringKeys => true;
+        
+        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> _)
         {
-            return new TestCache<T>(config.Serializer, config.Deserializer);
+            return new TestCache<TK, TV>(config.ValueSerializer, config.ValueDeserializer);
         }
     }
 }

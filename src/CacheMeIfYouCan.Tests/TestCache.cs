@@ -1,45 +1,47 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class TestCache<T> : ICache<T>
+    public class TestCache<TK, TV> : ICache<TK, TV>
     {
-        private readonly Func<T, string> _serializer;
-        private readonly Func<string, T> _deserializer;
+        private readonly Func<TV, string> _serializer;
+        private readonly Func<string, TV> _deserializer;
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
+        public readonly string CacheType = "test";
 
-        public TestCache(Func<T, string> serializer, Func<string, T> deserializer)
+        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer)
         {
             _serializer = serializer;
             _deserializer = deserializer;
         }
 
-        public Task<GetFromCacheResult<T>> Get(string key)
+        public Task<GetFromCacheResult<TV>> Get(Key<TK> key)
         {
-            var result = GetFromCacheResult<T>.NotFound;
+            var result = GetFromCacheResult<TV>.NotFound;
 
-            if (Values.TryGetValue(key, out var item))
+            if (Values.TryGetValue(key.AsString.Value, out var item))
             {
                 var timeToLive = item.Item2 - DateTimeOffset.UtcNow;
 
                 if (timeToLive < TimeSpan.Zero)
-                    Values.TryRemove(key, out _);
+                    Values.TryRemove(key.AsString.Value, out _);
                 else
-                    result = new GetFromCacheResult<T>(_deserializer(item.Item1), timeToLive, "test");
+                    result = new GetFromCacheResult<TV>(_deserializer(item.Item1), timeToLive, CacheType);
             }
 
             return Task.FromResult(result);
         }
 
-        public Task Set(string key, T value, TimeSpan timeToLive)
+        public Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             if (timeToLive > TimeSpan.Zero)
             {
                 var expiry = DateTimeOffset.UtcNow + timeToLive;
 
-                Values[key] = Tuple.Create(_serializer(value), expiry);
+                Values[key.AsString.Value] = Tuple.Create(_serializer(value), expiry);
             }
 
             return Task.CompletedTask;

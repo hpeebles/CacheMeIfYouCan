@@ -1,4 +1,6 @@
-﻿namespace CacheMeIfYouCan.Prometheus
+﻿using CacheMeIfYouCan.Configuration;
+
+namespace CacheMeIfYouCan.Prometheus
 {
     public static class InterfaceCacheConfigurationManagerPrometheusExtensions
     {

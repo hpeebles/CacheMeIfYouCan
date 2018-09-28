@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Serializers
 {
     public class ValueSerializers
     {

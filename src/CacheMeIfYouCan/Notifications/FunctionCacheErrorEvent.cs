@@ -1,18 +1,18 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheErrorEvent
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly string KeyString;
+        public readonly Lazy<string> KeyString;
         public readonly long Timestamp;
         public readonly string Message;
         public readonly Exception Exception;
 
         protected internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
-            string keyString,
+            Lazy<string> keyString,
             long timestamp,
             string message,
             Exception exception)
@@ -31,12 +31,11 @@ namespace CacheMeIfYouCan
 
         internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
-            TK key,
-            string keyString,
+            Key<TK> key,
             long timestamp,
             string message,
             Exception exception)
-            : base(functionInfo, keyString, timestamp, message, exception)
+            : base(functionInfo, key.AsString, timestamp, message, exception)
         {
             Key = key;
         }

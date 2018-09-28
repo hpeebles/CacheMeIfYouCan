@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
+using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -10,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<TK, Task<TV>> _func;
         private readonly FunctionInfo _functionInfo;
-        private readonly ICache<TV> _cache;
+        private readonly ICache<TK, TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
         private readonly bool _earlyFetchEnabled;
@@ -19,14 +21,14 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
-        private readonly ConcurrentDictionary<string, Task<TV>> _activeFetches;
+        private readonly IKeyDictionary<TK, Task<TV>> _activeFetchesDictionary;
         private readonly Random _rng;
         private long _averageFetchDuration;
         
         public FunctionCache(
             Func<TK, Task<TV>> func,
             FunctionInfo functionInfo,
-            ICache<TV> cache,
+            ICache<TK, TV> cache,
             TimeSpan timeToLive,
             Func<TK, string> keySerializer,
             bool earlyFetchEnabled,
@@ -34,7 +36,9 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheErrorEvent<TK>> onError,
-            Func<Task<IList<TK>>> keysToKeepAliveFunc)
+            IKeyDictionary<TK, Task<TV>> activeFetchesDictionary,
+            Func<Task<IList<TK>>> keysToKeepAliveFunc,
+            IKeySetFactory<TK> keySetFactory)
         {
             _func = func;
             _functionInfo = functionInfo;
@@ -47,12 +51,12 @@ namespace CacheMeIfYouCan.Internal
             _onResult = onResult ?? DefaultCacheSettings.OnResult;
             _onFetch = onFetch ?? DefaultCacheSettings.OnFetch;
             _onError = onError ?? DefaultCacheSettings.OnError;
-            _activeFetches = new ConcurrentDictionary<string, Task<TV>>();
+            _activeFetchesDictionary = activeFetchesDictionary;
             _rng = new Random();
 
             if (_cache != null && keysToKeepAliveFunc != null)
             {
-                async Task<TimeSpan?> GetTimeToLive(string key)
+                async Task<TimeSpan?> GetTimeToLive(Key<TK> key)
                 {
                     var result = await _cache.Get(key);
 
@@ -61,7 +65,10 @@ namespace CacheMeIfYouCan.Internal
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
                 {
-                    return Fetch(new Key<TK>(key, _keySerializer(key)), FetchReason.KeysToKeepAliveFunc, existingTimeToLive);
+                    return Fetch(
+                        new Key<TK>(key, new Lazy<string>(() => _keySerializer(key))),
+                        FetchReason.KeysToKeepAliveFunc,
+                        existingTimeToLive);
                 }
 
                 var keysToKeepAliveProcessor = new KeysToKeepAliveProcessor<TK>(
@@ -69,7 +76,8 @@ namespace CacheMeIfYouCan.Internal
                     GetTimeToLive,
                     RefreshKey,
                     keysToKeepAliveFunc,
-                    _keySerializer);
+                    _keySerializer,
+                    keySetFactory);
 
                 Task.Run(keysToKeepAliveProcessor.Run);
             }
@@ -79,7 +87,7 @@ namespace CacheMeIfYouCan.Internal
         {
             var start = Stopwatch.GetTimestamp();
             var result = new Result<TV>();
-            var key = new Key<TK>(keyObj, _keySerializer(keyObj));
+            var key = new Key<TK>(keyObj, new Lazy<string>(() => _keySerializer(keyObj)));
             
             try
             {
@@ -97,9 +105,8 @@ namespace CacheMeIfYouCan.Internal
 
                     _onResult(new FunctionCacheGetResult<TK, TV>(
                         _functionInfo,
-                        key.AsObject,
+                        key,
                         result.Value,
-                        key.AsString,
                         result.Outcome,
                         start,
                         duration,
@@ -118,7 +125,7 @@ namespace CacheMeIfYouCan.Internal
 
             GetFromCacheResult<TV> getFromCacheResult;
             if (_cache != null)
-                getFromCacheResult = await _cache.Get(key.AsString);
+                getFromCacheResult = await _cache.Get(key);
             else
                 getFromCacheResult = GetFromCacheResult<TV>.NotFound;
             
@@ -150,13 +157,13 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
-                value = await _activeFetches.GetOrAdd(
-                    key.AsString,
+                value = await _activeFetchesDictionary.GetOrAdd(
+                    key,
                     async k =>
                     {
                         duplicate = false;
                         
-                        var fetchedValue = await _func(key.AsObject);
+                        var fetchedValue = await _func(k.AsObject);
 
                         if (_cache != null)
                             await _cache.Set(k, fetchedValue, _timeToLive);
@@ -170,8 +177,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     _onError(new FunctionCacheErrorEvent<TK>(
                         _functionInfo,
-                        key.AsObject,
-                        key.AsString,
+                        key,
                         start,
                         "Unable to fetch value",
                         ex));
@@ -183,7 +189,7 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                _activeFetches.TryRemove(key.AsString, out _);
+                _activeFetchesDictionary.Remove(key);
                 
                 if (_onFetch != null)
                 {
@@ -193,9 +199,8 @@ namespace CacheMeIfYouCan.Internal
 
                     _onFetch(new FunctionCacheFetchResult<TK, TV>(
                         _functionInfo,
-                        key.AsObject,
+                        key,
                         value,
-                        key.AsString,
                         !error,
                         start,
                         duration,
@@ -231,8 +236,7 @@ namespace CacheMeIfYouCan.Internal
 
                 _onError(new FunctionCacheErrorEvent<TK>(
                     _functionInfo,
-                    key.AsObject,
-                    key.AsString,
+                    key,
                     Stopwatch.GetTimestamp(),
                     message,
                     ex));

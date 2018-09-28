@@ -1,4 +1,6 @@
-﻿namespace CacheMeIfYouCan.Internal
+﻿using CacheMeIfYouCan.Notifications;
+
+namespace CacheMeIfYouCan.Internal
 {
     internal struct Result<TV>
     {

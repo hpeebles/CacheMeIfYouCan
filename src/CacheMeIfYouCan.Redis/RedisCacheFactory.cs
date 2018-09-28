@@ -1,4 +1,6 @@
-﻿using StackExchange.Redis;
+﻿using System;
+using CacheMeIfYouCan.Caches;
+using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
@@ -11,7 +13,9 @@ namespace CacheMeIfYouCan.Redis
             _redisConfig = redisConfig;
         }
 
-        public ICache<T> Build<T>(CacheFactoryConfig<T> config)
+        public bool RequiresStringKeys => true;
+
+        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> removeFromLocalCacheCallback)
         {
             var options = new ConfigurationOptions();
             
@@ -22,13 +26,14 @@ namespace CacheMeIfYouCan.Redis
 
             var keySpacePrefix = _redisConfig.KeySpacePrefixFunc?.Invoke(config.FunctionInfo);
             
-            return new RedisCache<T>(
+            return new RedisCache<TK, TV>(
                 multiplexer,
                 _redisConfig.Database,
-                config.MemoryCache,
                 keySpacePrefix,
-                config.Serializer,
-                config.Deserializer);
+                config.KeyDeserializer,
+                config.ValueSerializer,
+                config.ValueDeserializer,
+                removeFromLocalCacheCallback);
         }
     }
 }

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Configuration
 {
     public class CachedProxyConfigurationManager<T>
     {
@@ -14,10 +17,10 @@ namespace CacheMeIfYouCan
         private readonly KeySerializers _keySerializers;
         private readonly ValueSerializers _valueSerializers;
         private TimeSpan? _timeToLive;
-        private int? _memoryCacheMaxSizeMB;
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
-        private ICacheFactory _cacheFactory;
+        private ILocalCacheFactory _localCacheFactory;
+        private ICacheFactory _remoteCacheFactory;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
         private Action<FunctionCacheErrorEvent> _onError;
@@ -47,25 +50,25 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(IKeySerializer serializer)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(ISerializer serializer)
         {
             _keySerializers.Set<TField>(serializer);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(IKeySerializer<TField> serializer)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(ISerializer<TField> serializer)
         {
             _keySerializers.Set(serializer);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(Func<object, string> serializer)
+        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(Func<object, string> serializer, Func<string, object> deserializer = null)
         {
-            _keySerializers.SetDefault(serializer);
+            _keySerializers.SetDefault(serializer, deserializer);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(IKeySerializer serializer)
+        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(ISerializer serializer)
         {
             _keySerializers.SetDefault(serializer);
             return this;
@@ -95,12 +98,6 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> WithMaxMemoryCacheMaxSizeMB(int maxSizeMB)
-        {
-            _memoryCacheMaxSizeMB = maxSizeMB;
-            return this;
-        }
-
         public CachedProxyConfigurationManager<T> WithEarlyFetch(bool enabled = true)
         {
             _earlyFetchEnabled = enabled;
@@ -113,9 +110,15 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> WithCacheFactory(ICacheFactory cacheFactory)
+        public CachedProxyConfigurationManager<T> WithLocalCacheFactory(ILocalCacheFactory cacheFactory)
         {
-            _cacheFactory = cacheFactory;
+            _localCacheFactory = cacheFactory;
+            return this;
+        }
+
+        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory)
+        {
+            _remoteCacheFactory = cacheFactory;
             return this;
         }
         
@@ -169,10 +172,10 @@ namespace CacheMeIfYouCan
                 _keySerializers,
                 _valueSerializers,
                 _timeToLive,
-                _memoryCacheMaxSizeMB,
                 _earlyFetchEnabled,
                 _disableCache,
-                _cacheFactory,
+                _localCacheFactory,
+                _remoteCacheFactory,
                 _onResult,
                 _onFetch,
                 _onError,

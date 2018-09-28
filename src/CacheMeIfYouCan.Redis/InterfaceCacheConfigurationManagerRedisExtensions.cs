@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Redis
 {
@@ -12,7 +13,7 @@ namespace CacheMeIfYouCan.Redis
 
             configAction(config);
             
-            configManager.WithCacheFactory(new RedisCacheFactory(config));
+            configManager.WithRemoteCacheFactory(new RedisCacheFactory(config));
             
             return configManager;
         }

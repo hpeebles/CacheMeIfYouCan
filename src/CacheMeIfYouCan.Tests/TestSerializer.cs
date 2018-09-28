@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using CacheMeIfYouCan.Serializers;
 
 namespace CacheMeIfYouCan.Tests
 {

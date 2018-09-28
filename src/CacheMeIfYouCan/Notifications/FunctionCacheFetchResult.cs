@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheFetchResult
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly string KeyString;
+        public readonly Lazy<string> KeyString;
         public readonly bool Success;
         public readonly long Start;
         public readonly long Duration;
@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan
 
         protected internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
-            string keyString,
+            Lazy<string> keyString,
             bool success,
             long start,
             long duration,
@@ -41,16 +41,15 @@ namespace CacheMeIfYouCan
 
         internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
-            TK key,
+            Key<TK> key,
             TV value,
-            string keyString,
             bool success,
             long start,
             long duration,
             bool duplicate,
             FetchReason reason,
             TimeSpan? existingTtl)
-            : base(functionInfo, keyString, success, start, duration, duplicate, reason, existingTtl)
+            : base(functionInfo, key.AsString, success, start, duration, duplicate, reason, existingTtl)
         {
             Key = key;
             Value = value;
