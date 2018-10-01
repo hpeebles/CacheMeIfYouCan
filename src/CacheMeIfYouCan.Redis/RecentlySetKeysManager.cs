@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Redis
     {
         private readonly ConcurrentDictionary<string, long> _dictionary = new ConcurrentDictionary<string, long>();
         private readonly Queue<KeyValuePair<string, long>> _queue = new Queue<KeyValuePair<string, long>>();
-        private readonly long _recentWindow = TimeSpan.FromSeconds(5).Ticks;
+        private readonly long _recentWindow = Stopwatch.Frequency * 5; // 5 seconds
         private readonly object _lock = new object();
 
         // Every second we prune keys which are no longer relevant, disposing of this field is the only way to stop that process
@@ -39,7 +39,9 @@ namespace CacheMeIfYouCan.Redis
 
         public bool IsRecentlySet(string key)
         {
-            return _dictionary.TryGetValue(key, out var timestamp) && IsRecent(timestamp);
+            // Remove keys as they are seen since if we recieve the same key a second time it must have
+            // been changed externally and so its value was no longer recently set by this local service
+            return _dictionary.TryRemove(key, out var timestamp) && IsRecent(timestamp);
         }
 
         public void Dispose()
@@ -66,7 +68,9 @@ namespace CacheMeIfYouCan.Redis
 
         private bool IsRecent(long timestamp)
         {
-            return Stopwatch.GetTimestamp() - timestamp < _recentWindow;
+            var age = Stopwatch.GetTimestamp() - timestamp;
+            
+            return age < _recentWindow;
         }
     }
 }

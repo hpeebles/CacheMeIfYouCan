@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Redis
     internal class RedisCache<TK, TV> : ICache<TK, TV>
     {
         private const string CacheType = "redis";
-        private readonly IConnectionMultiplexer _multiplexer;
+        private readonly RedisConnection _connection;
         private readonly int _database;
         private readonly string _keySpacePrefix;
         private readonly Func<string, TK> _keyDeserializer;
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
 
         public RedisCache(
-            IConnectionMultiplexer multiplexer,
+            RedisConnection connection,
             int database,
             string keySpacePrefix,
             Func<string, TK> keyDeserializer,
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Redis
             Func<string, TV> deserializer,
             Action<Key<TK>> removeFromLocalCacheAction = null)
         {
-            _multiplexer = multiplexer;
+            _connection = connection;
             _database = database;
             _keySpacePrefix = keySpacePrefix;
             _keyDeserializer = keyDeserializer;
@@ -43,27 +43,15 @@ namespace CacheMeIfYouCan.Redis
             }
             else
             {
-                _toRedisKey = k => $"{keySpacePrefix}_{k}";
-                _fromRedisKey = k => k.Substring(keySpacePrefix.Length + 1);
+                _toRedisKey = k => $"{keySpacePrefix}{k}";
+                _fromRedisKey = k => k.Substring(keySpacePrefix.Length);
             }
 
             if (_removeFromLocalCacheAction != null)
             {
                 _recentlySetKeysManager = new RecentlySetKeysManager();
 
-                // All Redis instances must have keyevent notifications enabled (eg. 'notify-keyspace-events AE')
-                var subscriber = multiplexer.GetSubscriber();
-
-                var keyEvents = new[]
-                {
-                    "set",
-                    "del",
-                    "expired",
-                    "evicted"
-                };
-
-                foreach (var keyEvent in keyEvents)
-                    subscriber.Subscribe($"__keyevent@{_database}__:{keyEvent}", (c, k) => RemoveKeyFromMemoryIfNotRecentlySet(k));
+                connection.RegisterOnKeyChangedCallback(_database, RemoveKeyFromMemoryIfNotRecentlySet);
             }
         }
 
@@ -115,7 +103,7 @@ namespace CacheMeIfYouCan.Redis
 
         private IDatabase GetDatabase()
         {
-            return _multiplexer.GetDatabase(_database);
+            return _connection.Get().GetDatabase(_database);
         }
     }
 }

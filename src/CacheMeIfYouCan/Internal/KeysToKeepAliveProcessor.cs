@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly TimeSpan _timeToLive;
         private readonly Func<Key<TK>, Task<TimeSpan?>> _getTimeToLiveFunc;
-        private readonly Func<TK, TimeSpan?, Task> _refreshKey;
+        private readonly Func<TK, TimeSpan?, Task> _refreshKeyFunc;
         private readonly Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private readonly Func<TK, string> _keySerializer;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
@@ -24,14 +24,14 @@ namespace CacheMeIfYouCan.Internal
         public KeysToKeepAliveProcessor(
             TimeSpan timeToLive,
             Func<Key<TK>, Task<TimeSpan?>> getTimeToLive,
-            Func<TK, TimeSpan?, Task> refreshKey,
+            Func<TK, TimeSpan?, Task> refreshKeyFunc,
             Func<Task<IList<TK>>> keysToKeepAliveFunc,
             Func<TK, string> keySerializer,
             IEqualityComparer<Key<TK>> keyComparer)
         {
             _timeToLive = timeToLive;
             _getTimeToLiveFunc = getTimeToLive;
-            _refreshKey = refreshKey;
+            _refreshKeyFunc = refreshKeyFunc;
             _keysToKeepAliveFunc = keysToKeepAliveFunc;
             _keySerializer = keySerializer;
             _keyComparer = keyComparer;
@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Internal
                         {
                             try
                             {
-                                await _refreshKey(key.AsObject, timeToLiveRemaining);
+                                await _refreshKeyFunc(key.AsObject, timeToLiveRemaining);
                             }
                             catch
                             { }
@@ -179,7 +179,7 @@ namespace CacheMeIfYouCan.Internal
 
                     if (!timeToLive.HasValue)
                     {
-                        await _refreshKey(key.AsObject, null);
+                        await _refreshKeyFunc(key.AsObject, null);
                         timeToLive = _timeToLive;
                     }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using CacheMeIfYouCan.Caches;
-using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
@@ -17,17 +16,12 @@ namespace CacheMeIfYouCan.Redis
 
         public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> removeFromLocalCacheAction)
         {
-            var options = new ConfigurationOptions();
-            
-            foreach (var endpoint in _redisConfig.Endpoints)
-                options.EndPoints.Add(endpoint);
-            
-            var multiplexer = ConnectionMultiplexer.Connect(options);
-
             var keySpacePrefix = _redisConfig.KeySpacePrefixFunc?.Invoke(config.FunctionInfo);
+
+            var connection = RedisConnectionManager.GetOrAdd(_redisConfig.ConnectionString ?? _redisConfig.Configuration.ToString());
             
             return new RedisCache<TK, TV>(
-                multiplexer,
+                connection,
                 _redisConfig.Database,
                 keySpacePrefix,
                 config.KeyDeserializer,
