@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
@@ -84,36 +85,39 @@ namespace CacheMeIfYouCan.Internal
 
         public async Task<TV> Get(TK keyObj)
         {
-            var start = Stopwatch.GetTimestamp();
-            var result = new Result<TV>();
-            var key = new Key<TK>(keyObj, new Lazy<string>(() => _keySerializer(keyObj)));
-            
-            try
+            using (SynchronizationContextRemover.StartNew())
             {
-                result = await GetImpl(key);
-            }
-            catch (Exception ex)
-            {
-                result = HandleError(key, ex);
-            }
-            finally
-            {
-                if (_onResult != null)
+                var start = Stopwatch.GetTimestamp();
+                var result = new Result<TV>();
+                var key = new Key<TK>(keyObj, new Lazy<string>(() => _keySerializer(keyObj)));
+
+                try
                 {
-                    var duration = Stopwatch.GetTimestamp() - start;
-
-                    _onResult(new FunctionCacheGetResult<TK, TV>(
-                        _functionInfo,
-                        key,
-                        result.Value,
-                        result.Outcome,
-                        start,
-                        duration,
-                        result.CacheType));
+                    result = await GetImpl(key);
                 }
-            }
+                catch (Exception ex)
+                {
+                    result = HandleError(key, ex);
+                }
+                finally
+                {
+                    if (_onResult != null)
+                    {
+                        var duration = Stopwatch.GetTimestamp() - start;
 
-            return result.Value;
+                        _onResult(new FunctionCacheGetResult<TK, TV>(
+                            _functionInfo,
+                            key,
+                            result.Value,
+                            result.Outcome,
+                            start,
+                            duration,
+                            result.CacheType));
+                    }
+                }
+
+                return result.Value;
+            }
         }
 
         private async Task<Result<TV>> GetImpl(Key<TK> key)
