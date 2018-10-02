@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
@@ -87,7 +85,8 @@ namespace CacheMeIfYouCan.Internal
         {
             using (SynchronizationContextRemover.StartNew())
             {
-                var start = Stopwatch.GetTimestamp();
+                var timestamp = Timestamp.Now;
+                var start = TimingsHelper.Start();
                 var result = new Result<TV>();
                 var key = new Key<TK>(keyObj, new Lazy<string>(() => _keySerializer(keyObj)));
 
@@ -103,15 +102,13 @@ namespace CacheMeIfYouCan.Internal
                 {
                     if (_onResult != null)
                     {
-                        var duration = Stopwatch.GetTimestamp() - start;
-
                         _onResult(new FunctionCacheGetResult<TK, TV>(
                             _functionInfo,
                             key,
                             result.Value,
                             result.Outcome,
-                            start,
-                            duration,
+                            timestamp,
+                            TimingsHelper.GetDuration(start),
                             result.CacheType));
                     }
                 }
@@ -153,7 +150,8 @@ namespace CacheMeIfYouCan.Internal
 
         private async Task<TV> Fetch(Key<TK> key, FetchReason reason, TimeSpan? existingTtl = null)
         {
-            var start = Stopwatch.GetTimestamp();
+            var timestamp = Timestamp.Now;
+            var start = TimingsHelper.Start();
             var value = default(TV);
             var duplicate = true;
             var error = false;
@@ -181,7 +179,7 @@ namespace CacheMeIfYouCan.Internal
                     _onError(new FunctionCacheErrorEvent<TK>(
                         _functionInfo,
                         key,
-                        start,
+                        Timestamp.Now,
                         "Unable to fetch value",
                         ex));
                 }
@@ -196,7 +194,7 @@ namespace CacheMeIfYouCan.Internal
                 
                 if (_onFetch != null)
                 {
-                    var duration = Stopwatch.GetTimestamp() - start;
+                    var duration = TimingsHelper.GetDuration(start);
 
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
@@ -205,8 +203,8 @@ namespace CacheMeIfYouCan.Internal
                         key,
                         value,
                         !error,
-                        start,
-                        duration,
+                        timestamp,
+                        TimingsHelper.GetDuration(start),
                         duplicate,
                         reason,
                         existingTtl));
@@ -240,7 +238,7 @@ namespace CacheMeIfYouCan.Internal
                 _onError(new FunctionCacheErrorEvent<TK>(
                     _functionInfo,
                     key,
-                    Stopwatch.GetTimestamp(),
+                    Timestamp.Now,
                     message,
                     ex));
             }

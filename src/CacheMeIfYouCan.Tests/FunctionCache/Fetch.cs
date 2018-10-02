@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
@@ -79,6 +80,49 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .ToList();
             
             Assert.NotEmpty(earlyFetches);
+        }
+        
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        public async Task FetchDurationIsAccurate(int seconds)
+        {
+            var duration = TimeSpan.FromSeconds(seconds);
+            
+            Func<string, Task<string>> echo = new Echo(duration);
+            
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .DisableCache()
+                .OnFetch(fetches.Add)
+                .Build();
+            
+            await cachedEcho("abc");
+            
+            Assert.Single(fetches);
+            Assert.True(duration.Ticks < fetches[0].Duration && fetches[0].Duration < duration.Ticks * 1.1);
+        }
+        
+        [Fact]
+        public async Task FetchTimestampIsAccurate()
+        {
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .OnFetch(fetches.Add)
+                .Build();
+            
+            var now = Timestamp.Now;
+            
+            await cachedEcho("abc");
+            
+            Assert.Single(fetches);
+            Assert.True(now <= fetches[0].Start && fetches[0].Start < now + TimeSpan.FromMilliseconds(10).Ticks);
         }
     }
 }

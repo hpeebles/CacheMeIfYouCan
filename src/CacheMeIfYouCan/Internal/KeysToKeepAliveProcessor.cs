@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -171,7 +170,7 @@ namespace CacheMeIfYouCan.Internal
                 if (token.IsCancellationRequested)
                     return;
                 
-                var keyStart = Stopwatch.GetTimestamp();
+                var keyStart = TimingsHelper.Start();
 
                 try
                 {
@@ -204,7 +203,7 @@ namespace CacheMeIfYouCan.Internal
                 catch
                 { }
 
-                var keyDuration = Stopwatch.GetTimestamp() - keyStart;
+                var keyDuration = TimingsHelper.GetDuration(keyStart);
 
                 // So that we don't hammer the cache
                 await Wait(TimeSpan.FromTicks(keyDuration), token);

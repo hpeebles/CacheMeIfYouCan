@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Redis
 {
@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Redis
     {
         private readonly ConcurrentDictionary<string, long> _dictionary = new ConcurrentDictionary<string, long>();
         private readonly Queue<KeyValuePair<string, long>> _queue = new Queue<KeyValuePair<string, long>>();
-        private readonly long _recentWindow = Stopwatch.Frequency * 5; // 5 seconds
+        private readonly long _recentWindow = TimeSpan.FromSeconds(5).Ticks;
         private readonly object _lock = new object();
 
         // Every second we prune keys which are no longer relevant, disposing of this field is the only way to stop that process
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Redis
 
         public void Mark(string key)
         {
-            var now = Stopwatch.GetTimestamp();
+            var now = Timestamp.Now;
 
             if (!_dictionary.TryAdd(key, now))
                 return;
@@ -68,7 +68,7 @@ namespace CacheMeIfYouCan.Redis
 
         private bool IsRecent(long timestamp)
         {
-            var age = Stopwatch.GetTimestamp() - timestamp;
+            var age = Timestamp.Now - timestamp;
             
             return age < _recentWindow;
         }

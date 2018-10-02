@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
@@ -163,6 +164,26 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
                 await Task.Delay(5);
             }
+        }
+        
+        [Fact]
+        public async Task ErrorTimestampIsAccurate()
+        {
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            
+            var errors = new List<FunctionCacheErrorEvent>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .OnError(errors.Add)
+                .Build();
+            
+            var now = Timestamp.Now;
+            
+            await Assert.ThrowsAsync<Exception>(() => cachedEcho("abc"));
+            
+            Assert.Equal(2, errors.Count);
+            Assert.True(errors.All(e => now <= e.Timestamp && e.Timestamp < now + TimeSpan.FromMilliseconds(10).Ticks));
         }
     }
 }

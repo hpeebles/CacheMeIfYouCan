@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Caches
 {
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Caches
             if (!_values.TryGetValue(key, out var value))
                 return GetFromCacheResult<TV>.NotFound;
             
-            var currentTimestamp = Stopwatch.GetTimestamp();
+            var currentTimestamp = Timestamp.Now;
 
             if (value.Item2 > currentTimestamp)
                 return new GetFromCacheResult<TV>(value.Item1, TimeSpan.FromTicks(value.Item2 - currentTimestamp), CacheType);
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Caches
 
         public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            var expiryTicks = Stopwatch.GetTimestamp() + timeToLive.Ticks;
+            var expiryTicks = Timestamp.Now + timeToLive.Ticks;
             var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
             _values[key] = Tuple.Create(value, expiryTicks);
@@ -79,7 +79,7 @@ namespace CacheMeIfYouCan.Caches
 
         private void RemoveExpiredKeys()
         {
-            var timestamp = Stopwatch.GetTimestamp();
+            var timestamp = Timestamp.Now;
 
             var keysToExpire = new List<TK>();
 
