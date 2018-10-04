@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 
@@ -22,12 +24,39 @@ namespace CacheMeIfYouCan.Tests
             _delay = delay;
         }
 
-        public async Task<GetFromCacheResult<TV>> Get(Key<TK> key)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
             if (_delay.HasValue)
                 await Task.Delay(_delay.Value);
+
+            return keys
+                .Select(GetSingle)
+                .ToArray();
+        }
+
+        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            if (timeToLive <= TimeSpan.Zero)
+                return;
             
-            var result = GetFromCacheResult<TV>.NotFound;
+            var expiry = DateTimeOffset.UtcNow + timeToLive;
+            
+            foreach (var kv in values)
+                Values[kv.Key.AsString.Value] = Tuple.Create(_serializer(kv.Value), expiry);
+        }
+
+        public void OnKeyChangedRemotely(string key)
+        {
+            Values.TryRemove(key, out _);
+            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, new Lazy<string>(key)));
+        }
+
+        private GetFromCacheResult<TK, TV> GetSingle(Key<TK> key)
+        {
+            var result = GetFromCacheResult<TK, TV>.NotFound(key);
 
             if (Values.TryGetValue(key.AsString.Value, out var item))
             {
@@ -36,29 +65,10 @@ namespace CacheMeIfYouCan.Tests
                 if (timeToLive < TimeSpan.Zero)
                     Values.TryRemove(key.AsString.Value, out _);
                 else
-                    result = new GetFromCacheResult<TV>(_deserializer(item.Item1), timeToLive, CacheType);
+                    result = new GetFromCacheResult<TK, TV>(key, _deserializer(item.Item1), timeToLive, CacheType);
             }
 
             return result;
-        }
-
-        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
-        {
-            if (_delay.HasValue)
-                await Task.Delay(_delay.Value);
-            
-            if (timeToLive > TimeSpan.Zero)
-            {
-                var expiry = DateTimeOffset.UtcNow + timeToLive;
-
-                Values[key.AsString.Value] = Tuple.Create(_serializer(value), expiry);
-            }
-        }
-
-        public void OnKeyChangedRemotely(string key)
-        {
-            Values.TryRemove(key, out _);
-            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, new Lazy<string>(key)));
         }
     }
 }

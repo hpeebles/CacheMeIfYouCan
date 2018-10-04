@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
@@ -48,7 +49,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 {
                     Assert.Equal(randomString, await proxy.StringToString(randomString));
                     
-                    Assert.Equal(j == 0 ? Outcome.Fetch : Outcome.FromCache, lastResult.Outcome);
+                    Assert.Equal(j == 0 ? Outcome.Fetch : Outcome.FromCache, lastResult.Results.Single().Outcome);
                 }
             }
         }

@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan.Prometheus
     {
         public static DefaultCacheConfiguration WithMetrics(this DefaultCacheConfiguration config)
         {
-            config.OnResult = MetricsTracker.OnResult;
-            config.OnFetch = MetricsTracker.OnFetch;
+            config.OnResult = FunctionCacheGetResultMetricsTracker.OnResult;
+            config.OnFetch = FunctionCacheFetchResultMetricsTracker.OnFetch;
             
             return config;
         }

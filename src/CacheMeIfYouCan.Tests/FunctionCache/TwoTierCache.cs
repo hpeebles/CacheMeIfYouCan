@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
@@ -36,22 +37,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho1("123");
             Assert.Single(results1);
-            Assert.Equal(Outcome.Fetch, results1[0].Outcome);
+            Assert.Equal(Outcome.Fetch, results1[0].Results.Single().Outcome);
 
             await cachedEcho1("123");
             Assert.Equal(2, results1.Count);
-            Assert.Equal(Outcome.FromCache, results1[1].Outcome);
-            Assert.Equal(localCache1.CacheType, results1[1].CacheType);
+            Assert.Equal(Outcome.FromCache, results1[1].Results.Single().Outcome);
+            Assert.Equal(localCache1.CacheType, results1[1].Results.Single().CacheType);
 
             await cachedEcho2("123");
             Assert.Single(results2);
-            Assert.Equal(Outcome.FromCache, results2[0].Outcome);
-            Assert.Equal(remoteCache.CacheType, results2[0].CacheType);
+            Assert.Equal(Outcome.FromCache, results2[0].Results.Single().Outcome);
+            Assert.Equal(remoteCache.CacheType, results2[0].Results.Single().CacheType);
             
             await cachedEcho2("123");
             Assert.Equal(2, results2.Count);
-            Assert.Equal(Outcome.FromCache, results2[1].Outcome);
-            Assert.Equal(localCache2.CacheType, results2[1].CacheType);
+            Assert.Equal(Outcome.FromCache, results2[1].Results.Single().Outcome);
+            Assert.Equal(localCache2.CacheType, results2[1].Results.Single().CacheType);
         }
 
         [Fact]
@@ -73,18 +74,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho("123");
             Assert.Single(results);
-            Assert.Equal(Outcome.Fetch, results[0].Outcome);
+            Assert.Equal(Outcome.Fetch, results[0].Results.Single().Outcome);
 
             await cachedEcho("123");
             Assert.Equal(2, results.Count);
-            Assert.Equal(Outcome.FromCache, results[1].Outcome);
-            Assert.Equal(localCache.CacheType, results[1].CacheType);
+            Assert.Equal(Outcome.FromCache, results[1].Results.Single().Outcome);
+            Assert.Equal(localCache.CacheType, results[1].Results.Single().CacheType);
 
             remoteCache.OnKeyChangedRemotely("123");
 
             await cachedEcho("123");
             Assert.Equal(3, results.Count);
-            Assert.Equal(Outcome.Fetch, results[2].Outcome);
+            Assert.Equal(Outcome.Fetch, results[2].Results.Single().Outcome);
         }
     }
 }

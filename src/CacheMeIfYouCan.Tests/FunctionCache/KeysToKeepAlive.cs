@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(2))
+                .For(TimeSpan.FromMilliseconds(100))
                 .OnResult(results.Add)
                 .WithKeysToKeepAlive(keys)
                 .Build();
@@ -40,11 +40,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await Task.WhenAll(tasks);
 
                 Assert.Equal(tasks.Count, results.Count);
-                Assert.True(results.All(r => r.Outcome == Outcome.FromCache));
+                Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.FromCache));
 
                 results.Clear();
                 
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
             }
         }
 
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(2))
+                .For(TimeSpan.FromMilliseconds(100))
                 .OnResult(results.Add)
                 .WithKeysToKeepAlive(keysFunc)
                 .Build();
@@ -82,13 +82,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await Task.WhenAll(tasks);
 
                 Assert.Equal(tasks.Count, results.Count);
-                Assert.True(results.All(r => r.Outcome == Outcome.FromCache));
+                Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.FromCache));
 
                 results.Clear();
 
                 index++;
 
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(1));
 
                 tasks = keys
                     .Select(cachedEcho)
@@ -97,7 +97,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await Task.WhenAll(tasks);
 
                 Assert.Equal(tasks.Count, results.Count);
-                Assert.True(results.All(r => r.Outcome == Outcome.Fetch));
+                Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.Fetch));
 
                 results.Clear();
             }

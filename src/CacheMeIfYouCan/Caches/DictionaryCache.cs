@@ -30,18 +30,18 @@ namespace CacheMeIfYouCan.Caches
                 .Subscribe(_ => RemoveExpiredKeys());
         }
         
-        public GetFromCacheResult<TV> Get(Key<TK> key)
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
             if (!_values.TryGetValue(key, out var value))
-                return GetFromCacheResult<TV>.NotFound;
+                return GetFromCacheResult<TK, TV>.NotFound(key);
             
             var currentTimestamp = Timestamp.Now;
 
             if (value.Item2 > currentTimestamp)
-                return new GetFromCacheResult<TV>(value.Item1, TimeSpan.FromTicks(value.Item2 - currentTimestamp), CacheType);
+                return new GetFromCacheResult<TK, TV>(key, value.Item1, TimeSpan.FromTicks(value.Item2 - currentTimestamp), CacheType);
             
             _values.TryRemove(key, out _);
-            return GetFromCacheResult<TV>.NotFound;
+            return GetFromCacheResult<TK, TV>.NotFound(key);
         }
 
         public void Set(Key<TK> key, TV value, TimeSpan timeToLive)

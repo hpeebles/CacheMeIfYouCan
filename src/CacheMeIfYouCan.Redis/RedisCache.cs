@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using StackExchange.Redis;
@@ -55,7 +57,31 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
-        public async Task<GetFromCacheResult<TV>> Get(Key<TK> key)
+        // Must get keys separately since multikey operations will fail if running Redis in cluster mode
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        {
+            var tasks = keys
+                .Select(GetSingle)
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+
+            return tasks
+                .Select(t => t.Result)
+                .ToArray();
+        }
+
+        // Must set keys separately since multikey operations will fail if running Redis in cluster mode
+        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        {
+            var tasks = values
+                .Select(kv => SetSingle(kv.Key, kv.Value, timeToLive))
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+        }
+
+        private async Task<GetFromCacheResult<TK, TV>> GetSingle(Key<TK> key)
         {
             var redisDb = GetDatabase();
             var stringKey = key.AsString.Value;
@@ -64,15 +90,15 @@ namespace CacheMeIfYouCan.Redis
             var fromRedis = await redisDb.StringGetWithExpiryAsync(redisKey);
             
             if (!fromRedis.Value.HasValue)
-                return GetFromCacheResult<TV>.NotFound;
+                return GetFromCacheResult<TK, TV>.NotFound(key);
 
             var value = _deserializer(fromRedis.Value);
             var timeToLive = fromRedis.Expiry.GetValueOrDefault();
 
-            return new GetFromCacheResult<TV>(value, timeToLive, CacheType);
+            return new GetFromCacheResult<TK, TV>(key, value, timeToLive, CacheType);
         }
-
-        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        
+        private async Task SetSingle(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             var redisDb = GetDatabase();
             var stringKey = key.AsString.Value;

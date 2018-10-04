@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -149,7 +150,7 @@ namespace CacheMeIfYouCan.Internal
             var keys = keyObjects
                 .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
                 .Where(keysSet.Add)
-                .ToList();
+                .ToArray();
 
             // Remove all keys that are no longer in the set of keys to keep alive
             lock (_lock)
@@ -170,7 +171,7 @@ namespace CacheMeIfYouCan.Internal
                 if (token.IsCancellationRequested)
                     return;
                 
-                var keyStart = TimingsHelper.Start();
+                var stopwatchStart = Stopwatch.GetTimestamp();
 
                 try
                 {
@@ -203,10 +204,10 @@ namespace CacheMeIfYouCan.Internal
                 catch
                 { }
 
-                var keyDuration = TimingsHelper.GetDuration(keyStart);
+                var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
                 // So that we don't hammer the cache
-                await Wait(TimeSpan.FromTicks(keyDuration), token);
+                await Wait(TimeSpan.FromTicks(duration), token);
             }
         }
 

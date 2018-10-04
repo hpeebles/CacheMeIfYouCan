@@ -39,12 +39,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedFuncWithSerializer(key2);
             await cachedFuncWithSerializer(key3);
             
-            Assert.Equal(results1[0].Value, results1[1].Value);
-            Assert.Equal(Outcome.FromCache, results1[1].Outcome);
+            Assert.Equal(results1[0].Results.Single().Value, results1[1].Results.Single().Value);
+            Assert.Equal(Outcome.FromCache, results1[1].Results.Single().Outcome);
             
-            Assert.Equal(Outcome.Fetch, results2[1].Outcome);
-            Assert.Equal(Outcome.FromCache, results2[2].Outcome);
-            Assert.Equal(results2[1].Value, results2[2].Value);
+            Assert.Equal(Outcome.Fetch, results2[1].Results.Single().Outcome);
+            Assert.Equal(Outcome.FromCache, results2[2].Results.Single().Outcome);
+            Assert.Equal(results2[1].Results.Single().Value, results2[2].Results.Single().Value);
         }
     }
 }

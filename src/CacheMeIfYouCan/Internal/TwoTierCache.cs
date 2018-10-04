@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 
@@ -15,28 +17,40 @@ namespace CacheMeIfYouCan.Internal
             _remoteCache = remoteCache;
         }
 
-        public async Task<GetFromCacheResult<TV>> Get(Key<TK> key)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            var fromMemoryCache = _localCache.Get(key);
+            var results = new List<GetFromCacheResult<TK, TV>>(keys.Count);
+            var remaining = new List<Key<TK>>();
+
+            foreach (var key in keys)
+            {
+                var fromMemoryCache = _localCache.Get(key);
                 
-            if (fromMemoryCache.Success)
-                return fromMemoryCache;
+                if (fromMemoryCache.Success)
+                    results.Add(fromMemoryCache);
+                else
+                    remaining.Add(key);
+            }
 
-            var fromRemoteCache = await _remoteCache.Get(key);
+            if (!remaining.Any())
+                return results;
             
-            if (!fromRemoteCache.Success)
-                return GetFromCacheResult<TV>.NotFound;
+            var fromRemoteCache = await _remoteCache.Get(remaining);
+            
+            foreach (var result in fromRemoteCache)
+                _localCache.Set(result.Key, result.Value, result.TimeToLive);
 
-            _localCache.Set(key, fromRemoteCache.Value, fromRemoteCache.TimeToLive);
-
-            return fromRemoteCache;
+            results.AddRange(fromRemoteCache);
+            
+            return results;
         }
 
-        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            _localCache.Set(key, value, timeToLive);
+            foreach (var kv in values)
+                _localCache.Set(kv.Key, kv.Value, timeToLive);
 
-            await _remoteCache.Set(key, value, timeToLive);
+            await _remoteCache.Set(values, timeToLive);
         }
     }
 }

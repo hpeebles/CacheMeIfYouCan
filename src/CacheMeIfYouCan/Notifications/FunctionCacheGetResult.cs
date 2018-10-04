@@ -1,51 +1,67 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheGetResult
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly Lazy<string> KeyString;
-        public readonly Outcome Outcome;
+        public readonly IEnumerable<IFunctionCacheGetResultInner> Results;
+        public readonly bool Success;
         public readonly long Start;
         public readonly long Duration;
-        public readonly string CacheType;
 
         protected internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
-            Lazy<string> keyString,
-            Outcome outcome,
+            IEnumerable<IFunctionCacheGetResultInner> results,
+            bool success,
             long start,
-            long duration,
-            string cacheType)
+            long duration)
         {
             FunctionInfo = functionInfo;
-            KeyString = keyString;
-            Outcome = outcome;
+            Results = results;
+            Success = success;
             Start = start;
             Duration = duration;
-            CacheType = cacheType;
         }
     }
 
     public class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
     {
-        public readonly TK Key;
-        public readonly TV Value;
-
         internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
-            Key<TK> key,
-            TV value,
-            Outcome outcome,
+            ICollection<FunctionCacheGetResultInner<TK, TV>> results,
+            bool success,
             long start,
-            long duration,
-            string cacheType)
-            : base(functionInfo, key.AsString, outcome, start, duration, cacheType)
+            long duration)
+            : base(functionInfo, results, success, start, duration)
+        { }
+
+        public new ICollection<FunctionCacheGetResultInner<TK, TV>> Results => base.Results as ICollection<FunctionCacheGetResultInner<TK, TV>>;
+    }
+
+    public interface IFunctionCacheGetResultInner
+    {
+        string KeyString { get; }
+        Outcome Outcome { get; }
+        string CacheType { get; }
+    }
+
+    public class FunctionCacheGetResultInner<TK, TV> : IFunctionCacheGetResultInner
+    {
+        internal FunctionCacheGetResultInner(Key<TK> key, TV value, Outcome outcome, string cacheType)
         {
             Key = key;
             Value = value;
+            Outcome = outcome;
+            CacheType = cacheType;
         }
+
+        public Key<TK> Key { get; }
+        public TV Value { get; }
+        
+        public string KeyString => Key.AsString.Value;
+        public Outcome Outcome { get; }
+        public string CacheType { get; }
     }
     
     public enum Outcome

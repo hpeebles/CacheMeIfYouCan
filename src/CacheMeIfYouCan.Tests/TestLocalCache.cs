@@ -9,9 +9,9 @@ namespace CacheMeIfYouCan.Tests
         public readonly ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>> Values = new ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>>();
         public readonly string CacheType = "test-local";
         
-        public GetFromCacheResult<TV> Get(Key<TK> key)
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
-            var result = GetFromCacheResult<TV>.NotFound;
+            var result = GetFromCacheResult<TK, TV>.NotFound(key);
 
             if (Values.TryGetValue(key, out var item))
             {
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Tests
                 if (timeToLive < TimeSpan.Zero)
                     Values.TryRemove(key, out _);
                 else
-                    result = new GetFromCacheResult<TV>(item.Item1, timeToLive, CacheType);
+                    result = new GetFromCacheResult<TK, TV>(key, item.Item1, timeToLive, CacheType);
             }
 
             return result;

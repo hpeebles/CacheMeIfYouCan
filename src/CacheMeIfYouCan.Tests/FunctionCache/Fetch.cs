@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Select(t => t.Result)
                 .ToList();
             
-            Assert.Equal(1, fetches.Count(f => !f.Duplicate));
+            Assert.Equal(1, fetches.Count(f => !f.Results.Single().Duplicate));
             Assert.True(timings.All(t => t > TimeSpan.FromSeconds(0.5)));
         }
         
@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await Task.WhenAll(tasks);
 
             var earlyFetches = fetches
-                .Where(f => f.ExistingTtl.HasValue)
+                .Where(f => f.Reason == FetchReason.EarlyFetch)
                 .ToList();
             
             Assert.NotEmpty(earlyFetches);

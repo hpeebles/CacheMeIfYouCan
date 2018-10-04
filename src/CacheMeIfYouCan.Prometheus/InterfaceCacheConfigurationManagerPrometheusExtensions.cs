@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan.Prometheus
     {
         public static CachedProxyConfigurationManager<T> WithMetrics<T>(this CachedProxyConfigurationManager<T> configManager)
         {
-            configManager.OnResult(MetricsTracker.OnResult);
-            configManager.OnFetch(MetricsTracker.OnFetch);
+            configManager.OnResult(FunctionCacheGetResultMetricsTracker.OnResult);
+            configManager.OnFetch(FunctionCacheFetchResultMetricsTracker.OnFetch);
             
             return configManager;
         }

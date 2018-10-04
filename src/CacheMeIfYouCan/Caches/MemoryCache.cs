@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Caches
 {
     public class MemoryCache<TK, TV> : ILocalCache<TK, TV>
     {
-        private const string Type = "memory";
+        private const string CacheType = "memory";
         private readonly MemoryCache _cache;
         
         internal MemoryCache(int maxSizeMB = 100)
@@ -20,15 +20,15 @@ namespace CacheMeIfYouCan.Caches
             _cache = new MemoryCache(Guid.NewGuid().ToString(), config);
         }
 
-        public GetFromCacheResult<TV> Get(Key<TK> key)
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
             var valueObj = _cache.Get(key.AsString.Value);
 
-            GetFromCacheResult<TV> result;
+            GetFromCacheResult<TK, TV> result;
             if (valueObj is ValueWithExpiry<TV> value)
-                result = new GetFromCacheResult<TV>(value, value.Expiry - DateTimeOffset.UtcNow, Type);
+                result = new GetFromCacheResult<TK, TV>(key, value, value.Expiry - DateTimeOffset.UtcNow, CacheType);
             else
-                result = GetFromCacheResult<TV>.NotFound;
+                result = GetFromCacheResult<TK, TV>.NotFound(key);
 
             return result;
         }

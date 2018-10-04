@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
             
             Assert.Equal(10, results.Count);
-            Assert.True(results.All(r => r.Outcome == Outcome.Fetch));
+            Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.Fetch));
         }
 
         private static ILocalCacheFactory GetCacheFactory(string cacheType)

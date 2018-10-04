@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan.Prometheus
     {
         public static FunctionCacheConfigurationManager<TK, TV> WithMetrics<TK, TV>(this FunctionCacheConfigurationManager<TK, TV> configManager)
         {
-            configManager.OnResult(MetricsTracker.OnResult);
-            configManager.OnFetch(MetricsTracker.OnFetch);
+            configManager.OnResult(FunctionCacheGetResultMetricsTracker.OnResult);
+            configManager.OnFetch(FunctionCacheFetchResultMetricsTracker.OnFetch);
             
             return configManager;
         }

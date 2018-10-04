@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
@@ -13,9 +14,10 @@ namespace CacheMeIfYouCan.Configuration
 {
     public class FunctionCacheConfigurationManager<TK, TV>
     {
-        private readonly Func<TK, Task<TV>> _inputFunc;
+        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
         private readonly Type _interfaceType;
         private readonly string _functionName;
+        private readonly bool _multiKey = true;
         private TimeSpan? _timeToLive;
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
@@ -31,8 +33,20 @@ namespace CacheMeIfYouCan.Configuration
         private Func<TV> _defaultValueFactory;
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
         private Func<TK, Task<TV>> _cachedFunc;
-        
-        internal FunctionCacheConfigurationManager(Func<TK, Task<TV>> inputFunc, string functionName, CachedProxyConfig interfaceConfig = null)
+
+        internal FunctionCacheConfigurationManager(
+            Func<TK, Task<TV>> inputFunc,
+            string functionName,
+            CachedProxyConfig interfaceConfig = null)
+            : this(ConvertFunc(inputFunc), functionName, interfaceConfig)
+        {
+            _multiKey = false;
+        }
+
+        internal FunctionCacheConfigurationManager(
+            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
+            string functionName,
+            CachedProxyConfig interfaceConfig = null)
         {
             _inputFunc = inputFunc;
             _functionName = functionName;
@@ -297,16 +311,12 @@ namespace CacheMeIfYouCan.Configuration
                 _onFetch,
                 _onError,
                 keyComparer,
+                _multiKey,
                 _keysToKeepAliveFunc);
             
-            _cachedFunc = functionCache.Get;
+            _cachedFunc = functionCache.GetSingle;
             
             return _cachedFunc;
-        }
-        
-        public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
-        {
-            return cacheConfig.Build();
         }
 
         private Func<TK, string> GetKeySerializer()
@@ -347,6 +357,23 @@ namespace CacheMeIfYouCan.Configuration
                 throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
 
             return deserializer;
+        }
+
+        private static Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> ConvertFunc(Func<TK, Task<TV>> func)
+        {
+            return async keys =>
+            {
+                var key = keys.Single();
+
+                var value = await func(key);
+                
+                return new Dictionary<TK, TV> { { key, value } };
+            };
+        }
+        
+        public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
+        {
+            return cacheConfig.Build();
         }
     }
 }

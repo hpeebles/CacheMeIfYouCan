@@ -1,61 +1,76 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheFetchResult
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly Lazy<string> KeyString;
+        public readonly IEnumerable<IFunctionCacheFetchResultInner> Results;
         public readonly bool Success;
         public readonly long Start;
         public readonly long Duration;
-        public readonly bool Duplicate;
         public readonly FetchReason Reason;
-        public readonly TimeSpan? ExistingTtl;
 
         protected internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
-            Lazy<string> keyString,
+            IEnumerable<IFunctionCacheFetchResultInner> results,
             bool success,
             long start,
             long duration,
-            bool duplicate,
-            FetchReason reason,
-            TimeSpan? existingTtl)
+            FetchReason reason)
         {
             FunctionInfo = functionInfo;
-            KeyString = keyString;
+            Results = results;
             Success = success;
             Start = start;
             Duration = duration;
-            Duplicate = duplicate;
             Reason = reason;
-            ExistingTtl = existingTtl;
         }
     }
     
     public class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
     {
-        public readonly TK Key;
-        public readonly TV Value;
-
         internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
-            Key<TK> key,
-            TV value,
+            ICollection<FunctionCacheFetchResultInner<TK, TV>> results,
             bool success,
             long start,
             long duration,
-            bool duplicate,
-            FetchReason reason,
-            TimeSpan? existingTtl)
-            : base(functionInfo, key.AsString, success, start, duration, duplicate, reason, existingTtl)
+            FetchReason reason)
+            : base(functionInfo, results, success, start, duration, reason)
+        { }
+        
+        public new ICollection<FunctionCacheFetchResultInner<TK, TV>> Results => base.Results as ICollection<FunctionCacheFetchResultInner<TK, TV>>;
+    }
+    
+    public interface IFunctionCacheFetchResultInner
+    {
+        string KeyString { get; }
+        bool Success { get; }
+        bool Duplicate { get; }
+        long Duration { get; }
+    }
+    
+    public class FunctionCacheFetchResultInner<TK, TV> : IFunctionCacheFetchResultInner
+    {
+        internal FunctionCacheFetchResultInner(Key<TK> key, TV value, bool success, bool duplicate, long duration)
         {
             Key = key;
             Value = value;
+            Success = success;
+            Duplicate = duplicate;
+            Duration = duration;
         }
+        
+        public Key<TK> Key { get; }
+        public TV Value { get; }
+        
+        public string KeyString => Key.AsString.Value;
+        public bool Success { get; }
+        public bool Duplicate { get; }
+        public long Duration { get; }
     }
-
+    
     public enum FetchReason
     {
         OnDemand, // Due to requested key not being in cache, will block client

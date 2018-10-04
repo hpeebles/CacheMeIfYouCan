@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Caches
@@ -12,16 +14,21 @@ namespace CacheMeIfYouCan.Caches
             _cache = cache;
         }
         
-        public Task<GetFromCacheResult<TV>> Get(Key<TK> key)
+        public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            return Task.FromResult(_cache.Get(key));
+            var results = keys
+                .Select(_cache.Get)
+                .ToArray();
+            
+            return Task.FromResult<IList<GetFromCacheResult<TK, TV>>>(results);
         }
 
-        public Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            _cache.Set(key, value, timeToLive);
+            foreach (var kv in values)
+                _cache.Set(kv.Key, kv.Value, timeToLive);
 
-            return Task.FromResult<object>(null);
+            return Task.CompletedTask;
         }
     }
 }

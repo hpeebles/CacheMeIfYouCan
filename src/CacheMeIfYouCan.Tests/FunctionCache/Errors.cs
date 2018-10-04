@@ -33,8 +33,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 {
                     await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
-                    Assert.Equal(key, errors[errors.Count - 1].KeyString.Value);
-                    Assert.Equal(key, errors[errors.Count - 2].KeyString.Value);
+                    Assert.Equal(key, errors[errors.Count - 1].Keys.Value.Single());
+                    Assert.Equal(key, errors[errors.Count - 2].Keys.Value.Single());
                 }
                 else
                 {
@@ -134,13 +134,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             Assert.Equal(loopCount * 2, errors.Count);
-            Assert.True(errors.All(k => k.KeyString.Value == "error!"));
+            Assert.True(errors.All(k => k.Keys.Value.Single() == "error!"));
             Assert.Equal(loopCount, thrownErrorsCount);
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "one"));
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "two"));
             Assert.Equal(0, results.Count(kv => kv.Key == "error!"));
             Assert.Equal(2, fetches.Count(f => f.Success));
-            Assert.Equal(0, fetches.Count(f => f.Duplicate));
+            Assert.Equal(0, fetches.Count(f => f.Results.Single().Duplicate));
         }
 
         [Fact]

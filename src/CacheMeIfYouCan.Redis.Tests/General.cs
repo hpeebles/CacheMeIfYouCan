@@ -28,9 +28,9 @@ namespace CacheMeIfYouCan.Redis.Tests
             await cachedEcho(key);
             await cachedEcho(key);
             
-            Assert.Equal(key, results[1].KeyString.Value);
-            Assert.Equal(Outcome.FromCache, results[1].Outcome);
-            Assert.Equal("redis", results[1].CacheType);
+            Assert.Equal(key, results[1].Results.Single().KeyString);
+            Assert.Equal(Outcome.FromCache, results[1].Results.Single().Outcome);
+            Assert.Equal("redis", results[1].Results.Single().CacheType);
         }
     }
 }

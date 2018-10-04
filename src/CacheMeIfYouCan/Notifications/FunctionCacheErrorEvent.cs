@@ -1,24 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheErrorEvent
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly Lazy<string> KeyString;
+        public readonly Lazy<IList<string>> Keys;
         public readonly long Timestamp;
         public readonly string Message;
         public readonly Exception Exception;
 
         protected internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
-            Lazy<string> keyString,
+            Lazy<IList<string>> keys,
             long timestamp,
             string message,
             Exception exception)
         {
             FunctionInfo = functionInfo;
-            KeyString = keyString;
+            Keys = keys;
             Timestamp = timestamp;
             Message = message;
             Exception = exception;
@@ -27,17 +29,17 @@ namespace CacheMeIfYouCan.Notifications
 
     public class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent
     {
-        public readonly TK Key;
+        public new readonly IList<Key<TK>> Keys;
 
         internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
-            Key<TK> key,
+            IList<Key<TK>> keys,
             long timestamp,
             string message,
             Exception exception)
-            : base(functionInfo, key.AsString, timestamp, message, exception)
+            : base(functionInfo, new Lazy<IList<string>>(() => keys.Select(k => (string)k).ToArray()), timestamp, message, exception)
         {
-            Key = key;
+            Keys = keys;
         }
     }
 }
