@@ -6,12 +6,12 @@ namespace CacheMeIfYouCan.Internal
     {
         public bool Equals(Key<TK> left, Key<TK> right)
         {
-            return left.AsString.Value.Equals(right.AsString.Value);
+            return left.AsString.Equals(right.AsString);
         }
 
         public int GetHashCode(Key<TK> key)
         {
-            return key.AsString.Value.GetHashCode();
+            return key.AsString.GetHashCode();
         }
     }
 }

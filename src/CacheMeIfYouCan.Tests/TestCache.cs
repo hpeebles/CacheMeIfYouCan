@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Tests
             var expiry = DateTimeOffset.UtcNow + timeToLive;
             
             foreach (var kv in values)
-                Values[kv.Key.AsString.Value] = Tuple.Create(_serializer(kv.Value), expiry);
+                Values[kv.Key.AsString] = Tuple.Create(_serializer(kv.Value), expiry);
         }
 
         public void OnKeyChangedRemotely(string key)
@@ -58,12 +58,12 @@ namespace CacheMeIfYouCan.Tests
         {
             var result = GetFromCacheResult<TK, TV>.NotFound(key);
 
-            if (Values.TryGetValue(key.AsString.Value, out var item))
+            if (Values.TryGetValue(key.AsString, out var item))
             {
                 var timeToLive = item.Item2 - DateTimeOffset.UtcNow;
 
                 if (timeToLive < TimeSpan.Zero)
-                    Values.TryRemove(key.AsString.Value, out _);
+                    Values.TryRemove(key.AsString, out _);
                 else
                     result = new GetFromCacheResult<TK, TV>(key, _deserializer(item.Item1), timeToLive, CacheType);
             }

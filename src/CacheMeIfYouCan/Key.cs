@@ -4,18 +4,20 @@ namespace CacheMeIfYouCan
 {
     public struct Key<TK>
     {
+        private readonly Lazy<string> _asString;
         public readonly TK AsObject;
-        public readonly Lazy<string> AsString;
 
         public Key(TK keyObj, Lazy<string> keyString)
         {
             AsObject = keyObj;
-            AsString = keyString;
+            _asString = keyString;
         }
 
         public Key(TK keyObj, string keyString)
             : this(keyObj, new Lazy<string>(() => keyString))
         { }
+        
+        public string AsString => _asString.Value;
 
         public static implicit operator TK(Key<TK> key)
         {
@@ -24,7 +26,7 @@ namespace CacheMeIfYouCan
 
         public static implicit operator string(Key<TK> key)
         {
-            return key.AsString.Value;
+            return key.AsString;
         }
     }
 }

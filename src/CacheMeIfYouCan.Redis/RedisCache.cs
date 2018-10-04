@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan.Redis
         private async Task<GetFromCacheResult<TK, TV>> GetSingle(Key<TK> key)
         {
             var redisDb = GetDatabase();
-            var stringKey = key.AsString.Value;
+            var stringKey = key.AsString;
             var redisKey = _toRedisKey(stringKey);
 
             var fromRedis = await redisDb.StringGetWithExpiryAsync(redisKey);
@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Redis
         private async Task SetSingle(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             var redisDb = GetDatabase();
-            var stringKey = key.AsString.Value;
+            var stringKey = key.AsString;
             var redisKey = _toRedisKey(stringKey);
 
             var serializedValue = _serializer(value);

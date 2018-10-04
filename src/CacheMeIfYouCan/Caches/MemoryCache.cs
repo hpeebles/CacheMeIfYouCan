@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Caches
 
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
-            var valueObj = _cache.Get(key.AsString.Value);
+            var valueObj = _cache.Get(key.AsString);
 
             GetFromCacheResult<TK, TV> result;
             if (valueObj is ValueWithExpiry<TV> value)
@@ -37,12 +37,12 @@ namespace CacheMeIfYouCan.Caches
         {
             var expiry = DateTime.UtcNow + timeToLive;
             
-            _cache.Set(key.AsString.Value, new ValueWithExpiry<TV>(value, expiry), expiry);
+            _cache.Set(key.AsString, new ValueWithExpiry<TV>(value, expiry), expiry);
         }
 
         public void Remove(Key<TK> key)
         {
-            _cache.Remove(key.AsString.Value);
+            _cache.Remove(key.AsString);
         }
     }
 }

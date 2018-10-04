@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Notifications
         public Key<TK> Key { get; }
         public TV Value { get; }
         
-        public string KeyString => Key.AsString.Value;
+        public string KeyString => Key.AsString;
         public Outcome Outcome { get; }
         public string CacheType { get; }
     }

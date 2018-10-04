@@ -7,10 +7,10 @@ namespace CacheMeIfYouCan.Notifications
     public abstract class FunctionCacheErrorEvent
     {
         public readonly FunctionInfo FunctionInfo;
-        public readonly Lazy<IList<string>> Keys;
         public readonly long Timestamp;
         public readonly string Message;
         public readonly Exception Exception;
+        private readonly Lazy<IList<string>> _keys;
 
         protected internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
@@ -20,11 +20,13 @@ namespace CacheMeIfYouCan.Notifications
             Exception exception)
         {
             FunctionInfo = functionInfo;
-            Keys = keys;
+            _keys = keys;
             Timestamp = timestamp;
             Message = message;
             Exception = exception;
         }
+
+        public IList<string> Keys => _keys.Value;
     }
 
     public class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent

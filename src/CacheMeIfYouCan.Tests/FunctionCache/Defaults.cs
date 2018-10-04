@@ -79,7 +79,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             DefaultCacheConfig.Configuration.OnError = x =>
             {
-                if (x.Keys.Value.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
+                if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
                     errors.Add(x);
             };
             
@@ -96,8 +96,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 {
                     await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
-                    Assert.Equal(key, errors[errors.Count - 1].Keys.Value.Single());
-                    Assert.Equal(key, errors[errors.Count - 2].Keys.Value.Single());
+                    Assert.Equal(key, errors[errors.Count - 1].Keys.Single());
+                    Assert.Equal(key, errors[errors.Count - 2].Keys.Single());
                 }
                 else
                 {
