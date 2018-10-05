@@ -8,6 +8,10 @@ namespace CacheMeIfYouCan.Tests
         private readonly Func<string, TimeSpan> _delayFunc;
         private readonly Func<string, bool> _errorFunc;
         
+        public Echo()
+            : this(TimeSpan.Zero)
+        { }
+        
         public Echo(TimeSpan delay)
             : this(k => delay)
         { }

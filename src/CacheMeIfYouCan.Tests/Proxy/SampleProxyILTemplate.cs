@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 
@@ -10,12 +11,14 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<string, Task<string>> _stringToString;
         private readonly Func<int, Task<string>> _intToString;
         private readonly Func<long, Task<int>> _longToInt;
+        private readonly Func<IEnumerable<string>, Task<IDictionary<string, string>>> _multiEcho;
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
             _stringToString = new FunctionCacheConfigurationManager<string, string>(impl.StringToString, "StringToString", config).Build();
             _intToString = new FunctionCacheConfigurationManager<int, string>(impl.IntToString, "IntToString", config).Build();
             _longToInt = new FunctionCacheConfigurationManager<long, int>(impl.LongToInt, "LongToInt", config).Build();
+            _multiEcho = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, "MultiEcho", config).Build();
         }
         
         public Task<string> StringToString(string key)
@@ -31,6 +34,11 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public Task<int> LongToInt(long key)
         {
             return _longToInt(key);
+        }
+        
+        public Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys)
+        {
+            return _multiEcho(keys);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
@@ -9,5 +10,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         Task<string> IntToString(int key);
 
         Task<int> LongToInt(long key);
+
+        Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys);
     }
 }

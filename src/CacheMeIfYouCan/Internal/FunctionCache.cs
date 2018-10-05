@@ -99,7 +99,7 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public async Task<Dictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)
+        public async Task<IDictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)
         {
             using (SynchronizationContextRemover.StartNew())
             {
@@ -283,7 +283,7 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                tcs.TrySetException(ex);
 
                 var duration = StopwatchHelper.GetDuration(stopwatchStart);
 

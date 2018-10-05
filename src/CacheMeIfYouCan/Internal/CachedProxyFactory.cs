@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -45,23 +47,20 @@ namespace CacheMeIfYouCan.Internal
 
             foreach (var methodInfo in interfaceType.GetMethods())
             {
-                // TK
-                var parameterType = methodInfo.GetParameters().First().ParameterType;
+                var definition = GetMethodDefinition(methodInfo);
                 
-                // Task<TV>
-                var returnType = methodInfo.ReturnType;
-                
-                // TV
-                var returnTypeInner = methodInfo.ReturnType.GenericTypeArguments.Single();
-
                 // Create a field called _methodName of type Func<TK, Task<TV>> in which to store the cached function
-                var fieldType = typeof(Func<,>).MakeGenericType(parameterType, returnType);
+                var fieldType = typeof(Func<,>).MakeGenericType(definition.ParameterType, definition.ReturnType);
                 var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}";
                 var field = typeBuilder.DefineField(fieldName, fieldType, FieldAttributes.Private);
                 var fieldCtor = fieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
                 
-                // FunctionCacheConfigurationManager<TK, TV>
-                var configManagerType = typeof(FunctionCacheConfigurationManager<,>).MakeGenericType(parameterType, returnTypeInner);
+                // Either FunctionCacheConfigurationManager<TK, TV> or MultiKeyFunctionCacheConfigurationManager
+                // depending on if the key is Enumerable or not
+                var configManagerType = definition.IsMultiKey
+                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,>).MakeGenericType(definition.KeyType, definition.ValueType)
+                    : typeof(FunctionCacheConfigurationManager<,>).MakeGenericType(definition.KeyType, definition.ValueType);
+                
                 var configManagerTypeCtor = configManagerType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
@@ -85,14 +84,14 @@ namespace CacheMeIfYouCan.Internal
                     methodInfo.Name,
                     MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual,
                     methodInfo.ReturnType,
-                    new[] { parameterType });
+                    new[] { definition.ParameterType });
                 
                 var methodGen = methodBuilder.GetILGenerator();
                 
                 methodGen.Emit(OpCodes.Ldarg_0); // this
                 methodGen.Emit(OpCodes.Ldfld, field); // _methodName
                 methodGen.Emit(OpCodes.Ldarg_1); // TK key
-                methodGen.Emit(OpCodes.Callvirt, fieldType.GetMethod("Invoke", new[] { parameterType })); // _methodName.Invoke(key)
+                methodGen.Emit(OpCodes.Callvirt, fieldType.GetMethod("Invoke", new[] { definition.ParameterType })); // _methodName.Invoke(key)
                 methodGen.Emit(OpCodes.Ret); // Return result
             }
             
@@ -118,11 +117,84 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
+        private static MethodDefinition GetMethodDefinition(MethodInfo methodInfo)
+        {
+            var messageFormat = $"Invalid method signature. {{0}}. Method: '{methodInfo.Name}'";
+            
+            if (methodInfo.GetParameters().Length > 1)
+                throw new Exception(String.Format(messageFormat, "Method must have a single input parameter"));
+            
+            var parameterType = methodInfo.GetParameters().First().ParameterType;
+
+            var isMultiKey = parameterType != typeof(String) && typeof(IEnumerable).IsAssignableFrom(parameterType);
+
+            Type keyType;
+            if (isMultiKey)
+            {
+                if (parameterType.GenericTypeArguments.Length != 1)
+                    throw new Exception(String.Format(messageFormat, "Enumerable parameters must have a single generic type argument"));
+
+                keyType = parameterType.GenericTypeArguments.Single();
+            }
+            else
+            {
+                keyType = parameterType;
+            }
+            
+            var returnType = methodInfo.ReturnType;
+            
+            if (!typeof(Task).IsAssignableFrom(returnType) || returnType.GenericTypeArguments.Length != 1)
+                throw new Exception(String.Format(messageFormat, "Return type must be a Task<T>"));
+            
+            var returnTypeInner = returnType.GenericTypeArguments.Single();
+
+            Type valueType;
+            if (isMultiKey)
+            {
+                if (returnTypeInner.GenericTypeArguments.Length != 2)
+                    throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
+
+                if (returnTypeInner.GenericTypeArguments.First() != keyType)
+                    throw new Exception(String.Format(messageFormat, "The key type in the returned dictionary must match the type of the items in the input parameter"));
+
+                valueType = returnTypeInner.GenericTypeArguments.Last();
+
+                var dictionaryType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
+                
+                if (!dictionaryType.IsAssignableFrom(returnTypeInner))
+                    throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
+            }
+            else
+            {
+                valueType = returnTypeInner;
+            }
+
+            return new MethodDefinition
+            {
+                ParameterType = parameterType,
+                ReturnType = returnType,
+                ReturnTypeInner = returnTypeInner,
+                KeyType = keyType,
+                ValueType = valueType,
+                IsMultiKey = isMultiKey
+            };
+        }
+
         private static string GetProxyName(Type type)
         {
             var name = $"{type.Namespace}.{type.Name.Remove(0, type.Name.StartsWith("I") ? 1 : 0)}Proxy_{Guid.NewGuid()}";
 
             return name;
+        }
+
+        private class MethodDefinition
+        {
+            public Type ParameterType;
+            public Type ReturnType;
+            public Type ReturnTypeInner;
+            public Type KeyType;
+            public Type ValueType;
+            public bool IsMultiKey;
         }
     }
 }
