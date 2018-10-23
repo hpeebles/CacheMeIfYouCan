@@ -10,45 +10,48 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ILocalCache<TK, TV> _localCache;
         private readonly ICache<TK, TV> _remoteCache;
+        private readonly IEqualityComparer<Key<TK>> _keyComparer;
 
-        public TwoTierCache(ILocalCache<TK, TV> localCache, ICache<TK, TV> remoteCache)
+        public TwoTierCache(
+            ILocalCache<TK, TV> localCache,
+            ICache<TK, TV> remoteCache,
+            IEqualityComparer<Key<TK>> keyComparer)
         {
             _localCache = localCache;
             _remoteCache = remoteCache;
+            _keyComparer = keyComparer;
+            CacheType = $"{_localCache.CacheType}+{_remoteCache.CacheType}";
         }
+
+        public string CacheType { get; }
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            var results = new List<GetFromCacheResult<TK, TV>>(keys.Count);
-            var remaining = new List<Key<TK>>();
+            var fromLocalCache = _localCache.Get(keys) ?? new GetFromCacheResult<TK, TV>[0];
+            
+            if (fromLocalCache.Count == keys.Count)
+                return fromLocalCache;
 
-            foreach (var key in keys)
-            {
-                var fromMemoryCache = _localCache.Get(key);
-                
-                if (fromMemoryCache.Success)
-                    results.Add(fromMemoryCache);
-                else
-                    remaining.Add(key);
-            }
+            var remaining = keys
+                .Except(fromLocalCache.Select(c => c.Key), _keyComparer)
+                .ToArray();
 
             if (!remaining.Any())
-                return results;
+                return fromLocalCache;
             
             var fromRemoteCache = await _remoteCache.Get(remaining);
             
             foreach (var result in fromRemoteCache)
                 _localCache.Set(result.Key, result.Value, result.TimeToLive);
 
-            results.AddRange(fromRemoteCache);
-            
-            return results;
+            return fromLocalCache
+                .Concat(fromRemoteCache)
+                .ToArray();
         }
 
         public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            foreach (var kv in values)
-                _localCache.Set(kv.Key, kv.Value, timeToLive);
+            _localCache.Set(values, timeToLive);
 
             await _remoteCache.Set(values, timeToLive);
         }

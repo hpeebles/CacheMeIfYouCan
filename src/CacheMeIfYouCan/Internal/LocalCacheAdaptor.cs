@@ -2,32 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan.Internal
 {
-    internal class LocalCacheWrapper<TK, TV> : ICache<TK, TV>
+    internal class LocalCacheAdaptor<TK, TV> : ICache<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _cache;
 
-        public LocalCacheWrapper(ILocalCache<TK, TV> cache)
+        public LocalCacheAdaptor(ILocalCache<TK, TV> cache)
         {
             _cache = cache;
         }
+
+        public string CacheType => _cache.CacheType;
         
         public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            var results = keys
-                .Select(_cache.Get)
-                .ToArray();
-            
-            return Task.FromResult<IList<GetFromCacheResult<TK, TV>>>(results);
+            return Task.FromResult(_cache.Get(keys));
         }
 
         public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            foreach (var kv in values)
-                _cache.Set(kv.Key, kv.Value, timeToLive);
-
+            _cache.Set(values, timeToLive);
+            
             return Task.CompletedTask;
         }
     }

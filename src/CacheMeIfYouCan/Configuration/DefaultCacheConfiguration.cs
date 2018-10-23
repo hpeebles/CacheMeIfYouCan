@@ -15,6 +15,8 @@ namespace CacheMeIfYouCan.Configuration
         public Action<FunctionCacheGetResult> OnResult;
         public Action<FunctionCacheFetchResult> OnFetch;
         public Action<FunctionCacheErrorEvent> OnError;
+        public Action<CacheGetResult> OnCacheGet;
+        public Action<CacheSetResult> OnCacheSet;
         public readonly KeySerializers KeySerializers = new KeySerializers();
         public readonly ValueSerializers ValueSerializers = new ValueSerializers();
     }

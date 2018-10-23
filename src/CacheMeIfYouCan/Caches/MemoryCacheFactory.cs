@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CacheMeIfYouCan.Caches
+﻿namespace CacheMeIfYouCan.Caches
 {
     public class MemoryCacheFactory : ILocalCacheFactory
     {

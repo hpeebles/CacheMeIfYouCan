@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
     public class MultiKey
     {
         [Fact]
-        public async Task MultiKeyCacheGetsBuilt()
+        public void MultiKeyCacheGetsBuilt()
         {
             // Supported parameter types
             // var parameterTypes = new[]

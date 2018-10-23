@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Notifications
         public readonly Exception Exception;
         private readonly Lazy<IList<string>> _keys;
 
-        protected internal FunctionCacheErrorEvent(
+        internal FunctionCacheErrorEvent(
             FunctionInfo functionInfo,
             Lazy<IList<string>> keys,
             long timestamp,
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Notifications
         public IList<string> Keys => _keys.Value;
     }
 
-    public class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent
+    public sealed class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent
     {
         public new readonly IList<Key<TK>> Keys;
 

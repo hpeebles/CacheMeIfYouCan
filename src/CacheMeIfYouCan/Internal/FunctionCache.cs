@@ -63,9 +63,9 @@ namespace CacheMeIfYouCan.Internal
             {
                 async Task<TimeSpan?> GetTimeToLive(Key<TK> key)
                 {
-                    var result = await _cache.Get(key);
+                    var results = await _cache.Get(new[] { key });
 
-                    return result.Success ? (TimeSpan?) result.TimeToLive : null;
+                    return results.Any() ? (TimeSpan?)results.Single().TimeToLive : null;
                 }
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
@@ -127,7 +127,7 @@ namespace CacheMeIfYouCan.Internal
                 IList<Key<TK>> missingKeys = null;
                 if (_cache != null)
                 {
-                    var fromCache = await GetFromCache(keys);
+                    var fromCache = await _cache.Get(keys);
                     
                     if (fromCache != null && fromCache.Any())
                     {
@@ -399,15 +399,6 @@ namespace CacheMeIfYouCan.Internal
             return keys.ToDictionary(
                 k => k,
                 k => new FunctionCacheGetResultInner<TK, TV>(k, defaultValue, Outcome.Error, null), _keyComparer);
-        }
-
-        private async Task<IList<GetFromCacheResult<TK, TV>>> GetFromCache(IList<Key<TK>> keys)
-        {
-            var fromCache = await _cache.Get(keys);
-
-            return fromCache
-                ?.Where(r => r.Success)
-                .ToArray();
         }
 
         private bool ShouldFetchEarly(TimeSpan timeToLive)

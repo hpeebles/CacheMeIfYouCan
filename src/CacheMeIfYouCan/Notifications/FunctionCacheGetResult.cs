@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Notifications
         public readonly long Start;
         public readonly long Duration;
 
-        protected internal FunctionCacheGetResult(
+        internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
             IEnumerable<IFunctionCacheGetResultInner> results,
             bool success,
@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Notifications
         }
     }
 
-    public class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
+    public sealed class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
     {
         internal FunctionCacheGetResult(
             FunctionInfo functionInfo,
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Notifications
         string CacheType { get; }
     }
 
-    public class FunctionCacheGetResultInner<TK, TV> : IFunctionCacheGetResultInner
+    public sealed class FunctionCacheGetResultInner<TK, TV> : IFunctionCacheGetResultInner
     {
         internal FunctionCacheGetResultInner(Key<TK> key, TV value, Outcome outcome, string cacheType)
         {

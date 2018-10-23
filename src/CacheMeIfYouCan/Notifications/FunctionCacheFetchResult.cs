@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Notifications
         public readonly long Duration;
         public readonly FetchReason Reason;
 
-        protected internal FunctionCacheFetchResult(
+        internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
             IEnumerable<IFunctionCacheFetchResultInner> results,
             bool success,
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Notifications
         }
     }
     
-    public class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
+    public sealed class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
     {
         internal FunctionCacheFetchResult(
             FunctionInfo functionInfo,
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Notifications
         long Duration { get; }
     }
     
-    public class FunctionCacheFetchResultInner<TK, TV> : IFunctionCacheFetchResultInner
+    public sealed class FunctionCacheFetchResultInner<TK, TV> : IFunctionCacheFetchResultInner
     {
         internal FunctionCacheFetchResultInner(Key<TK> key, TV value, bool success, bool duplicate, long duration)
         {

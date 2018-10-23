@@ -107,6 +107,83 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             DefaultCacheConfig.Configuration.OnError = null;
         }
+        
+        [Fact]
+        public async Task DefaultOnCacheGetIsTriggered()
+        {
+            Func<string, Task<string>> echo = new Echo();
+
+            var results = new List<CacheGetResult>();
+
+            var key = Guid.NewGuid().ToString();
+            
+            DefaultCacheConfig.Configuration.OnCacheGet = x =>
+            {
+                if (x.Hits.Contains(key) || x.Misses.Contains(key))
+                    results.Add(x);
+            };
+            
+            var cachedEcho = echo
+                .Cached()
+                .Build();
+
+            await cachedEcho(key);
+
+            Assert.Single(results);
+            Assert.True(results.Single().Success);
+            Assert.Empty(results.Single().Hits);
+            Assert.Single(results.Single().Misses);
+            Assert.Equal(key, results.Single().Misses.Single());
+            Assert.Equal("memory", results.Single().CacheType);
+            
+            for (var i = 2; i < 10; i++)
+            {
+                await cachedEcho(key);
+                
+                Assert.Equal(i, results.Count);
+                Assert.True(results.Last().Success);
+                Assert.Single(results.Last().Hits);
+                Assert.Empty(results.Last().Misses);
+                Assert.Equal(key, results.Last().Hits.Single());
+                Assert.Equal("memory", results.Last().CacheType);
+            }
+            
+            DefaultCacheConfig.Configuration.OnCacheGet = null;
+        }
+        
+        [Fact]
+        public async Task DefaultOnCacheSetIsTriggered()
+        {
+            Func<string, Task<string>> echo = new Echo();
+
+            var results = new List<CacheSetResult>();
+
+            var key = Guid.NewGuid().ToString();
+            
+            DefaultCacheConfig.Configuration.OnCacheSet = x =>
+            {
+                if (x.Keys.Contains(key))
+                    results.Add(x);
+            };
+            
+            var cachedEcho = echo
+                .Cached()
+                .Build();
+
+            await cachedEcho(key);
+
+            Assert.Single(results);
+            Assert.True(results.Single().Success);
+            Assert.Single(results.Single().Keys);
+            Assert.Equal(key, results.Single().Keys.Single());
+            Assert.Equal("memory", results.Single().CacheType);
+            
+            await cachedEcho(key);
+            
+            Assert.Single(results);
+            
+            DefaultCacheConfig.Configuration.OnCacheSet = null;
+        }
 
         private static string GetRandomKey()
         {

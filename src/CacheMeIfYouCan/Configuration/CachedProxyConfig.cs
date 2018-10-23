@@ -20,6 +20,8 @@ namespace CacheMeIfYouCan.Configuration
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
         public readonly Action<FunctionCacheErrorEvent> OnError;
+        public readonly Action<CacheGetResult> OnCacheGet;
+        public readonly Action<CacheSetResult> OnCacheSet;
         public readonly IDictionary<MethodInfoKey, object> FunctionCacheConfigActions;
         
         public CachedProxyConfig(
@@ -34,6 +36,8 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
             Action<FunctionCacheErrorEvent> onError,
+            Action<CacheGetResult> onCacheGet,
+            Action<CacheSetResult> onCacheSet,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -47,6 +51,8 @@ namespace CacheMeIfYouCan.Configuration
             OnResult = onResult;
             OnFetch = onFetch;
             OnError = onError;
+            OnCacheGet = onCacheGet;
+            OnCacheSet = onCacheSet;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
     }

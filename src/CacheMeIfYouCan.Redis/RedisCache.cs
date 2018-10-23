@@ -9,7 +9,6 @@ namespace CacheMeIfYouCan.Redis
 {
     internal class RedisCache<TK, TV> : ICache<TK, TV>
     {
-        private const string CacheType = "redis";
         private readonly RedisConnection _connection;
         private readonly int _database;
         private readonly string _keySpacePrefix;
@@ -57,9 +56,20 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
+        public string CacheType { get; } = "redis";
+        
         // Must get keys separately since multikey operations will fail if running Redis in cluster mode
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
+            var redisDb = GetDatabase();
+
+            async Task<KeyValuePair<Key<TK>, RedisValueWithExpiry>> GetSingle(Key<TK> key)
+            {
+                var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key));
+                
+                return new KeyValuePair<Key<TK>, RedisValueWithExpiry>(key, valueWithExpiry);
+            }
+
             var tasks = keys
                 .Select(GetSingle)
                 .ToArray();
@@ -68,47 +78,36 @@ namespace CacheMeIfYouCan.Redis
 
             return tasks
                 .Select(t => t.Result)
+                .Where(kv => kv.Value.Value.HasValue)
+                .Select(kv => new GetFromCacheResult<TK, TV>(
+                    kv.Key,
+                    _deserializer(kv.Value.Value),
+                    kv.Value.Expiry.GetValueOrDefault(),
+                    CacheType))
                 .ToArray();
         }
 
         // Must set keys separately since multikey operations will fail if running Redis in cluster mode
         public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
+            var redisDb = GetDatabase();
+            
+            async Task SetSingle(Key<TK> key, TV value)
+            {
+                var redisKey = _toRedisKey(key);
+
+                var serializedValue = _serializer(value);
+
+                _recentlySetKeysManager?.Mark(key);
+            
+                await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
+            }
+            
             var tasks = values
-                .Select(kv => SetSingle(kv.Key, kv.Value, timeToLive))
+                .Select(kv => SetSingle(kv.Key, kv.Value))
                 .ToArray();
 
             await Task.WhenAll(tasks);
-        }
-
-        private async Task<GetFromCacheResult<TK, TV>> GetSingle(Key<TK> key)
-        {
-            var redisDb = GetDatabase();
-            var stringKey = key.AsString;
-            var redisKey = _toRedisKey(stringKey);
-
-            var fromRedis = await redisDb.StringGetWithExpiryAsync(redisKey);
-            
-            if (!fromRedis.Value.HasValue)
-                return GetFromCacheResult<TK, TV>.NotFound(key);
-
-            var value = _deserializer(fromRedis.Value);
-            var timeToLive = fromRedis.Expiry.GetValueOrDefault();
-
-            return new GetFromCacheResult<TK, TV>(key, value, timeToLive, CacheType);
-        }
-        
-        private async Task SetSingle(Key<TK> key, TV value, TimeSpan timeToLive)
-        {
-            var redisDb = GetDatabase();
-            var stringKey = key.AsString;
-            var redisKey = _toRedisKey(stringKey);
-
-            var serializedValue = _serializer(value);
-
-            _recentlySetKeysManager?.Mark(stringKey);
-            
-            await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
         }
 
         private void RemoveKeyFromMemoryIfNotRecentlySet(string redisKey)

@@ -24,6 +24,8 @@ namespace CacheMeIfYouCan.Configuration
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
         private Action<FunctionCacheErrorEvent> _onError;
+        private Action<CacheGetResult> _onCacheGet;
+        private Action<CacheSetResult> _onCacheSet;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl, string name)
@@ -35,6 +37,8 @@ namespace CacheMeIfYouCan.Configuration
             _onResult = DefaultCacheConfig.Configuration.OnResult;
             _onFetch = DefaultCacheConfig.Configuration.OnFetch;
             _onError = DefaultCacheConfig.Configuration.OnError;
+            _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
+            _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -151,6 +155,26 @@ namespace CacheMeIfYouCan.Configuration
 
             return this;
         }
+        
+        public CachedProxyConfigurationManager<T> OnCacheGet(Action<CacheGetResult> onCacheGet, bool append = false)
+        {
+            if (onCacheGet == null || !append)
+                _onCacheGet = onCacheGet;
+            else
+                _onCacheGet = x => { _onCacheGet(x); onCacheGet(x); };
+
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> OnCacheSet(Action<CacheSetResult> onCacheSet, bool append = false)
+        {
+            if (onCacheSet == null || !append)
+                _onCacheSet = onCacheSet;
+            else
+                _onCacheSet = x => { _onCacheSet(x); onCacheSet(x); };
+
+            return this;
+        }
 
         public CachedProxyConfigurationManager<T> ConfigureFor<TK, TV>(
             Expression<Func<T, Func<TK, Task<TV>>>> expression,
@@ -179,6 +203,8 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onError,
+                _onCacheGet,
+                _onCacheSet,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var localCache1 = new TestLocalCache<string, string>();
             var localCache2 = new TestLocalCache<string, string>();
             
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
             
             var results1 = new List<FunctionCacheGetResult>();
             var results2 = new List<FunctionCacheGetResult>();

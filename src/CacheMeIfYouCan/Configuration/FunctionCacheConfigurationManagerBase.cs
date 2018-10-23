@@ -23,6 +23,8 @@ namespace CacheMeIfYouCan.Configuration
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private Action<FunctionCacheErrorEvent<TK>> _onError;
+        private Action<CacheGetResult<TK, TV>> _onCacheGet;
+        private Action<CacheSetResult<TK, TV>> _onCacheSet;
         private Func<TK, string> _keySerializer;
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
@@ -58,14 +60,11 @@ namespace CacheMeIfYouCan.Configuration
                 if (interfaceConfig.RemoteCacheFactory != null)
                     _remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(interfaceConfig.RemoteCacheFactory);
 
-                if (interfaceConfig.OnResult != null)
-                    _onResult = interfaceConfig.OnResult;
-                
-                if (interfaceConfig.OnFetch != null)
-                    _onFetch = interfaceConfig.OnFetch;
-                
-                if (interfaceConfig.OnError != null)
-                    _onError = interfaceConfig.OnError;
+                _onResult = interfaceConfig.OnResult;
+                _onFetch = interfaceConfig.OnFetch;
+                _onError = interfaceConfig.OnError;
+                _onCacheGet = interfaceConfig.OnCacheGet;
+                _onCacheSet = interfaceConfig.OnCacheSet;
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
@@ -83,6 +82,8 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult = DefaultCacheConfig.Configuration.OnResult;
                 _onFetch = DefaultCacheConfig.Configuration.OnFetch;
                 _onError = DefaultCacheConfig.Configuration.OnError;
+                _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
+                _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
             }
         }
 
@@ -215,6 +216,26 @@ namespace CacheMeIfYouCan.Configuration
 
             return (TConfig)this;
         }
+        
+        public TConfig OnCacheGet(Action<CacheGetResult<TK, TV>> onCacheGet, bool append = false)
+        {
+            if (onCacheGet == null || !append)
+                _onCacheGet = onCacheGet;
+            else
+                _onCacheGet = x => { _onCacheGet(x); onCacheGet(x); };
+
+            return (TConfig)this;
+        }
+        
+        public TConfig OnCacheSet(Action<CacheSetResult<TK, TV>> onCacheSet, bool append = false)
+        {
+            if (onCacheSet == null || !append)
+                _onCacheSet = onCacheSet;
+            else
+                _onCacheSet = x => { _onCacheSet(x); onCacheSet(x); };
+
+            return (TConfig)this;
+        }
 
         public TConfig WithKeysToKeepAlive(IList<TK> keysToKeepAlive)
         {
@@ -267,14 +288,13 @@ namespace CacheMeIfYouCan.Configuration
                     remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(DefaultCacheConfig.Configuration.RemoteCacheFactory);
                 
                 cache = CacheBuilder.Build(
+                    functionInfo,
                     localCacheFactory,
                     remoteCacheFactory,
                     cacheConfig,
-                    out var requiresStringKeys);
-
-                keyComparer = requiresStringKeys
-                    ? (IEqualityComparer<Key<TK>>)new StringKeyComparer<TK>()
-                    : new GenericKeyComparer<TK>();
+                    _onCacheGet,
+                    _onCacheSet,
+                    out keyComparer);
             }
 
             return new FunctionCache<TK, TV>(
