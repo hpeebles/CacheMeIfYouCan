@@ -11,10 +11,11 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Counter TotalItemsRequestedCounter;
         private static readonly Histogram RequestDurationsMs;
         private static readonly Histogram EarlyFetchTimeToLivesMs;
+        private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static FunctionCacheFetchResultMetricsTracker()
         {
-            TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheFetch_TotalItemsRequestedCounter", null, null, "interface", "function", "success");
+            TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheFetch_TotalItemsRequestedCounter", null, "interface", "function", "success");
             RequestDurationsMs = Metrics.CreateHistogram("FunctionCacheFetch_RequestDurationsMs", null, null, "interface", "function", "success", "duplicate", "reason");
             EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("FunctionCacheFetch_EarlyFetchTimeToLivesMs", null, null, "interface", "function", "success", "reason");
         }
@@ -24,11 +25,9 @@ namespace CacheMeIfYouCan.Prometheus
             var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
             var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
 
-            var fetchCount = result.Results.Count();
-            
             TotalItemsRequestedCounter
                 .Labels(interfaceName, functionName, result.Success.ToString())
-                .Inc(fetchCount);
+                .Inc(result.Results.Count());
             
             foreach (var fetch in result.Results)
             {
@@ -47,7 +46,7 @@ namespace CacheMeIfYouCan.Prometheus
 
         private static double ConvertToMilliseconds(long ticks)
         {
-            return (double)ticks / 10000;
+            return ticks / TicksPerMs;
         }
     }
 }

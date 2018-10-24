@@ -10,11 +10,14 @@ namespace CacheMeIfYouCan.Prometheus
     {
         private static readonly Counter TotalItemsRequestedCounter;
         private static readonly Histogram RequestDurationsMs;
+        private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static FunctionCacheGetResultMetricsTracker()
         {
-            TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheGet_TotalItemsRequestedCounter", null, null, "interface", "function", "success");
-            RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, "interface", "function", "success");
+            var labels = new[] { "interface", "function", "success" };
+            
+            TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheGet_TotalItemsRequestedCounter", null, labels);
+            RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, labels);
         }
 
         public static void OnResult(FunctionCacheGetResult result)
@@ -22,20 +25,20 @@ namespace CacheMeIfYouCan.Prometheus
             var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
             var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
 
-            var itemsRequested = result.Results.Count();
+            var labels = new[] { interfaceName, functionName, result.Success.ToString() };
             
             TotalItemsRequestedCounter
-                .Labels(interfaceName, functionName, result.Success.ToString())
-                .Inc(itemsRequested);
+                .Labels(labels)
+                .Inc(result.Results.Count());
             
             RequestDurationsMs
-                .Labels(interfaceName, functionName, result.Success.ToString())
+                .Labels(labels)
                 .Observe(ConvertToMilliseconds(result.Duration));
         }
 
         private static double ConvertToMilliseconds(long ticks)
         {
-            return (double)ticks / 10000;
+            return ticks / TicksPerMs;
         }
     }
 }

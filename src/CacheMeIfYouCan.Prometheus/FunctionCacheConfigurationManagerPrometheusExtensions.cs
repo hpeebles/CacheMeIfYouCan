@@ -22,6 +22,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             configManager.OnResult(FunctionCacheGetResultMetricsTracker.OnResult);
             configManager.OnFetch(FunctionCacheFetchResultMetricsTracker.OnFetch);
+            configManager.OnCacheGet(CacheMetricsTracker.OnCacheGet);
+            configManager.OnCacheSet(CacheMetricsTracker.OnCacheSet);
             
             return configManager;
         }

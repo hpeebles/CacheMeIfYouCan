@@ -46,8 +46,8 @@ namespace CacheMeIfYouCan.Notifications
     
     public sealed class CacheGetResult<TK, TV> : CacheGetResult
     {
-        public readonly ICollection<GetFromCacheResult<TK, TV>> Hits;
-        public readonly ICollection<Key<TK>> Misses;
+        public new readonly ICollection<GetFromCacheResult<TK, TV>> Hits;
+        public new readonly ICollection<Key<TK>> Misses;
 
         internal CacheGetResult(
             FunctionInfo functionInfo,
