@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
-using CacheMeIfYouCan.Internal;
-using CacheMeIfYouCan.Notifications;
-using CacheMeIfYouCan.Serializers;
 
-[assembly: InternalsVisibleTo("ProxyFactoryAsm")]
-[assembly: InternalsVisibleTo("CacheMeIfYouCan.Tests")]
 namespace CacheMeIfYouCan.Configuration
 {
     public class FunctionCacheConfigurationManager<TK, TV> : FunctionCacheConfigurationManagerBase<FunctionCacheConfigurationManager<TK, TV>, TK, TV>

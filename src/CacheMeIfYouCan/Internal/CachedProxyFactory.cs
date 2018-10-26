@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 
+[assembly: InternalsVisibleTo("ProxyFactoryAsm")]
+[assembly: InternalsVisibleTo("CacheMeIfYouCan.Tests")]
 namespace CacheMeIfYouCan.Internal
 {
     internal class CachedProxyFactory
