@@ -314,11 +314,11 @@ namespace CacheMeIfYouCan.Configuration
         private Func<TK, string> GetKeySerializer()
         {
             var serializer = _keySerializer ?? DefaultCacheConfig.Configuration.KeySerializers.GetSerializer<TK>();
-            
-            if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
-                throw new Exception($"No key serializer defined for type '{typeof(TK).FullName}'");
 
-            return serializer;
+            if (serializer == null)
+                ProvidedSerializers.TryGetSerializer(out serializer);
+
+            return serializer ?? (_ => throw new Exception($"No key serializer defined for type '{typeof(TK).FullName}'"));
         }
 
         private Func<string, TK> GetKeyDeserializer()
@@ -328,7 +328,7 @@ namespace CacheMeIfYouCan.Configuration
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
 
-            return deserializer;
+            return deserializer ?? (_ => throw new Exception($"No key deserializer defined for type '{typeof(TK).FullName}'"));
         }
         
         private Func<TV, string> GetValueSerializer()
@@ -338,7 +338,7 @@ namespace CacheMeIfYouCan.Configuration
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
 
-            return serializer;
+            return serializer ?? (_ => throw new Exception($"No value serializer defined for type '{typeof(TV).FullName}'"));
         }
         
         private Func<string, TV> GetValueDeserializer()
@@ -348,7 +348,7 @@ namespace CacheMeIfYouCan.Configuration
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
 
-            return deserializer;
+            return deserializer ?? (_ => throw new Exception($"No value deserializer defined for type '{typeof(TV).FullName}'"));
         }
     }
 }
