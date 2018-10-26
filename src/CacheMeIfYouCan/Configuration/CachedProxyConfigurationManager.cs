@@ -209,6 +209,11 @@ namespace CacheMeIfYouCan.Configuration
             
             return CachedProxyFactory.Build(_impl, config);
         }
+
+        public static implicit operator T(CachedProxyConfigurationManager<T> configManager)
+        {
+            return configManager.Build();
+        }
         
         private static MethodInfo GetMethodInfo(LambdaExpression expression)
         {

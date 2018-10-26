@@ -16,6 +16,11 @@ namespace CacheMeIfYouCan.Redis
 
         public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> removeFromLocalCacheAction)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (config.KeyDeserializer == null) throw new ArgumentNullException(nameof(config.KeyDeserializer));
+            if (config.ValueSerializer == null) throw new ArgumentNullException(nameof(config.ValueSerializer));
+            if (config.ValueDeserializer == null) throw new ArgumentNullException(nameof(config.ValueDeserializer));
+            
             var keySpacePrefix = _redisConfig.KeySpacePrefixFunc?.Invoke(config.FunctionInfo);
 
             var connection = RedisConnectionManager.GetOrAdd(_redisConfig.ConnectionString ?? _redisConfig.Configuration.ToString());

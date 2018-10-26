@@ -32,6 +32,11 @@ namespace CacheMeIfYouCan.Configuration
             return _cachedFunc;
         }
         
+        public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
+        {
+            return cacheConfig.Build();
+        }
+        
         private static Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> ConvertFunc(Func<TK, Task<TV>> func)
         {
             return async keys =>
@@ -42,11 +47,6 @@ namespace CacheMeIfYouCan.Configuration
                 
                 return new Dictionary<TK, TV> { { key, value } };
             };
-        }
-        
-        public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
-        {
-            return cacheConfig.Build();
         }
     }
 }

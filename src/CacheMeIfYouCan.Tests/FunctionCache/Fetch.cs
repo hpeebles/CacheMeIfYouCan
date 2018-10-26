@@ -122,7 +122,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             Assert.Single(fetches);
-            Assert.True(now <= fetches[0].Start && fetches[0].Start < now + TimeSpan.FromMilliseconds(10).Ticks);
+            Assert.True(now <= fetches[0].Start && fetches[0].Start < now + TimeSpan.FromMilliseconds(100).Ticks);
         }
     }
 }

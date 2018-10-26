@@ -336,9 +336,9 @@ namespace CacheMeIfYouCan.Configuration
         private Func<TV, string> GetValueSerializer()
         {
             var serializer = _valueSerializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetSerializer<TV>();
-            
-            if (serializer == null && !ProvidedSerializers.TryGetSerializer(out serializer))
-                throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
+
+            if (serializer == null)
+                ProvidedSerializers.TryGetSerializer(out serializer);
 
             return serializer;
         }
@@ -347,8 +347,8 @@ namespace CacheMeIfYouCan.Configuration
         {
             var deserializer = _valueDeserializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetDeserializer<TV>();
             
-            if (deserializer == null && !ProvidedSerializers.TryGetDeserializer(out deserializer))
-                throw new Exception($"No serializer defined for type '{typeof(TV).FullName}'");
+            if (deserializer == null)
+                ProvidedSerializers.TryGetDeserializer(out deserializer);
 
             return deserializer;
         }
