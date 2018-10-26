@@ -12,6 +12,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<int, Task<string>> _intToString;
         private readonly Func<long, Task<int>> _longToInt;
         private readonly Func<IEnumerable<string>, Task<IDictionary<string, string>>> _multiEcho;
+        private readonly Func<IList<string>, Task<IDictionary<string, string>>> _multiEchoList;
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
@@ -19,6 +20,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             _intToString = new FunctionCacheConfigurationManager<int, string>(impl.IntToString, "IntToString", config).Build();
             _longToInt = new FunctionCacheConfigurationManager<long, int>(impl.LongToInt, "LongToInt", config).Build();
             _multiEcho = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, "MultiEcho", config).Build();
+            _multiEchoList = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, "MultiEchoList", config).Build();
         }
         
         public Task<string> StringToString(string key)
@@ -39,6 +41,11 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys)
         {
             return _multiEcho(keys);
+        }
+        
+        public Task<IDictionary<string, string>> MultiEchoList(IList<string> keys)
+        {
+            return _multiEchoList(keys);
         }
     }
 }

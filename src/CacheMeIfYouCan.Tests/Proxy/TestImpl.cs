@@ -25,5 +25,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
         }
+        
+        public Task<IDictionary<string, string>> MultiEchoList(IList<string> keys)
+        {
+            return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
+        }
     }
 }

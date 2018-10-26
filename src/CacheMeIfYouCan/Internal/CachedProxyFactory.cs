@@ -53,10 +53,9 @@ namespace CacheMeIfYouCan.Internal
                 var definition = GetMethodDefinition(methodInfo);
                 
                 // Create a field called _methodName of type Func<TK, Task<TV>> in which to store the cached function
-                var fieldType = typeof(Func<,>).MakeGenericType(definition.ParameterType, definition.ReturnType);
                 var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}";
-                var field = typeBuilder.DefineField(fieldName, fieldType, FieldAttributes.Private);
-                var fieldCtor = fieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
+                var field = typeBuilder.DefineField(fieldName, definition.FieldType, FieldAttributes.Private);
+                var fieldCtor = definition.FieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
                 
                 // Either FunctionCacheConfigurationManager<TK, TV> or MultiKeyFunctionCacheConfigurationManager
                 // depending on if the key is Enumerable or not
@@ -67,7 +66,7 @@ namespace CacheMeIfYouCan.Internal
                 var configManagerTypeCtor = configManagerType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
-                    new[] { fieldType, typeof(string), typeof(CachedProxyConfig) },
+                    new[] { definition.FieldType, typeof(string), typeof(CachedProxyConfig) },
                     new ParameterModifier[0]);
                 
                 // Build a cached version of the function and store it in the newly created field
@@ -94,7 +93,7 @@ namespace CacheMeIfYouCan.Internal
                 methodGen.Emit(OpCodes.Ldarg_0); // this
                 methodGen.Emit(OpCodes.Ldfld, field); // _methodName
                 methodGen.Emit(OpCodes.Ldarg_1); // TK key
-                methodGen.Emit(OpCodes.Callvirt, fieldType.GetMethod("Invoke", new[] { definition.ParameterType })); // _methodName.Invoke(key)
+                methodGen.Emit(OpCodes.Callvirt, definition.FieldType.GetMethod("Invoke", new[] { definition.ParameterType })); // _methodName.Invoke(key)
                 methodGen.Emit(OpCodes.Ret); // Return result
             }
             
@@ -152,6 +151,7 @@ namespace CacheMeIfYouCan.Internal
             var returnTypeInner = returnType.GenericTypeArguments.Single();
 
             Type valueType;
+            Type fieldType;
             if (isMultiKey)
             {
                 if (returnTypeInner.GenericTypeArguments.Length != 2)
@@ -166,19 +166,26 @@ namespace CacheMeIfYouCan.Internal
                 
                 if (!dictionaryType.IsAssignableFrom(returnTypeInner))
                     throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
+
+                var multiParamType = typeof(IEnumerable<>).MakeGenericType(keyType);
+                var multiReturnType = typeof(Task<>).MakeGenericType(dictionaryType);
+                
+                fieldType = typeof(Func<,>).MakeGenericType(multiParamType, multiReturnType);
             }
             else
             {
                 valueType = returnTypeInner;
+
+                fieldType = typeof(Func<,>).MakeGenericType(parameterType, returnType);
             }
 
             return new MethodDefinition
             {
                 ParameterType = parameterType,
                 ReturnType = returnType,
-                ReturnTypeInner = returnTypeInner,
                 KeyType = keyType,
                 ValueType = valueType,
+                FieldType = fieldType,
                 IsMultiKey = isMultiKey
             };
         }
@@ -194,9 +201,9 @@ namespace CacheMeIfYouCan.Internal
         {
             public Type ParameterType;
             public Type ReturnType;
-            public Type ReturnTypeInner;
             public Type KeyType;
             public Type ValueType;
+            public Type FieldType;
             public bool IsMultiKey;
         }
     }
