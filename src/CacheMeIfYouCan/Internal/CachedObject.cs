@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<Task<T>> _getValueFunc;
         private readonly Func<TimeSpan> _intervalFunc;
         private readonly Action<Exception> _onError;
-        private readonly IList<RefreshValueResult> _previousRefreshes;
+        private readonly Queue<RefreshValueResult> _previousRefreshValueResults;
         private readonly object _lock = new Object();
         private T _value;
         private bool _initialised;
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Internal
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
             _intervalFunc = intervalFunc ?? throw new ArgumentNullException(nameof(intervalFunc));
             _onError = onError;
-            _previousRefreshes = new List<RefreshValueResult>();
+            _previousRefreshValueResults = new Queue<RefreshValueResult>();
         }
 
         public T Value
@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 var result = await RefreshValue();
 
-                _previousRefreshes.Add(result);
+                LogRefreshValueResult(result);
 
                 if (!result.Success)
                     return false;
@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Internal
                         .ToObservable()
                         .DelaySubscription(_intervalFunc()))
                     .Repeat()
-                    .Subscribe(_previousRefreshes.Add);
+                    .Subscribe(LogRefreshValueResult);
                     
                 _initialised = true;
             }
@@ -114,6 +114,14 @@ namespace CacheMeIfYouCan.Internal
                 Success = exception == null,
                 Exception = exception
             };
+        }
+
+        private void LogRefreshValueResult(RefreshValueResult result)
+        {
+            while (_previousRefreshValueResults.Count >= 10)
+                _previousRefreshValueResults.Dequeue();
+                        
+            _previousRefreshValueResults.Enqueue(result);
         }
         
         private class RefreshValueResult
