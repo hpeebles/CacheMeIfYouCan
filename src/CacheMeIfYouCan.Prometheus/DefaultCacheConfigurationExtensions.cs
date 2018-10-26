@@ -8,6 +8,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             config.OnResult = FunctionCacheGetResultMetricsTracker.OnResult;
             config.OnFetch = FunctionCacheFetchResultMetricsTracker.OnFetch;
+            config.OnCacheGet = CacheMetricsTracker.OnCacheGet;
+            config.OnCacheSet = CacheMetricsTracker.OnCacheSet;
             
             return config;
         }
