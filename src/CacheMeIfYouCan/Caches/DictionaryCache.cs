@@ -92,9 +92,11 @@ namespace CacheMeIfYouCan.Caches
                 _ttls.Clear();
         }
 
+        public int Count => _values.Count;
+
         private void RemoveExpiredKeys()
         {
-            var timestamp = Timestamp.Now;
+            var timestampSeconds = (int) (Timestamp.Now / TimeSpan.TicksPerSecond);
 
             var keysToExpire = new List<TK>();
 
@@ -102,7 +104,7 @@ namespace CacheMeIfYouCan.Caches
             {
                 // Since _ttls is a sorted dictionary by expiry timestamp, the first item will be the next to expire
                 var next = _ttls.FirstOrDefault();
-                while (0 < next.Key && next.Key < timestamp)
+                while (0 < next.Key && next.Key < timestampSeconds)
                 {
                     keysToExpire.AddRange(next.Value);
                     _ttls.Remove(next.Key);
