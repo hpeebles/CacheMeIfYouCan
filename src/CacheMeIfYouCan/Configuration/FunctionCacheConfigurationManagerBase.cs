@@ -155,10 +155,10 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithLocalCache(ILocalCache<TK, TV> cache, bool requiresStringKeys = true)
         {
-            return WithLocalCacheFactory(() => cache, requiresStringKeys);
+            return WithLocalCacheFactory(f => cache, requiresStringKeys);
         }
         
-        public TConfig WithLocalCacheFactory(Func<ILocalCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        public TConfig WithLocalCacheFactory(Func<FunctionInfo, ILocalCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
             _localCacheFactory = new LocalCacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
             return (TConfig)this;

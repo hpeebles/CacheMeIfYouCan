@@ -2,7 +2,6 @@
 using System.Linq;
 using CacheMeIfYouCan.Notifications;
 using Prometheus;
-using Histogram = Prometheus.Histogram;
 
 namespace CacheMeIfYouCan.Prometheus
 {
@@ -15,9 +14,10 @@ namespace CacheMeIfYouCan.Prometheus
         static FunctionCacheGetResultMetricsTracker()
         {
             var labels = new[] { "interface", "function", "success" };
+            var requestDurationBuckets = new[] { 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000 };
             
             TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheGet_TotalItemsRequestedCounter", null, labels);
-            RequestDurationsMs = Metrics.CreateHistogram("RequestDurationsMs", null, null, labels);
+            RequestDurationsMs = Metrics.CreateHistogram("FunctionCacheGet_RequestDurationsMs", null, requestDurationBuckets, labels);
         }
 
         public static void OnResult(FunctionCacheGetResult result)

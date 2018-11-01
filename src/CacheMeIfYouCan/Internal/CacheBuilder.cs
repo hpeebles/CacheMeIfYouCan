@@ -21,13 +21,19 @@ namespace CacheMeIfYouCan.Internal
             if (localCacheFactory == null && remoteCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
-            var localCache = localCacheFactory?.Build();
+            var localCache = localCacheFactory?.Build(functionInfo);
 
+            if (localCache is ICachedItemCounter localItemCounter)
+                CachedItemCounterContainer.Register(localItemCounter);
+            
             Action<Key<TK>> removeFromLocalCacheAction = null;
             if (localCache != null)
                 removeFromLocalCacheAction = localCache.Remove;
 
             var remoteCache = remoteCacheFactory?.Build(config, removeFromLocalCacheAction);
+
+            if (remoteCache is ICachedItemCounter remoteItemCounter)
+                CachedItemCounterContainer.Register(remoteItemCounter);
 
             if (onCacheGet != null || onCacheSet != null)
             {

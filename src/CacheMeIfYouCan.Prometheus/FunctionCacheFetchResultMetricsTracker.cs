@@ -15,9 +15,12 @@ namespace CacheMeIfYouCan.Prometheus
         
         static FunctionCacheFetchResultMetricsTracker()
         {
+            var requestDurationBuckets = new[] { 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000 };
+            var earlyFetchTimeToLiveBuckets = new[] { 1.0, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000 };
+            
             TotalItemsRequestedCounter = Metrics.CreateCounter("FunctionCacheFetch_TotalItemsRequestedCounter", null, "interface", "function", "success");
-            RequestDurationsMs = Metrics.CreateHistogram("FunctionCacheFetch_RequestDurationsMs", null, null, "interface", "function", "success", "duplicate", "reason");
-            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("FunctionCacheFetch_EarlyFetchTimeToLivesMs", null, null, "interface", "function", "success", "reason");
+            RequestDurationsMs = Metrics.CreateHistogram("FunctionCacheFetch_RequestDurationsMs", null, requestDurationBuckets, "interface", "function", "success", "duplicate", "reason");
+            EarlyFetchTimeToLivesMs = Metrics.CreateHistogram("FunctionCacheFetch_EarlyFetchTimeToLivesMs", null, earlyFetchTimeToLiveBuckets, "interface", "function", "success", "reason");
         }
         
         public static void OnFetch(FunctionCacheFetchResult result)

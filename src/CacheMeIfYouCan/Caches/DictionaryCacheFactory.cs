@@ -4,9 +4,9 @@
     {
         public bool RequiresStringKeys => false;
         
-        public ILocalCache<TK, TV> Build<TK, TV>()
+        public ILocalCache<TK, TV> Build<TK, TV>(FunctionInfo functionInfo)
         {
-            return new DictionaryCache<TK, TV>();
+            return new DictionaryCache<TK, TV>(functionInfo);
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Linq;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 using Prometheus;
 
@@ -11,17 +13,26 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Counter TotalItemsSetCounter;
         private static readonly Histogram GetDurationsMs;
         private static readonly Histogram SetDurationsMs;
+        private static readonly Gauge CachedItemsCounter;
         private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static CacheMetricsTracker()
         {
             var labels = new[] { "interface", "function", "success", "cachetype" };
+            var cacheDurationBuckets = new[] { 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000 };
             
             TotalHitsCounter = Metrics.CreateCounter("Cache_TotalHitsCounter", null, labels);
             TotalMissesCounter = Metrics.CreateCounter("Cache_TotalMissesCounter", null, labels);
             TotalItemsSetCounter = Metrics.CreateCounter("Cache_TotalItemsSetCounter", null, labels);
-            GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, null, labels);
-            SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, null, labels);
+            GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, cacheDurationBuckets, labels);
+            SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, cacheDurationBuckets, labels);
+            CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "interface", "function", "cachetype");
+
+            Observable
+                .Interval(TimeSpan.FromSeconds(5))
+                .Do(_ => TrackCachedItemCounts())
+                .Retry()
+                .Subscribe();
         }
         
         public static void OnCacheGet(CacheGetResult result)
@@ -58,6 +69,19 @@ namespace CacheMeIfYouCan.Prometheus
             SetDurationsMs
                 .Labels(labels)
                 .Observe(ConvertToMilliseconds(result.Duration));
+        }
+
+        private static void TrackCachedItemCounts()
+        {
+            foreach (var count in CachedItemCounterContainer.GetCounts())
+            {
+                var interfaceName = count.FunctionInfo.InterfaceType?.Name ?? String.Empty;
+                var functionName = count.FunctionInfo.FunctionName ?? String.Empty;
+                
+                CachedItemsCounter
+                    .Labels(interfaceName, functionName, count.CacheType)
+                    .Set(count.Count);
+            }
         }
 
         private static double ConvertToMilliseconds(long ticks)

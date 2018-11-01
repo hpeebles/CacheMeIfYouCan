@@ -5,13 +5,13 @@ namespace CacheMeIfYouCan.Caches
     public interface ILocalCacheFactory
     {
         bool RequiresStringKeys { get; }
-        ILocalCache<TK, TV> Build<TK, TV>();
+        ILocalCache<TK, TV> Build<TK, TV>(FunctionInfo functionInfo);
     }
     
     public interface ILocalCacheFactory<TK, TV>
     {
         bool RequiresStringKeys { get; }
-        ILocalCache<TK, TV> Build();
+        ILocalCache<TK, TV> Build(FunctionInfo functionInfo);
     }
 
     internal class LocalCacheFactoryWrapper<TK, TV> : ILocalCacheFactory<TK, TV>
@@ -25,17 +25,17 @@ namespace CacheMeIfYouCan.Caches
 
         public bool RequiresStringKeys => _factory.RequiresStringKeys;
         
-        public ILocalCache<TK, TV> Build()
+        public ILocalCache<TK, TV> Build(FunctionInfo functionInfo)
         {
-            return _factory.Build<TK, TV>();
+            return _factory.Build<TK, TV>(functionInfo);
         }
     }
     
     internal class LocalCacheFactoryFuncWrapper<TK, TV> : ILocalCacheFactory<TK, TV>
     {
-        private readonly Func<ILocalCache<TK, TV>> _func;
+        private readonly Func<FunctionInfo, ILocalCache<TK, TV>> _func;
 
-        public LocalCacheFactoryFuncWrapper(Func<ILocalCache<TK, TV>> func, bool requiresStringKeys)
+        public LocalCacheFactoryFuncWrapper(Func<FunctionInfo, ILocalCache<TK, TV>> func, bool requiresStringKeys)
         {
             _func = func;
             RequiresStringKeys = requiresStringKeys;
@@ -43,9 +43,9 @@ namespace CacheMeIfYouCan.Caches
         
         public bool RequiresStringKeys { get; }
 
-        public ILocalCache<TK, TV> Build()
+        public ILocalCache<TK, TV> Build(FunctionInfo functionInfo)
         {
-            return _func();
+            return _func(functionInfo);
         }
     }
 }
