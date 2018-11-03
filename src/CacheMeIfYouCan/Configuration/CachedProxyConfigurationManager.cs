@@ -48,9 +48,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(Func<TField, string> serializer)
+        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer = null)
         {
-            _keySerializers.Set(serializer);
+            _keySerializers.Set(serializer, deserializer);
             return this;
         }
         
