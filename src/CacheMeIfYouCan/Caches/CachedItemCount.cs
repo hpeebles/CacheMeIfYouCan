@@ -4,9 +4,9 @@ namespace CacheMeIfYouCan.Caches
     {
         public readonly string CacheType;
         public readonly FunctionInfo FunctionInfo;
-        public readonly int Count;
+        public readonly long Count;
 
-        internal CachedItemCount(string cacheType, FunctionInfo functionInfo, int count)
+        internal CachedItemCount(string cacheType, FunctionInfo functionInfo, long count)
         {
             CacheType = cacheType;
             FunctionInfo = functionInfo;

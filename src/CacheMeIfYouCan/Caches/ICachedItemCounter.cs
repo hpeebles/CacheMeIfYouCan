@@ -4,6 +4,6 @@
     {
         string CacheType { get; }
         FunctionInfo FunctionInfo { get; }
-        int Count { get; }
+        long Count { get; }
     }
 }

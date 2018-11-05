@@ -6,7 +6,7 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Caches
 {
-    public class MemoryCache<TK, TV> : ILocalCache<TK, TV>
+    public class MemoryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         private readonly MemoryCache _cache;
         
@@ -21,6 +21,10 @@ namespace CacheMeIfYouCan.Caches
         }
         
         public string CacheType { get; } = "memory";
+
+        public FunctionInfo FunctionInfo => throw new NotImplementedException();
+
+        public long Count => _cache.GetCount();
 
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
@@ -54,6 +58,11 @@ namespace CacheMeIfYouCan.Caches
         public void Remove(Key<TK> key)
         {
             _cache.Remove(key.AsString);
+        }
+
+        public void Dispose()
+        {
+            _cache?.Dispose();
         }
     }
 }

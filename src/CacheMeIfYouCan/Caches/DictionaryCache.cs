@@ -7,7 +7,7 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Caches
 {
-    public class DictionaryCache<TK, TV> : ILocalCache<TK, TV>, IDisposable, ICachedItemCounter
+    public class DictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         // Store keys along with their exact expiry times
         private readonly ConcurrentDictionary<TK, Tuple<TV, long>> _values = new ConcurrentDictionary<TK, Tuple<TV, long>>();
@@ -31,6 +31,7 @@ namespace CacheMeIfYouCan.Caches
         }
         
         public string CacheType { get; } = "dictionary";
+
         public FunctionInfo FunctionInfo { get; }
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
@@ -86,16 +87,16 @@ namespace CacheMeIfYouCan.Caches
             _values.TryRemove(key, out _);
         }
 
+        public long Count => _values.Count;
+
         public void Dispose()
         {
             _keyRemoverProcess?.Dispose();
             _values.Clear();
-            
+
             lock (_lock)
                 _ttls.Clear();
         }
-
-        public int Count => _values.Count;
 
         private void RemoveExpiredKeys()
         {
