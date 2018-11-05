@@ -57,7 +57,7 @@ namespace CacheMeIfYouCan.Caches
         {
             Func<TimeSpan> intervalFunc;
 
-            if (_jitterPercentage == 0)
+            if (_jitterPercentage.Equals(0))
             {
                 intervalFunc = _intervalFunc;
             }

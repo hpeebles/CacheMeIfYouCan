@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using Xunit;
@@ -8,27 +10,43 @@ namespace CacheMeIfYouCan.Tests.CachedObject
     public class Initialisation
     {
         [Fact]
-        public void NotInitialisedThrowsException()
+        public void NotInitialisedWillInitialiseOnFirstCall()
         {
             var ticks = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow.Ticks)
+                .ConfigureFor(() =>
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    return DateTime.UtcNow.Ticks;
+                })
                 .RefreshInterval(TimeSpan.FromSeconds(1))
                 .Build(false);
 
-            Assert.Throws<Exception>(() => ticks.Value);
+            var timer = Stopwatch.StartNew();
+
+            Assert.NotEqual(0, ticks.Value);
+
+            Assert.True(timer.Elapsed >= TimeSpan.FromSeconds(1));
         }
         
         [Fact]
         public async Task CanBeInitialisedDirectly()
         {
             var ticks = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow.Ticks)
+                .ConfigureFor(() =>
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    return DateTime.UtcNow.Ticks;
+                })
                 .RefreshInterval(TimeSpan.FromSeconds(1))
                 .Build(false);
 
             await ticks.Init();
-            
+
+            var timer = Stopwatch.StartNew();
+
             Assert.NotEqual(0, ticks.Value);
+
+            Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(20));
         }
         
         [Fact]

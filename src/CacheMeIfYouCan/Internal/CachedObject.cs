@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Internal
             get
             {
                 if (!_initialised)
-                    throw new Exception("CachedObject has not been initialised");
+                    Init().GetAwaiter().GetResult();
                 
                 return _value;
             }
