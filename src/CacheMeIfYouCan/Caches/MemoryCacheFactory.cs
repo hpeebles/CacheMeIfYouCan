@@ -6,7 +6,7 @@
 
         public ILocalCache<TK, TV> Build<TK, TV>(FunctionInfo functionInfo)
         {
-            return new MemoryCache<TK, TV>();
+            return new MemoryCache<TK, TV>(functionInfo);
         }
     }
 }

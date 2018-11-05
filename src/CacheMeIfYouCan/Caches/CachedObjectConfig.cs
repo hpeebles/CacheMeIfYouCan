@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Caches
@@ -9,15 +9,25 @@ namespace CacheMeIfYouCan.Caches
     {
         private readonly Func<Task<T>> _getValueFunc;
         private Func<TimeSpan> _intervalFunc;
+        private double _jitterPercentage;
         private Action<Exception> _onError;
 
         internal CachedObjectConfig(Func<Task<T>> getValueFunc)
         {
             _getValueFunc = getValueFunc;
+
+            if (DefaultCachedObjectConfig.Configuration.RefreshInterval.HasValue)
+                RefreshInterval(DefaultCachedObjectConfig.Configuration.RefreshInterval.Value);
+
+            if (DefaultCachedObjectConfig.Configuration.JitterPercentage.HasValue)
+                JitterPercentage(DefaultCachedObjectConfig.Configuration.JitterPercentage.Value);
         }
         
         public CachedObjectConfig<T> RefreshInterval(TimeSpan interval)
         {
+            if (interval == TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(interval));
+
             _intervalFunc = () => interval;
             return this;
         }
@@ -32,21 +42,8 @@ namespace CacheMeIfYouCan.Caches
         {
             if (percentage < 0 || percentage > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentage));
-            
-            var random = new Random();
 
-            // This gives a uniformly distributed value between +/- percentage
-            double JitterFunc()
-            {
-                var j = (random.NextDouble() - 0.5) * 2 * percentage;
-
-                return j;
-            }
-
-            var intervalFunc = _intervalFunc;
-            
-            _intervalFunc = () => TimeSpan.FromTicks((long) (intervalFunc().Ticks * (1 + (JitterFunc() / 100))));
-
+            _jitterPercentage = percentage;
             return this;
         }
 
@@ -58,7 +55,25 @@ namespace CacheMeIfYouCan.Caches
 
         public ICachedObject<T> Build(bool registerGlobally = true)
         {
-            var cachedObject = new CachedObject<T>(_getValueFunc, _intervalFunc, _onError);
+            Func<TimeSpan> intervalFunc;
+
+            if (_jitterPercentage == 0)
+            {
+                intervalFunc = _intervalFunc;
+            }
+            else
+            {
+                var random = new Random();
+
+                var jitterPercentage = _jitterPercentage;
+
+                // This gives a uniformly distributed value between +/- percentage
+                double JitterFunc() => (random.NextDouble() - 0.5) * 2 * jitterPercentage;
+
+                intervalFunc = () => TimeSpan.FromTicks((long)(_intervalFunc().Ticks * (1 + (JitterFunc() / 100))));
+            }
+
+            var cachedObject = new CachedObject<T>(_getValueFunc, intervalFunc, _onError);
             
             if (registerGlobally)
                 CachedObjectInitialiser.Register(cachedObject);

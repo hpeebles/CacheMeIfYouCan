@@ -10,8 +10,10 @@ namespace CacheMeIfYouCan.Caches
     {
         private readonly MemoryCache _cache;
         
-        internal MemoryCache(int maxSizeMB = 100)
+        internal MemoryCache(FunctionInfo functionInfo, int maxSizeMB = 100)
         {
+            FunctionInfo = functionInfo;
+
             var config = new NameValueCollection
             {
                 { "cacheMemoryLimitMegabytes", maxSizeMB.ToString() }
@@ -22,7 +24,7 @@ namespace CacheMeIfYouCan.Caches
         
         public string CacheType { get; } = "memory";
 
-        public FunctionInfo FunctionInfo => throw new NotImplementedException();
+        public FunctionInfo FunctionInfo { get; }
 
         public long Count => _cache.GetCount();
 
