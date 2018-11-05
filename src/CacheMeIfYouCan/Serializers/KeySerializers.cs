@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Serializers
         private readonly IDictionary<Type, object> _deserializers = new Dictionary<Type, object>();
         private ISerializer _default;
 
-        public Func<T, string> GetSerializer<T>()
+        internal Func<T, string> GetSerializer<T>()
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj))
                 return (Func<T, string>)serializerObj;
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Serializers
             return null;
         }
 
-        public Func<string, T> GetDeserializer<T>()
+        internal Func<string, T> GetDeserializer<T>()
         {
             if (_deserializers.TryGetValue(typeof(T), out var deserializerObj))
             {
@@ -36,26 +36,37 @@ namespace CacheMeIfYouCan.Serializers
             return null;
         }
 
-        public void Set<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
+        public KeySerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
         {
             _serializers[typeof(T)] = serializer;
+            return this;
         }
 
-        public void Set<T>(ISerializer serializer)
+        public KeySerializers Set<T>(ISerializer serializer)
         {
             _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
             _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize<T>;
+            return this;
         }
 
-        public void Set<T>(ISerializer<T> serializer)
+        public KeySerializers Set<T>(ISerializer<T> serializer)
         {
             _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
             _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize;
+            return this;
         }
 
-        public void SetDefault(ISerializer serializer) => _default = serializer;
+        public KeySerializers SetDefault(ISerializer serializer)
+        {
+            _default = serializer;
+            return this;
+        }
 
-        public void SetDefault(Func<object, string> serializer, Func<string, object> deserializer = null) => _default = new Wrapper(serializer, deserializer);
+        public KeySerializers SetDefault(Func<object, string> serializer, Func<string, object> deserializer = null)
+        {
+            _default = new Wrapper(serializer, deserializer);
+            return this;
+        }
         
         private class Wrapper : ISerializer
         {

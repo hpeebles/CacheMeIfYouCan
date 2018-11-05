@@ -46,6 +46,7 @@ namespace CacheMeIfYouCan.Configuration
             {
                 _interfaceType = interfaceConfig.InterfaceType;
                 _keySerializer = interfaceConfig.KeySerializers.GetSerializer<TK>();
+                _keyDeserializer = interfaceConfig.KeySerializers.GetDeserializer<TK>();
                 _valueSerializer = interfaceConfig.ValueSerializers.GetSerializer<TV>();
                 _valueDeserializer = interfaceConfig.ValueSerializers.GetDeserializer<TV>();
                 _timeToLive = interfaceConfig.TimeToLive;

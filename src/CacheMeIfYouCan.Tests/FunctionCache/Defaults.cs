@@ -19,11 +19,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheGetResult>();
 
-            DefaultCacheConfig.Configuration.OnResult = x =>
+            DefaultCacheConfig.Configuration.WithOnResultAction(x =>
             {
                 if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
                     results.Add(x);
-            };
+            });
             
             var cachedEcho = echo
                 .Cached()
@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(i, results.Count);
             }
             
-            DefaultCacheConfig.Configuration.OnResult = null;
+            DefaultCacheConfig.Configuration.WithOnResultAction(null);
         }
         
         [Fact]
@@ -47,11 +47,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheFetchResult>();
 
-            DefaultCacheConfig.Configuration.OnFetch = x =>
+            DefaultCacheConfig.Configuration.WithOnFetchAction(x =>
             {
                 if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
                     results.Add(x);
-            };
+            });
             
             var cachedEcho = echo
                 .Cached()
@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(i, results.Count);
             }
 
-            DefaultCacheConfig.Configuration.OnFetch = null;
+            DefaultCacheConfig.Configuration.WithOnFetchAction(null);
         }
         
         [Fact]
@@ -77,11 +77,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var errors = new List<FunctionCacheErrorEvent>();
 
-            DefaultCacheConfig.Configuration.OnError = x =>
+            DefaultCacheConfig.Configuration.WithOnErrorAction(x =>
             {
                 if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
                     errors.Add(x);
-            };
+            });
             
             var cachedEcho = echo
                 .Cached()
@@ -105,7 +105,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            DefaultCacheConfig.Configuration.OnError = null;
+            DefaultCacheConfig.Configuration.WithOnErrorAction(null);
         }
         
         [Fact]
@@ -117,11 +117,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var key = Guid.NewGuid().ToString();
             
-            DefaultCacheConfig.Configuration.OnCacheGet = x =>
+            DefaultCacheConfig.Configuration.WithOnCacheGetAction(x =>
             {
                 if (x.Hits.Contains(key) || x.Misses.Contains(key))
                     results.Add(x);
-            };
+            });
             
             var cachedEcho = echo
                 .Cached()
@@ -148,7 +148,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal("memory", results.Last().CacheType);
             }
             
-            DefaultCacheConfig.Configuration.OnCacheGet = null;
+            DefaultCacheConfig.Configuration.WithOnCacheGetAction(null);
         }
         
         [Fact]
@@ -160,11 +160,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var key = Guid.NewGuid().ToString();
             
-            DefaultCacheConfig.Configuration.OnCacheSet = x =>
+            DefaultCacheConfig.Configuration.WithOnCacheSetAction(x =>
             {
                 if (x.Keys.Contains(key))
                     results.Add(x);
-            };
+            });
             
             var cachedEcho = echo
                 .Cached()
@@ -182,7 +182,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Assert.Single(results);
             
-            DefaultCacheConfig.Configuration.OnCacheSet = null;
+            DefaultCacheConfig.Configuration.WithOnCacheSetAction(null);
         }
 
         private static string GetRandomKey()

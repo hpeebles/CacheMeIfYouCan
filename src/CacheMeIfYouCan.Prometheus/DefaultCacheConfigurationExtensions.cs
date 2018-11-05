@@ -6,12 +6,11 @@ namespace CacheMeIfYouCan.Prometheus
     {
         public static DefaultCacheConfiguration WithMetrics(this DefaultCacheConfiguration config)
         {
-            config.OnResult = FunctionCacheGetResultMetricsTracker.OnResult;
-            config.OnFetch = FunctionCacheFetchResultMetricsTracker.OnFetch;
-            config.OnCacheGet = CacheMetricsTracker.OnCacheGet;
-            config.OnCacheSet = CacheMetricsTracker.OnCacheSet;
-            
-            return config;
+            return config
+                .WithOnResultAction(FunctionCacheGetResultMetricsTracker.OnResult)
+                .WithOnFetchAction(FunctionCacheFetchResultMetricsTracker.OnFetch)
+                .WithOnCacheGetAction(CacheMetricsTracker.OnCacheGet)
+                .WithOnCacheSetAction(CacheMetricsTracker.OnCacheSet);
         }
     }
 }

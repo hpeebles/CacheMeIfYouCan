@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Serializers
         private readonly IDictionary<Type, object> _deserializers = new Dictionary<Type, object>();
         private ISerializer _default;
 
-        public Func<T, string> GetSerializer<T>()
+        internal Func<T, string> GetSerializer<T>()
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj) && serializerObj is Func<T, string> serializer)
                 return serializer;
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Serializers
             return null;
         }
 
-        public Func<string, T> GetDeserializer<T>()
+        internal Func<string, T> GetDeserializer<T>()
         {
             if (_deserializers.TryGetValue(typeof(T), out var deserializerObj) && deserializerObj is Func<string, T> deserializer)
                 return deserializer;
@@ -31,24 +31,31 @@ namespace CacheMeIfYouCan.Serializers
             return null;
         }
 
-        public void Set<T>(Func<T, string> serializer, Func<string, T> deserializer)
+        public ValueSerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer)
         {
             _serializers[typeof(T)] = serializer;
             _deserializers[typeof(T)] = deserializer;
+            return this;
         }
 
-        public void Set<T>(ISerializer serializer)
+        public ValueSerializers Set<T>(ISerializer serializer)
         {
             _serializers[typeof(T)] = (Func<T, string>)(serializer.Serialize);
             _deserializers[typeof(T)] = (Func<string, T>)(serializer.Deserialize<T>);
+            return this;
         }
 
-        public void Set<T>(ISerializer<T> serializer)
+        public ValueSerializers Set<T>(ISerializer<T> serializer)
         {
             _serializers[typeof(T)] = (Func<T, string>)(serializer.Serialize);
             _deserializers[typeof(T)] = (Func<string, T>)(serializer.Deserialize);
+            return this;
         }
 
-        public void SetDefault(ISerializer serializer) => _default = serializer;
+        public ValueSerializers SetDefault(ISerializer serializer)
+        {
+            _default = serializer;
+            return this;
+        }
     }
 }
