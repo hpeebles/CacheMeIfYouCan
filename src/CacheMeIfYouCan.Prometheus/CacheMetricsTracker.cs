@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Prometheus
         static CacheMetricsTracker()
         {
             var labels = new[] { "interface", "function", "success", "cachetype" };
-            var cacheDurationBuckets = new[] { 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000 };
+            var cacheDurationBuckets = new[] { 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000 };
             
             TotalHitsCounter = Metrics.CreateCounter("Cache_TotalHitsCounter", null, labels);
             TotalMissesCounter = Metrics.CreateCounter("Cache_TotalMissesCounter", null, labels);
