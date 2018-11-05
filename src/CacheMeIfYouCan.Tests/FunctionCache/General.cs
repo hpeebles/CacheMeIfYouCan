@@ -40,7 +40,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
                 else
                 {
-                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(10));
+                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(50));
                 }
             }
             

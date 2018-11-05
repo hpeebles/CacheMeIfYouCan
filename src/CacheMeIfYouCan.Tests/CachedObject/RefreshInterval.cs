@@ -69,6 +69,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             }
 
             var sorted = results
+                .Skip(1) // skip first one as it is always slow due to JITting
                 .OrderBy(r => r)
                 .ToArray();
             
@@ -80,7 +81,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var max = diffs.Max();
             
             Assert.True(TimeSpan.FromMilliseconds(100) <= min && min <= TimeSpan.FromMilliseconds(150));
-            Assert.True(TimeSpan.FromMilliseconds(250) <= max && max <= TimeSpan.FromMilliseconds(300));
+            Assert.True(TimeSpan.FromMilliseconds(250) <= max && max <= TimeSpan.FromMilliseconds(350));
         }
     }
 }
