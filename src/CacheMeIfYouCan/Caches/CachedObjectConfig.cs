@@ -17,13 +17,13 @@ namespace CacheMeIfYouCan.Caches
             _getValueFunc = getValueFunc;
 
             if (DefaultCachedObjectConfig.Configuration.RefreshInterval.HasValue)
-                RefreshInterval(DefaultCachedObjectConfig.Configuration.RefreshInterval.Value);
+                WithRefreshInterval(DefaultCachedObjectConfig.Configuration.RefreshInterval.Value);
 
             if (DefaultCachedObjectConfig.Configuration.JitterPercentage.HasValue)
-                JitterPercentage(DefaultCachedObjectConfig.Configuration.JitterPercentage.Value);
+                WithJitterPercentage(DefaultCachedObjectConfig.Configuration.JitterPercentage.Value);
         }
         
-        public CachedObjectConfig<T> RefreshInterval(TimeSpan interval)
+        public CachedObjectConfig<T> WithRefreshInterval(TimeSpan interval)
         {
             if (interval == TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(interval));
@@ -32,13 +32,13 @@ namespace CacheMeIfYouCan.Caches
             return this;
         }
 
-        public CachedObjectConfig<T> RefreshInterval(Func<TimeSpan> intervalFunc)
+        public CachedObjectConfig<T> WithRefreshInterval(Func<TimeSpan> intervalFunc)
         {
             _intervalFunc = intervalFunc;
             return this;
         }
         
-        public CachedObjectConfig<T> JitterPercentage(double percentage)
+        public CachedObjectConfig<T> WithJitterPercentage(double percentage)
         {
             if (percentage < 0 || percentage > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentage));

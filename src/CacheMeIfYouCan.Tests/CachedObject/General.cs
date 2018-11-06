@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build(false);
 
             await date.Init();
@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     
                     return DateTime.UtcNow;
                 })
-                .RefreshInterval(TimeSpan.FromMilliseconds(100))
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(100))
                 .Build(false);
 
             await date.Init();
@@ -59,12 +59,12 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             CachedObjectFactory
                 .ConfigureFor(Guid.NewGuid)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
             Assert.Throws<Exception>(() => CachedObjectFactory
                 .ConfigureFor(Guid.NewGuid)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build());
         }
     }

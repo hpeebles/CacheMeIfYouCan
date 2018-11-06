@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .RefreshInterval(TimeSpan.FromMilliseconds(200))
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
                 .Build(false);
 
             await date.Init();
@@ -51,8 +51,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .RefreshInterval(TimeSpan.FromMilliseconds(200))
-                .JitterPercentage(50)
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
+                .WithJitterPercentage(50)
                 .Build(false);
 
             await date.Init();

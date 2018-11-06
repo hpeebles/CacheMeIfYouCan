@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     return DateTime.UtcNow.Ticks;
                 })
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build(false);
 
             var timer = Stopwatch.StartNew();
@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     return DateTime.UtcNow.Ticks;
                 })
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build(false);
 
             await ticks.Init();
@@ -54,17 +54,17 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var ticks = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
             var millis = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Millisecond)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
             var ticksDouble = CachedObjectFactory
                 .ConfigureFor(() => (double)DateTime.UtcNow.Ticks)
-                .RefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
 
             await CachedObjectInitialiser.InitAll();
