@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 
@@ -20,6 +21,10 @@ namespace CacheMeIfYouCan.Internal
             _localCache = localCache;
             _remoteCache = remoteCache;
             _keyComparer = keyComparer;
+
+            if (_remoteCache is IKeyChangeNotifier<TK> notifier)
+                notifier.KeyChanges.Subscribe(_localCache.Remove);
+
             CacheType = $"{_localCache.CacheType}+{_remoteCache.CacheType}";
         }
 

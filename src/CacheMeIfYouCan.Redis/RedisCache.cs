@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal class RedisCache<TK, TV> : ICache<TK, TV>
+    internal class RedisCache<TK, TV> : ICache<TK, TV>, IKeyChangeNotifier<TK>
     {
         private readonly RedisConnection _connection;
         private readonly int _database;
@@ -15,10 +17,10 @@ namespace CacheMeIfYouCan.Redis
         private readonly Func<string, TK> _keyDeserializer;
         private readonly Func<TV, string> _serializer;
         private readonly Func<string, TV> _deserializer;
-        private readonly Action<Key<TK>> _removeFromLocalCacheAction;
         private readonly Func<string, string> _toRedisKey;
         private readonly Func<string, string> _fromRedisKey;
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
+        private readonly Subject<Key<TK>> _keyChanges;
 
         public RedisCache(
             RedisConnection connection,
@@ -26,8 +28,7 @@ namespace CacheMeIfYouCan.Redis
             string keySpacePrefix,
             Func<string, TK> keyDeserializer,
             Func<TV, string> serializer,
-            Func<string, TV> deserializer,
-            Action<Key<TK>> removeFromLocalCacheAction = null)
+            Func<string, TV> deserializer)
         {
             _connection = connection;
             _database = database;
@@ -35,7 +36,6 @@ namespace CacheMeIfYouCan.Redis
             _keyDeserializer = keyDeserializer;
             _serializer = serializer;
             _deserializer = deserializer;
-            _removeFromLocalCacheAction = removeFromLocalCacheAction;
             
             if (String.IsNullOrWhiteSpace(keySpacePrefix))
             {
@@ -48,12 +48,10 @@ namespace CacheMeIfYouCan.Redis
                 _fromRedisKey = k => k.Substring(keySpacePrefix.Length);
             }
 
-            if (_removeFromLocalCacheAction != null)
-            {
-                _recentlySetKeysManager = new RecentlySetKeysManager();
+            _recentlySetKeysManager = new RecentlySetKeysManager();
+            _keyChanges = new Subject<Key<TK>>();
 
-                connection.RegisterOnKeyChangedCallback(_database, RemoveKeyFromMemoryIfNotRecentlySet);
-            }
+            connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
         }
 
         public string CacheType { get; } = "redis";
@@ -110,7 +108,9 @@ namespace CacheMeIfYouCan.Redis
             await Task.WhenAll(tasks);
         }
 
-        private void RemoveKeyFromMemoryIfNotRecentlySet(string redisKey)
+        public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();
+
+        private void NotifyKeyChanged(string redisKey)
         {
             // Ignore keys that are not from the same keyspace
             if (!String.IsNullOrWhiteSpace(_keySpacePrefix) && !redisKey.StartsWith(_keySpacePrefix))
@@ -123,7 +123,7 @@ namespace CacheMeIfYouCan.Redis
 
             var key = new Key<TK>(_keyDeserializer(stringKey), stringKey);
 
-            _removeFromLocalCacheAction(key);
+            _keyChanges.OnNext(key);
         }
 
         private IDatabase GetDatabase()

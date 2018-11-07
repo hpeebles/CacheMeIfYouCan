@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Redis
             return _multiplexer;
         }
 
-        public void RegisterOnKeyChangedCallback(int dbIndex, Action<string> onKeyChangedAction)
+        public void SubscribeToKeyChanges(int dbIndex, Action<string> onKeyChangedAction)
         {
             lock (_lock)
             {

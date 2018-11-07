@@ -170,17 +170,12 @@ namespace CacheMeIfYouCan.Configuration
             return WithRemoteCacheFactory(cacheFactory.Build, cacheFactory.RequiresStringKeys);
         }
         
-        public TConfig WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
-        {
-            return WithRemoteCacheFactory((c, a) => cacheFactoryFunc(c), requiresStringKeys);
-        }
-        
         public TConfig WithRemoteCache(ICache<TK, TV> cache, bool requiresStringKeys = true)
         {
-            return WithRemoteCacheFactory((c, a) => cache, requiresStringKeys);
+            return WithRemoteCacheFactory(c => cache, requiresStringKeys);
         }
         
-        public TConfig WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, Action<Key<TK>>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        public TConfig WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
             _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
             return (TConfig)this;

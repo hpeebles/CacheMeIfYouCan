@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Tests
     {
         public bool RequiresStringKeys => true;
         
-        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> _)
+        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config)
         {
             return new TestCache<TK, TV>(config.ValueSerializer, config.ValueDeserializer);
         }

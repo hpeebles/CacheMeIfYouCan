@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Redis
 
         public bool RequiresStringKeys => true;
 
-        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config, Action<Key<TK>> removeFromLocalCacheAction)
+        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (config.KeyDeserializer == null) throw new ArgumentNullException(nameof(config.KeyDeserializer));
@@ -31,8 +31,7 @@ namespace CacheMeIfYouCan.Redis
                 keySpacePrefix,
                 config.KeyDeserializer,
                 config.ValueSerializer,
-                config.ValueDeserializer,
-                removeFromLocalCacheAction);
+                config.ValueDeserializer);
         }
     }
 }

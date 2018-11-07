@@ -26,11 +26,7 @@ namespace CacheMeIfYouCan.Internal
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            Action<Key<TK>> removeFromLocalCacheAction = null;
-            if (localCache != null)
-                removeFromLocalCacheAction = localCache.Remove;
-
-            var remoteCache = remoteCacheFactory?.Build(config, removeFromLocalCacheAction);
+            var remoteCache = remoteCacheFactory?.Build(config);
 
             if (remoteCache is ICachedItemCounter remoteItemCounter)
                 CachedItemCounterContainer.Register(remoteItemCounter);
