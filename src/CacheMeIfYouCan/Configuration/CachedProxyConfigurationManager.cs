@@ -48,57 +48,15 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer = null)
+        public CachedProxyConfigurationManager<T> WithKeySerializers(Action<KeySerializers> configAction)
         {
-            _keySerializers.Set(serializer, deserializer);
+            configAction(_keySerializers);
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(ISerializer serializer)
+        public CachedProxyConfigurationManager<T> WithValueSerializers(Action<ValueSerializers> configAction)
         {
-            _keySerializers.Set<TField>(serializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithKeySerializer<TField>(ISerializer<TField> serializer)
-        {
-            _keySerializers.Set(serializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(Func<object, string> serializer, Func<string, object> deserializer = null)
-        {
-            _keySerializers.SetDefault(serializer, deserializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithDefaultKeySerializer(ISerializer serializer)
-        {
-            _keySerializers.SetDefault(serializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(Func<TField, string> serializer, Func<string, TField> deserializer)
-        {
-            _valueSerializers.Set(serializer, deserializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(ISerializer serializer)
-        {
-            _valueSerializers.Set<TField>(serializer);
-            return this;
-        }
-        
-        public CachedProxyConfigurationManager<T> WithValueSerializer<TField>(ISerializer<TField> serializer)
-        {
-            _valueSerializers.Set(serializer);
-            return this;
-        }
-
-        public CachedProxyConfigurationManager<T> WithDefaultValueSerializer(ISerializer serializer)
-        {
-            _valueSerializers.SetDefault(serializer);
+            configAction(_valueSerializers);
             return this;
         }
 

@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Prometheus
 {
-    public static class DefaultCacheConfigurationExtensions
+    public static class DefaultCacheConfigurationPrometheusExtensions
     {
         public static DefaultCacheConfiguration WithMetrics(this DefaultCacheConfiguration config)
         {
