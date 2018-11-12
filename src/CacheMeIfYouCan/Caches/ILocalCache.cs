@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CacheMeIfYouCan.Caches
 {
@@ -13,9 +14,18 @@ namespace CacheMeIfYouCan.Caches
 
     public static class LocalCacheExtensions
     {
+        public static GetFromCacheResult<TK, TV> Get<TK, TV>(this ILocalCache<TK, TV> cache, Key<TK> key)
+        {
+            var results = cache.Get(new[] { key });
+
+            return results.Any()
+                ? results.First()
+                : new GetFromCacheResult<TK, TV>();
+        }
+
         public static void Set<TK, TV>(this ILocalCache<TK, TV> cache, Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            cache.Set(new[] { new  KeyValuePair<Key<TK>, TV>(key, value) }, timeToLive);
+            cache.Set(new[] { new KeyValuePair<Key<TK>, TV>(key, value) }, timeToLive);
         }
     }
 }
