@@ -21,25 +21,24 @@ namespace CacheMeIfYouCan.Internal
             if (localCacheFactory == null && remoteCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
-            var localCache = localCacheFactory?.Build(functionInfo);
+            var localCache = localCacheFactory
+                ?.Configure(c => c
+                    .OnGetResult(onCacheGet)
+                    .OnSetResult(onCacheSet))
+                .Build(functionInfo);
 
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            var remoteCache = remoteCacheFactory?.Build(config);
+            var remoteCache = remoteCacheFactory
+                ?.Configure(c => c
+                    .OnGetResult(onCacheGet)
+                    .OnSetResult(onCacheSet))
+                .Build(config);
 
             if (remoteCache is ICachedItemCounter remoteItemCounter)
                 CachedItemCounterContainer.Register(remoteItemCounter);
 
-            if (onCacheGet != null || onCacheSet != null)
-            {
-                if (localCache != null)
-                    localCache = new LocalCacheNotificationWrapper<TK, TV>(functionInfo, localCache, onCacheGet, onCacheSet);
-                
-                if (remoteCache != null)
-                    remoteCache = new CacheNotificationWrapper<TK, TV>(functionInfo, remoteCache, onCacheGet, onCacheSet);
-            }
-            
             if (localCache != null)
             {
                 if (!localCacheFactory.RequiresStringKeys)
