@@ -38,12 +38,12 @@ namespace CacheMeIfYouCan.Configuration
 
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
-        public ILocalCache<TK, TV> Build<TK, TV>(FunctionInfo functionInfo)
+        public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
-            var cache = _cacheFactory.Build<TK ,TV>(functionInfo);
+            var cache = _cacheFactory.Build<TK ,TV>(cacheName);
             
             if (_onGetResult != null || _onSetResult != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(functionInfo, cache, _onGetResult, _onSetResult);
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult);
 
             return cache;
         }
@@ -82,12 +82,12 @@ namespace CacheMeIfYouCan.Configuration
 
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
-        public ILocalCache<TK, TV> Build(FunctionInfo functionInfo)
+        public ILocalCache<TK, TV> Build(string cacheName)
         {
-            var cache = _cacheFactory.Build(functionInfo);
+            var cache = _cacheFactory.Build(cacheName);
             
             if (_onGetResult != null || _onSetResult != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(functionInfo, cache, _onGetResult, _onSetResult);
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult);
 
             return cache;
         }

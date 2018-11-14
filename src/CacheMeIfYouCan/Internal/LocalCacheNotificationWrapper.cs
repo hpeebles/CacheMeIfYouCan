@@ -10,24 +10,25 @@ namespace CacheMeIfYouCan.Internal
 {
     public class LocalCacheNotificationWrapper<TK, TV> : ILocalCache<TK, TV> 
     {
-        private readonly FunctionInfo _functionInfo;
         private readonly ILocalCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
 
         public LocalCacheNotificationWrapper(
-            FunctionInfo functionInfo,
             ILocalCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult)
         {
-            _functionInfo = functionInfo;
             _cache = cache;
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
+
+            CacheName = _cache.CacheName;
+            CacheType = _cache.CacheType;
         }
 
-        public string CacheType => _cache.CacheType;
+        public string CacheName { get; }
+        public string CacheType { get; }
 
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
@@ -56,7 +57,7 @@ namespace CacheMeIfYouCan.Internal
                         : keys.Except(results.Select(r => r.Key)).ToArray();
                 
                     _onCacheGetResult(new CacheGetResult<TK, TV>(
-                        _functionInfo,
+                        CacheName,
                         CacheType,
                         results,
                         misses,
@@ -90,7 +91,7 @@ namespace CacheMeIfYouCan.Internal
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
                     _onCacheSetResult(new CacheSetResult<TK, TV>(
-                        _functionInfo,
+                        CacheName,
                         CacheType,
                         values,
                         !error,

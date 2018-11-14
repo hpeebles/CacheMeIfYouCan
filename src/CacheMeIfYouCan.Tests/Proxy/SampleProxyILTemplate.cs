@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 
@@ -16,11 +17,13 @@ namespace CacheMeIfYouCan.Tests.Proxy
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
-            _stringToString = new FunctionCacheConfigurationManager<string, string>(impl.StringToString, "StringToString", config).Build();
-            _intToString = new FunctionCacheConfigurationManager<int, string>(impl.IntToString, "IntToString", config).Build();
-            _longToInt = new FunctionCacheConfigurationManager<long, int>(impl.LongToInt, "LongToInt", config).Build();
-            _multiEcho = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, "MultiEcho", config).Build();
-            _multiEchoList = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, "MultiEchoList", config).Build();
+            var methods = typeof(ITest).GetMethods();
+            
+            _stringToString = new FunctionCacheConfigurationManager<string, string>(impl.StringToString, config, methods[0]).Build();
+            _intToString = new FunctionCacheConfigurationManager<int, string>(impl.IntToString, config, methods[1]).Build();
+            _longToInt = new FunctionCacheConfigurationManager<long, int>(impl.LongToInt, config, methods[2]).Build();
+            _multiEcho = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, config, methods[3]).Build();
+            _multiEchoList = new MultiKeyFunctionCacheConfigurationManager<string, string>(impl.MultiEcho, config, methods[4]).Build();
         }
         
         public Task<string> StringToString(string key)

@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         public readonly bool? DisableCache;
         public readonly ILocalCacheFactory LocalCacheFactory;
         public readonly ICacheFactory RemoteCacheFactory;
+        public readonly Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc;
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
         public readonly Action<FunctionCacheErrorEvent> OnError;
@@ -33,6 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             bool? disableCache,
             ILocalCacheFactory localCacheFactory,
             ICacheFactory remoteCacheFactory,
+            Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
             Action<FunctionCacheErrorEvent> onError,
@@ -48,6 +50,7 @@ namespace CacheMeIfYouCan.Configuration
             DisableCache = disableCache;
             LocalCacheFactory = localCacheFactory;
             RemoteCacheFactory = remoteCacheFactory;
+            KeyspacePrefixFunc = keyspacePrefixFunc;
             OnResult = onResult;
             OnFetch = onFetch;
             OnError = onError;

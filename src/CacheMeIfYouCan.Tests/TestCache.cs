@@ -22,7 +22,8 @@ namespace CacheMeIfYouCan.Tests
             _removeKeyFromLocalCacheAction = removeKeyFromLocalCacheAction;
             _delay = delay;
         }
-        
+
+        public string CacheName { get; } = "test-name";
         public string CacheType { get; } = "test";
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)

@@ -9,6 +9,7 @@ namespace CacheMeIfYouCan.Tests
     {
         public readonly ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>> Values = new ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>>();
 
+        public string CacheName { get; } = "test-local-name";
         public string CacheType { get; } = "test-local";
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)

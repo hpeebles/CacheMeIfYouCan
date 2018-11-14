@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration
@@ -10,9 +11,20 @@ namespace CacheMeIfYouCan.Configuration
 
         internal MultiKeyFunctionCacheConfigurationManager(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
-            string functionName,
-            CachedProxyConfig interfaceConfig = null)
-            : base(inputFunc, functionName, true, interfaceConfig)
+            string functionName)
+            : base(inputFunc, functionName, true)
+        { }
+
+        internal MultiKeyFunctionCacheConfigurationManager(
+            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
+            CachedProxyConfig interfaceConfig,
+            MethodInfo methodInfo)
+            : base(
+                inputFunc,
+                $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
+                true,
+                interfaceConfig,
+                new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
         public Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> Build()

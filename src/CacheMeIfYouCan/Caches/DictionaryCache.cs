@@ -21,18 +21,17 @@ namespace CacheMeIfYouCan.Caches
         // Every 10 seconds we check for expired keys and remove them, disposing of this field is the only way to stop that process
         private readonly IDisposable _keyRemoverProcess;
 
-        public DictionaryCache(FunctionInfo functionInfo)
+        public DictionaryCache(string cacheName)
         {
-            FunctionInfo = functionInfo;
+            CacheName = cacheName;
 
             _keyRemoverProcess = Observable
                 .Interval(TimeSpan.FromSeconds(10))
                 .Subscribe(_ => RemoveExpiredKeys());
         }
         
+        public string CacheName { get; }
         public string CacheType { get; } = "dictionary";
-
-        public FunctionInfo FunctionInfo { get; }
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {

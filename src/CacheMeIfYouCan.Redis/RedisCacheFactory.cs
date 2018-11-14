@@ -21,14 +21,12 @@ namespace CacheMeIfYouCan.Redis
             if (config.ValueSerializer == null) throw new ArgumentNullException(nameof(config.ValueSerializer));
             if (config.ValueDeserializer == null) throw new ArgumentNullException(nameof(config.ValueDeserializer));
             
-            var keySpacePrefix = _redisConfig.KeySpacePrefixFunc?.Invoke(config.FunctionInfo);
-
             var connection = RedisConnectionManager.GetOrAdd(_redisConfig.ConnectionString ?? _redisConfig.Configuration.ToString());
             
             return new RedisCache<TK, TV>(
                 connection,
                 _redisConfig.Database,
-                keySpacePrefix,
+                config.KeyspacePrefix,
                 config.KeyDeserializer,
                 config.ValueSerializer,
                 config.ValueDeserializer);

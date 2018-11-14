@@ -2,8 +2,8 @@
 {
     public interface ICachedItemCounter
     {
+        string CacheName { get; }
         string CacheType { get; }
-        FunctionInfo FunctionInfo { get; }
         long Count { get; }
     }
 }

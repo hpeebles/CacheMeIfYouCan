@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration
@@ -11,9 +12,20 @@ namespace CacheMeIfYouCan.Configuration
 
         internal FunctionCacheConfigurationManager(
             Func<TK, Task<TV>> inputFunc,
-            string functionName,
-            CachedProxyConfig interfaceConfig = null)
-            : base(ConvertFunc(inputFunc), functionName, false, interfaceConfig)
+            string functionName)
+            : base(ConvertFunc(inputFunc), functionName, false)
+        { }
+
+        internal FunctionCacheConfigurationManager(
+            Func<TK, Task<TV>> inputFunc,
+            CachedProxyConfig interfaceConfig,
+            MethodInfo methodInfo)
+            : base(
+                ConvertFunc(inputFunc),
+                $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
+                false,
+                interfaceConfig,
+                new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
         public Func<TK, Task<TV>> Build()

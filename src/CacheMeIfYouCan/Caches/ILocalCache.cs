@@ -6,6 +6,7 @@ namespace CacheMeIfYouCan.Caches
 {
     public interface ILocalCache<TK, TV>
     {
+        string CacheName { get; }
         string CacheType { get; }
         IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys);
         void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);

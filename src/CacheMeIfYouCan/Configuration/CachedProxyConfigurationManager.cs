@@ -13,7 +13,6 @@ namespace CacheMeIfYouCan.Configuration
     public class CachedProxyConfigurationManager<T>
     {
         private readonly T _impl;
-        private readonly string _name;
         private readonly KeySerializers _keySerializers;
         private readonly ValueSerializers _valueSerializers;
         private TimeSpan? _timeToLive;
@@ -21,6 +20,7 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
         private ICacheFactory _remoteCacheFactory;
+        private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
         private Action<FunctionCacheErrorEvent> _onError;
@@ -28,10 +28,9 @@ namespace CacheMeIfYouCan.Configuration
         private Action<CacheSetResult> _onCacheSet;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
-        internal CachedProxyConfigurationManager(T impl, string name)
+        internal CachedProxyConfigurationManager(T impl)
         {
             _impl = impl;
-            _name = name;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
             _onResult = DefaultCacheConfig.Configuration.OnResult;
@@ -80,7 +79,18 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory)
         {
+            return WithRemoteCacheFactory(cacheFactory, f => null);
+        }
+        
+        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
+        {
+            return WithRemoteCacheFactory(cacheFactory, f => keyspacePrefix);
+        }
+        
+        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
+        {
             _remoteCacheFactory = cacheFactory;
+            _keyspacePrefixFunc = keyspacePrefixFunc;
             return this;
         }
         
@@ -140,7 +150,7 @@ namespace CacheMeIfYouCan.Configuration
         {
             var methodInfo = GetMethodInfo(expression);
             
-            var key = new MethodInfoKey(methodInfo);
+            var key = new MethodInfoKey(typeof(T), methodInfo);
             
             _functionCacheConfigActions[key] = configAction;
             
@@ -158,6 +168,7 @@ namespace CacheMeIfYouCan.Configuration
                 _disableCache,
                 _localCacheFactory,
                 _remoteCacheFactory,
+                _keyspacePrefixFunc,
                 _onResult,
                 _onFetch,
                 _onError,

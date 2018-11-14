@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Internal
     internal static class CacheBuilder
     {
         public static ICache<TK, TV> Build<TK, TV>(
-            FunctionInfo functionInfo,
+            string cacheName,
             ILocalCacheFactory<TK, TV> localCacheFactory,
             ICacheFactory<TK, TV> remoteCacheFactory,
             CacheFactoryConfig<TK, TV> config,
@@ -21,17 +21,17 @@ namespace CacheMeIfYouCan.Internal
             if (localCacheFactory == null && remoteCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
-            var localCache = localCacheFactory
-                ?.Configure(c => c
+            var localCache = localCacheFactory?
+                .Configure(c => c
                     .OnGetResult(onCacheGet)
                     .OnSetResult(onCacheSet))
-                .Build(functionInfo);
+                .Build(cacheName);
 
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            var remoteCache = remoteCacheFactory
-                ?.Configure(c => c
+            var remoteCache = remoteCacheFactory?
+                .Configure(c => c
                     .OnGetResult(onCacheGet)
                     .OnSetResult(onCacheSet))
                 .Build(config);

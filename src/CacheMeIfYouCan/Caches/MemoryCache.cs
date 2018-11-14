@@ -10,9 +10,9 @@ namespace CacheMeIfYouCan.Caches
     {
         private readonly MemoryCache _cache;
         
-        internal MemoryCache(FunctionInfo functionInfo, int maxSizeMB = 100)
+        internal MemoryCache(string cacheName, int maxSizeMB = 100)
         {
-            FunctionInfo = functionInfo;
+            CacheName = cacheName;
 
             var config = new NameValueCollection
             {
@@ -22,10 +22,8 @@ namespace CacheMeIfYouCan.Caches
             _cache = new MemoryCache(Guid.NewGuid().ToString(), config);
         }
         
+        public string CacheName { get; }
         public string CacheType { get; } = "memory";
-
-        public FunctionInfo FunctionInfo { get; }
-
         public long Count => _cache.GetCount();
 
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)

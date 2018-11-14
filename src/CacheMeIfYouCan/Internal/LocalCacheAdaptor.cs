@@ -13,10 +13,14 @@ namespace CacheMeIfYouCan.Internal
         public LocalCacheAdaptor(ILocalCache<TK, TV> cache)
         {
             _cache = cache;
+
+            CacheName = cache.CacheName;
+            CacheType = cache.CacheType;
         }
 
-        public string CacheType => _cache.CacheType;
-        
+        public string CacheName { get; }
+        public string CacheType { get; }
+
         public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
             return Task.FromResult(_cache.Get(keys));

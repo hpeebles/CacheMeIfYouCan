@@ -43,7 +43,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(config);
             
             if (_onGetResult != null || _onSetResult != null)
-                cache = new CacheNotificationWrapper<TK, TV>(config.FunctionInfo, cache, _onGetResult, _onSetResult);
+                cache = new CacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult);
 
             return cache;
         }
@@ -87,7 +87,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(config);
             
             if (_onGetResult != null || _onSetResult != null)
-                cache = new CacheNotificationWrapper<TK, TV>(config.FunctionInfo, cache, _onGetResult, _onSetResult);
+                cache = new CacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult);
 
             return cache;
         }

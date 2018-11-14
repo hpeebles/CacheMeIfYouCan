@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Prometheus
         
         static CacheMetricsTracker()
         {
-            var labels = new[] { "interface", "function", "success", "cachetype" };
+            var labels = new[] { "name", "cachetype", "success" };
             var cacheDurationBuckets = new[] { 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000 };
             
             TotalHitsCounter = Metrics.CreateCounter("Cache_TotalHitsCounter", null, labels);
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Prometheus
             TotalItemsSetCounter = Metrics.CreateCounter("Cache_TotalItemsSetCounter", null, labels);
             GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, cacheDurationBuckets, labels);
             SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, cacheDurationBuckets, labels);
-            CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "interface", "function", "cachetype");
+            CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "name", "cachetype");
 
             Observable
                 .Interval(TimeSpan.FromSeconds(5))
@@ -37,10 +37,7 @@ namespace CacheMeIfYouCan.Prometheus
         
         public static void OnCacheGet(CacheGetResult result)
         {
-            var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
-            var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
-
-            var labels = new[] { interfaceName, functionName, result.Success.ToString(), result.CacheType };
+            var labels = new[] { result.CacheName, result.CacheType, result.Success.ToString() };
             
             TotalHitsCounter
                 .Labels(labels)
@@ -57,10 +54,7 @@ namespace CacheMeIfYouCan.Prometheus
         
         public static void OnCacheSet(CacheSetResult result)
         {
-            var interfaceName = result.FunctionInfo.InterfaceType?.Name ?? String.Empty;
-            var functionName = result.FunctionInfo.FunctionName ?? String.Empty;
-            
-            var labels = new[] { interfaceName, functionName, result.Success.ToString(), result.CacheType };
+            var labels = new[] { result.CacheName, result.CacheType, result.Success.ToString() };
             
             TotalItemsSetCounter
                 .Labels(labels)
@@ -75,11 +69,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             foreach (var count in CachedItemCounterContainer.GetCounts())
             {
-                var interfaceName = count.FunctionInfo.InterfaceType?.Name ?? String.Empty;
-                var functionName = count.FunctionInfo.FunctionName ?? String.Empty;
-                
                 CachedItemsCounter
-                    .Labels(interfaceName, functionName, count.CacheType)
+                    .Labels(count.CacheType, count.CacheType)
                     .Set(count.Count);
             }
         }

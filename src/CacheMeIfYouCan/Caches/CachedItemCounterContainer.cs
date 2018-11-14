@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Caches
             lock (Lock)
             {
                 return CachedItemCounters
-                    .Select(c => new CachedItemCount(c.CacheType, c.FunctionInfo, c.Count))
+                    .Select(c => new CachedItemCount(c.CacheName, c.CacheType, c.Count))
                     .ToArray();
             }
         }

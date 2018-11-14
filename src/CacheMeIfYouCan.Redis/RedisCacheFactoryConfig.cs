@@ -5,10 +5,22 @@ namespace CacheMeIfYouCan.Redis
 {
     public class RedisCacheFactoryConfig
     {
-        public string ConnectionString;
-        public ConfigurationOptions Configuration;
+        private ConfigurationOptions _configurationOptions;
+
+        public string ConnectionString
+        {
+            get => _configurationOptions.ToString();
+            set => _configurationOptions = ConfigurationOptions.Parse(value);
+        }
+
+        public ConfigurationOptions Configuration
+        {
+            get => _configurationOptions;
+            set => ConnectionString = value.ToString();
+        }
+
         public int Database;
-        public Func<FunctionInfo, string> KeySpacePrefixFunc;
+        public Func<CachedProxyFunctionInfo, string> KeySpacePrefixFunc;
         public string KeySpacePrefix { set => KeySpacePrefixFunc = f => value; }
     }
 }

@@ -54,6 +54,7 @@ namespace CacheMeIfYouCan.Redis
             connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
         }
 
+        public string CacheName { get; }
         public string CacheType { get; } = "redis";
         
         // Must get keys separately since multikey operations will fail if running Redis in cluster mode

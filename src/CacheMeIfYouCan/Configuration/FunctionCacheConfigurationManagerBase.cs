@@ -12,7 +12,6 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
-        private readonly Type _interfaceType;
         private readonly string _functionName;
         private readonly bool _multiKey;
         private TimeSpan? _timeToLive;
@@ -29,6 +28,7 @@ namespace CacheMeIfYouCan.Configuration
         private Func<string, TV> _valueDeserializer;
         private ILocalCacheFactory<TK, TV> _localCacheFactory;
         private ICacheFactory<TK, TV> _remoteCacheFactory;
+        private string _keyspacePrefix;
         private Func<TV> _defaultValueFactory;
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
 
@@ -36,7 +36,8 @@ namespace CacheMeIfYouCan.Configuration
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
             string functionName,
             bool multiKey,
-            CachedProxyConfig interfaceConfig = null)
+            CachedProxyConfig interfaceConfig = null,
+            CachedProxyFunctionInfo proxyFunctionInfo = null)
         {
             _inputFunc = inputFunc;
             _functionName = functionName;
@@ -44,7 +45,6 @@ namespace CacheMeIfYouCan.Configuration
 
             if (interfaceConfig != null)
             {
-                _interfaceType = interfaceConfig.InterfaceType;
                 _keySerializer = interfaceConfig.KeySerializers.GetSerializer<TK>();
                 _keyDeserializer = interfaceConfig.KeySerializers.GetDeserializer<TK>();
                 _valueSerializer = interfaceConfig.ValueSerializers.GetSerializer<TV>();
@@ -59,6 +59,7 @@ namespace CacheMeIfYouCan.Configuration
                 if (interfaceConfig.RemoteCacheFactory != null)
                     _remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(interfaceConfig.RemoteCacheFactory);
 
+                _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
                 _onResult = interfaceConfig.OnResult;
                 _onFetch = interfaceConfig.OnFetch;
                 _onError = interfaceConfig.OnError;
@@ -149,35 +150,51 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        public TConfig WithLocalCacheFactory(ILocalCacheFactory cacheFactory)
-        {
-            return WithLocalCacheFactory(cacheFactory.Build<TK, TV>, cacheFactory.RequiresStringKeys);
-        }
-        
         public TConfig WithLocalCache(ILocalCache<TK, TV> cache, bool requiresStringKeys = true)
         {
             return WithLocalCacheFactory(f => cache, requiresStringKeys);
         }
         
-        public TConfig WithLocalCacheFactory(Func<FunctionInfo, ILocalCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        public TConfig WithLocalCacheFactory(ILocalCacheFactory cacheFactory)
+        {
+            return WithLocalCacheFactory(cacheFactory.Build<TK, TV>, cacheFactory.RequiresStringKeys);
+        }
+        
+        public TConfig WithLocalCacheFactory(Func<string, ILocalCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
             _localCacheFactory = new LocalCacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
             return (TConfig)this;
         }
         
-        public TConfig WithRemoteCacheFactory(ICacheFactory cacheFactory)
+        public TConfig WithRemoteCache(ICache<TK, TV> cache, string keyspacePrefix)
         {
-            return WithRemoteCacheFactory(cacheFactory.Build, cacheFactory.RequiresStringKeys);
-        }
+            return WithRemoteCacheFactory(c => cache, keyspacePrefix);
+        } 
         
         public TConfig WithRemoteCache(ICache<TK, TV> cache, bool requiresStringKeys = true)
         {
             return WithRemoteCacheFactory(c => cache, requiresStringKeys);
         }
         
+        public TConfig WithRemoteCacheFactory(ICacheFactory cacheFactory)
+        {
+            return WithRemoteCacheFactory(cacheFactory.Build);
+        }
+        
+        public TConfig WithRemoteCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
+        {
+            return WithRemoteCacheFactory(cacheFactory.Build, keyspacePrefix);
+        }
+        
+        public TConfig WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, string keyspacePrefix)
+        {
+            SetRemoteCacheFactory(cacheFactoryFunc, true, keyspacePrefix);
+            return (TConfig)this;
+        }
+        
         public TConfig WithRemoteCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
-            _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
+            SetRemoteCacheFactory(cacheFactoryFunc, requiresStringKeys, null);
             return (TConfig)this;
         }
         
@@ -252,10 +269,11 @@ namespace CacheMeIfYouCan.Configuration
 
         internal FunctionCache<TK, TV> BuildFunctionCache()
         {
-            var functionInfo = new FunctionInfo(_interfaceType, _functionName, typeof(TK), typeof(TV));
+            
             var cacheConfig = new CacheFactoryConfig<TK, TV>
             {
-                FunctionInfo = functionInfo,
+                CacheName = _functionName,
+                KeyspacePrefix = _keyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
                 ValueSerializer = GetValueSerializer(),
                 ValueDeserializer = GetValueDeserializer()
@@ -280,9 +298,9 @@ namespace CacheMeIfYouCan.Configuration
                     remoteCacheFactory = _remoteCacheFactory;
                 else if (DefaultCacheConfig.Configuration.RemoteCacheFactory != null)
                     remoteCacheFactory = new CacheFactoryWrapper<TK, TV>(DefaultCacheConfig.Configuration.RemoteCacheFactory);
-                
+
                 cache = CacheBuilder.Build(
-                    functionInfo,
+                    _functionName,
                     localCacheFactory,
                     remoteCacheFactory,
                     cacheConfig,
@@ -293,7 +311,7 @@ namespace CacheMeIfYouCan.Configuration
 
             return new FunctionCache<TK, TV>(
                 _inputFunc,
-                functionInfo,
+                _functionName,
                 cache,
                 _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
                 _keySerializer ?? GetKeySerializer(),
@@ -305,6 +323,15 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer,
                 _multiKey,
                 _keysToKeepAliveFunc);
+        }
+
+        private void SetRemoteCacheFactory(
+            Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc,
+            bool requiresStringKeys,
+            string keyspacePrefix)
+        {
+            _remoteCacheFactory = new CacheFactoryFuncWrapper<TK, TV>(cacheFactoryFunc, requiresStringKeys);
+            _keyspacePrefix = keyspacePrefix;
         }
 
         private Func<TK, string> GetKeySerializer()

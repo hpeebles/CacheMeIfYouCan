@@ -9,8 +9,8 @@ namespace CacheMeIfYouCan.Internal
         public readonly string MethodName;
         public readonly string ParameterTypeName;
         
-        public MethodInfoKey(MethodInfo methodInfo)
-            :this(methodInfo.Name, methodInfo.GetParameters().Single().ParameterType.FullName)
+        public MethodInfoKey(Type interfaceType, MethodInfo methodInfo)
+            :this($"{interfaceType.Name}.{methodInfo.Name}", methodInfo.GetParameters().Single().ParameterType.FullName)
         { }
         
         public MethodInfoKey(string methodName, string parameterTypeName)

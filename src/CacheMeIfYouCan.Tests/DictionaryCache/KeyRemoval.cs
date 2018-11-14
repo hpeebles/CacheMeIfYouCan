@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Tests.DictionaryCache
         {
             Func<string, Task<string>> echo = new Echo();
 
-            var cache = new DictionaryCache<string, string>(new FunctionInfo(null, "echo", typeof(string), typeof(string)));
+            var cache = new DictionaryCache<string, string>("echo");
             
             var cachedEcho = echo
                 .Cached()
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Tests.DictionaryCache
         {
             Func<string, Task<string>> echo = new Echo();
 
-            var cache = new DictionaryCache<string, string>(new FunctionInfo(null, "echo", typeof(string), typeof(string)));
+            var cache = new DictionaryCache<string, string>("echo");
             
             var cachedEcho = echo
                 .Cached()

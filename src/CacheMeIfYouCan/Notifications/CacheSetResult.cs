@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class CacheSetResult
     {
-        public readonly FunctionInfo FunctionInfo;
+        public readonly string CacheName;
         public readonly string CacheType;
         public readonly bool Success;
         public readonly long Start;
@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Notifications
         private readonly Lazy<IList<string>> _keys;
 
         internal CacheSetResult(
-            FunctionInfo functionInfo,
+            string cacheName,
             string cacheType,
             bool success,
             long start,
@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Notifications
             int keysCount,
             Lazy<IList<string>> keys)
         {
-            FunctionInfo = functionInfo;
+            CacheName = cacheName;
             CacheType = cacheType;
             Success = success;
             Start = start;
@@ -40,14 +40,14 @@ namespace CacheMeIfYouCan.Notifications
         public readonly ICollection<KeyValuePair<Key<TK>, TV>> Values;
 
         internal CacheSetResult(
-            FunctionInfo functionInfo,
+            string cacheName,
             string cacheType,
             ICollection<KeyValuePair<Key<TK>, TV>> values,
             bool success,
             long start,
             long duration)
         : base(
-            functionInfo,
+            cacheName,
             cacheType,
             success,
             start,

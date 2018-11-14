@@ -28,7 +28,9 @@ namespace CacheMeIfYouCan.Redis
 
             configAction(config);
             
-            configManager.WithRemoteCacheFactory(new RedisCacheFactory(config));
+            var keyspacePrefix = config.KeySpacePrefixFunc?.Invoke(null);
+
+            configManager.WithRemoteCacheFactory(new RedisCacheFactory(config), keyspacePrefix);
             
             return configManager;
         }

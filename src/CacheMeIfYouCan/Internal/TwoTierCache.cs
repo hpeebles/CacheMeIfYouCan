@@ -25,9 +25,11 @@ namespace CacheMeIfYouCan.Internal
             if (_remoteCache is IKeyChangeNotifier<TK> notifier)
                 notifier.KeyChanges.Subscribe(_localCache.Remove);
 
+            CacheName = _localCache.CacheName;
             CacheType = $"{_localCache.CacheType}+{_remoteCache.CacheType}";
         }
 
+        public string CacheName { get; }
         public string CacheType { get; }
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
