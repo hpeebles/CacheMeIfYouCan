@@ -185,6 +185,36 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             DefaultCacheConfig.Configuration.WithOnCacheSetAction(null);
         }
 
+        [Fact]
+        public async Task DefaultOnCacheErrorIsTriggered()
+        {
+            Func<string, Task<string>> echo = new Echo();
+
+            var errors = new List<CacheErrorEvent>();
+
+            var key = Guid.NewGuid().ToString();
+            
+            DefaultCacheConfig.Configuration.WithOnCacheErrorAction(x =>
+            {
+                if (x.Keys.Contains(key))
+                    errors.Add(x);
+            });
+            
+            var cachedEcho = echo
+                .Cached()
+                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
+                .Build();
+
+            await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
+
+            Assert.Single(errors);
+            Assert.Single(errors.Single().Keys);
+            Assert.Equal(key, errors.Single().Keys.Single());
+            Assert.Equal("test", errors.Single().CacheType);
+            
+            DefaultCacheConfig.Configuration.WithOnErrorAction(null);
+        }
+        
         private static string GetRandomKey()
         {
             return KeyPrefix + Guid.NewGuid();

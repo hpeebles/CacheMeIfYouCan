@@ -25,6 +25,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<FunctionCacheErrorEvent> _onError;
         private Action<CacheGetResult> _onCacheGet;
         private Action<CacheSetResult> _onCacheSet;
+        private Action<CacheErrorEvent> _onCacheError;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -37,6 +38,7 @@ namespace CacheMeIfYouCan.Configuration
             _onError = DefaultCacheConfig.Configuration.OnError;
             _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
             _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
+            _onCacheError = DefaultCacheConfig.Configuration.OnCacheError;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -142,6 +144,16 @@ namespace CacheMeIfYouCan.Configuration
 
             return this;
         }
+        
+        public CachedProxyConfigurationManager<T> OnCacheError(Action<CacheErrorEvent> onCacheError, bool append = false)
+        {
+            if (onCacheError == null || !append)
+                _onCacheError = onCacheError;
+            else
+                _onCacheError = x => { _onCacheError(x); onCacheError(x); };
+
+            return this;
+        }
 
         public CachedProxyConfigurationManager<T> ConfigureFor<TK, TV>(
             Expression<Func<T, Func<TK, Task<TV>>>> expression,
@@ -173,6 +185,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onError,
                 _onCacheGet,
                 _onCacheSet,
+                _onCacheError,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

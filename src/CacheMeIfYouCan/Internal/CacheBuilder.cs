@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Internal
             CacheFactoryConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
+            Action<CacheErrorEvent<TK>> onCacheError,
             out IEqualityComparer<Key<TK>> keyComparer)
         {
             keyComparer = new StringKeyComparer<TK>();
@@ -25,7 +26,8 @@ namespace CacheMeIfYouCan.Internal
             var localCache = localCacheFactory?
                 .Configure(c => c
                     .OnGetResult(onCacheGet)
-                    .OnSetResult(onCacheSet))
+                    .OnSetResult(onCacheSet)
+                    .OnError(onCacheError))
                 .Build(cacheName);
 
             if (localCache is ICachedItemCounter localItemCounter)
@@ -34,7 +36,8 @@ namespace CacheMeIfYouCan.Internal
             var distributedCache = distributedCacheFactory?
                 .Configure(c => c
                     .OnGetResult(onCacheGet)
-                    .OnSetResult(onCacheSet))
+                    .OnSetResult(onCacheSet)
+                    .OnError(onCacheError))
                 .Build(config);
 
             if (distributedCache is ICachedItemCounter distributedItemCounter)

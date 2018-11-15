@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
@@ -65,6 +65,28 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             await cachedEcho("123");
             Assert.Single(results);
+        }
+
+        [Fact]
+        public async Task OnCacheError()
+        {
+            Func<string, Task<string>> echo = new Echo();
+            
+            var errors = new List<CacheErrorEvent>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
+                .OnCacheError(errors.Add)
+                .Build();
+
+            var start = Timestamp.Now;
+            
+            await Assert.ThrowsAsync<Exception>(() => cachedEcho("123"));
+            Assert.Single(errors);
+            Assert.Single(errors[0].Keys);
+            Assert.Equal("123", errors[0].Keys.First());
+            Assert.InRange(errors[0].Timestamp, start, Timestamp.Now);
         }
 
         [Fact]

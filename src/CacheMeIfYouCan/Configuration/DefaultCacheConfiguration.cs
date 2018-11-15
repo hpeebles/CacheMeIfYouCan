@@ -16,6 +16,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<FunctionCacheErrorEvent> OnError { get; private set; }
         internal Action<CacheGetResult> OnCacheGet { get; private set; }
         internal Action<CacheSetResult> OnCacheSet { get; private set; }
+        internal Action<CacheErrorEvent> OnCacheError { get; private set; }
         internal readonly KeySerializers KeySerializers = new KeySerializers();
         internal readonly ValueSerializers ValueSerializers = new ValueSerializers();
 
@@ -76,6 +77,12 @@ namespace CacheMeIfYouCan.Configuration
         public DefaultCacheConfiguration WithOnCacheSetAction(Action<CacheSetResult> onCacheSet)
         {
             OnCacheSet = onCacheSet;
+            return this;
+        }
+
+        public DefaultCacheConfiguration WithOnCacheErrorAction(Action<CacheErrorEvent> onCacheError)
+        {
+            OnCacheError = onCacheError;
             return this;
         }
 

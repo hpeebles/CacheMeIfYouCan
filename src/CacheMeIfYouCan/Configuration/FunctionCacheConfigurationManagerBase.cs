@@ -21,6 +21,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<FunctionCacheErrorEvent<TK>> _onError;
         private Action<CacheGetResult<TK, TV>> _onCacheGet;
         private Action<CacheSetResult<TK, TV>> _onCacheSet;
+        private Action<CacheErrorEvent<TK>> _onCacheError;
         private Func<TK, string> _keySerializer;
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
@@ -64,6 +65,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onError = interfaceConfig.OnError;
                 _onCacheGet = interfaceConfig.OnCacheGet;
                 _onCacheSet = interfaceConfig.OnCacheSet;
+                _onCacheError = interfaceConfig.OnCacheError;
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
@@ -83,6 +85,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onError = DefaultCacheConfig.Configuration.OnError;
                 _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
                 _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
+                _onCacheError = DefaultCacheConfig.Configuration.OnCacheError;
             }
         }
 
@@ -247,6 +250,16 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
+        public TConfig OnCacheError(Action<CacheErrorEvent<TK>> onCacheError, bool append = false)
+        {
+            if (onCacheError == null || !append)
+                _onCacheError = onCacheError;
+            else
+                _onCacheError = x => { _onCacheError(x); onCacheError(x); };
+
+            return (TConfig)this;
+        }
+
         public TConfig WithKeysToKeepAlive(IList<TK> keysToKeepAlive)
         {
             return WithKeysToKeepAlive(() => keysToKeepAlive);
@@ -268,7 +281,6 @@ namespace CacheMeIfYouCan.Configuration
 
         internal FunctionCache<TK, TV> BuildFunctionCache()
         {
-            
             var cacheConfig = new CacheFactoryConfig<TK, TV>
             {
                 KeyspacePrefix = _keyspacePrefix,
@@ -304,6 +316,7 @@ namespace CacheMeIfYouCan.Configuration
                     cacheConfig,
                     _onCacheGet,
                     _onCacheSet,
+                    _onCacheError,
                     out keyComparer);
             }
 

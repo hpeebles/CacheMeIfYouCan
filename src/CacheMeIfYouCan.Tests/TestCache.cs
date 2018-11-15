@@ -13,14 +13,16 @@ namespace CacheMeIfYouCan.Tests
         private readonly Func<string, TV> _deserializer;
         private readonly Action<Key<string>> _removeKeyFromLocalCacheAction;
         private readonly TimeSpan? _delay;
+        private readonly Func<bool> _error;
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
         
-        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer, Action<Key<string>> removeKeyFromLocalCacheAction = null, TimeSpan? delay = null)
+        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer, Action<Key<string>> removeKeyFromLocalCacheAction = null, TimeSpan? delay = null, Func<bool> error = null)
         {
             _serializer = serializer;
             _deserializer = deserializer;
             _removeKeyFromLocalCacheAction = removeKeyFromLocalCacheAction;
             _delay = delay;
+            _error = error;
         }
 
         public string CacheName { get; } = "test-name";
@@ -31,6 +33,9 @@ namespace CacheMeIfYouCan.Tests
             if (_delay.HasValue)
                 await Task.Delay(_delay.Value);
 
+            if (_error?.Invoke() ?? false)
+                throw new Exception();
+            
             var results = new List<GetFromCacheResult<TK, TV>>();
 
             foreach (var key in keys)
