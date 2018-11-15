@@ -79,7 +79,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Cached()
                 .For(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new TestLocalCache<string, string>())
-                .WithRemoteCacheFactory(new TestCacheFactory())
+                .WithDistributedCacheFactory(new TestCacheFactory())
                 .OnCacheGet(getResults.Add)
                 .OnCacheSet(setResults.Add)
                 .Build();

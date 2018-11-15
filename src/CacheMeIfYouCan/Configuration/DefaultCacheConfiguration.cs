@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
         internal bool EarlyFetchEnabled { get; private set; } = true;
         internal bool DisableCache { get; private set; }
         internal ILocalCacheFactory LocalCacheFactory { get; private set; }
-        internal ICacheFactory RemoteCacheFactory { get; private set; }
+        internal ICacheFactory DistributedCacheFactory { get; private set; }
         internal Action<FunctionCacheGetResult> OnResult { get; private set; }
         internal Action<FunctionCacheFetchResult> OnFetch { get; private set; }
         internal Action<FunctionCacheErrorEvent> OnError { get; private set; }
@@ -43,9 +43,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithRemoteCacheFactory(ICacheFactory remoteCacheFactory)
+        public DefaultCacheConfiguration WithDistributedCacheFactory(ICacheFactory distributedCacheFactory)
         {
-            RemoteCacheFactory = remoteCacheFactory;
+            DistributedCacheFactory = distributedCacheFactory;
             return this;
         }
 

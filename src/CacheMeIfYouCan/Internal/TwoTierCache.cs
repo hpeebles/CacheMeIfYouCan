@@ -8,23 +8,23 @@ namespace CacheMeIfYouCan.Internal
     internal class TwoTierCache<TK, TV> : ICache<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _localCache;
-        private readonly ICache<TK, TV> _remoteCache;
+        private readonly ICache<TK, TV> _distributedCache;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
-            ICache<TK, TV> remoteCache,
+            ICache<TK, TV> distributedCache,
             IEqualityComparer<Key<TK>> keyComparer)
         {
             _localCache = localCache;
-            _remoteCache = remoteCache;
+            _distributedCache = distributedCache;
             _keyComparer = keyComparer;
 
-            if (_remoteCache is IKeyChangeNotifier<TK> notifier)
+            if (_distributedCache is IKeyChangeNotifier<TK> notifier)
                 notifier.KeyChanges.Subscribe(_localCache.Remove);
 
             CacheName = _localCache.CacheName;
-            CacheType = $"{_localCache.CacheType}+{_remoteCache.CacheType}";
+            CacheType = $"{_localCache.CacheType}+{_distributedCache.CacheType}";
         }
 
         public string CacheName { get; }
@@ -44,13 +44,13 @@ namespace CacheMeIfYouCan.Internal
             if (!remaining.Any())
                 return fromLocalCache;
             
-            var fromRemoteCache = await _remoteCache.Get(remaining);
+            var fromDistributedCache = await _distributedCache.Get(remaining);
             
-            foreach (var result in fromRemoteCache)
+            foreach (var result in fromDistributedCache)
                 _localCache.Set(result.Key, result.Value, result.TimeToLive);
 
             return fromLocalCache
-                .Concat(fromRemoteCache)
+                .Concat(fromDistributedCache)
                 .ToArray();
         }
 
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Internal
         {
             _localCache.Set(values, timeToLive);
 
-            await _remoteCache.Set(values, timeToLive);
+            await _distributedCache.Set(values, timeToLive);
         }
     }
 }

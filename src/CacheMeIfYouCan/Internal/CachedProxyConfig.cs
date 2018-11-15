@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Internal
         public readonly bool? EarlyFetchEnabled;
         public readonly bool? DisableCache;
         public readonly ILocalCacheFactory LocalCacheFactory;
-        public readonly ICacheFactory RemoteCacheFactory;
+        public readonly ICacheFactory DistributedCacheFactory;
         public readonly Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc;
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Internal
             bool? earlyFetchEnabled,
             bool? disableCache,
             ILocalCacheFactory localCacheFactory,
-            ICacheFactory remoteCacheFactory,
+            ICacheFactory distributedCacheFactory,
             Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Internal
             EarlyFetchEnabled = earlyFetchEnabled;
             DisableCache = disableCache;
             LocalCacheFactory = localCacheFactory;
-            RemoteCacheFactory = remoteCacheFactory;
+            DistributedCacheFactory = distributedCacheFactory;
             KeyspacePrefixFunc = keyspacePrefixFunc;
             OnResult = onResult;
             OnFetch = onFetch;

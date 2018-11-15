@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .WithRemoteCache(new TestCache<string, string>(x => x, x => x, delay: delay))
+                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, delay: delay))
                 .OnResult(results.Add)
                 .Build();
             

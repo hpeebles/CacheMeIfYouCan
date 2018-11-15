@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Redis
 
             configAction(config);
             
-            configManager.WithRemoteCacheFactory(new RedisCacheFactory(config), config.KeySpacePrefixFunc);
+            configManager.WithDistributedCacheFactory(new RedisCacheFactory(config), config.KeySpacePrefixFunc);
             
             return configManager;
         }

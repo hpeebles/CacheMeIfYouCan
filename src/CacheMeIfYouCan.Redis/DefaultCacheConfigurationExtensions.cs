@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Redis
 
             configAction(redisConfig);
         
-            return config.WithRemoteCacheFactory(new RedisCacheFactory(redisConfig));
+            return config.WithDistributedCacheFactory(new RedisCacheFactory(redisConfig));
         }
     }
 }

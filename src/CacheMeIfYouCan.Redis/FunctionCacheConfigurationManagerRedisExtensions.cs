@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Redis
             
             var keyspacePrefix = config.KeySpacePrefixFunc?.Invoke(null);
 
-            configManager.WithRemoteCacheFactory(new RedisCacheFactory(config), keyspacePrefix);
+            configManager.WithDistributedCacheFactory(new RedisCacheFactory(config), keyspacePrefix);
             
             return configManager;
         }

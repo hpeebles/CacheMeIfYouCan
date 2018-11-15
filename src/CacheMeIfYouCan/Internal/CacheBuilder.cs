@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Internal
         public static ICache<TK, TV> Build<TK, TV>(
             string cacheName,
             ILocalCacheFactory<TK, TV> localCacheFactory,
-            ICacheFactory<TK, TV> remoteCacheFactory,
+            ICacheFactory<TK, TV> distributedCacheFactory,
             CacheFactoryConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Internal
         {
             keyComparer = new StringKeyComparer<TK>();
 
-            if (localCacheFactory == null && remoteCacheFactory == null)
+            if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
             var localCache = localCacheFactory?
@@ -31,33 +31,33 @@ namespace CacheMeIfYouCan.Internal
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            var remoteCache = remoteCacheFactory?
+            var distributedCache = distributedCacheFactory?
                 .Configure(c => c
                     .OnGetResult(onCacheGet)
                     .OnSetResult(onCacheSet))
                 .Build(config);
 
-            if (remoteCache is ICachedItemCounter remoteItemCounter)
-                CachedItemCounterContainer.Register(remoteItemCounter);
+            if (distributedCache is ICachedItemCounter distributedItemCounter)
+                CachedItemCounterContainer.Register(distributedItemCounter);
 
             if (localCache != null)
             {
                 if (!localCacheFactory.RequiresStringKeys)
                     keyComparer = new GenericKeyComparer<TK>();
                 
-                if (remoteCache != null)
-                    return new TwoTierCache<TK, TV>(localCache, remoteCache, keyComparer);
+                if (distributedCache != null)
+                    return new TwoTierCache<TK, TV>(localCache, distributedCache, keyComparer);
 
                 return new LocalCacheAdaptor<TK, TV>(localCache);
             }
 
-            if (remoteCache == null)
+            if (distributedCache == null)
                 throw new Exception("Cache factory returned null");
 
-            if (!remoteCacheFactory.RequiresStringKeys)
+            if (!distributedCacheFactory.RequiresStringKeys)
                 keyComparer = new GenericKeyComparer<TK>();
             
-            return remoteCache;
+            return distributedCache;
         }
 
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()

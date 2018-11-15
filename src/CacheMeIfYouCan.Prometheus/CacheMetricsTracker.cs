@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Prometheus
             foreach (var count in CachedItemCounterContainer.GetCounts())
             {
                 CachedItemsCounter
-                    .Labels(count.CacheType, count.CacheType)
+                    .Labels(count.CacheName, count.CacheType)
                     .Set(count.Count);
             }
         }

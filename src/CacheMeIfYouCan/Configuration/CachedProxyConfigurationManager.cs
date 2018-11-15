@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
-        private ICacheFactory _remoteCacheFactory;
+        private ICacheFactory _distributedCacheFactory;
         private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
@@ -76,19 +76,19 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory)
         {
-            return WithRemoteCacheFactory(cacheFactory, f => null);
+            return WithDistributedCacheFactory(cacheFactory, f => null);
         }
         
-        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
         {
-            return WithRemoteCacheFactory(cacheFactory, f => keyspacePrefix);
+            return WithDistributedCacheFactory(cacheFactory, f => keyspacePrefix);
         }
         
-        public CachedProxyConfigurationManager<T> WithRemoteCacheFactory(ICacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
         {
-            _remoteCacheFactory = cacheFactory;
+            _distributedCacheFactory = cacheFactory;
             _keyspacePrefixFunc = keyspacePrefixFunc;
             return this;
         }
@@ -166,7 +166,7 @@ namespace CacheMeIfYouCan.Configuration
                 _earlyFetchEnabled,
                 _disableCache,
                 _localCacheFactory,
-                _remoteCacheFactory,
+                _distributedCacheFactory,
                 _keyspacePrefixFunc,
                 _onResult,
                 _onFetch,
