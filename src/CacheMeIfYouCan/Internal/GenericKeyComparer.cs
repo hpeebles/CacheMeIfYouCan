@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class GenericKeyComparer<TK> : IEqualityComparer<Key<TK>>
+    internal class GenericKeyComparer<TK> : IEqualityComparer<Key<TK>>
     {
         public bool Equals(Key<TK> left, Key<TK> right)
         {

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis

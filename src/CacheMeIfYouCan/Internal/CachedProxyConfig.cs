@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using CacheMeIfYouCan.Caches;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan.Configuration
+namespace CacheMeIfYouCan.Internal
 {
     internal class CachedProxyConfig
     {

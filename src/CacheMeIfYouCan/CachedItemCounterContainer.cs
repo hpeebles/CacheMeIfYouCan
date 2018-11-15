@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public static class CachedItemCounterContainer
     {

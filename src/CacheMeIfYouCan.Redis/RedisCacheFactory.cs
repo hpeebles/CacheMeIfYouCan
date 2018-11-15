@@ -1,5 +1,5 @@
 ﻿using System;
-using CacheMeIfYouCan.Caches;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Redis
 {

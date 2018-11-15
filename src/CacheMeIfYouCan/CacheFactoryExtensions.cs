@@ -1,7 +1,7 @@
 using System;
 using CacheMeIfYouCan.Configuration;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public static class CacheFactoryExtensions
     {

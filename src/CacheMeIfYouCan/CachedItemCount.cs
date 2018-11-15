@@ -1,4 +1,4 @@
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public class CachedItemCount
     {

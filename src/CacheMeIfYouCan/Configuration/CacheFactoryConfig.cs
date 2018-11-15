@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan.Configuration
 {
     public class CacheFactoryConfig<TK, TV>
     {
-        public string CacheName;
         public string KeyspacePrefix;
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;

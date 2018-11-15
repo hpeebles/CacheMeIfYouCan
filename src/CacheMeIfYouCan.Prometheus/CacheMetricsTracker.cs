@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive.Linq;
-using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 using Prometheus;
 

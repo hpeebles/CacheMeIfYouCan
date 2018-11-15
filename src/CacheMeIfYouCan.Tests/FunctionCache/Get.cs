@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             Assert.Equal(2, results.Count);
-            Assert.True(delay.Ticks < results[1].Duration && results[1].Duration < delay.Ticks * 1.1);
+            Assert.True(delay.Ticks < results[1].Duration && results[1].Duration < delay.Ticks * 1.2);
         }
         
         [Fact]

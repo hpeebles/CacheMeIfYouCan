@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan
 {
     public static class Timestamp
     {

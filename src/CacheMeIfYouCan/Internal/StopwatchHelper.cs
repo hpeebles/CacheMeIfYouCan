@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace CacheMeIfYouCan.Internal
 {
     // When calling GetDuration you must pass in a value in Stopwatch ticks and not DateTime ticks.
-    public static class StopwatchHelper
+    internal static class StopwatchHelper
     {
         private static readonly double Multiplier = (double) TimeSpan.TicksPerSecond / Stopwatch.Frequency;
         

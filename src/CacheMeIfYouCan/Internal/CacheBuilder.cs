@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CacheMeIfYouCan.Caches;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public interface ILocalCache<TK, TV>
     {

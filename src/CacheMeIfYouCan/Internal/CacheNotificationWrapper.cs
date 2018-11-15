@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class CacheNotificationWrapper<TK, TV> : ICache<TK, TV> 
+    internal class CacheNotificationWrapper<TK, TV> : ICache<TK, TV> 
     {
         private readonly ICache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;

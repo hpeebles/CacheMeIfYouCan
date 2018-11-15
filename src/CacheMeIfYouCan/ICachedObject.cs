@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public interface ICachedObject<out T>
     {

@@ -2,7 +2,6 @@
 using System.Linq;
 using CacheMeIfYouCan.Notifications;
 using Prometheus;
-using Histogram = Prometheus.Histogram;
 
 namespace CacheMeIfYouCan.Prometheus
 {

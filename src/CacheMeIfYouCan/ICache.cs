@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public interface ICache<TK, TV>
     {

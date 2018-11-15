@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
@@ -272,7 +271,6 @@ namespace CacheMeIfYouCan.Configuration
             
             var cacheConfig = new CacheFactoryConfig<TK, TV>
             {
-                CacheName = _functionName,
                 KeyspacePrefix = _keyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
                 ValueSerializer = GetValueSerializer(),

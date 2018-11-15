@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan.Caches
+namespace CacheMeIfYouCan
 {
     public interface ILocalCacheFactory
     {

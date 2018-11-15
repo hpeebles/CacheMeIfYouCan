@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class NoMatchesComparer<T> : IEqualityComparer<T>
+    internal class NoMatchesComparer<T> : IEqualityComparer<T>
     {
         public bool Equals(T x, T y)
         {

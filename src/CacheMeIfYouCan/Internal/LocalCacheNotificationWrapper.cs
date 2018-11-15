@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class LocalCacheNotificationWrapper<TK, TV> : ILocalCache<TK, TV> 
+    internal class LocalCacheNotificationWrapper<TK, TV> : ILocalCache<TK, TV> 
     {
         private readonly ILocalCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;

@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public struct MethodInfoKey
+    internal struct MethodInfoKey
     {
         public readonly string MethodName;
         public readonly string ParameterTypeName;
