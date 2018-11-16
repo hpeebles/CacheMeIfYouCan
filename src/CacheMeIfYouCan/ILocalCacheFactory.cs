@@ -14,11 +14,11 @@ namespace CacheMeIfYouCan
         ILocalCache<TK, TV> Build(string cacheName);
     }
 
-    internal class LocalCacheFactoryWrapper<TK, TV> : ILocalCacheFactory<TK, TV>
+    internal class LocalCacheFactoryAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly ILocalCacheFactory _factory;
 
-        public LocalCacheFactoryWrapper(ILocalCacheFactory factory)
+        public LocalCacheFactoryAdaptor(ILocalCacheFactory factory)
         {
             _factory = factory;
         }
@@ -31,11 +31,11 @@ namespace CacheMeIfYouCan
         }
     }
     
-    internal class LocalCacheFactoryFuncWrapper<TK, TV> : ILocalCacheFactory<TK, TV>
+    internal class LocalCacheFactoryFuncAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly Func<string, ILocalCache<TK, TV>> _func;
 
-        public LocalCacheFactoryFuncWrapper(Func<string, ILocalCache<TK, TV>> func, bool requiresStringKeys)
+        public LocalCacheFactoryFuncAdaptor(Func<string, ILocalCache<TK, TV>> func, bool requiresStringKeys)
         {
             _func = func;
             RequiresStringKeys = requiresStringKeys;

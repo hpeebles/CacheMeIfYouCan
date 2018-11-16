@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Configuration
 {
     public class CacheConfigurationManager : ICacheFactory
     {
-        private readonly ICacheFactory _cacheFactory;
+        private ICacheFactory _cacheFactory;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheErrorEvent> _onError;
@@ -45,6 +45,12 @@ namespace CacheMeIfYouCan.Configuration
 
             return this;
         }
+        
+        public CacheConfigurationManager AddWrapper(ICacheWrapperFactory wrapper)
+        {
+            _cacheFactory = new CacheFactoryWrapper(_cacheFactory, wrapper);
+            return this;
+        }
 
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
@@ -53,7 +59,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(config);
             
             if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new CacheWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+                cache = new CacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
             return cache;
         }
@@ -61,14 +67,14 @@ namespace CacheMeIfYouCan.Configuration
     
     public class CacheConfigurationManager<TK, TV> : ICacheFactory<TK, TV>
     {
-        private readonly ICacheFactory<TK, TV> _cacheFactory;
+        private ICacheFactory<TK, TV> _cacheFactory;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
         private Action<CacheErrorEvent<TK>> _onError;
 
         internal CacheConfigurationManager(ICacheFactory<TK, TV> cacheFactory)
         {
-            _cacheFactory = cacheFactory;
+            _cacheFactory = cacheFactory ?? throw new ArgumentNullException(nameof(cacheFactory));
         }
 
         public CacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult<TK, TV>> onGetResult, bool append = false)
@@ -101,6 +107,12 @@ namespace CacheMeIfYouCan.Configuration
             return OnErrorImpl(onError, append);
         }
 
+        public CacheConfigurationManager<TK, TV> AddWrapper(ICacheWrapperFactory<TK, TV> wrapper)
+        {
+            _cacheFactory = new CacheFactoryWrapper<TK, TV>(_cacheFactory, wrapper);
+            return this;
+        }
+
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
         public ICache<TK, TV> Build(CacheFactoryConfig<TK, TV> config)
@@ -108,7 +120,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(config);
             
             if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new CacheWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+                cache = new CacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
             return cache;
         }

@@ -15,11 +15,11 @@ namespace CacheMeIfYouCan
         ICache<TK, TV> Build(CacheFactoryConfig<TK, TV> config);
     }
 
-    internal class CacheFactoryWrapper<TK, TV> : ICacheFactory<TK, TV>
+    internal class CacheFactoryGenericAdaptor<TK, TV> : ICacheFactory<TK, TV>
     {
         private readonly ICacheFactory _factory;
 
-        public CacheFactoryWrapper(ICacheFactory factory)
+        public CacheFactoryGenericAdaptor(ICacheFactory factory)
         {
             _factory = factory;
         }
@@ -32,11 +32,11 @@ namespace CacheMeIfYouCan
         }
     }
 
-    internal class CacheFactoryFuncWrapper<TK, TV> : ICacheFactory<TK, TV>
+    internal class CacheFactoryFuncAdaptor<TK, TV> : ICacheFactory<TK, TV>
     {
         private readonly Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> _func;
 
-        public CacheFactoryFuncWrapper(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> func, bool requiresStringKeys)
+        public CacheFactoryFuncAdaptor(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> func, bool requiresStringKeys)
         {
             _func = func;
             RequiresStringKeys = requiresStringKeys;

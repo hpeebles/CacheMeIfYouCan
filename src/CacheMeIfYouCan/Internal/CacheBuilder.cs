@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Internal
 
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()
         {
-            return new LocalCacheFactoryWrapper<TK, TV>(new MemoryCacheFactory());
+            return new LocalCacheFactoryAdaptor<TK, TV>(new MemoryCacheFactory());
         }
     }
 }

@@ -53,7 +53,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build<TK ,TV>(cacheName);
             
             if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+                cache = new LocalCacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
             return cache;
         }
@@ -108,7 +108,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(cacheName);
             
             if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+                cache = new LocalCacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
             return cache;
         }
