@@ -99,6 +99,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .OnFetch(fetches.Add)
                 .Build();
             
+            await cachedEcho("warmup");
+            
+            fetches.Clear();
+            
             await cachedEcho("abc");
             
             Assert.Single(fetches);
