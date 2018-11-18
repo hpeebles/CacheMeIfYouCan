@@ -1,10 +1,10 @@
 namespace CacheMeIfYouCan
 {
-    public class CachedItemCount
+    public readonly struct CachedItemCount
     {
-        public readonly string CacheName;
-        public readonly string CacheType;
-        public readonly long Count;
+        public string CacheName { get; }
+        public string CacheType { get; }
+        public long Count { get; }
 
         internal CachedItemCount(string cacheName, string cacheType, long count)
         {

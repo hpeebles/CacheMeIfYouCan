@@ -8,7 +8,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class FunctionCache<TK, TV>
+    internal sealed class FunctionCache<TK, TV>
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly string _functionName;
@@ -407,10 +407,10 @@ namespace CacheMeIfYouCan.Internal
             return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
         }
         
-        private struct KeyToFetch
+        private readonly struct KeyToFetch
         {
-            public readonly Key<TK> Key;
-            public readonly TimeSpan? TimeToLive;
+            public Key<TK> Key { get; }
+            public TimeSpan? TimeToLive { get; }
 
             public KeyToFetch(Key<TK> key, TimeSpan? timeToLive = null)
             {
@@ -424,10 +424,10 @@ namespace CacheMeIfYouCan.Internal
             }
         }
         
-        private struct FetchResults
+        private readonly struct FetchResults
         {
-            public readonly IDictionary<TK, TV> Results;
-            public readonly long StopwatchTimestampCompleted;
+            public IDictionary<TK, TV> Results { get; }
+            public long StopwatchTimestampCompleted { get; }
 
             public FetchResults(IDictionary<TK, TV> results, long stopwatchTimestampCompleted)
             {

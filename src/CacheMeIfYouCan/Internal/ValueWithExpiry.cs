@@ -2,10 +2,10 @@
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal struct ValueWithExpiry<T>
+    internal readonly struct ValueWithExpiry<T>
     {
-        public T Value;
-        public DateTimeOffset Expiry;
+        public T Value { get; }
+        public DateTimeOffset Expiry { get; }
 
         public ValueWithExpiry(T value, DateTimeOffset expiry)
         {

@@ -2,10 +2,10 @@
 
 namespace CacheMeIfYouCan
 {
-    public struct Key<TK>
+    public readonly struct Key<TK>
     {
         private readonly Lazy<string> _asString;
-        public readonly TK AsObject;
+        public TK AsObject { get; }
 
         public Key(TK keyObj, Lazy<string> keyString)
         {

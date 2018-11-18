@@ -5,6 +5,7 @@
     <PackageTags>Cache;Redis;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />

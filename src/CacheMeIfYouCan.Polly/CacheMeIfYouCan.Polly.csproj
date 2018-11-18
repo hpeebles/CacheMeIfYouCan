@@ -5,6 +5,7 @@
     <PackageTags>Cache;Polly;CircuitBreaker</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="6.1.1" />

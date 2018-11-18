@@ -5,6 +5,7 @@
     <PackageTags>Cache;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="4.1.1" />

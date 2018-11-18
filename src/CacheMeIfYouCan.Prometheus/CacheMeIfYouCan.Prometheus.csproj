@@ -5,6 +5,7 @@
     <PackageTags>Cache;Prometheus;Metrics</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="prometheus-net" Version="2.1.3" />

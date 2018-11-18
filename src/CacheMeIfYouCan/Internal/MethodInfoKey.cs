@@ -4,10 +4,10 @@ using System.Reflection;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal struct MethodInfoKey
+    internal readonly struct MethodInfoKey
     {
-        public readonly string MethodName;
-        public readonly string ParameterTypeName;
+        public string MethodName { get; }
+        public string ParameterTypeName { get; }
         
         public MethodInfoKey(Type interfaceType, MethodInfo methodInfo)
             :this($"{interfaceType.Name}.{methodInfo.Name}", methodInfo.GetParameters().Single().ParameterType.FullName)

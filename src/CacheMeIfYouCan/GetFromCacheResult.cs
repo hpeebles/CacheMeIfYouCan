@@ -2,12 +2,12 @@
 
 namespace CacheMeIfYouCan
 {
-    public struct GetFromCacheResult<TK, TV>
+    public readonly struct GetFromCacheResult<TK, TV>
     {
-        public readonly Key<TK> Key;
-        public readonly TV Value;
-        public readonly TimeSpan TimeToLive;
-        public readonly string CacheType;
+        public Key<TK> Key { get; }
+        public TV Value { get; }
+        public TimeSpan TimeToLive { get; }
+        public string CacheType { get; }
 
         public bool Success => Key.AsObject != null;
 
