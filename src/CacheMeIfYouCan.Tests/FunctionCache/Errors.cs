@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
 
-            var errors = new List<FunctionCacheErrorEvent>();
+            var errors = new List<FunctionCacheException>();
             
             var cachedEcho = echo
                 .Cached()
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 
                 if (i % 2 == 0)
                 {
-                    await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
+                    await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
                     Assert.Equal(key, errors[errors.Count - 1].Keys.Single());
                     Assert.Equal(key, errors[errors.Count - 2].Keys.Single());
@@ -100,7 +100,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => x.Equals("error!"));
 
-            var errors = new List<FunctionCacheErrorEvent>();
+            var errors = new List<FunctionCacheException>();
             var fetches = new List<FunctionCacheFetchResult>();
 
             var cachedEcho = echo
@@ -158,7 +158,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             for (var i = 0; i < 20; i++)
             {
                 if (i % 4 == 2)
-                    await Assert.ThrowsAsync<Exception>(() => cachedEcho("abc"));
+                    await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("abc"));
                 else
                     Assert.Equal("abc", await cachedEcho("abc"));
 
@@ -171,7 +171,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             
-            var errors = new List<FunctionCacheErrorEvent>();
+            var errors = new List<FunctionCacheException>();
             
             var cachedEcho = echo
                 .Cached()
@@ -180,7 +180,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var now = Timestamp.Now;
             
-            await Assert.ThrowsAsync<Exception>(() => cachedEcho("abc"));
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("abc"));
             
             Assert.Equal(2, errors.Count);
             Assert.True(errors.All(e => now <= e.Timestamp && e.Timestamp < now + TimeSpan.FromMilliseconds(10).Ticks));

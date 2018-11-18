@@ -22,10 +22,10 @@ namespace CacheMeIfYouCan.Configuration
         private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
-        private Action<FunctionCacheErrorEvent> _onError;
+        private Action<FunctionCacheException> _onError;
         private Action<CacheGetResult> _onCacheGet;
         private Action<CacheSetResult> _onCacheSet;
-        private Action<CacheErrorEvent> _onCacheError;
+        private Action<CacheException> _onCacheError;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -115,7 +115,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> OnError(Action<FunctionCacheErrorEvent> onError, bool append = false)
+        public CachedProxyConfigurationManager<T> OnError(Action<FunctionCacheException> onError, bool append = false)
         {
             if (_onError == null || !append)
                 _onError = onError;
@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheError(Action<CacheErrorEvent> onCacheError, bool append = false)
+        public CachedProxyConfigurationManager<T> OnCacheError(Action<CacheException> onCacheError, bool append = false)
         {
             if (onCacheError == null || !append)
                 _onCacheError = onCacheError;

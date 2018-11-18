@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             Func<string, Task<string>> echo = new Echo();
             
-            var errors = new List<CacheErrorEvent>();
+            var errors = new List<CacheException>();
             
             var cachedEcho = echo
                 .Cached()
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var start = Timestamp.Now;
             
-            await Assert.ThrowsAsync<Exception>(() => cachedEcho("123"));
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
             Assert.Single(errors);
             Assert.Single(errors[0].Keys);
             Assert.Equal("123", errors[0].Keys.First());

@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnResultIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new List<FunctionCacheGetResult>();
 
@@ -43,7 +43,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnFetchIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new List<FunctionCacheFetchResult>();
 
@@ -75,7 +75,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
 
-            var errors = new List<FunctionCacheErrorEvent>();
+            var errors = new List<FunctionCacheException>();
 
             DefaultCacheConfig.Configuration.WithOnErrorAction(x =>
             {
@@ -94,7 +94,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 
                 if (i % 2 == 0)
                 {
-                    await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
+                    await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
                     Assert.Equal(key, errors[errors.Count - 1].Keys.Single());
                     Assert.Equal(key, errors[errors.Count - 2].Keys.Single());
@@ -190,7 +190,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             Func<string, Task<string>> echo = new Echo();
 
-            var errors = new List<CacheErrorEvent>();
+            var errors = new List<CacheException>();
 
             var key = Guid.NewGuid().ToString();
             
@@ -205,7 +205,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
                 .Build();
 
-            await Assert.ThrowsAsync<Exception>(() => cachedEcho(key));
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
 
             Assert.Single(errors);
             Assert.Single(errors.Single().Keys);

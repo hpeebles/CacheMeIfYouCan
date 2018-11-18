@@ -18,10 +18,10 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
-        private Action<FunctionCacheErrorEvent<TK>> _onError;
+        private Action<FunctionCacheException<TK>> _onError;
         private Action<CacheGetResult<TK, TV>> _onCacheGet;
         private Action<CacheSetResult<TK, TV>> _onCacheSet;
-        private Action<CacheErrorEvent<TK>> _onCacheError;
+        private Action<CacheException<TK>> _onCacheError;
         private Func<TK, string> _keySerializer;
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
@@ -228,7 +228,7 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig OnError(Action<FunctionCacheErrorEvent<TK>> onError, bool append = false)
+        public TConfig OnError(Action<FunctionCacheException<TK>> onError, bool append = false)
         {
             if (_onError == null || !append)
                 _onError = onError;
@@ -258,7 +258,7 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig OnCacheError(Action<CacheErrorEvent<TK>> onCacheError, bool append = false)
+        public TConfig OnCacheError(Action<CacheException<TK>> onCacheError, bool append = false)
         {
             if (onCacheError == null || !append)
                 _onCacheError = onCacheError;

@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Internal
             CacheFactoryConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
-            Action<CacheErrorEvent<TK>> onCacheError,
+            Action<CacheException<TK>> onCacheError,
             out IEqualityComparer<Key<TK>> keyComparer)
         {
             keyComparer = new StringKeyComparer<TK>();

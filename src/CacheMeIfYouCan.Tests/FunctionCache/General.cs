@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal("test!", result);
                 if (first)
                 {
-                    Assert.True(timer.Elapsed > TimeSpan.FromSeconds(1));
+                    Assert.True(timer.Elapsed > TimeSpan.FromMilliseconds(900));
                     first = false;
                 }
                 else
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData("dictionary")]
         public async Task ShortTimeToLiveExpiresCorrectly(string cacheType)
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
             
             var results = new List<FunctionCacheGetResult>();
             

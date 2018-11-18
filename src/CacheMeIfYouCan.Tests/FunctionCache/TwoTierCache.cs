@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var localCache = new TestLocalCache<string, string>();
             var distributedCache = new TestCache<string, string>(x => x, x => x, localCache.Remove);
 
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new List<FunctionCacheGetResult>();
 

@@ -4,36 +4,33 @@ using System.Linq;
 
 namespace CacheMeIfYouCan.Notifications
 {
-    public abstract class FunctionCacheErrorEvent
+    public abstract class FunctionCacheException : Exception
     {
         public readonly string FunctionName;
         public readonly long Timestamp;
-        public readonly string Message;
-        public readonly Exception Exception;
         private readonly Lazy<IList<string>> _keys;
 
-        internal FunctionCacheErrorEvent(
+        internal FunctionCacheException(
             string functionName,
             Lazy<IList<string>> keys,
             long timestamp,
             string message,
             Exception exception)
+        : base(message, exception)
         {
             FunctionName = functionName;
             _keys = keys;
             Timestamp = timestamp;
-            Message = message;
-            Exception = exception;
         }
 
         public IList<string> Keys => _keys.Value;
     }
 
-    public sealed class FunctionCacheErrorEvent<TK> : FunctionCacheErrorEvent
+    public sealed class FunctionCacheException<TK> : FunctionCacheException
     {
         public new readonly IList<Key<TK>> Keys;
 
-        internal FunctionCacheErrorEvent(
+        internal FunctionCacheException(
             string functionName,
             IList<Key<TK>> keys,
             long timestamp,

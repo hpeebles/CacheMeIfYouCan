@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData(false)]
         public async Task DisableCacheTests(bool disableCache)
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var fetches = new List<FunctionCacheFetchResult>();
 

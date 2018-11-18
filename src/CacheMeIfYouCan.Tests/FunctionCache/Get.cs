@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             var delay = TimeSpan.FromSeconds(seconds);
             
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
             
             var results = new List<FunctionCacheGetResult>();
             
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             Assert.Equal(2, results.Count);
-            Assert.True(delay.Ticks < results[1].Duration && results[1].Duration < delay.Ticks * 1.2);
+            Assert.InRange(results[1].Duration, delay.Ticks * 0.99, delay.Ticks * 1.2);
         }
         
         [Fact]

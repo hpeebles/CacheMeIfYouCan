@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests;
 using Polly;
 using Polly.CircuitBreaker;
@@ -28,14 +29,16 @@ namespace CacheMeIfYouCan.Polly.Tests
 
             await cache.Set(key, "abc", TimeSpan.FromMinutes(1));
             
-            await Assert.ThrowsAsync<Exception>(() => cache.Get(key));
+            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
             
             Assert.Equal("abc", await cache.Get(key));
 
-            await Assert.ThrowsAsync<Exception>(() => cache.Get(key));
-            await Assert.ThrowsAsync<Exception>(() => cache.Get(key));
+            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
+            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
             
-            await Assert.ThrowsAsync<BrokenCircuitException>(() => cache.Get(key));
+            var exception = await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
+
+            Assert.True(exception.InnerException is BrokenCircuitException);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             

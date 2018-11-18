@@ -7,18 +7,18 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CacheWrapperInternal<TK, TV> : ICache<TK, TV> 
+    internal class CacheNotificationWrapperInternal<TK, TV> : ICache<TK, TV> 
     {
         private readonly ICache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
-        private readonly Action<CacheErrorEvent<TK>> _onError;
+        private readonly Action<CacheException<TK>> _onError;
 
-        public CacheWrapperInternal(
+        public CacheNotificationWrapperInternal(
             ICache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
-            Action<CacheErrorEvent<TK>> onError)
+            Action<CacheException<TK>> onError)
         {
             _cache = cache;
             _onCacheGetResult = onCacheGetResult;
@@ -47,15 +47,17 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                _onError?.Invoke(new CacheErrorEvent<TK>(
+                var exception = new CacheException<TK>(
                     CacheName,
                     CacheType,
                     keys,
                     timestamp,
                     "Cache.Get exception",
-                    ex));
+                    ex);
+                
+                _onError?.Invoke(exception);
 
-                throw;
+                throw exception;
             }
             finally
             {
@@ -95,15 +97,17 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                _onError?.Invoke(new CacheErrorEvent<TK>(
+                var exception = new CacheException<TK>(
                     CacheName,
                     CacheType,
                     values.Select(kv => kv.Key).ToArray(),
                     timestamp,
                     "Cache.Set exception",
-                    ex));
+                    ex);
+                
+                _onError?.Invoke(exception);
 
-                throw;
+                throw exception;
             }
             finally
             {

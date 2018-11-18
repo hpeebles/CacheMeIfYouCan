@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
-        private readonly Action<FunctionCacheErrorEvent<TK>> _onError;
+        private readonly Action<FunctionCacheException<TK>> _onError;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
         private readonly bool _multiKey;
         private readonly ConcurrentDictionary<Key<TK>, Task<FetchResults>> _activeFetches;
@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Internal
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
-            Action<FunctionCacheErrorEvent<TK>> onError,
+            Action<FunctionCacheException<TK>> onError,
             IEqualityComparer<Key<TK>> keyComparer,
             bool multiKey,
             Func<Task<IList<TK>>> keysToKeepAliveFunc)
@@ -291,20 +291,19 @@ namespace CacheMeIfYouCan.Internal
                 results.AddRange(keys
                     .Select(k => k.Key)
                     .Except(fetchedKeys)
-                    .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default(TV), false, false, duration)));
+                    .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
                 
-                if (_onError != null)
-                {
-                    _onError(new FunctionCacheErrorEvent<TK>(
-                        _functionName,
-                        keys.Select(k => (Key<TK>)k).ToArray(),
-                        Timestamp.Now,
-                        "Unable to fetch value(s)",
-                        ex));
-                }
-
+                var exception = new FunctionCacheException<TK>(
+                    _functionName,
+                    keys.Select(k => (Key<TK>)k).ToArray(),
+                    Timestamp.Now,
+                    "Unable to fetch value(s)",
+                    ex);
+                
+                _onError?.Invoke(exception);
+                
                 error = true;
-                throw;
+                throw exception;
             }
             finally
             {
@@ -374,22 +373,21 @@ namespace CacheMeIfYouCan.Internal
         
         private Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
         {
-            if (_onError != null)
-            {
-                var message = _continueOnException
-                    ? "Unable to get value(s). Default being returned"
-                    : "Unable to get value(s)";
+            var message = _continueOnException
+                ? "Unable to get value(s). Default being returned"
+                : "Unable to get value(s)";
 
-                _onError(new FunctionCacheErrorEvent<TK>(
-                    _functionName,
-                    keys,
-                    Timestamp.Now,
-                    message,
-                    ex));
-            }
+            var exception = new FunctionCacheException<TK>(
+                _functionName,
+                keys,
+                Timestamp.Now,
+                message,
+                ex);
+            
+            _onError?.Invoke(exception);
 
             if (!_continueOnException)
-                throw ex;
+                throw exception;
             
             var defaultValue = _defaultValueFactory == null
                 ? default(TV)

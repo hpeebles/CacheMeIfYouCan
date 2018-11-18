@@ -6,18 +6,18 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class LocalCacheWrapperInternal<TK, TV> : ILocalCache<TK, TV> 
+    internal class LocalCacheNotificationWrapperInternal<TK, TV> : ILocalCache<TK, TV> 
     {
         private readonly ILocalCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
-        private readonly Action<CacheErrorEvent<TK>> _onError;
+        private readonly Action<CacheException<TK>> _onError;
 
-        public LocalCacheWrapperInternal(
+        public LocalCacheNotificationWrapperInternal(
             ILocalCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
-            Action<CacheErrorEvent<TK>> onError)
+            Action<CacheException<TK>> onError)
         {
             _cache = cache;
             _onCacheGetResult = onCacheGetResult;
@@ -46,15 +46,17 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                _onError?.Invoke(new CacheErrorEvent<TK>(
+                var exception = new CacheException<TK>(
                     CacheName,
                     CacheType,
                     keys,
                     timestamp,
                     "LocalCache.Get exception",
-                    ex));
+                    ex);
+                
+                _onError?.Invoke(exception);
 
-                throw;
+                throw exception;
             }
             finally
             {
@@ -94,15 +96,17 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                _onError?.Invoke(new CacheErrorEvent<TK>(
+                var exception = new CacheException<TK>(
                     CacheName,
                     CacheType,
                     values.Select(kv => kv.Key).ToArray(),
                     timestamp,
                     "LocalCache.Set exception",
-                    ex));
+                    ex);
+                
+                _onError?.Invoke(exception);
 
-                throw;
+                throw exception;
             }
             finally
             {

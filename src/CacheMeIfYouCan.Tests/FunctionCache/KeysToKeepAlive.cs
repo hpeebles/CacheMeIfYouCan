@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task AllKeysAreKeptInCache()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new ConcurrentBag<FunctionCacheGetResult>();
 
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task WhenKeysToKeepAliveChangeTheNewKeysAreKeptInCache()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero);
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new ConcurrentBag<FunctionCacheGetResult>();
 

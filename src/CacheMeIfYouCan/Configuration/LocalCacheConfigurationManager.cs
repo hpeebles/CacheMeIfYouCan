@@ -7,15 +7,22 @@ namespace CacheMeIfYouCan.Configuration
     public class LocalCacheConfigurationManager : ILocalCacheFactory
     {
         private readonly ILocalCacheFactory _cacheFactory;
+        private bool _notificationsEnabled = true;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
-        private Action<CacheErrorEvent> _onError;
+        private Action<CacheException> _onError;
 
         internal LocalCacheConfigurationManager(ILocalCacheFactory cacheFactory)
         {
             _cacheFactory = cacheFactory;
         }
 
+        public LocalCacheConfigurationManager WithNotificationsEnabled(bool enabled)
+        {
+            _notificationsEnabled = enabled;
+            return this;
+        }
+        
         public LocalCacheConfigurationManager OnGetResult(Action<CacheGetResult> onGetResult, bool append = false)
         {
             if (onGetResult == null || !append)
@@ -36,7 +43,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public LocalCacheConfigurationManager OnError(Action<CacheErrorEvent> onError, bool append = false)
+        public LocalCacheConfigurationManager OnError(Action<CacheException> onError, bool append = false)
         {
             if (onError == null || !append)
                 _onError = onError;
@@ -52,25 +59,31 @@ namespace CacheMeIfYouCan.Configuration
         {
             var cache = _cacheFactory.Build<TK ,TV>(cacheName);
             
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
-
-            return cache;
+            return _notificationsEnabled
+                ? new LocalCacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                : cache;
         }
     }
     
     public class LocalCacheConfigurationManager<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly ILocalCacheFactory<TK, TV> _cacheFactory;
+        private bool _notificationsEnabled = true;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
-        private Action<CacheErrorEvent<TK>> _onError;
+        private Action<CacheException<TK>> _onError;
 
         internal LocalCacheConfigurationManager(ILocalCacheFactory<TK, TV> cacheFactory)
         {
             _cacheFactory = cacheFactory;
         }
 
+        public LocalCacheConfigurationManager<TK, TV> WithNotificationsEnabled(bool enabled)
+        {
+            _notificationsEnabled = enabled;
+            return this;
+        }
+        
         public LocalCacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult<TK, TV>> onGetResult, bool append = false)
         {
             return OnGetResultImpl(onGetResult, append);
@@ -91,12 +104,12 @@ namespace CacheMeIfYouCan.Configuration
             return OnSetResultImpl(onSetResult, append);
         }
 
-        public LocalCacheConfigurationManager<TK, TV> OnError(Action<CacheErrorEvent> onError, bool append = false)
+        public LocalCacheConfigurationManager<TK, TV> OnError(Action<CacheException> onError, bool append = false)
         {
             return OnErrorImpl(onError, append);
         }
 
-        public LocalCacheConfigurationManager<TK, TV> OnError(Action<CacheErrorEvent<TK>> onError, bool append = false)
+        public LocalCacheConfigurationManager<TK, TV> OnError(Action<CacheException<TK>> onError, bool append = false)
         {
             return OnErrorImpl(onError, append);
         }
@@ -106,11 +119,10 @@ namespace CacheMeIfYouCan.Configuration
         public ILocalCache<TK, TV> Build(string cacheName)
         {
             var cache = _cacheFactory.Build(cacheName);
-            
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
-            return cache;
+            return _notificationsEnabled
+                ? new LocalCacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                : cache;
         }
         
         private LocalCacheConfigurationManager<TK, TV> OnGetResultImpl(Action<CacheGetResult<TK, TV>> onGetResult, bool append)
@@ -133,7 +145,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        private LocalCacheConfigurationManager<TK, TV> OnErrorImpl(Action<CacheErrorEvent<TK>> onError, bool append)
+        private LocalCacheConfigurationManager<TK, TV> OnErrorImpl(Action<CacheException<TK>> onError, bool append)
         {
             if (onError == null || !append)
                 _onError = onError;
