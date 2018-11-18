@@ -45,10 +45,18 @@ namespace CacheMeIfYouCan.Configuration
 
             if (interfaceConfig != null)
             {
-                _keySerializer = interfaceConfig.KeySerializers.GetSerializer<TK>();
-                _keyDeserializer = interfaceConfig.KeySerializers.GetDeserializer<TK>();
-                _valueSerializer = interfaceConfig.ValueSerializers.GetSerializer<TV>();
-                _valueDeserializer = interfaceConfig.ValueSerializers.GetDeserializer<TV>();
+                if (interfaceConfig.KeySerializers.TryGetSerializer<TK>(out var keySerializer))
+                    _keySerializer = keySerializer;
+
+                if (interfaceConfig.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
+                    _keyDeserializer = keyDeserializer;
+
+                if (interfaceConfig.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer))
+                    _valueSerializer = valueSerializer;
+
+                if (interfaceConfig.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
+                    _valueDeserializer = valueDeserializer;
+
                 _timeToLive = interfaceConfig.TimeToLive;
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
                 _disableCache = interfaceConfig.DisableCache;
@@ -347,7 +355,10 @@ namespace CacheMeIfYouCan.Configuration
 
         private Func<TK, string> GetKeySerializer()
         {
-            var serializer = _keySerializer ?? DefaultCacheConfig.Configuration.KeySerializers.GetSerializer<TK>();
+            var serializer = _keySerializer;
+            
+            if (serializer == null)
+                DefaultCacheConfig.Configuration.KeySerializers.TryGetSerializer<TK>(out serializer);
 
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
@@ -357,7 +368,10 @@ namespace CacheMeIfYouCan.Configuration
 
         private Func<string, TK> GetKeyDeserializer()
         {
-            var deserializer = _keyDeserializer ?? DefaultCacheConfig.Configuration.KeySerializers.GetDeserializer<TK>();
+            var deserializer = _keyDeserializer;
+            
+            if (deserializer == null)
+                DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out deserializer);
 
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
@@ -367,7 +381,10 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<TV, string> GetValueSerializer()
         {
-            var serializer = _valueSerializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetSerializer<TV>();
+            var serializer = _valueSerializer;
+
+            if (serializer == null)
+                DefaultCacheConfig.Configuration.ValueSerializers.TryGetSerializer<TV>(out serializer);
 
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
@@ -377,7 +394,10 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<string, TV> GetValueDeserializer()
         {
-            var deserializer = _valueDeserializer ?? DefaultCacheConfig.Configuration.ValueSerializers.GetDeserializer<TV>();
+            var deserializer = _valueDeserializer;
+            
+            if (deserializer == null)
+                DefaultCacheConfig.Configuration.ValueSerializers.TryGetDeserializer<TV>(out deserializer);
             
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);

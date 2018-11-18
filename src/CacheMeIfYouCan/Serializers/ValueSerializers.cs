@@ -9,26 +9,28 @@ namespace CacheMeIfYouCan.Serializers
         private readonly IDictionary<Type, object> _deserializers = new Dictionary<Type, object>();
         private ISerializer _default;
 
-        internal Func<T, string> GetSerializer<T>()
+        internal bool TryGetSerializer<T>(out Func<T, string> serializer)
         {
-            if (_serializers.TryGetValue(typeof(T), out var serializerObj) && serializerObj is Func<T, string> serializer)
-                return serializer;
+            if (_serializers.TryGetValue(typeof(T), out var serializerObj))
+                serializer = (Func<T, string>)serializerObj;
+            else if (_default != null)
+                serializer = _default.Serialize;
+            else
+                serializer = null;
 
-            if (_default != null)
-                return x => _default.Serialize(x);
-
-            return null;
+            return serializer != null;
         }
 
-        internal Func<string, T> GetDeserializer<T>()
+        internal bool TryGetDeserializer<T>(out Func<string, T> deserializer)
         {
-            if (_deserializers.TryGetValue(typeof(T), out var deserializerObj) && deserializerObj is Func<string, T> deserializer)
-                return deserializer;
+            if (_deserializers.TryGetValue(typeof(T), out var deserializerObj))
+                deserializer = (Func<string, T>)deserializerObj;
+            else if (_default != null)
+                deserializer = _default.Deserialize<T>;
+            else
+                deserializer = null;
 
-            if (_default != null)
-                return x => _default.Deserialize<T>(x);
-
-            return null;
+            return deserializer != null;
         }
 
         public ValueSerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer)
