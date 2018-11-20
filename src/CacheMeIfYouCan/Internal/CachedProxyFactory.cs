@@ -10,6 +10,7 @@ using CacheMeIfYouCan.Configuration;
 
 [assembly: InternalsVisibleTo("ProxyFactoryAsm")]
 [assembly: InternalsVisibleTo("CacheMeIfYouCan.Tests")]
+[assembly: InternalsVisibleTo("CacheMeIfYouCan.PerformanceTests")]
 namespace CacheMeIfYouCan.Internal
 {
     internal class CachedProxyFactory
