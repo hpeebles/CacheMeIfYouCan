@@ -93,7 +93,7 @@ namespace CacheMeIfYouCan.Internal
                 var result = await GetImpl(new[] { keyObj });
     
                 return result == null || result.Count != 1
-                    ? default(TV)
+                    ? default
                     : result.First().Value;
             }
         }
@@ -108,7 +108,7 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private async Task<ICollection<FunctionCacheGetResultInner<TK, TV>>>     GetImpl(IList<TK> keyObjs)
+        private async Task<ICollection<FunctionCacheGetResultInner<TK, TV>>> GetImpl(IList<TK> keyObjs)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -223,7 +223,7 @@ namespace CacheMeIfYouCan.Internal
             var results = new List<FunctionCacheFetchResultInner<TK, TV>>();
             
             var tcs = new TaskCompletionSource<FetchResults>();
-            var toFetch = new List<Key<TK>>();
+            var toFetch = new Dictionary<TK, Key<TK>>();
             var alreadyPendingFetches = new List<KeyValuePair<Key<TK>, Task<FetchResults>>>();
             
             foreach (var key in keys)
@@ -231,7 +231,7 @@ namespace CacheMeIfYouCan.Internal
                 var task = _activeFetches.GetOrAdd(key, k => tcs.Task);
                 
                 if (task == tcs.Task)
-                    toFetch.Add(key);
+                    toFetch.Add(key.Key.AsObject, key.Key);
                 else
                     alreadyPendingFetches.Add(new KeyValuePair<Key<TK>, Task<FetchResults>>(key, task));
             }
@@ -244,7 +244,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 if (toFetch.Any())
                 {
-                    var fetched = await _func(toFetch.Select(k => (TK)k).ToArray());
+                    var fetched = await _func(toFetch.Keys);
     
                     tcs.SetResult(new FetchResults(fetched, Stopwatch.GetTimestamp()));
                     
@@ -254,17 +254,9 @@ namespace CacheMeIfYouCan.Internal
     
                         // If this is not a multi key function it is not guaranteed that we can use TK as a key in
                         // a dictionary so rather than find the Key<TK> from the TK just use the single value
-                        IDictionary<Key<TK>, TV> fetchedDictionary;
-                        if (_multiKey)
-                        {
-                            var keysDictionary = toFetch.ToDictionary(k => k.AsObject);
-    
-                            fetchedDictionary = fetched.ToDictionary(f => keysDictionary[f.Key], f => f.Value);
-                        }
-                        else
-                        {
-                            fetchedDictionary = new Dictionary<Key<TK>, TV> { { toFetch.Single(), fetched.Single().Value } };
-                        }
+                        var fetchedDictionary = _multiKey
+                            ? fetched.ToDictionary(f => toFetch[f.Key], f => f.Value)
+                            : new Dictionary<Key<TK>, TV> { { toFetch.Single().Value, fetched.Single().Value } };
                         
                         results.AddRange(fetchedDictionary.Select(f => new FunctionCacheFetchResultInner<TK, TV>(f.Key, f.Value, true, false, duration)));
                         
@@ -308,7 +300,7 @@ namespace CacheMeIfYouCan.Internal
             finally
             {
                 foreach (var key in toFetch)
-                    _activeFetches.TryRemove(key, out _);
+                    _activeFetches.TryRemove(key.Value, out _);
                 
                 if (_onFetch != null)
                 {
@@ -390,7 +382,7 @@ namespace CacheMeIfYouCan.Internal
                 throw exception;
             
             var defaultValue = _defaultValueFactory == null
-                ? default(TV)
+                ? default
                 : _defaultValueFactory();
             
             return keys.ToDictionary(
