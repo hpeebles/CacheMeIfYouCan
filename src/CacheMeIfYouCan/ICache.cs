@@ -19,9 +19,7 @@ namespace CacheMeIfYouCan
         {
             var results = await cache.Get(new[] { key });
 
-            return results.Any()
-                ? results.First()
-                : new GetFromCacheResult<TK, TV>();
+            return results.FirstOrDefault();
         }
 
         public static Task Set<TK, TV>(this ICache<TK, TV> cache, Key<TK> key, TV value, TimeSpan timeToLive)

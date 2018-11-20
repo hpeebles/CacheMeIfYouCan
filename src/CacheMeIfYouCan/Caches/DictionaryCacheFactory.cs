@@ -2,11 +2,18 @@
 {
     public class DictionaryCacheFactory : ILocalCacheFactory
     {
+        private readonly int? _maxItems; 
+        
         public bool RequiresStringKeys => false;
+
+        public DictionaryCacheFactory(int? maxItems = null)
+        {
+            _maxItems = maxItems;
+        }
         
         public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
-            return new DictionaryCache<TK, TV>(cacheName);
+            return new DictionaryCache<TK, TV>(cacheName, _maxItems);
         }
     }
 }

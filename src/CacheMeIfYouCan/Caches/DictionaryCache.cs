@@ -14,15 +14,20 @@ namespace CacheMeIfYouCan.Caches
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
         
-        // Lock to ensure only 1 thread accesses the non-threadsafe dictionary of TTLs
+        // Lock to ensure only 1 thread accesses the non-threadsafe dictionary of TTLs at a time
         private readonly object _lock = new object();
+
+        // Max number of items to hold. Each time the key remover runs it will ensure the count stays below this value.
+        private readonly int? _maxItems;
         
         // Every 10 seconds we check for expired keys and remove them, disposing of this field is the only way to stop that process
         private readonly IDisposable _keyRemoverProcess;
-
-        public DictionaryCache(string cacheName)
+        
+        public DictionaryCache(string cacheName, int? maxItems = null)
         {
             CacheName = cacheName;
+
+            _maxItems = maxItems;
 
             _keyRemoverProcess = Observable
                 .Interval(TimeSpan.FromSeconds(10))
@@ -116,6 +121,28 @@ namespace CacheMeIfYouCan.Caches
             }
         
             foreach (var key in keysToExpire)
+                _values.TryRemove(key, out _);
+
+            if (!_maxItems.HasValue || _values.Count <= _maxItems.Value)
+                return;
+
+            var countToRemove = _values.Count - _maxItems.Value;
+
+            var toRemove = new List<TK>();
+            
+            lock (_lock)
+            {
+                while (toRemove.Count < countToRemove)
+                {
+                    var next = _ttls.FirstOrDefault();
+                    if (next.Key == 0)
+                        break;
+                    
+                    toRemove.AddRange(next.Value);
+                }
+            }
+            
+            foreach (var key in toRemove.Take(countToRemove))
                 _values.TryRemove(key, out _);
         }
     }
