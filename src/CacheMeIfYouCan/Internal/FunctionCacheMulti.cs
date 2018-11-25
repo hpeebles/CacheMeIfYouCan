@@ -8,7 +8,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class FunctionCache<TK, TV>
+    internal sealed class FunctionCacheMulti<TK, TV>
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly string _functionName;
@@ -22,12 +22,11 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onError;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
-        private readonly bool _multiKey;
         private readonly ConcurrentDictionary<Key<TK>, Task<FetchResults>> _activeFetches;
         private readonly Random _rng;
         private long _averageFetchDuration;
         
-        public FunctionCache(
+        public FunctionCacheMulti(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func,
             string functionName,
             ICache<TK, TV> cache,
@@ -39,7 +38,6 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onError,
             IEqualityComparer<Key<TK>> keyComparer,
-            bool multiKey,
             Func<Task<IList<TK>>> keysToKeepAliveFunc)
         {
             _func = func;
@@ -54,7 +52,6 @@ namespace CacheMeIfYouCan.Internal
             _onFetch = onFetch;
             _onError = onError;
             _keyComparer = keyComparer;
-            _multiKey = multiKey;
             _activeFetches = new ConcurrentDictionary<Key<TK>, Task<FetchResults>>(keyComparer);
             _rng = new Random();
 
@@ -62,9 +59,9 @@ namespace CacheMeIfYouCan.Internal
             {
                 async Task<TimeSpan?> GetTimeToLive(Key<TK> key)
                 {
-                    var results = await _cache.Get(new[] { key });
+                    var result = await _cache.Get(key);
 
-                    return results.Any() ? (TimeSpan?)results.Single().TimeToLive : null;
+                    return result.Success ? (TimeSpan?)result.TimeToLive : null;
                 }
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
@@ -86,22 +83,6 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public async Task<TV> GetSingle(TK keyObj)
-        {
-            using (SynchronizationContextRemover.StartNew())
-            {
-                var result = await GetImpl(new[] { keyObj });
-                
-                using (var enumerator = result.GetEnumerator())
-                {
-                    if (enumerator.MoveNext() && enumerator.Current != null)
-                        return enumerator.Current.Value;
-                }
-
-                return default;
-            }
-        }
-
         public async Task<IDictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)
         {
             using (SynchronizationContextRemover.StartNew())
@@ -117,7 +98,7 @@ namespace CacheMeIfYouCan.Internal
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
-            var resultsContainer = FunctionCacheResultsContainerFactory.Build<TK, TV>(keyObjs.Count, _keyComparer);
+            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keyObjs.Count, _keyComparer);
             
             var keys = keyObjs
                 .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
@@ -136,7 +117,7 @@ namespace CacheMeIfYouCan.Internal
                     {
                         foreach (var result in fromCache)
                         {
-                            resultsContainer[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
                                 result.Key,
                                 result.Value,
                                 Outcome.FromCache,
@@ -144,7 +125,7 @@ namespace CacheMeIfYouCan.Internal
                         }
 
                         missingKeys = keys
-                            .Except(resultsContainer.Keys, _keyComparer)
+                            .Except(results.Keys, _keyComparer)
                             .ToArray();
 
                         if (_earlyFetchEnabled)
@@ -171,7 +152,7 @@ namespace CacheMeIfYouCan.Internal
                     {
                         foreach (var result in fetched)
                         {
-                            resultsContainer[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
                                 result.Key,
                                 result.Value,
                                 Outcome.Fetch,
@@ -180,7 +161,7 @@ namespace CacheMeIfYouCan.Internal
                     }
                 }
 
-                return resultsContainer.Values;
+                return results.Values;
             }
             catch (Exception ex)
             {
@@ -193,7 +174,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     _onResult(new FunctionCacheGetResult<TK, TV>(
                         _functionName,
-                        resultsContainer.Values,
+                        results.Values,
                         !error,
                         timestamp,
                         StopwatchHelper.GetDuration(stopwatchStart)));
@@ -257,11 +238,7 @@ namespace CacheMeIfYouCan.Internal
                     {
                         var duration = StopwatchHelper.GetDuration(stopwatchStart);
     
-                        // If this is not a multi key function it is not guaranteed that we can use TK as a key in
-                        // a dictionary so rather than find the Key<TK> from the TK just use the single value
-                        var fetchedDictionary = _multiKey
-                            ? fetched.ToDictionary(f => toFetch[f.Key], f => f.Value)
-                            : new Dictionary<Key<TK>, TV> { { toFetch.Single().Value, fetched.Single().Value } };
+                        var fetchedDictionary = fetched.ToDictionary(f => toFetch[f.Key], f => f.Value);
                         
                         results.AddRange(fetchedDictionary.Select(f => new FunctionCacheFetchResultInner<TK, TV>(f.Key, f.Value, true, false, duration)));
                         
@@ -332,22 +309,6 @@ namespace CacheMeIfYouCan.Internal
         {
             await Task.WhenAll(fetches.Select(f => f.Value).Distinct());
 
-            if (!_multiKey)
-            {
-                var fetch = fetches.Single();
-                var result = fetch.Value.Result;
-                
-                return new[]
-                {
-                    new FunctionCacheFetchResultInner<TK, TV>(
-                        fetch.Key,
-                        result.Results.Values.Single(),
-                        true,
-                        true,
-                        StopwatchHelper.GetDuration(stopwatchStart, result.StopwatchTimestampCompleted))
-                };
-            }
-            
             var results = new List<FunctionCacheFetchResultInner<TK, TV>>(fetches.Count);
 
             foreach (var fetch in fetches)

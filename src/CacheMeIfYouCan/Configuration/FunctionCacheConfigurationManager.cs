@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Configuration
         internal FunctionCacheConfigurationManager(
             Func<TK, Task<TV>> inputFunc,
             string functionName)
-            : base(ConvertFunc(inputFunc), functionName, false)
+            : base(inputFunc, functionName)
         { }
 
         internal FunctionCacheConfigurationManager(
@@ -22,18 +22,17 @@ namespace CacheMeIfYouCan.Configuration
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(
-                ConvertFunc(inputFunc),
+                inputFunc,
                 $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
-                false,
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
         public Func<TK, Task<TV>> Build()
         {
-            var functionCache = BuildFunctionCache();
-            
-            _cachedFunc = functionCache.GetSingle;
+            var functionCache = BuildFunctionCacheSingle();
+
+            _cachedFunc = functionCache.Get;
             
             return _cachedFunc;
         }
@@ -41,18 +40,6 @@ namespace CacheMeIfYouCan.Configuration
         public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
         {
             return cacheConfig.Build();
-        }
-        
-        private static Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> ConvertFunc(Func<TK, Task<TV>> func)
-        {
-            return async keys =>
-            {
-                var key = keys.Single();
-
-                var value = await func(key);
-                
-                return new Dictionary<TK, TV> { { key, value } };
-            };
         }
     }
 }

@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Configuration
         internal MultiKeyFunctionCacheConfigurationManager(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
             string functionName)
-            : base(inputFunc, functionName, true)
+            : base(inputFunc, functionName)
         { }
 
         internal MultiKeyFunctionCacheConfigurationManager(
@@ -23,14 +23,13 @@ namespace CacheMeIfYouCan.Configuration
             : base(
                 inputFunc,
                 $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
-                true,
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
         public Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> Build()
         {
-            var functionCache = BuildFunctionCache();
+            var functionCache = BuildFunctionCacheMulti();
             
             _cachedFunc = functionCache.GetMulti;
             

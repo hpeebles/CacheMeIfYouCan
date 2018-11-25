@@ -8,8 +8,7 @@ namespace CacheMeIfYouCan
         public TV Value { get; }
         public TimeSpan TimeToLive { get; }
         public string CacheType { get; }
-
-        public bool Success => Key.AsObject != null;
+        public bool Success { get; }
 
         public GetFromCacheResult(Key<TK> key, TV value, TimeSpan timeToLive, string cacheType)
         {
@@ -17,6 +16,7 @@ namespace CacheMeIfYouCan
             Value = value;
             TimeToLive = timeToLive;
             CacheType = cacheType;
+            Success = true;
         }
 
         public static implicit operator TV(GetFromCacheResult<TK, TV> result)

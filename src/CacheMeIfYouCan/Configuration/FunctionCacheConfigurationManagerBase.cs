@@ -10,7 +10,8 @@ namespace CacheMeIfYouCan.Configuration
     public abstract class FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
+        private readonly Func<TK, Task<TV>> _inputFuncSingle;
+        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFuncMulti;
         private readonly string _functionName;
         private readonly bool _multiKey;
         private TimeSpan? _timeToLive;
@@ -33,15 +34,33 @@ namespace CacheMeIfYouCan.Configuration
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
 
         internal FunctionCacheConfigurationManagerBase(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
+            Func<TK, Task<TV>> inputFuncSingle,
             string functionName,
-            bool multiKey,
+            CachedProxyConfig interfaceConfig = null,
+            CachedProxyFunctionInfo proxyFunctionInfo = null)
+            : this(functionName, interfaceConfig, proxyFunctionInfo)
+        {
+            _inputFuncSingle = inputFuncSingle;
+            _multiKey = false;
+        }
+        
+        internal FunctionCacheConfigurationManagerBase(
+            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFuncMulti,
+            string functionName,
+            CachedProxyConfig interfaceConfig = null,
+            CachedProxyFunctionInfo proxyFunctionInfo = null)
+            : this(functionName, interfaceConfig, proxyFunctionInfo)
+        {
+            _inputFuncMulti = inputFuncMulti;
+            _multiKey = true;
+        }
+        
+        private FunctionCacheConfigurationManagerBase(
+            string functionName,
             CachedProxyConfig interfaceConfig = null,
             CachedProxyFunctionInfo proxyFunctionInfo = null)
         {
-            _inputFunc = inputFunc;
             _functionName = functionName;
-            _multiKey = multiKey;
 
             if (interfaceConfig != null)
             {
@@ -287,7 +306,51 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        internal FunctionCache<TK, TV> BuildFunctionCache()
+        internal FunctionCacheSingle<TK, TV> BuildFunctionCacheSingle()
+        {
+            if (_multiKey)
+                throw new Exception("You can't build a FunctionCacheSingle since your function is multi key");
+
+            var cache = BuildCache(out var keyComparer);
+            
+            return new FunctionCacheSingle<TK, TV>(
+                _inputFuncSingle,
+                _functionName,
+                cache,
+                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
+                _keySerializer ?? GetKeySerializer(),
+                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
+                _defaultValueFactory,
+                _onResult,
+                _onFetch,
+                _onError,
+                keyComparer,
+                _keysToKeepAliveFunc);
+        }
+        
+        internal FunctionCacheMulti<TK, TV> BuildFunctionCacheMulti()
+        {
+            if (!_multiKey)
+                throw new Exception("You can't build a FunctionCacheMulti since your function is single key");
+
+            var cache = BuildCache(out var keyComparer);
+            
+            return new FunctionCacheMulti<TK, TV>(
+                _inputFuncMulti,
+                _functionName,
+                cache,
+                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
+                _keySerializer ?? GetKeySerializer(),
+                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
+                _defaultValueFactory,
+                _onResult,
+                _onFetch,
+                _onError,
+                keyComparer,
+                _keysToKeepAliveFunc);
+        }
+
+        private ICache<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
         {
             var cacheConfig = new CacheFactoryConfig<TK, TV>
             {
@@ -298,7 +361,6 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICache<TK, TV> cache = null;
-            IEqualityComparer<Key<TK>> keyComparer;
             if (_disableCache ?? DefaultCacheConfig.Configuration.DisableCache)
             {
                 keyComparer = new NoMatchesComparer<Key<TK>>();
@@ -328,20 +390,7 @@ namespace CacheMeIfYouCan.Configuration
                     out keyComparer);
             }
 
-            return new FunctionCache<TK, TV>(
-                _inputFunc,
-                _functionName,
-                cache,
-                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
-                _keySerializer ?? GetKeySerializer(),
-                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
-                _defaultValueFactory,
-                _onResult,
-                _onFetch,
-                _onError,
-                keyComparer,
-                _multiKey,
-                _keysToKeepAliveFunc);
+            return cache;
         }
 
         private void SetDistributedCacheFactory(
