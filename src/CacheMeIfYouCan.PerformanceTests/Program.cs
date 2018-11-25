@@ -10,7 +10,8 @@ namespace CacheMeIfYouCan.PerformanceTests
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<SingleVsMulti<Guid>>(ManualConfig
+            BenchmarkRunner
+                .Run<SingleVsMulti<Guid>>(ManualConfig
                 .Create(DefaultConfig.Instance)
                 .With(MemoryDiagnoser.Default)
                 .With(new EtwProfiler()));

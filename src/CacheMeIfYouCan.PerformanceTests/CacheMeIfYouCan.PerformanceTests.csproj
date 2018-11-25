@@ -11,6 +11,7 @@
     <PackageReference Include="System.Runtime.Caching" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
   <PropertyGroup>

@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.PerformanceTests
         
         public SingleVsMulti()
         {
-            _keys = GenerateKeys(1000);
+            _keys = KeyGenerator.Generate<T>(1000);
             _single = BuildSingle();
             _multi = BuildMulti();
         }
@@ -62,30 +62,6 @@ namespace CacheMeIfYouCan.PerformanceTests
                 .Build();
         }
 
-        private static IList<T> GenerateKeys(int count)
-        {
-            var generateKeyFunc = GenerateKeyFunc();
-            
-            return Enumerable
-                .Range(0, count)
-                .Select(generateKeyFunc)
-                .ToArray();
-        }
-
-        private static Func<int, T> GenerateKeyFunc()
-        {
-            if (typeof(T) == typeof(int))
-                return i => (T)(object)i;
-            
-            if (typeof(T) == typeof(string))
-                return i => (T)(object)Guid.NewGuid().ToString();
-            
-            if (typeof(T) == typeof(Guid))
-                return i => (T)(object)Guid.NewGuid();
-
-            throw new Exception();
-        }
-        
         private static Task<T> DummyFunc(T key)
         {
             return Task.FromResult(key);
