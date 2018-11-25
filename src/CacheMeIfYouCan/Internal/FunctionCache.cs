@@ -91,10 +91,14 @@ namespace CacheMeIfYouCan.Internal
             using (SynchronizationContextRemover.StartNew())
             {
                 var result = await GetImpl(new[] { keyObj });
-    
-                return result == null || result.Count != 1
-                    ? default
-                    : result.First().Value;
+                
+                using (var enumerator = result.GetEnumerator())
+                {
+                    if (enumerator.MoveNext() && enumerator.Current != null)
+                        return enumerator.Current.Value;
+                }
+
+                return default;
             }
         }
 
@@ -108,12 +112,12 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private async Task<ICollection<FunctionCacheGetResultInner<TK, TV>>> GetImpl(IList<TK> keyObjs)
+        private async Task<IEnumerable<FunctionCacheGetResultInner<TK, TV>>> GetImpl(IList<TK> keyObjs)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
-            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keyObjs.Count, _keyComparer);
+            var resultsContainer = FunctionCacheResultsContainerFactory.Build<TK, TV>(keyObjs.Count, _keyComparer);
             
             var keys = keyObjs
                 .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
@@ -132,14 +136,15 @@ namespace CacheMeIfYouCan.Internal
                     {
                         foreach (var result in fromCache)
                         {
-                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                            resultsContainer[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
                                 result.Key,
                                 result.Value,
-                                Outcome.FromCache, result.CacheType);
+                                Outcome.FromCache,
+                                result.CacheType);
                         }
 
                         missingKeys = keys
-                            .Except(results.Select(r => r.Key), _keyComparer)
+                            .Except(resultsContainer.Keys, _keyComparer)
                             .ToArray();
 
                         if (_earlyFetchEnabled)
@@ -166,7 +171,7 @@ namespace CacheMeIfYouCan.Internal
                     {
                         foreach (var result in fetched)
                         {
-                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                            resultsContainer[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
                                 result.Key,
                                 result.Value,
                                 Outcome.Fetch,
@@ -174,11 +179,13 @@ namespace CacheMeIfYouCan.Internal
                         }
                     }
                 }
+
+                return resultsContainer.Values;
             }
             catch (Exception ex)
             {
                 error = true;
-                results = HandleError(keys, ex);
+                return HandleError(keys, ex);
             }
             finally
             {
@@ -186,14 +193,12 @@ namespace CacheMeIfYouCan.Internal
                 {
                     _onResult(new FunctionCacheGetResult<TK, TV>(
                         _functionName,
-                        results.Values,
+                        resultsContainer.Values,
                         !error,
                         timestamp,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
             }
-
-            return results.Values;
         }
 
         private Task<IList<FunctionCacheFetchResultInner<TK, TV>>> FetchOnDemand(IList<Key<TK>> keys)
@@ -363,7 +368,7 @@ namespace CacheMeIfYouCan.Internal
             return results;
         }
         
-        private Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
+        private IEnumerable<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
         {
             var message = _continueOnException
                 ? "Unable to get value(s). Default being returned"
@@ -385,9 +390,8 @@ namespace CacheMeIfYouCan.Internal
                 ? default
                 : _defaultValueFactory();
             
-            return keys.ToDictionary(
-                k => k,
-                k => new FunctionCacheGetResultInner<TK, TV>(k, defaultValue, Outcome.Error, null), _keyComparer);
+            foreach (var key in keys)
+                yield return new FunctionCacheGetResultInner<TK, TV>(key, defaultValue, Outcome.Error, null);
         }
 
         private bool ShouldFetchEarly(TimeSpan timeToLive)

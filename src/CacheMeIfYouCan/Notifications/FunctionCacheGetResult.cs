@@ -29,14 +29,14 @@ namespace CacheMeIfYouCan.Notifications
     {
         internal FunctionCacheGetResult(
             string functionName,
-            ICollection<FunctionCacheGetResultInner<TK, TV>> results,
+            IEnumerable<FunctionCacheGetResultInner<TK, TV>> results,
             bool success,
             long start,
             long duration)
             : base(functionName, results, success, start, duration)
         { }
 
-        public new ICollection<FunctionCacheGetResultInner<TK, TV>> Results => base.Results as ICollection<FunctionCacheGetResultInner<TK, TV>>;
+        public new IEnumerable<FunctionCacheGetResultInner<TK, TV>> Results => base.Results as IEnumerable<FunctionCacheGetResultInner<TK, TV>>;
     }
 
     public interface IFunctionCacheGetResultInner
