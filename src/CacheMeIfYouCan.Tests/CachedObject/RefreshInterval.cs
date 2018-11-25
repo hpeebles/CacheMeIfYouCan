@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(400))
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .WithJitterPercentage(50)
                 .Build(false);
 
@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var results = new HashSet<DateTime>();
 
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
             while (!cancellationTokenSource.IsCancellationRequested)
             {
@@ -80,8 +80,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var min = diffs.Min();
             var max = diffs.Max();
             
-            Assert.InRange(min, TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(300));
-            Assert.InRange(max, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(1000));
+            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(1000));
+            Assert.InRange(max, TimeSpan.FromMilliseconds(1000), TimeSpan.FromMilliseconds(2000));
         }
     }
 }
