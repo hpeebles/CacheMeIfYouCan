@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class SynchronizationContextRemover : IDisposable
+    internal struct SynchronizationContextRemover : IDisposable
     {
         private readonly SynchronizationContext _context;
 
