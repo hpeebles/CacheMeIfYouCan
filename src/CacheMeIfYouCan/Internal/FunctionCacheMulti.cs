@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Internal
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
                 {
-                    var keyToFetch = new KeyToFetch(new Key<TK>(key, new Lazy<string>(() => _keySerializer(key))), existingTimeToLive);
+                    var keyToFetch = new KeyToFetch(new Key<TK>(key, _keySerializer), existingTimeToLive);
                     
                     return FetchImpl(new[] { keyToFetch }, FetchReason.KeysToKeepAliveFunc);
                 }
@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Internal
             var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keyObjs.Count, _keyComparer);
             
             var keys = keyObjs
-                .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
+                .Select(k => new Key<TK>(k, _keySerializer))
                 .ToArray();
 
             var error = false;

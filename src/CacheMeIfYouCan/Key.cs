@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace CacheMeIfYouCan
 {
@@ -7,14 +8,14 @@ namespace CacheMeIfYouCan
         private readonly Lazy<string> _asString;
         public TK AsObject { get; }
 
-        public Key(TK keyObj, Lazy<string> keyString)
+        public Key(TK keyObj, Func<TK, string> serializer)
         {
             AsObject = keyObj;
-            _asString = keyString;
+            _asString = new Lazy<string>(() => serializer(keyObj), LazyThreadSafetyMode.None);
         }
 
         public Key(TK keyObj, string keyString)
-            : this(keyObj, new Lazy<string>(() => keyString))
+            : this(keyObj, k => keyString)
         { }
         
         public string AsString => _asString.Value;

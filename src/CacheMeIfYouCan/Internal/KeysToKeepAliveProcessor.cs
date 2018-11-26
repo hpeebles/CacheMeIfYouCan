@@ -148,7 +148,7 @@ namespace CacheMeIfYouCan.Internal
             var keysSet = new HashSet<Key<TK>>(_keyComparer);
             
             var keys = keyObjects
-                .Select(k => new Key<TK>(k, new Lazy<string>(() => _keySerializer(k))))
+                .Select(k => new Key<TK>(k, _keySerializer))
                 .Where(keysSet.Add)
                 .ToArray();
 

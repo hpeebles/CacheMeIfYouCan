@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Internal
 
                 Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
                 {
-                    var keyToFetch = new Key<TK>(key, new Lazy<string>(() => _keySerializer(key)));
+                    var keyToFetch = new Key<TK>(key, _keySerializer);
                     
                     return FetchImpl(keyToFetch, FetchReason.KeysToKeepAliveFunc, existingTimeToLive);
                 }
@@ -87,7 +87,7 @@ namespace CacheMeIfYouCan.Internal
                 var timestamp = Timestamp.Now;
                 var stopwatchStart = Stopwatch.GetTimestamp();
 
-                var key = new Key<TK>(keyObj, new Lazy<string>(() => _keySerializer(keyObj)));
+                var key = new Key<TK>(keyObj, _keySerializer);
                 var error = false;
 
                 FunctionCacheGetResultInner<TK, TV> result = null;
