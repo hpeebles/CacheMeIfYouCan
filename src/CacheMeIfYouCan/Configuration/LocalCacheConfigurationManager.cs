@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build<TK ,TV>(cacheName);
             
             return _notificationsEnabled
-                ? new LocalCacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                ? new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
                 : cache;
         }
     }
@@ -121,7 +121,7 @@ namespace CacheMeIfYouCan.Configuration
             var cache = _cacheFactory.Build(cacheName);
 
             return _notificationsEnabled
-                ? new LocalCacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                ? new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
                 : cache;
         }
         

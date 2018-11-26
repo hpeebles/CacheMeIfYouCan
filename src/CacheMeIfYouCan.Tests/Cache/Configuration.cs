@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var cache = new TestCacheFactory(error: () => true)
                 .Configure(c => c.WithNotificationsEnabled(enableNotifications))
-                .Build(new CacheFactoryConfig<string, string>());
+                .Build(new DistributedCacheFactoryConfig<string, string>());
 
             var exceptionType = enableNotifications
                 ? typeof(CacheException<string>)

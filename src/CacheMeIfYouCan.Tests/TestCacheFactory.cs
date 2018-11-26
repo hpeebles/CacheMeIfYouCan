@@ -3,7 +3,7 @@ using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class TestCacheFactory : ICacheFactory
+    public class TestCacheFactory : IDistributedCacheFactory
     {
         private readonly TimeSpan? _delay;
         private readonly Func<bool> _error;
@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests
         
         public bool RequiresStringKeys => true;
         
-        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
         {
             return new TestCache<TK, TV>(config.ValueSerializer, config.ValueDeserializer, null, _delay, _error);
         }

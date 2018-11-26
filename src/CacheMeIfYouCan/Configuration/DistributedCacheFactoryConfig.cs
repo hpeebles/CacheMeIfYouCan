@@ -3,14 +3,14 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class CacheFactoryConfig<TK, TV>
+    public class DistributedCacheFactoryConfig<TK, TV>
     {
         public string KeyspacePrefix;
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;
         public Func<string, TV> ValueDeserializer;
 
-        public CacheFactoryConfig()
+        public DistributedCacheFactoryConfig()
         {
             if (DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer<TK>(out keyDeserializer))

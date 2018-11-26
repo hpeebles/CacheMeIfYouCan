@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICache<TK, TV>
+    public interface IDistributedCache<TK, TV>
     {
         string CacheName { get; }
         string CacheType { get; }

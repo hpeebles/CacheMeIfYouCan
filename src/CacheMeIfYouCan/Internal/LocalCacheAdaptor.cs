@@ -19,28 +19,28 @@ namespace CacheMeIfYouCan.Internal
         public string CacheName { get; }
         public string CacheType { get; }
         
-        public Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        public ValueTask<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
-            return Task.FromResult(_cache.Get(key));
+            return new ValueTask<GetFromCacheResult<TK, TV>>(_cache.Get(key));
         }
 
-        public Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        public ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             _cache.Set(key, value, timeToLive);
             
-            return Task.CompletedTask;
+            return new ValueTask();
         }
 
-        public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            return Task.FromResult(_cache.Get(keys));
+            return new ValueTask<IList<GetFromCacheResult<TK, TV>>>(_cache.Get(keys));
         }
 
-        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             _cache.Set(values, timeToLive);
             
-            return Task.CompletedTask;
+            return new ValueTask();
         }
     }
 }

@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CacheNotificationWrapperInternal<TK, TV> : ICache<TK, TV> 
+    internal class LocalCacheNotificationWrapper<TK, TV> : ILocalCache<TK, TV> 
     {
-        private readonly ICache<TK, TV> _cache;
+        private readonly ILocalCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
         private readonly Action<CacheException<TK>> _onError;
 
-        public CacheNotificationWrapperInternal(
-            ICache<TK, TV> cache,
+        public LocalCacheNotificationWrapper(
+            ILocalCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
             Action<CacheException<TK>> onError)
@@ -31,8 +30,8 @@ namespace CacheMeIfYouCan.Internal
 
         public string CacheName { get; }
         public string CacheType { get; }
-        
-        public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -41,7 +40,7 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
-                result = await _cache.Get(key);
+                result = _cache.Get(key);
             }
             catch (Exception ex)
             {
@@ -52,7 +51,7 @@ namespace CacheMeIfYouCan.Internal
                     CacheType,
                     new[] { key },
                     timestamp,
-                    "Cache.Get exception",
+                    "LocalCache.Get exception",
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -79,7 +78,7 @@ namespace CacheMeIfYouCan.Internal
             return result;
         }
 
-        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -87,7 +86,7 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                await _cache.Set(key, value, timeToLive);
+                _cache.Set(key, value, timeToLive);
             }
             catch (Exception ex)
             {
@@ -98,7 +97,7 @@ namespace CacheMeIfYouCan.Internal
                     CacheType,
                     new[] { key },
                     timestamp,
-                    "Cache.Set exception",
+                    "LocalCache.Set exception",
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -121,8 +120,8 @@ namespace CacheMeIfYouCan.Internal
                 }
             }
         }
-
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        
+        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -131,7 +130,7 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
-                results = await _cache.Get(keys);
+                results = _cache.Get(keys);
             }
             catch (Exception ex)
             {
@@ -142,7 +141,7 @@ namespace CacheMeIfYouCan.Internal
                     CacheType,
                     keys,
                     timestamp,
-                    "Cache.Get exception",
+                    "LocalCache.Get exception",
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -173,7 +172,7 @@ namespace CacheMeIfYouCan.Internal
             return results;
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -181,7 +180,7 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                await _cache.Set(values, timeToLive);
+                _cache.Set(values, timeToLive);
             }
             catch (Exception ex)
             {
@@ -192,7 +191,7 @@ namespace CacheMeIfYouCan.Internal
                     CacheType,
                     values.Select(kv => kv.Key).ToArray(),
                     timestamp,
-                    "Cache.Set exception",
+                    "LocalCache.Set exception",
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -214,6 +213,11 @@ namespace CacheMeIfYouCan.Internal
                         duration));
                 }
             }
+        }
+
+        public void Remove(Key<TK> key)
+        {
+            _cache.Remove(key);
         }
     }
 }

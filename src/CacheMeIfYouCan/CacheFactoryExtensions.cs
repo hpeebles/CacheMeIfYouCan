@@ -5,22 +5,22 @@ namespace CacheMeIfYouCan
 {
     public static class CacheFactoryExtensions
     {
-        public static ICacheFactory Configure(
-            this ICacheFactory cacheFactory,
-            Action<CacheConfigurationManager> configAction)
+        public static IDistributedCacheFactory Configure(
+            this IDistributedCacheFactory cacheFactory,
+            Action<DistributedCacheConfigurationManager> configAction)
         {
-            var configManager = new CacheConfigurationManager(cacheFactory);
+            var configManager = new DistributedCacheConfigurationManager(cacheFactory);
 
             configAction(configManager);
 
             return configManager;
         }
         
-        public static ICacheFactory<TK, TV> Configure<TK, TV>(
-            this ICacheFactory<TK ,TV> cacheFactory,
-            Action<CacheConfigurationManager<TK ,TV>> configAction)
+        public static IDistributedCacheFactory<TK, TV> Configure<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Action<DistributedCacheConfigurationManager<TK ,TV>> configAction)
         {
-            var configManager = new CacheConfigurationManager<TK, TV>(cacheFactory);
+            var configManager = new DistributedCacheConfigurationManager<TK, TV>(cacheFactory);
 
             configAction(configManager);
 

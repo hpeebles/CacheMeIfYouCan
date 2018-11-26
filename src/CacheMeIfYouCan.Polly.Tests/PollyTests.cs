@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Polly.Tests
             
             var cache = new TestCacheFactory(error: () => errorIndexes.Contains(index++))
                 .Configure(c => c.WithPolicy(policy))
-                .Build(new CacheFactoryConfig<string, string>());
+                .Build(new DistributedCacheFactoryConfig<string, string>());
             
             var key = new Key<string>("123", "123");
 

@@ -3,7 +3,7 @@ using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Redis
 {
-    public class RedisCacheFactory : ICacheFactory
+    public class RedisCacheFactory : IDistributedCacheFactory
     {
         private readonly RedisCacheFactoryConfig _redisConfig;
 
@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Redis
 
         public bool RequiresStringKeys => true;
 
-        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (config.KeyDeserializer == null) throw new ArgumentNullException(nameof(config.KeyDeserializer));

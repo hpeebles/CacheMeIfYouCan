@@ -11,8 +11,8 @@ namespace CacheMeIfYouCan.Internal
         public static ICache<TK, TV> Build<TK, TV>(
             string cacheName,
             ILocalCacheFactory<TK, TV> localCacheFactory,
-            ICacheFactory<TK, TV> distributedCacheFactory,
-            CacheFactoryConfig<TK, TV> config,
+            IDistributedCacheFactory<TK, TV> distributedCacheFactory,
+            DistributedCacheFactoryConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheException<TK>> onCacheError,
@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Internal
             if (!distributedCacheFactory.RequiresStringKeys)
                 keyComparer = new GenericKeyComparer<TK>();
             
-            return distributedCache;
+            return new DistributedCacheAdaptor<TK, TV>(distributedCache);
         }
 
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()

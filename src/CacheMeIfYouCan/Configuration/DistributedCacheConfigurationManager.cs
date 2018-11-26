@@ -4,26 +4,26 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class CacheConfigurationManager : ICacheFactory
+    public class DistributedCacheConfigurationManager : IDistributedCacheFactory
     {
-        private ICacheFactory _cacheFactory;
+        private IDistributedCacheFactory _cacheFactory;
         private bool _notificationsEnabled = true;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheException> _onError;
 
-        internal CacheConfigurationManager(ICacheFactory cacheFactory)
+        internal DistributedCacheConfigurationManager(IDistributedCacheFactory cacheFactory)
         {
             _cacheFactory = cacheFactory;
         }
 
-        public CacheConfigurationManager WithNotificationsEnabled(bool enabled)
+        public DistributedCacheConfigurationManager WithNotificationsEnabled(bool enabled)
         {
             _notificationsEnabled = enabled;
             return this;
         }
         
-        public CacheConfigurationManager OnGetResult(Action<CacheGetResult> onGetResult, bool append = false)
+        public DistributedCacheConfigurationManager OnGetResult(Action<CacheGetResult> onGetResult, bool append = false)
         {
             if (onGetResult == null || !append)
                 _onGetResult = onGetResult;
@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CacheConfigurationManager OnSetResult(Action<CacheSetResult> onSetResult, bool append = false)
+        public DistributedCacheConfigurationManager OnSetResult(Action<CacheSetResult> onSetResult, bool append = false)
         {
             if (onSetResult == null || !append)
                 _onSetResult = onSetResult;
@@ -43,7 +43,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CacheConfigurationManager OnError(Action<CacheException> onError, bool append = false)
+        public DistributedCacheConfigurationManager OnError(Action<CacheException> onError, bool append = false)
         {
             if (onError == null || !append)
                 _onError = onError;
@@ -53,91 +53,91 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CacheConfigurationManager AddWrapper(ICacheWrapperFactory wrapper)
+        public DistributedCacheConfigurationManager AddWrapper(IDistributedCacheWrapperFactory wrapper)
         {
-            _cacheFactory = new CacheFactoryWrapper(_cacheFactory, wrapper);
+            _cacheFactory = new DistributedCacheFactoryWrapper(_cacheFactory, wrapper);
             return this;
         }
 
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
-        public ICache<TK, TV> Build<TK, TV>(CacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
         {
             var cache = _cacheFactory.Build(config);
             
             return _notificationsEnabled
-                ? new CacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                ? new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
                 : cache;
         }
     }
     
-    public class CacheConfigurationManager<TK, TV> : ICacheFactory<TK, TV>
+    public class DistributedCacheConfigurationManager<TK, TV> : IDistributedCacheFactory<TK, TV>
     {
-        private ICacheFactory<TK, TV> _cacheFactory;
+        private IDistributedCacheFactory<TK, TV> _cacheFactory;
         private bool _notificationsEnabled = true;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
         private Action<CacheException<TK>> _onError;
 
-        internal CacheConfigurationManager(ICacheFactory<TK, TV> cacheFactory)
+        internal DistributedCacheConfigurationManager(IDistributedCacheFactory<TK, TV> cacheFactory)
         {
             _cacheFactory = cacheFactory ?? throw new ArgumentNullException(nameof(cacheFactory));
         }
 
-        public CacheConfigurationManager<TK, TV> WithNotificationsEnabled(bool enabled)
+        public DistributedCacheConfigurationManager<TK, TV> WithNotificationsEnabled(bool enabled)
         {
             _notificationsEnabled = enabled;
             return this;
         }
         
-        public CacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult<TK, TV>> onGetResult, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult<TK, TV>> onGetResult, bool append = false)
         {
             return OnGetResultImpl(onGetResult, append);
         }
         
-        public CacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult> onGetResult, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnGetResult(Action<CacheGetResult> onGetResult, bool append = false)
         {
             return OnGetResultImpl(onGetResult, append);
         }
 
-        public CacheConfigurationManager<TK, TV> OnSetResult(Action<CacheSetResult<TK, TV>> onSetResult, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnSetResult(Action<CacheSetResult<TK, TV>> onSetResult, bool append = false)
         {
             return OnSetResultImpl(onSetResult, append);
         }
         
-        public CacheConfigurationManager<TK, TV> OnSetResult(Action<CacheSetResult> onSetResult, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnSetResult(Action<CacheSetResult> onSetResult, bool append = false)
         {
             return OnSetResultImpl(onSetResult, append);
         }
 
-        public CacheConfigurationManager<TK, TV> OnError(Action<CacheException> onError, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnError(Action<CacheException> onError, bool append = false)
         {
             return OnErrorImpl(onError, append);
         }
 
-        public CacheConfigurationManager<TK, TV> OnError(Action<CacheException<TK>> onError, bool append = false)
+        public DistributedCacheConfigurationManager<TK, TV> OnError(Action<CacheException<TK>> onError, bool append = false)
         {
             return OnErrorImpl(onError, append);
         }
 
-        public CacheConfigurationManager<TK, TV> AddWrapper(ICacheWrapperFactory<TK, TV> wrapper)
+        public DistributedCacheConfigurationManager<TK, TV> AddWrapper(IDistributedCacheWrapperFactory<TK, TV> wrapper)
         {
-            _cacheFactory = new CacheFactoryWrapper<TK, TV>(_cacheFactory, wrapper);
+            _cacheFactory = new DistributedCacheFactoryWrapper<TK, TV>(_cacheFactory, wrapper);
             return this;
         }
 
         public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
         
-        public ICache<TK, TV> Build(CacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build(DistributedCacheFactoryConfig<TK, TV> config)
         {
             var cache = _cacheFactory.Build(config);
 
             return _notificationsEnabled
-                ? new CacheNotificationWrapperInternal<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
+                ? new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError)
                 : cache;
         }
         
-        private CacheConfigurationManager<TK, TV> OnGetResultImpl(Action<CacheGetResult<TK, TV>> onGetResult, bool append)
+        private DistributedCacheConfigurationManager<TK, TV> OnGetResultImpl(Action<CacheGetResult<TK, TV>> onGetResult, bool append)
         {
             if (onGetResult == null || !append)
                 _onGetResult = onGetResult;
@@ -147,7 +147,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        private CacheConfigurationManager<TK, TV> OnSetResultImpl(Action<CacheSetResult<TK, TV>> onSetResult, bool append)
+        private DistributedCacheConfigurationManager<TK, TV> OnSetResultImpl(Action<CacheSetResult<TK, TV>> onSetResult, bool append)
         {
             if (onSetResult == null || !append)
                 _onSetResult = onSetResult;
@@ -157,7 +157,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        private CacheConfigurationManager<TK, TV> OnErrorImpl(Action<CacheException<TK>> onError, bool append)
+        private DistributedCacheConfigurationManager<TK, TV> OnErrorImpl(Action<CacheException<TK>> onError, bool append)
         {
             if (onError == null || !append)
                 _onError = onError;

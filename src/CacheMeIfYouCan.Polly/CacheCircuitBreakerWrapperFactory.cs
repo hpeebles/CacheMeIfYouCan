@@ -2,7 +2,7 @@ using Polly;
 
 namespace CacheMeIfYouCan.Polly
 {
-    internal class CachePollyWrapperFactory : ICacheWrapperFactory
+    internal class CachePollyWrapperFactory : IDistributedCacheWrapperFactory
     {
         private readonly Policy _policy;
 
@@ -11,13 +11,13 @@ namespace CacheMeIfYouCan.Polly
             _policy = policy;
         }
 
-        public ICache<TK, TV> Wrap<TK, TV>(ICache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache)
         {
             return new CachePollyWrapper<TK, TV>(cache, _policy);
         }
     }
     
-    internal class CachePollyWrapperFactory<TK, TV> : ICacheWrapperFactory<TK, TV>
+    internal class CachePollyWrapperFactory<TK, TV> : IDistributedCacheWrapperFactory<TK, TV>
     {
         private readonly Policy _policy;
 
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Polly
             _policy = policy;
         }
 
-        public ICache<TK, TV> Wrap(ICache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap(IDistributedCache<TK, TV> cache)
         {
             return new CachePollyWrapper<TK, TV>(cache, _policy);
         }

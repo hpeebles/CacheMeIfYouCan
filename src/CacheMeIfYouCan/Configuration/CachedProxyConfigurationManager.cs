@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
-        private ICacheFactory _distributedCacheFactory;
+        private IDistributedCacheFactory _distributedCacheFactory;
         private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
@@ -78,17 +78,17 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
             return WithDistributedCacheFactory(cacheFactory, f => null);
         }
         
-        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory, string keyspacePrefix)
         {
             return WithDistributedCacheFactory(cacheFactory, f => keyspacePrefix);
         }
         
-        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(ICacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
+        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
         {
             _distributedCacheFactory = cacheFactory;
             _keyspacePrefixFunc = keyspacePrefixFunc;

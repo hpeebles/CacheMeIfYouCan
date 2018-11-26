@@ -8,7 +8,7 @@ using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal class RedisCache<TK, TV> : ICache<TK, TV>, IKeyChangeNotifier<TK>
+    internal class RedisCache<TK, TV> : IDistributedCache<TK, TV>, IKeyChangeNotifier<TK>
     {
         private readonly RedisConnection _connection;
         private readonly int _database;

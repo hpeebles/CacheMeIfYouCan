@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Configuration
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
         private ILocalCacheFactory<TK, TV> _localCacheFactory;
-        private ICacheFactory<TK, TV> _distributedCacheFactory;
+        private IDistributedCacheFactory<TK, TV> _distributedCacheFactory;
         private string _keyspacePrefix;
         private Func<TV> _defaultValueFactory;
         private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan.Configuration
                     _localCacheFactory = new LocalCacheFactoryAdaptor<TK, TV>(interfaceConfig.LocalCacheFactory);
                                 
                 if (interfaceConfig.DistributedCacheFactory != null)
-                    _distributedCacheFactory = new CacheFactoryGenericAdaptor<TK, TV>(interfaceConfig.DistributedCacheFactory);
+                    _distributedCacheFactory = new DistributedCacheFactoryGenericAdaptor<TK, TV>(interfaceConfig.DistributedCacheFactory);
 
                 _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
                 _onResult = interfaceConfig.OnResult;
@@ -195,33 +195,33 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        public TConfig WithDistributedCache(ICache<TK, TV> cache, string keyspacePrefix)
+        public TConfig WithDistributedCache(IDistributedCache<TK, TV> cache, string keyspacePrefix)
         {
             return WithDistributedCacheFactory(c => cache, keyspacePrefix);
         } 
         
-        public TConfig WithDistributedCache(ICache<TK, TV> cache, bool requiresStringKeys = true)
+        public TConfig WithDistributedCache(IDistributedCache<TK, TV> cache, bool requiresStringKeys = true)
         {
             return WithDistributedCacheFactory(c => cache, requiresStringKeys);
         }
         
-        public TConfig WithDistributedCacheFactory(ICacheFactory cacheFactory)
+        public TConfig WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
             return WithDistributedCacheFactory(cacheFactory.Build);
         }
         
-        public TConfig WithDistributedCacheFactory(ICacheFactory cacheFactory, string keyspacePrefix)
+        public TConfig WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory, string keyspacePrefix)
         {
             return WithDistributedCacheFactory(cacheFactory.Build, keyspacePrefix);
         }
         
-        public TConfig WithDistributedCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, string keyspacePrefix)
+        public TConfig WithDistributedCacheFactory(Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, string keyspacePrefix)
         {
             SetDistributedCacheFactory(cacheFactoryFunc, true, keyspacePrefix);
             return (TConfig)this;
         }
         
-        public TConfig WithDistributedCacheFactory(Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        public TConfig WithDistributedCacheFactory(Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
             SetDistributedCacheFactory(cacheFactoryFunc, requiresStringKeys, null);
             return (TConfig)this;
@@ -352,7 +352,7 @@ namespace CacheMeIfYouCan.Configuration
 
         private ICache<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
         {
-            var cacheConfig = new CacheFactoryConfig<TK, TV>
+            var cacheConfig = new DistributedCacheFactoryConfig<TK, TV>
             {
                 KeyspacePrefix = _keyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
@@ -373,11 +373,11 @@ namespace CacheMeIfYouCan.Configuration
                 else if (DefaultCacheConfig.Configuration.LocalCacheFactory != null)
                     localCacheFactory = new LocalCacheFactoryAdaptor<TK, TV>(DefaultCacheConfig.Configuration.LocalCacheFactory);
 
-                ICacheFactory<TK, TV> distributedCacheFactory = null;
+                IDistributedCacheFactory<TK, TV> distributedCacheFactory = null;
                 if (_distributedCacheFactory != null)
                     distributedCacheFactory = _distributedCacheFactory;
                 else if (DefaultCacheConfig.Configuration.DistributedCacheFactory != null)
-                    distributedCacheFactory = new CacheFactoryGenericAdaptor<TK, TV>(DefaultCacheConfig.Configuration.DistributedCacheFactory);
+                    distributedCacheFactory = new DistributedCacheFactoryGenericAdaptor<TK, TV>(DefaultCacheConfig.Configuration.DistributedCacheFactory);
 
                 cache = CacheBuilder.Build(
                     _functionName,
@@ -394,11 +394,11 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         private void SetDistributedCacheFactory(
-            Func<CacheFactoryConfig<TK, TV>, ICache<TK, TV>> cacheFactoryFunc,
+            Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
             bool requiresStringKeys,
             string keyspacePrefix)
         {
-            _distributedCacheFactory = new CacheFactoryFuncAdaptor<TK, TV>(cacheFactoryFunc, requiresStringKeys);
+            _distributedCacheFactory = new DistributedCacheFactoryFuncAdaptor<TK, TV>(cacheFactoryFunc, requiresStringKeys);
             _keyspacePrefix = keyspacePrefix;
         }
 

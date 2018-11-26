@@ -8,12 +8,12 @@ namespace CacheMeIfYouCan.Internal
     internal class TwoTierCache<TK, TV> : ICache<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _localCache;
-        private readonly ICache<TK, TV> _distributedCache;
+        private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
-            ICache<TK, TV> distributedCache,
+            IDistributedCache<TK, TV> distributedCache,
             IEqualityComparer<Key<TK>> keyComparer)
         {
             _localCache = localCache;
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Internal
         public string CacheName { get; }
         public string CacheType { get; }
         
-        public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        public async ValueTask<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
             var fromLocalCache = _localCache.Get(key);
             
@@ -45,14 +45,14 @@ namespace CacheMeIfYouCan.Internal
             return fromDistributedCache;
         }
 
-        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        public async ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             _localCache.Set(key, value, timeToLive);
 
             await _distributedCache.Set(key, value, timeToLive);
         }
 
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
             var fromLocalCache = _localCache.Get(keys) ?? new GetFromCacheResult<TK, TV>[0];
             
@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan.Internal
                 .ToArray();
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             _localCache.Set(values, timeToLive);
 

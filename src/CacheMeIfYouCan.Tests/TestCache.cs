@@ -7,7 +7,7 @@ using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class TestCache<TK, TV> : ICache<TK, TV>
+    public class TestCache<TK, TV> : IDistributedCache<TK, TV>
     {
         private readonly Func<TV, string> _serializer;
         private readonly Func<string, TV> _deserializer;
