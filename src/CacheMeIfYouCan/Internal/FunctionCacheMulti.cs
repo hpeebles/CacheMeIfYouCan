@@ -87,13 +87,13 @@ namespace CacheMeIfYouCan.Internal
         {
             using (SynchronizationContextRemover.StartNew())
             {
-                var results = await GetImpl(keyObjs.ToArray());
+                var results = await GetImpl(keyObjs as ICollection<TK> ?? keyObjs.ToArray());
 
                 return results?.ToDictionary(kv => kv.Key.AsObject, kv => kv.Value);
             }
         }
 
-        private async Task<IEnumerable<FunctionCacheGetResultInner<TK, TV>>> GetImpl(IList<TK> keyObjs)
+        private async Task<IEnumerable<FunctionCacheGetResultInner<TK, TV>>> GetImpl(ICollection<TK> keyObjs)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
