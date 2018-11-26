@@ -21,6 +21,16 @@ namespace CacheMeIfYouCan.Polly
         public string CacheName { get; }
         public string CacheType { get; }
         
+        public Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        {
+            return _policy.ExecuteAsync(() => _cache.Get(key));
+        }
+
+        public Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            return _policy.ExecuteAsync(() => _cache.Set(key, value, timeToLive));
+        }
+
         public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
             return _policy.ExecuteAsync(() => _cache.Get(keys));

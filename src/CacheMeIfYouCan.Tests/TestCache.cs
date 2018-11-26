@@ -27,6 +27,18 @@ namespace CacheMeIfYouCan.Tests
 
         public string CacheName { get; } = "test-name";
         public string CacheType { get; } = "test";
+        
+        public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        {
+            var result = await Get(new[] { key });
+
+            return result.SingleOrDefault();
+        }
+
+        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            await Set(new[] { new KeyValuePair<Key<TK>, TV>(key, value) }, timeToLive);
+        }
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
@@ -71,7 +83,7 @@ namespace CacheMeIfYouCan.Tests
         public void OnKeyChangedRemotely(string key)
         {
             Values.TryRemove(key, out _);
-            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, new Lazy<string>(key)));
+            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, key));
         }
     }
 }

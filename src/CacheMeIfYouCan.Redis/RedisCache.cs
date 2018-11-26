@@ -56,6 +56,35 @@ namespace CacheMeIfYouCan.Redis
         public string CacheName { get; }
         public string CacheType { get; } = "redis";
         
+        public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        {
+            var redisDb = GetDatabase();
+
+            var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key));
+
+            if (!valueWithExpiry.Value.HasValue)
+                return new GetFromCacheResult<TK, TV>();
+                    
+            return new GetFromCacheResult<TK, TV>(
+                key,
+                _deserializer(valueWithExpiry.Value),
+                valueWithExpiry.Expiry.GetValueOrDefault(),
+                CacheType);
+        }
+
+        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            var redisDb = GetDatabase();
+            
+            var redisKey = _toRedisKey(key);
+
+            var serializedValue = _serializer(value);
+            
+            _recentlySetKeysManager?.Mark(key);
+        
+            await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
+        }
+
         // Must get keys separately since multikey operations will fail if running Redis in cluster mode
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {

@@ -29,6 +29,28 @@ namespace CacheMeIfYouCan.Internal
 
         public string CacheName { get; }
         public string CacheType { get; }
+        
+        public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        {
+            var fromLocalCache = _localCache.Get(key);
+            
+            if (fromLocalCache.Success)
+                return fromLocalCache;
+
+            var fromDistributedCache = await _distributedCache.Get(key);
+            
+            if (fromDistributedCache.Success)
+                _localCache.Set(key, fromDistributedCache.Value, fromDistributedCache.TimeToLive);
+
+            return fromDistributedCache;
+        }
+
+        public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            _localCache.Set(key, value, timeToLive);
+
+            await _distributedCache.Set(key, value, timeToLive);
+        }
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {

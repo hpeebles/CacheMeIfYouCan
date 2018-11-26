@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Caches
     public class DictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         // Store keys along with their exact expiry times
-        private readonly ConcurrentDictionary<TK, Tuple<TV, long>> _values = new ConcurrentDictionary<TK, Tuple<TV, long>>();
+        private readonly ConcurrentDictionary<TK, (TV Value, long Expiry)> _values = new ConcurrentDictionary<TK, (TV, long)>();
         
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
@@ -36,6 +36,45 @@ namespace CacheMeIfYouCan.Caches
         
         public string CacheName { get; }
         public string CacheType { get; } = "dictionary";
+
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
+        {
+            if (!_values.TryGetValue(key, out var value))
+                return new GetFromCacheResult<TK, TV>();
+            
+            var currentTimestamp = Timestamp.Now;
+
+            if (value.Expiry < currentTimestamp)
+            {
+                _values.TryRemove(key, out _);
+                return new GetFromCacheResult<TK, TV>();
+            }
+            
+            return new GetFromCacheResult<TK, TV>(
+                key,
+                value.Value,
+                TimeSpan.FromTicks(value.Expiry - currentTimestamp),
+                CacheType);
+        }
+
+        public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            var expiryTicks = Timestamp.Now + timeToLive.Ticks;
+            var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
+            
+            _values[key] = (value, expiryTicks);
+
+            lock (_lock)
+            {
+                if (!_ttls.TryGetValue(expirySeconds, out var existing))
+                {
+                    existing = new List<TK>();
+                    _ttls.Add(expirySeconds, existing);
+                }
+                
+                existing.Add(key);
+            }
+        }
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
@@ -71,7 +110,7 @@ namespace CacheMeIfYouCan.Caches
             var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
             foreach (var kv in values)
-                _values[kv.Key] = Tuple.Create(kv.Value, expiryTicks);
+                _values[kv.Key] = (kv.Value, expiryTicks);
 
             lock (_lock)
             {

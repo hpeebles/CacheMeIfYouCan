@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
@@ -12,6 +13,16 @@ namespace CacheMeIfYouCan.Tests
         public string CacheName { get; } = "test-local-name";
         public string CacheType { get; } = "test-local";
         
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
+        {
+            return Get(new[] { key }).SingleOrDefault();
+        }
+
+        public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            Set(new[] { new KeyValuePair<Key<TK>, TV>(key, value) }, timeToLive);
+        }
+
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
             var results = new List<GetFromCacheResult<TK, TV>>();

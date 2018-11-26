@@ -18,6 +18,18 @@ namespace CacheMeIfYouCan.Internal
 
         public string CacheName { get; }
         public string CacheType { get; }
+        
+        public Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
+        {
+            return Task.FromResult(_cache.Get(key));
+        }
+
+        public Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            _cache.Set(key, value, timeToLive);
+            
+            return Task.CompletedTask;
+        }
 
         public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {

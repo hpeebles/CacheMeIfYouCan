@@ -26,6 +26,29 @@ namespace CacheMeIfYouCan.Caches
         public string CacheType { get; } = "memory";
         public long Count => _cache.GetCount();
 
+        public GetFromCacheResult<TK, TV> Get(Key<TK> key)
+        {
+            var valueObj = _cache.Get(key.AsString);
+
+            if (valueObj is ValueWithExpiry<TV> value)
+            {
+                return new GetFromCacheResult<TK, TV>(
+                    key,
+                    value,
+                    value.Expiry - DateTimeOffset.UtcNow,
+                    CacheType);
+            }
+            
+            return new GetFromCacheResult<TK, TV>();
+        }
+
+        public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
+        {
+            var expiry = DateTime.UtcNow + timeToLive;
+            
+            _cache.Set(key, new ValueWithExpiry<TV>(value, expiry), expiry);
+        }
+        
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
             var results = new List<GetFromCacheResult<TK, TV>>();
