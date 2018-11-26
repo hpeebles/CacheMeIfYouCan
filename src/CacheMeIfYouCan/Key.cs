@@ -3,22 +3,36 @@ using System.Threading;
 
 namespace CacheMeIfYouCan
 {
-    public readonly struct Key<TK>
+    public struct Key<TK>
     {
-        private readonly Lazy<string> _asString;
-        public TK AsObject { get; }
+        private readonly Func<TK, string> _serializer;
+        private string _asString;
 
         public Key(TK keyObj, Func<TK, string> serializer)
         {
+            _serializer = serializer;
+            _asString = null;
+            
             AsObject = keyObj;
-            _asString = new Lazy<string>(() => serializer(keyObj), LazyThreadSafetyMode.None);
         }
 
         public Key(TK keyObj, string keyString)
             : this(keyObj, k => keyString)
         { }
+
+        public TK AsObject { get; }
         
-        public string AsString => _asString.Value;
+        public string AsString
+        {
+            get
+            {
+                if (_asString != null)
+                    return _asString;
+
+                _asString = _serializer(AsObject);
+                return _asString;
+            }
+        }
 
         public static implicit operator TK(Key<TK> key)
         {

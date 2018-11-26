@@ -69,3 +69,12 @@ Passing null instead of Lazy<string> (can't do this in reality, but this is clea
    Single | 356.49 us | 1.4990 us | 1.2518 us | 24.52 |    0.41 |     72.2656 |           - |           - |           148.47 KB |
     Multi | 393.75 us | 1.8899 us | 1.5781 us | 27.08 |    0.49 |    135.7422 |     29.7852 |           - |           421.13 KB |
  Baseline |  14.55 us | 0.2766 us | 0.2716 us |  1.00 |    0.00 |     38.1775 |           - |           - |            78.22 KB |
+
+
+Pass serializer into Key rather than using Lazy<string>
+   Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Gen 0/1k Op | Gen 1/1k Op | Gen 2/1k Op | Allocated Memory/Op |
+--------- |----------:|----------:|----------:|------:|--------:|------------:|------------:|------------:|--------------------:|
+   Single | 395.34 us | 3.4260 us | 3.2046 us | 27.96 |    0.44 |     76.1719 |           - |           - |           156.28 KB |
+    Multi | 446.10 us | 7.6673 us | 6.4025 us | 31.51 |    0.57 |    116.2109 |     45.4102 |           - |           477.29 KB |
+ Baseline |  14.15 us | 0.1720 us | 0.1525 us |  1.00 |    0.00 |     38.1775 |           - |           - |            78.22 KB |
+
