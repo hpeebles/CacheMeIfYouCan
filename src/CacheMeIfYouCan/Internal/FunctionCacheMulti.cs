@@ -37,8 +37,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onError,
-            IEqualityComparer<Key<TK>> keyComparer,
-            Func<Task<IList<TK>>> keysToKeepAliveFunc)
+            IEqualityComparer<Key<TK>> keyComparer)
         {
             _func = func;
             _functionName = functionName;
@@ -54,33 +53,6 @@ namespace CacheMeIfYouCan.Internal
             _keyComparer = keyComparer;
             _activeFetches = new ConcurrentDictionary<Key<TK>, Task<FetchResults>>(keyComparer);
             _rng = new Random();
-
-            if (_cache != null && keysToKeepAliveFunc != null)
-            {
-                async Task<TimeSpan?> GetTimeToLive(Key<TK> key)
-                {
-                    var result = await _cache.Get(key);
-
-                    return result.Success ? (TimeSpan?)result.TimeToLive : null;
-                }
-
-                Task RefreshKey(TK key, TimeSpan? existingTimeToLive)
-                {
-                    var keyToFetch = new KeyToFetch(new Key<TK>(key, _keySerializer), existingTimeToLive);
-                    
-                    return FetchImpl(new[] { keyToFetch }, FetchReason.KeysToKeepAliveFunc);
-                }
-
-                var keysToKeepAliveProcessor = new KeysToKeepAliveProcessor<TK>(
-                    _timeToLive,
-                    GetTimeToLive,
-                    RefreshKey,
-                    keysToKeepAliveFunc,
-                    _keySerializer,
-                    keyComparer);
-
-                Task.Run(keysToKeepAliveProcessor.Run);
-            }
         }
 
         public async Task<IDictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)

@@ -31,7 +31,6 @@ namespace CacheMeIfYouCan.Configuration
         private IDistributedCacheFactory<TK, TV> _distributedCacheFactory;
         private string _keyspacePrefix;
         private Func<TV> _defaultValueFactory;
-        private Func<Task<IList<TK>>> _keysToKeepAliveFunc;
 
         internal FunctionCacheConfigurationManagerBase(
             Func<TK, Task<TV>> inputFuncSingle,
@@ -286,26 +285,7 @@ namespace CacheMeIfYouCan.Configuration
 
             return (TConfig)this;
         }
-
-        public TConfig WithKeysToKeepAlive(IList<TK> keysToKeepAlive)
-        {
-            return WithKeysToKeepAlive(() => keysToKeepAlive);
-        }
         
-        public TConfig WithKeysToKeepAlive(Func<IList<TK>> keysToKeepAliveFunc)
-        {
-            return WithKeysToKeepAlive(() => Task.FromResult(keysToKeepAliveFunc()));
-        }
-        
-        // If you have lots of keys, make the function return them in priority order as keys are refreshed in that order.
-        // Any that have not yet been processed when a new cycle is due will be ignored in order to ensure the highest
-        // priority keys are always in the cache.
-        public TConfig WithKeysToKeepAlive(Func<Task<IList<TK>>> keysToKeepAliveFunc)
-        {
-            _keysToKeepAliveFunc = keysToKeepAliveFunc;
-            return (TConfig)this;
-        }
-
         internal FunctionCacheSingle<TK, TV> BuildFunctionCacheSingle()
         {
             if (_multiKey)
@@ -324,8 +304,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onError,
-                keyComparer,
-                _keysToKeepAliveFunc);
+                keyComparer);
         }
         
         internal FunctionCacheMulti<TK, TV> BuildFunctionCacheMulti()
@@ -346,8 +325,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onError,
-                keyComparer,
-                _keysToKeepAliveFunc);
+                keyComparer);
         }
 
         private ICache<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
