@@ -152,5 +152,42 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Equal(2, setResults.Count);
             Assert.Equal(new[] {"456"}, setResults[1].Keys);
         }
+
+        [Theory]
+        [InlineData(ActionOrdering.Append)]
+        [InlineData(ActionOrdering.Prepend)]
+        [InlineData(ActionOrdering.Overwrite)]
+        public async Task CombinedActions(ActionOrdering secondActionOrdering)
+        {
+            var list = new List<int>();
+            
+            Func<string, Task<string>> echo = new Echo();
+            
+            var cachedEcho = echo
+                .Cached()
+                .OnResult(x => list.Add(1))
+                .OnResult(x => list.Add(2), secondActionOrdering)
+                .Build();
+
+            await cachedEcho("123");
+
+            if (secondActionOrdering == ActionOrdering.Append)
+            {
+                Assert.Equal(2, list.Count);
+                Assert.Equal(1, list[0]);
+                Assert.Equal(2, list[1]);
+            }
+            else if (secondActionOrdering == ActionOrdering.Prepend)
+            {
+                Assert.Equal(2, list.Count);
+                Assert.Equal(2, list[0]);
+                Assert.Equal(1, list[1]);
+            }
+            else if (secondActionOrdering == ActionOrdering.Overwrite)
+            {
+                Assert.Single(list);
+                Assert.Equal(2, list.Single());
+            }
+        }
     }
 }

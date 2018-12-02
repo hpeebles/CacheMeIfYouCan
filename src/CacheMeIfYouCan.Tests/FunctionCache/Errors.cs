@@ -177,13 +177,19 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Cached()
                 .OnError(errors.Add)
                 .Build();
+
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("warmup"));
+            
+            errors.Clear();
             
             var now = Timestamp.Now;
             
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("abc"));
-            
+
             Assert.Equal(2, errors.Count);
-            Assert.True(errors.All(e => now <= e.Timestamp && e.Timestamp < now + TimeSpan.FromMilliseconds(10).Ticks));
+            
+            foreach (var error in errors)
+                Assert.InRange(error.Timestamp, now, now + TimeSpan.FromMilliseconds(100).Ticks);
         }
     }
 }

@@ -95,62 +95,92 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnResult(Action<FunctionCacheGetResult> onResult, bool append = false)
+        public CachedProxyConfigurationManager<T> OnResult(
+            Action<FunctionCacheGetResult> onResult,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (_onResult == null || !append)
+            var current = _onResult;
+            if (current == null || ordering == ActionOrdering.Overwrite)
                 _onResult = onResult;
+            else if (ordering == ActionOrdering.Append)
+                _onResult = x => { current(x); onResult(x); };
             else
-                _onResult = x => { _onResult(x); onResult(x); };
+                _onResult = x => { onResult(x); current(x); };            
             
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnFetch(Action<FunctionCacheFetchResult> onFetch, bool append = false)
+        public CachedProxyConfigurationManager<T> OnFetch(
+            Action<FunctionCacheFetchResult> onFetch,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (_onFetch == null || !append)
+            var current = _onFetch;
+            if (_onFetch == null || ordering == ActionOrdering.Overwrite)
                 _onFetch = onFetch;
+            else if (ordering == ActionOrdering.Append)
+                _onFetch = x => { current(x); onFetch(x); };
             else
-                _onFetch = x => { _onFetch(x); onFetch(x); };
+                _onFetch = x => { onFetch(x); current(x); };
 
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> OnError(Action<FunctionCacheException> onError, bool append = false)
+        public CachedProxyConfigurationManager<T> OnError(
+            Action<FunctionCacheException> onError,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (_onError == null || !append)
+            var current = _onError;
+            if (current == null || ordering == ActionOrdering.Overwrite)
                 _onError = onError;
+            else if (ordering == ActionOrdering.Append)
+                _onError = x => { current(x); onError(x); };
             else
-                _onError = x => { _onError(x); onError(x); };
-
+                _onError = x => { onError(x); current(x); };
+            
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheGet(Action<CacheGetResult> onCacheGet, bool append = false)
+        public CachedProxyConfigurationManager<T> OnCacheGet(
+            Action<CacheGetResult> onCacheGet,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (onCacheGet == null || !append)
+            var current = _onCacheGet;
+            if (current == null || ordering == ActionOrdering.Overwrite)
                 _onCacheGet = onCacheGet;
+            else if (ordering == ActionOrdering.Append)
+                _onCacheGet = x => { current(x); onCacheGet(x); };
             else
-                _onCacheGet = x => { _onCacheGet(x); onCacheGet(x); };
+                _onCacheGet = x => { onCacheGet(x); current(x); };
 
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheSet(Action<CacheSetResult> onCacheSet, bool append = false)
+        public CachedProxyConfigurationManager<T> OnCacheSet(
+            Action<CacheSetResult> onCacheSet,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (onCacheSet == null || !append)
+            var current = _onCacheSet;
+            if (current == null || ordering == ActionOrdering.Overwrite)
                 _onCacheSet = onCacheSet;
+            else if (ordering == ActionOrdering.Append)
+                _onCacheSet = x => { current(x); onCacheSet(x); };
             else
-                _onCacheSet = x => { _onCacheSet(x); onCacheSet(x); };
+                _onCacheSet = x => { onCacheSet(x); current(x); };
 
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheError(Action<CacheException> onCacheError, bool append = false)
+        public CachedProxyConfigurationManager<T> OnCacheError(
+            Action<CacheException> onCacheError,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            if (onCacheError == null || !append)
+            var current = _onCacheError;
+            if (current == null || ordering == ActionOrdering.Overwrite)
                 _onCacheError = onCacheError;
+            else if (ordering == ActionOrdering.Append)
+                _onCacheError = x => { current(x); onCacheError(x); };
             else
-                _onCacheError = x => { _onCacheError(x); onCacheError(x); };
+                _onCacheError = x => { onCacheError(x); current(x); };
 
             return this;
         }
