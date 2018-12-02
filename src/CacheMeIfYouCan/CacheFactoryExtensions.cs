@@ -7,9 +7,9 @@ namespace CacheMeIfYouCan
     {
         public static IDistributedCacheFactory Configure(
             this IDistributedCacheFactory cacheFactory,
-            Action<DistributedCacheConfigurationManager> configAction)
+            Action<DistributedCacheFactoryConfigurationManager> configAction)
         {
-            var configManager = new DistributedCacheConfigurationManager(cacheFactory);
+            var configManager = new DistributedCacheFactoryConfigurationManager(cacheFactory);
 
             configAction(configManager);
 
@@ -18,9 +18,9 @@ namespace CacheMeIfYouCan
         
         public static IDistributedCacheFactory<TK, TV> Configure<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
-            Action<DistributedCacheConfigurationManager<TK ,TV>> configAction)
+            Action<DistributedCacheFactoryConfigurationManager<TK ,TV>> configAction)
         {
-            var configManager = new DistributedCacheConfigurationManager<TK, TV>(cacheFactory);
+            var configManager = new DistributedCacheFactoryConfigurationManager<TK, TV>(cacheFactory);
 
             configAction(configManager);
 
@@ -29,9 +29,9 @@ namespace CacheMeIfYouCan
         
         public static ILocalCacheFactory Configure(
             this ILocalCacheFactory cacheFactory,
-            Action<LocalCacheConfigurationManager> configAction)
+            Action<LocalCacheFactoryConfigurationManager> configAction)
         {
-            var configManager = new LocalCacheConfigurationManager(cacheFactory);
+            var configManager = new LocalCacheFactoryConfigurationManager(cacheFactory);
 
             configAction(configManager);
 
@@ -40,9 +40,9 @@ namespace CacheMeIfYouCan
         
         public static ILocalCacheFactory<TK, TV> Configure<TK, TV>(
             this ILocalCacheFactory<TK ,TV> cacheFactory,
-            Action<LocalCacheConfigurationManager<TK ,TV>> configAction)
+            Action<LocalCacheFactoryConfigurationManager<TK ,TV>> configAction)
         {
-            var configManager = new LocalCacheConfigurationManager<TK, TV>(cacheFactory);
+            var configManager = new LocalCacheFactoryConfigurationManager<TK, TV>(cacheFactory);
 
             configAction(configManager);
 

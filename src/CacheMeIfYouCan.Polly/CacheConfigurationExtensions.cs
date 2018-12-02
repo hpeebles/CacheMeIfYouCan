@@ -5,15 +5,15 @@ namespace CacheMeIfYouCan.Polly
 {
     public static class CacheConfigurationManagerExtensions
     {
-        public static DistributedCacheConfigurationManager WithPolicy(
-            this DistributedCacheConfigurationManager configurationManager,
+        public static DistributedCacheFactoryConfigurationManager WithPolicy(
+            this DistributedCacheFactoryConfigurationManager configurationManager,
             Policy policy)
         {
             return configurationManager.AddWrapper(new CachePollyWrapperFactory(policy));
         }
         
-        public static DistributedCacheConfigurationManager<TK, TV> WithPolicy<TK, TV>(
-            this DistributedCacheConfigurationManager<TK, TV> configurationManager,
+        public static DistributedCacheFactoryConfigurationManager<TK, TV> WithPolicy<TK, TV>(
+            this DistributedCacheFactoryConfigurationManager<TK, TV> configurationManager,
             Policy policy)
         {
             return configurationManager.AddWrapper(new CachePollyWrapperFactory<TK, TV>(policy));
