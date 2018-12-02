@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMilliseconds(1))
+                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
                 .ContinueOnException()
                 .Build();
 
@@ -78,7 +78,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMilliseconds(1))
+                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
                 .ContinueOnException("defaultValue")
                 .Build();
 
@@ -152,7 +152,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMilliseconds(1))
+                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
                 .Build();
 
             for (var i = 0; i < 20; i++)

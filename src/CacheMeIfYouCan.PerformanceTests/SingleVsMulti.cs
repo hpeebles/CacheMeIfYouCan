@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.PerformanceTests
             
             return func
                 .Cached()
-                .For(TimeSpan.FromMinutes(10))
+                .WithTimeToLive(TimeSpan.FromMinutes(10))
                 .WithLocalCacheFactory(new DictionaryCacheFactory())
                 .Build();
         }
@@ -57,7 +57,7 @@ namespace CacheMeIfYouCan.PerformanceTests
             
             return func
                 .Cached()
-                .For(TimeSpan.FromMinutes(10))
+                .WithTimeToLive(TimeSpan.FromMinutes(10))
                 .WithLocalCacheFactory(new DictionaryCacheFactory())
                 .Build();
         }

@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<TK, Task<TV>> _func;
         private readonly string _functionName;
         private readonly ICache<TK, TV> _cache;
-        private readonly TimeSpan _timeToLive;
+        private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
         private readonly bool _earlyFetchEnabled;
         private readonly Func<TV> _defaultValueFactory;
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Internal
             Func<TK, Task<TV>> func,
             string functionName,
             ICache<TK, TV> cache,
-            TimeSpan timeToLive,
+            Func<TK, TV, TimeSpan> timeToLiveFactory,
             Func<TK, string> keySerializer,
             bool earlyFetchEnabled,
             Func<TV> defaultValueFactory,
@@ -40,7 +40,7 @@ namespace CacheMeIfYouCan.Internal
             _func = func;
             _functionName = functionName;
             _cache = cache;
-            _timeToLive = timeToLive;
+            _timeToLiveFactory = timeToLiveFactory;
             _keySerializer = keySerializer;
             _earlyFetchEnabled = earlyFetchEnabled;
             _defaultValueFactory = defaultValueFactory;
@@ -169,7 +169,7 @@ namespace CacheMeIfYouCan.Internal
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
                     if (_cache != null)
-                        await _cache.Set(key, fetched, _timeToLive);
+                        await _cache.Set(key, fetched, _timeToLiveFactory(key, fetched));
 
                     result = new FunctionCacheFetchResultInner<TK, TV>(key, fetched, true, false, duration);
                 }

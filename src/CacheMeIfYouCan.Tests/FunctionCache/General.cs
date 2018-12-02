@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMilliseconds(1))
+                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
                 .WithLocalCacheFactory(GetCacheFactory(cacheType))
                 .OnResult(results.Add)
                 .Build();
@@ -72,6 +72,46 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Assert.Equal(10, results.Count);
             Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.Fetch));
+        }
+
+        [Fact]
+        public async Task TimeToLiveFactory()
+        {
+            Func<string, Task<string>> echo = new Echo();
+            
+            var results = new List<FunctionCacheGetResult>();
+            
+            var cachedEcho = echo
+                .Cached()
+                .WithTimeToLiveFactory((k, v) => TimeSpan.FromMilliseconds(Int32.Parse(k)))
+                .OnResult(results.Add)
+                .Build();
+
+            await cachedEcho("100");
+            await cachedEcho("100");
+
+            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+            
+            await cachedEcho("200");
+            await cachedEcho("200");
+
+            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+            
+            await Task.Delay(150);
+
+            await cachedEcho("100");
+            
+            Assert.Equal(Outcome.Fetch, results.Last().Results.Last().Outcome);
+
+            await cachedEcho("200");
+            
+            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+           
+            await Task.Delay(100);
+            
+            await cachedEcho("200");
+
+            Assert.Equal(Outcome.Fetch, results.Last().Results.Last().Outcome);
         }
 
         private static ILocalCacheFactory GetCacheFactory(string cacheType)

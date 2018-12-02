@@ -19,8 +19,8 @@ namespace CacheMeIfYouCan.PerformanceTests
             
             var testImpl = new TestImpl();
 
-            _v1 = testImpl.Cached<ITest>().WithLocalCacheFactory(new MemoryCacheFactory()).For(TimeSpan.FromMinutes(10)).Build();
-            _v2 = testImpl.Cached<ITest>().WithLocalCacheFactory(new DictionaryCacheFactory()).For(TimeSpan.FromMinutes(10)).Build();
+            _v1 = testImpl.Cached<ITest>().WithLocalCacheFactory(new MemoryCacheFactory()).WithTimeToLive(TimeSpan.FromMinutes(10)).Build();
+            _v2 = testImpl.Cached<ITest>().WithLocalCacheFactory(new DictionaryCacheFactory()).WithTimeToLive(TimeSpan.FromMinutes(10)).Build();
         }
 
         [Benchmark]

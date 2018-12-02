@@ -55,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(1))
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .OnFetch(fetches.Add)
                 .Build();
 

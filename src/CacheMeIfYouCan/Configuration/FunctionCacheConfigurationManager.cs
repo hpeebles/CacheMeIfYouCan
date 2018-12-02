@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -27,6 +25,11 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
+
+        public new FunctionCacheConfigurationManager<TK, TV> WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
+        {
+            return base.WithTimeToLiveFactory(timeToLiveFactory);
+        }
         
         public Func<TK, Task<TV>> Build()
         {

@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(1))
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .OnCacheGet(results.Add)
                 .Build();
 
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(1))
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .OnCacheSet(results.Add)
                 .Build();
 
@@ -99,7 +99,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromSeconds(1))
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new TestLocalCache<string, string>())
                 .WithDistributedCacheFactory(new TestCacheFactory())
                 .OnCacheGet(getResults.Add)

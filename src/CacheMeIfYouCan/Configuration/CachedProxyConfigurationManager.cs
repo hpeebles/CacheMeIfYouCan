@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
-        public CachedProxyConfigurationManager<T> For(TimeSpan timeToLive)
+        public CachedProxyConfigurationManager<T> WithTimeToLive(TimeSpan timeToLive)
         {
             _timeToLive = timeToLive;
             return this;

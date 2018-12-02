@@ -17,10 +17,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             var proxy = impl
                 .Cached()
-                .For(TimeSpan.FromMilliseconds(100))
+                .WithTimeToLive(TimeSpan.FromMilliseconds(100))
                 .OnResult(x => lastResult = x)
-                .ConfigureFor<int, string>(x => x.IntToString, c => c.For(TimeSpan.FromSeconds(1)))
-                .ConfigureFor<long, int>(x => x.LongToInt, c => c.For(TimeSpan.FromSeconds(2)))
+                .ConfigureFor<int, string>(x => x.IntToString, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)))
+                .ConfigureFor<long, int>(x => x.LongToInt, c => c.WithTimeToLive(TimeSpan.FromSeconds(2)))
                 .Build();
 
             // Run the functions with dummy data otherwise the first test usages will be slow

@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly string _functionName;
         private readonly bool _multiKey;
         private TimeSpan? _timeToLive;
+        private Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
@@ -115,9 +116,15 @@ namespace CacheMeIfYouCan.Configuration
             }
         }
 
-        public TConfig For(TimeSpan timeToLive)
+        public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
-            _timeToLive = timeToLive;
+            _timeToLiveFactory = (k, v) => timeToLive;
+            return (TConfig)this;
+        }
+        
+        protected TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
+        {
+            _timeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
         }
         
@@ -292,12 +299,23 @@ namespace CacheMeIfYouCan.Configuration
                 throw new Exception("You can't build a FunctionCacheSingle since your function is multi key");
 
             var cache = BuildCache(out var keyComparer);
-            
+
+            Func<TK, TV, TimeSpan> timeToLiveFactory;
+            if (_timeToLiveFactory != null)
+            {
+                timeToLiveFactory = _timeToLiveFactory;
+            }
+            else
+            {
+                var timeToLive = _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive;
+                timeToLiveFactory = (k, v) => timeToLive;
+            }
+
             return new FunctionCacheSingle<TK, TV>(
                 _inputFuncSingle,
                 _functionName,
                 cache,
-                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
+                timeToLiveFactory,
                 _keySerializer ?? GetKeySerializer(),
                 _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
                 _defaultValueFactory,

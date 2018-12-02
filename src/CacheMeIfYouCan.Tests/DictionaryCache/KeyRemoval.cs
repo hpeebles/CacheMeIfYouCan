@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests.DictionaryCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromTicks(1))
+                .WithTimeToLive(TimeSpan.FromTicks(1))
                 .WithLocalCache(cache)
                 .Build();
 
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Tests.DictionaryCache
             
             var cachedEcho = echo
                 .Cached()
-                .For(TimeSpan.FromMinutes(1))
+                .WithTimeToLive(TimeSpan.FromMinutes(1))
                 .WithLocalCache(cache)
                 .Build();
 
