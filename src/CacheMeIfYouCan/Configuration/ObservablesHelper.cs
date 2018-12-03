@@ -4,7 +4,7 @@ using System.Reactive.Subjects;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public static class ObservableHelper
+    public static class ObservablesHelper
     {
         public static TConfig SetupObservable<T, TConfig>(
             Action<IObservable<T>> action,

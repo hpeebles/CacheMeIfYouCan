@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheGetResult>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, config.WithOnResultAction, ordering);
+            return ObservablesHelper.SetupObservable(onResult, config.WithOnResultAction, ordering);
         }
         
         public static DefaultCacheConfiguration WithOnFetchObservable(
@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheFetchResult>> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onFetch, config.WithOnFetchAction, ordering);
+            return ObservablesHelper.SetupObservable(onFetch, config.WithOnFetchAction, ordering);
         }
         
         public static DefaultCacheConfiguration WithOnErrorObservable(
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheException>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, config.WithOnErrorAction, ordering);
+            return ObservablesHelper.SetupObservable(onError, config.WithOnErrorAction, ordering);
         }
         
         public static DefaultCacheConfiguration WithOnCacheGetObservable(
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult>> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheGet, config.WithOnCacheGetAction, ordering);
+            return ObservablesHelper.SetupObservable(onCacheGet, config.WithOnCacheGetAction, ordering);
         }
         
         public static DefaultCacheConfiguration WithOnCacheSetObservable(
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult>> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheSet, config.WithOnCacheSetAction, ordering);
+            return ObservablesHelper.SetupObservable(onCacheSet, config.WithOnCacheSetAction, ordering);
         }
         
         public static DefaultCacheConfiguration WithOnCacheErrorObservable(
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException>> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheError, config.WithOnCacheErrorAction, ordering);
+            return ObservablesHelper.SetupObservable(onCacheError, config.WithOnCacheErrorAction, ordering);
         }
     }
 }

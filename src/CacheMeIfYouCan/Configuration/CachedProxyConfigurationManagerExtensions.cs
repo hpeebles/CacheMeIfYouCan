@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheGetResult>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnResult, ordering);
         }
         
         public static CachedProxyConfigurationManager<T> OnFetchObservable<T>(
@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheFetchResult>> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
+            return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
         }
         
         public static CachedProxyConfigurationManager<T> OnErrorObservable<T>(
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheException>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheGetObservable<T>(
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult>> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheSetObservable<T>(
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult>> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheErrorObservable<T>(
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException>> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
+            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
         }
     }
 }

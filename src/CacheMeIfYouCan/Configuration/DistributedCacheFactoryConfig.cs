@@ -13,19 +13,19 @@ namespace CacheMeIfYouCan.Configuration
         public DistributedCacheFactoryConfig()
         {
             if (DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
-                ProvidedSerializers.TryGetDeserializer<TK>(out keyDeserializer))
+                ProvidedSerializers.TryGetDeserializer(out keyDeserializer))
             {
                 KeyDeserializer = keyDeserializer;
             }
 
             if (DefaultCacheConfig.Configuration.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer) ||
-                ProvidedSerializers.TryGetSerializer<TV>(out valueSerializer))
+                ProvidedSerializers.TryGetSerializer(out valueSerializer))
             {
                 ValueSerializer = valueSerializer;
             }
 
             if (DefaultCacheConfig.Configuration.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer) ||
-                ProvidedSerializers.TryGetDeserializer<TV>(out valueDeserializer))
+                ProvidedSerializers.TryGetDeserializer(out valueDeserializer))
             {
                 ValueDeserializer = valueDeserializer;
             }

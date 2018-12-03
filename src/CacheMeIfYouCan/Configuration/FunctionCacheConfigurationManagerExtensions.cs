@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheGetResult<TK, TV>>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnResult, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnFetchObservable<TK, TV>(
@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheFetchResult<TK, TV>>> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
+            return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheException<TK>>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheGetObservable<TK, TV>(
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult<TK, TV>>> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheSetObservable<TK, TV>(
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult<TK, TV>>> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheErrorObservable<TK, TV>(
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException<TK>>> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
+            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnResultObservable<TK, TV>(
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheGetResult<TK, TV>>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnResult, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnFetchObservable<TK, TV>(
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheFetchResult<TK, TV>>> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
+            return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
@@ -74,7 +74,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<FunctionCacheException<TK>>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheGetObservable<TK, TV>(
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult<TK, TV>>> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheSetObservable<TK, TV>(
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult<TK, TV>>> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheErrorObservable<TK, TV>(
@@ -98,7 +98,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException<TK>>> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
+            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
         }
     }
 }

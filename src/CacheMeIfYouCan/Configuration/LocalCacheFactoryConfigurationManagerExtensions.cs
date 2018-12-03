@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult<TK, TV>>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnGetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnGetResult, ordering);
         }
         
         public static LocalCacheFactoryConfigurationManager<TK, TV> OnSetResultObservable<TK, TV>(
@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult<TK, TV>>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnSetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnSetResult, ordering);
         }
         
         public static LocalCacheFactoryConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException<TK>>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
         
         public static LocalCacheFactoryConfigurationManager OnGetResultObservable(
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheGetResult>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnGetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnGetResult, ordering);
         }
         
         public static LocalCacheFactoryConfigurationManager OnSetResultObservable(
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheSetResult>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onResult, configManager.OnSetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnSetResult, ordering);
         }
         
         public static LocalCacheFactoryConfigurationManager OnErrorObservable(
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<IObservable<CacheException>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
     }
 }

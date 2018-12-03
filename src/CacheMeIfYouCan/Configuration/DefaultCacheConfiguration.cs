@@ -54,14 +54,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheGetResult> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnResult;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnResult = onResult;
-            else if (ordering == ActionOrdering.Append)
-                OnResult = x => { current(x); onResult(x); };
-            else
-                OnResult = x => { onResult(x); current(x); };
-            
+            OnResult = ActionsHelper.Combine(OnResult, onResult, ordering);
             return this;
         }
 
@@ -69,14 +62,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheFetchResult> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnFetch;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnFetch = onFetch;
-            else if (ordering == ActionOrdering.Append)
-                OnFetch = x => { current(x); onFetch(x); };
-            else
-                OnFetch = x => { onFetch(x); current(x); };
-
+            OnFetch = ActionsHelper.Combine(OnFetch, onFetch, ordering);
             return this;
         }
 
@@ -84,14 +70,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheException> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnError;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnError = onError;
-            else if (ordering == ActionOrdering.Append)
-                OnError = x => { current(x); onError(x); };
-            else
-                OnError = x => { onError(x); current(x); };
-
+            OnError = ActionsHelper.Combine(OnError, onError, ordering);
             return this;
         }
 
@@ -99,14 +78,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheGetResult> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnCacheGet;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnCacheGet = onCacheGet;
-            else if (ordering == ActionOrdering.Append)
-                OnCacheGet = x => { current(x); onCacheGet(x); };
-            else
-                OnCacheGet = x => { onCacheGet(x); current(x); };
-
+            OnCacheGet = ActionsHelper.Combine(OnCacheGet, onCacheGet, ordering);
             return this;
         }
 
@@ -114,14 +86,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheSetResult> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnCacheSet;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnCacheSet = onCacheSet;
-            else if (ordering == ActionOrdering.Append)
-                OnCacheSet = x => { current(x); onCacheSet(x); };
-            else
-                OnCacheSet = x => { onCacheSet(x); current(x); };
-
+            OnCacheSet = ActionsHelper.Combine(OnCacheSet, onCacheSet, ordering);
             return this;
         }
 
@@ -129,14 +94,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheException> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            var current = OnCacheError;
-            if (current == null || ordering == ActionOrdering.Overwrite)
-                OnCacheError = onCacheError;
-            else if (ordering == ActionOrdering.Append)
-                OnCacheError = x => { current(x); onCacheError(x); };
-            else
-                OnCacheError = x => { onCacheError(x); current(x); };
-
+            OnCacheError = ActionsHelper.Combine(OnCacheError, onCacheError, ordering);
             return this;
         }
 
