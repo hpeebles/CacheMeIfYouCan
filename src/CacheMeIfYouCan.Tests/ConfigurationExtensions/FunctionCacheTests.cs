@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
-using CacheMeIfYouCan.Tests;
 using Xunit;
 
-namespace CacheMeIfYouCan.Observables.Tests
+namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class DefaultCacheConfigurationTests
+    public class FunctionCacheTests
     {
         [Fact]
         public async Task OnResult()
@@ -16,14 +15,11 @@ namespace CacheMeIfYouCan.Observables.Tests
             Func<string, Task<string>> echo = new Echo();
             
             var results = new List<FunctionCacheGetResult>();
-
-            DefaultCacheConfig.Configuration.WithOnResultObservable(x => x.Subscribe(results.Add));
             
             var cachedEcho = echo
                 .Cached()
+                .OnResultObservable(x => x.Subscribe(results.Add))
                 .Build();
-
-            DefaultCacheConfig.Configuration.WithOnResultAction(null, ActionOrdering.Overwrite);
 
             await cachedEcho("123");
 
@@ -37,14 +33,11 @@ namespace CacheMeIfYouCan.Observables.Tests
             
             var fetches = new List<FunctionCacheFetchResult>();
             
-            DefaultCacheConfig.Configuration.WithOnFetchObservable(x => x.Subscribe(fetches.Add));
-            
             var cachedEcho = echo
                 .Cached()
+                .OnFetchObservable(x => x.Subscribe(fetches.Add))
                 .Build();
 
-            DefaultCacheConfig.Configuration.WithOnFetchAction(null, ActionOrdering.Overwrite);
-            
             await cachedEcho("123");
 
             Assert.Single(fetches);
@@ -57,14 +50,11 @@ namespace CacheMeIfYouCan.Observables.Tests
             
             var errors = new List<FunctionCacheException>();
             
-            DefaultCacheConfig.Configuration.WithOnErrorObservable(x => x.Subscribe(errors.Add));
-
             var cachedEcho = echo
                 .Cached()
+                .OnErrorObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
-            DefaultCacheConfig.Configuration.WithOnErrorAction(null, ActionOrdering.Overwrite);
-            
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
 
             Assert.Equal(2, errors.Count);
@@ -77,15 +67,12 @@ namespace CacheMeIfYouCan.Observables.Tests
             Func<string, Task<string>> echo = new Echo();
             
             var results = new List<CacheGetResult>();
-
-            DefaultCacheConfig.Configuration.WithOnCacheGetObservable(x => x.Subscribe(results.Add));
             
             var cachedEcho = echo
                 .Cached()
+                .OnCacheGetObservable(x => x.Subscribe(results.Add))
                 .Build();
 
-            DefaultCacheConfig.Configuration.WithOnCacheGetAction(null, ActionOrdering.Overwrite);
-            
             await cachedEcho("123");
 
             Assert.Single(results);
@@ -97,15 +84,12 @@ namespace CacheMeIfYouCan.Observables.Tests
             Func<string, Task<string>> echo = new Echo();
             
             var results = new List<CacheSetResult>();
-
-            DefaultCacheConfig.Configuration.WithOnCacheSetObservable(x => x.Subscribe(results.Add));
             
             var cachedEcho = echo
                 .Cached()
+                .OnCacheSetObservable(x => x.Subscribe(results.Add))
                 .Build();
 
-            DefaultCacheConfig.Configuration.WithOnCacheSetAction(null, ActionOrdering.Overwrite);
-            
             await cachedEcho("123");
 
             Assert.Single(results);
@@ -118,8 +102,6 @@ namespace CacheMeIfYouCan.Observables.Tests
             
             var errors = new List<CacheException>();
 
-            DefaultCacheConfig.Configuration.WithOnCacheErrorObservable(x => x.Subscribe(errors.Add));
-            
             var cache = new TestCacheFactory(error: () => true)
                 .Configure(x => { })
                 .Build(new DistributedCacheFactoryConfig<string, string>());
@@ -127,10 +109,9 @@ namespace CacheMeIfYouCan.Observables.Tests
             var cachedEcho = echo
                 .Cached()
                 .WithDistributedCache(cache)
+                .OnCacheErrorObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
-            DefaultCacheConfig.Configuration.WithOnCacheErrorAction(null, ActionOrdering.Overwrite);
-            
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
 
             Assert.Single(errors);

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Observables
+namespace CacheMeIfYouCan.Configuration
 {
-    public static class CachedProxyConfigurationManagerObservableExtensions
+    public static class CachedProxyConfigurationManagerExtensions
     {
         public static CachedProxyConfigurationManager<T> OnResultObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,

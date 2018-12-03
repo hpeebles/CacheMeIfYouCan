@@ -1,8 +1,7 @@
 using System;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Observables
+namespace CacheMeIfYouCan.Configuration
 {
     public static class DistributedCacheFactoryConfigurationManagerExtensions
     {

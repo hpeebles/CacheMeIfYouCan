@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
-using CacheMeIfYouCan.Tests;
 using Xunit;
 
-namespace CacheMeIfYouCan.Observables.Tests
+namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class FunctionCacheTests
+    public class MultiKeyFunctionCacheTests
     {
         [Fact]
         public async Task OnResult()
         {
-            Func<string, Task<string>> echo = new Echo();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             
             var results = new List<FunctionCacheGetResult>();
             
@@ -22,7 +21,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnResultObservable(x => x.Subscribe(results.Add))
                 .Build();
 
-            await cachedEcho("123");
+            await cachedEcho(new[] { "123" });
 
             Assert.Single(results);
         }
@@ -30,7 +29,7 @@ namespace CacheMeIfYouCan.Observables.Tests
         [Fact]
         public async Task OnFetch()
         {
-            Func<string, Task<string>> echo = new Echo();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             
             var fetches = new List<FunctionCacheFetchResult>();
             
@@ -39,7 +38,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnFetchObservable(x => x.Subscribe(fetches.Add))
                 .Build();
 
-            await cachedEcho("123");
+            await cachedEcho(new[] { "123" });
 
             Assert.Single(fetches);
         }
@@ -47,7 +46,7 @@ namespace CacheMeIfYouCan.Observables.Tests
         [Fact]
         public async Task OnError()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
             
             var errors = new List<FunctionCacheException>();
             
@@ -56,7 +55,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnErrorObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
-            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(new[] { "123" }));
 
             Assert.Equal(2, errors.Count);
         }
@@ -65,7 +64,7 @@ namespace CacheMeIfYouCan.Observables.Tests
         [Fact]
         public async Task OnCacheGet()
         {
-            Func<string, Task<string>> echo = new Echo();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             
             var results = new List<CacheGetResult>();
             
@@ -74,7 +73,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnCacheGetObservable(x => x.Subscribe(results.Add))
                 .Build();
 
-            await cachedEcho("123");
+            await cachedEcho(new[] { "123" });
 
             Assert.Single(results);
         }
@@ -82,7 +81,7 @@ namespace CacheMeIfYouCan.Observables.Tests
         [Fact]
         public async Task OnCacheSet()
         {
-            Func<string, Task<string>> echo = new Echo();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             
             var results = new List<CacheSetResult>();
             
@@ -91,7 +90,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnCacheSetObservable(x => x.Subscribe(results.Add))
                 .Build();
 
-            await cachedEcho("123");
+            await cachedEcho(new[] { "123" });
 
             Assert.Single(results);
         }
@@ -99,7 +98,7 @@ namespace CacheMeIfYouCan.Observables.Tests
         [Fact]
         public async Task OnCacheError()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
             
             var errors = new List<CacheException>();
 
@@ -113,7 +112,7 @@ namespace CacheMeIfYouCan.Observables.Tests
                 .OnCacheErrorObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
-            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
+            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(new[] { "123" }));
 
             Assert.Single(errors);
         }

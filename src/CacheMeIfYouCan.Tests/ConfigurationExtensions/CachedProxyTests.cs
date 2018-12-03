@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
-using CacheMeIfYouCan.Tests;
 using CacheMeIfYouCan.Tests.Proxy;
 using Xunit;
 
-namespace CacheMeIfYouCan.Observables.Tests
+namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
     public class CachedProxyTests
     {

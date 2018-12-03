@@ -19,15 +19,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheGetResult>();
 
-            DefaultCacheConfig.Configuration.WithOnResultAction(x =>
+            Func<string, Task<string>> cachedEcho;
+
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
-                    results.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnResultAction(x =>
+                {
+                    if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
+                        results.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnResultAction(null, ActionOrdering.Overwrite);
+            }
 
             for (var i = 1; i < 10; i++)
             {
@@ -36,8 +43,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
-            
-            DefaultCacheConfig.Configuration.WithOnResultAction(null);
         }
         
         [Fact]
@@ -47,15 +52,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var results = new List<FunctionCacheFetchResult>();
 
-            DefaultCacheConfig.Configuration.WithOnFetchAction(x =>
+            Func<string, Task<string>> cachedEcho;
+
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
-                    results.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnFetchAction(x =>
+                {
+                    if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
+                        results.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnFetchAction(null, ActionOrdering.Overwrite);
+            }
 
             for (var i = 1; i < 10; i++)
             {
@@ -64,8 +76,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await cachedEcho(key);
                 Assert.Equal(i, results.Count);
             }
-
-            DefaultCacheConfig.Configuration.WithOnFetchAction(null);
         }
         
         [Fact]
@@ -77,15 +87,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var errors = new List<FunctionCacheException>();
 
-            DefaultCacheConfig.Configuration.WithOnErrorAction(x =>
+            Func<string, Task<string>> cachedEcho;
+
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
-                    errors.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnErrorAction(x =>
+                {
+                    if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
+                        errors.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnErrorAction(null, ActionOrdering.Overwrite);
+            }
 
             var previousErrorCount = 0;
             for (var i = 0; i < 10; i++)
@@ -104,8 +121,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     Assert.Equal(key, await cachedEcho(key));
                 }
             }
-            
-            DefaultCacheConfig.Configuration.WithOnErrorAction(null);
         }
         
         [Fact]
@@ -117,15 +132,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var key = Guid.NewGuid().ToString();
             
-            DefaultCacheConfig.Configuration.WithOnCacheGetAction(x =>
+            Func<string, Task<string>> cachedEcho;
+
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Hits.Contains(key) || x.Misses.Contains(key))
-                    results.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnCacheGetAction(x =>
+                {
+                    if (x.Hits.Contains(key) || x.Misses.Contains(key))
+                        results.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnCacheGetAction(null, ActionOrdering.Overwrite);
+            }
 
             await cachedEcho(key);
 
@@ -147,8 +169,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(key, results.Last().Hits.Single());
                 Assert.Equal("memory", results.Last().CacheType);
             }
-            
-            DefaultCacheConfig.Configuration.WithOnCacheGetAction(null);
         }
         
         [Fact]
@@ -159,16 +179,23 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var results = new List<CacheSetResult>();
 
             var key = Guid.NewGuid().ToString();
+
+            Func<string, Task<string>> cachedEcho;
             
-            DefaultCacheConfig.Configuration.WithOnCacheSetAction(x =>
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Keys.Contains(key))
-                    results.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnCacheSetAction(x =>
+                {
+                    if (x.Keys.Contains(key))
+                        results.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnCacheSetAction(null, ActionOrdering.Overwrite);
+            }
 
             await cachedEcho(key);
 
@@ -181,8 +208,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho(key);
             
             Assert.Single(results);
-            
-            DefaultCacheConfig.Configuration.WithOnCacheSetAction(null);
         }
 
         [Fact]
@@ -193,17 +218,24 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var errors = new List<CacheException>();
 
             var key = Guid.NewGuid().ToString();
+
+            Func<string, Task<string>> cachedEcho;
             
-            DefaultCacheConfig.Configuration.WithOnCacheErrorAction(x =>
+            lock (DefaultSettingsLock.Lock)
             {
-                if (x.Keys.Contains(key))
-                    errors.Add(x);
-            });
-            
-            var cachedEcho = echo
-                .Cached()
-                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
-                .Build();
+                DefaultCacheConfig.Configuration.WithOnCacheErrorAction(x =>
+                {
+                    if (x.Keys.Contains(key))
+                        errors.Add(x);
+                });
+
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
+                    .Build();
+
+                DefaultCacheConfig.Configuration.WithOnErrorAction(null, ActionOrdering.Overwrite);
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
 
@@ -211,8 +243,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Single(errors.Single().Keys);
             Assert.Equal(key, errors.Single().Keys.Single());
             Assert.Equal("test", errors.Single().CacheType);
-            
-            DefaultCacheConfig.Configuration.WithOnErrorAction(null);
         }
         
         private static string GetRandomKey()

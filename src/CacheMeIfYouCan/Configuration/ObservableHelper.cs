@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace CacheMeIfYouCan.Observables
+namespace CacheMeIfYouCan.Configuration
 {
     public static class ObservableHelper
     {
