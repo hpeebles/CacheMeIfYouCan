@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<FunctionCacheGetResult<TK, TV>>> onResult,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onResult, configManager.OnResult, ordering);
+            return ObservableHelper.SetupObservable(onResult, configManager.OnResult, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnFetchObservable<TK, TV>(
@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<FunctionCacheFetchResult<TK, TV>>> onFetch,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onFetch, configManager.OnFetch, ordering);
+            return ObservableHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<FunctionCacheException<TK>>> onError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onError, configManager.OnError, ordering);
+            return ObservableHelper.SetupObservable(onError, configManager.OnError, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheGetObservable<TK, TV>(
@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<CacheGetResult<TK, TV>>> onCacheGet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
+            return ObservableHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheSetObservable<TK, TV>(
@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<CacheSetResult<TK, TV>>> onCacheSet,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
+            return ObservableHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheErrorObservable<TK, TV>(
@@ -53,19 +53,7 @@ namespace CacheMeIfYouCan.Observables
             Action<IObservable<CacheException<TK>>> onCacheError,
             ActionOrdering ordering = ActionOrdering.Append)
         {
-            return SetupObservable(onCacheError, configManager.OnCacheError, ordering);
-        }
-
-        private static TConfig SetupObservable<T, TConfig>(
-            Action<IObservable<T>> action,
-            Func<Action<T>, ActionOrdering, TConfig> configFunc,
-            ActionOrdering ordering)
-        {
-            var subject = new Subject<T>();
-
-            action(subject.AsObservable());
-
-            return configFunc(subject.OnNext, ordering);
+            return ObservableHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
         }
     }
 }
