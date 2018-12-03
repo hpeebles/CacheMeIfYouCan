@@ -50,39 +50,93 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnResultAction(Action<FunctionCacheGetResult> onResult)
+        public DefaultCacheConfiguration WithOnResultAction(
+            Action<FunctionCacheGetResult> onResult,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnResult = onResult;
+            var current = OnResult;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnResult = onResult;
+            else if (ordering == ActionOrdering.Append)
+                OnResult = x => { current(x); onResult(x); };
+            else
+                OnResult = x => { onResult(x); current(x); };
+            
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnFetchAction(Action<FunctionCacheFetchResult> onFetch)
+        public DefaultCacheConfiguration WithOnFetchAction(
+            Action<FunctionCacheFetchResult> onFetch,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnFetch = onFetch;
+            var current = OnFetch;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnFetch = onFetch;
+            else if (ordering == ActionOrdering.Append)
+                OnFetch = x => { current(x); onFetch(x); };
+            else
+                OnFetch = x => { onFetch(x); current(x); };
+
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnErrorAction(Action<FunctionCacheException> onError)
+        public DefaultCacheConfiguration WithOnErrorAction(
+            Action<FunctionCacheException> onError,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnError = onError;
+            var current = OnError;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnError = onError;
+            else if (ordering == ActionOrdering.Append)
+                OnError = x => { current(x); onError(x); };
+            else
+                OnError = x => { onError(x); current(x); };
+
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheGetAction(Action<CacheGetResult> onCacheGet)
+        public DefaultCacheConfiguration WithOnCacheGetAction(
+            Action<CacheGetResult> onCacheGet,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnCacheGet = onCacheGet;
+            var current = OnCacheGet;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnCacheGet = onCacheGet;
+            else if (ordering == ActionOrdering.Append)
+                OnCacheGet = x => { current(x); onCacheGet(x); };
+            else
+                OnCacheGet = x => { onCacheGet(x); current(x); };
+
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheSetAction(Action<CacheSetResult> onCacheSet)
+        public DefaultCacheConfiguration WithOnCacheSetAction(
+            Action<CacheSetResult> onCacheSet,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnCacheSet = onCacheSet;
+            var current = OnCacheSet;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnCacheSet = onCacheSet;
+            else if (ordering == ActionOrdering.Append)
+                OnCacheSet = x => { current(x); onCacheSet(x); };
+            else
+                OnCacheSet = x => { onCacheSet(x); current(x); };
+
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheErrorAction(Action<CacheException> onCacheError)
+        public DefaultCacheConfiguration WithOnCacheErrorAction(
+            Action<CacheException> onCacheError,
+            ActionOrdering ordering = ActionOrdering.Append)
         {
-            OnCacheError = onCacheError;
+            var current = OnCacheError;
+            if (current == null || ordering == ActionOrdering.Overwrite)
+                OnCacheError = onCacheError;
+            else if (ordering == ActionOrdering.Append)
+                OnCacheError = x => { current(x); onCacheError(x); };
+            else
+                OnCacheError = x => { onCacheError(x); current(x); };
+
             return this;
         }
 
