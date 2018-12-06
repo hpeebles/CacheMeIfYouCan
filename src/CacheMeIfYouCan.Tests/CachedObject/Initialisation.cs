@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -78,6 +78,29 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             Assert.NotEqual(ticksValue, ticks.Value);
             Assert.NotEqual(millisValue, millis.Value);
             Assert.NotEqual(ticksDoubleValue, ticksDouble.Value);
+        }
+
+        [Fact]
+        public void InitialisationOnlyRunsOnce()
+        {
+            var count = 0;
+            
+            var ticksAsync = CachedObjectFactory
+                .ConfigureFor(() =>
+                {
+                    Interlocked.Increment(ref count);
+                    return Task.Delay(100).ContinueWith(t => DateTime.UtcNow.Ticks);
+                })
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .Build(false);
+
+            var values = Enumerable
+                .Range(0, 1000)
+                .AsParallel()
+                .Select(i => ticksAsync.Value)
+                .ToArray();
+
+            Assert.Equal(1, count);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
@@ -18,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
         private int _successfulRefreshCount;
         private DateTime _lastRefreshAttempt;
         private DateTime _lastSuccessfulRefresh;
-        private readonly object _lock = new Object();
+        private readonly SemaphoreSlim _semaphore;
         private T _value;
         private bool _initialised;
         private IDisposable _refreshTask;
@@ -33,6 +32,7 @@ namespace CacheMeIfYouCan.Internal
             _intervalFunc = intervalFunc ?? throw new ArgumentNullException(nameof(intervalFunc));
             _onRefresh = onRefresh;
             _onError = onError;
+            _semaphore = new SemaphoreSlim(1);
         }
 
         public T Value
@@ -51,14 +51,11 @@ namespace CacheMeIfYouCan.Internal
             if (_initialised)
                 return true;
 
-            var lockTaken = false;
-            Monitor.TryEnter(_lock, ref lockTaken);
+            await _semaphore.WaitAsync();
 
             if (_initialised)
             {
-                if (lockTaken)
-                    Monitor.Exit(_lock);
-
+                _semaphore.Release();
                 return true;
             }
 
@@ -80,8 +77,7 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                if (lockTaken)
-                    Monitor.Exit(_lock);
+                _semaphore.Release();
             }
 
             return _initialised;
