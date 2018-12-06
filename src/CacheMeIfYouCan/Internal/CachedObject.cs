@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -12,19 +12,27 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<Task<T>> _getValueFunc;
         private readonly Func<TimeSpan> _intervalFunc;
+        private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
         private readonly Action<Exception> _onError;
-        private readonly Queue<RefreshValueResult> _previousRefreshValueResults;
+        private int _refreshAttemptCount;
+        private int _successfulRefreshCount;
+        private DateTime _lastRefreshAttempt;
+        private DateTime _lastSuccessfulRefresh;
         private readonly object _lock = new Object();
         private T _value;
         private bool _initialised;
         private IDisposable _refreshTask;
 
-        public CachedObject(Func<Task<T>> getValueFunc, Func<TimeSpan> intervalFunc, Action<Exception> onError)
+        public CachedObject(
+            Func<Task<T>> getValueFunc,
+            Func<TimeSpan> intervalFunc,
+            Action<CachedObjectRefreshResult<T>> onRefresh,
+            Action<Exception> onError)
         {
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
             _intervalFunc = intervalFunc ?? throw new ArgumentNullException(nameof(intervalFunc));
+            _onRefresh = onRefresh;
             _onError = onError;
-            _previousRefreshValueResults = new Queue<RefreshValueResult>();
         }
 
         public T Value
@@ -58,17 +66,15 @@ namespace CacheMeIfYouCan.Internal
             {
                 var result = await RefreshValue();
 
-                LogRefreshValueResult(result);
-
                 if (!result.Success)
                     return false;
 
                 _refreshTask = Observable
-                    .Defer(() => RefreshValue()
-                        .ToObservable()
+                    .Defer(() => Observable
+                        .FromAsync(RefreshValue)
                         .DelaySubscription(_intervalFunc()))
                     .Repeat()
-                    .Subscribe(LogRefreshValueResult);
+                    .Subscribe();
                     
                 _initialised = true;
             }
@@ -86,48 +92,51 @@ namespace CacheMeIfYouCan.Internal
             _refreshTask?.Dispose();
         }
 
-        private async Task<RefreshValueResult> RefreshValue()
+        private async Task<CachedObjectRefreshResult<T>> RefreshValue()
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             Exception exception = null;
+            T newValue;
 
             try
             {
-                _value = await _getValueFunc();
+                newValue = await _getValueFunc();
+                _value = newValue;
+                _successfulRefreshCount++;
             }
             catch (Exception ex)
             {
                 exception = ex;
-                
+                newValue = default;
+
                 _onError?.Invoke(ex);
+            }
+            finally
+            {
+                _refreshAttemptCount++;
             }
             
             var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-            return new RefreshValueResult
-            {
-                Start = start,
-                Duration = TimeSpan.FromTicks(duration),
-                Success = exception == null,
-                Exception = exception
-            };
-        }
-
-        private void LogRefreshValueResult(RefreshValueResult result)
-        {
-            while (_previousRefreshValueResults.Count >= 10)
-                _previousRefreshValueResults.Dequeue();
-                        
-            _previousRefreshValueResults.Enqueue(result);
-        }
-        
-        private class RefreshValueResult
-        {
-            public DateTime Start;
-            public TimeSpan Duration;
-            public bool Success;
-            public Exception Exception;
+            
+            var result = new CachedObjectRefreshResult<T>(
+                start,
+                TimeSpan.FromTicks(duration),
+                exception,
+                newValue,
+                _refreshAttemptCount,
+                _successfulRefreshCount,
+                _lastRefreshAttempt,
+                _lastSuccessfulRefresh);
+            
+            _lastRefreshAttempt = DateTime.UtcNow;
+            
+            if (exception == null)
+                _lastSuccessfulRefresh = DateTime.UtcNow;
+            
+            _onRefresh?.Invoke(result);
+            
+            return result;
         }
     }
 }

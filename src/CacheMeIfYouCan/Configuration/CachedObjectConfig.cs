@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Configuration
 {
     public class CachedObjectConfig<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
         private Func<TimeSpan> _intervalFunc;
         private double _jitterPercentage;
+        private Action<CachedObjectRefreshResult<T>> _onRefreshResult;
         private Action<Exception> _onError;
 
         internal CachedObjectConfig(Func<Task<T>> getValueFunc)
@@ -21,6 +22,12 @@ namespace CacheMeIfYouCan
 
             if (DefaultCachedObjectConfig.Configuration.JitterPercentage.HasValue)
                 WithJitterPercentage(DefaultCachedObjectConfig.Configuration.JitterPercentage.Value);
+
+            if (DefaultCachedObjectConfig.Configuration.OnRefreshResult != null)
+                OnRefreshResult(DefaultCachedObjectConfig.Configuration.OnRefreshResult);
+            
+            if (DefaultCachedObjectConfig.Configuration.OnError != null)
+                OnError(DefaultCachedObjectConfig.Configuration.OnError);
         }
         
         public CachedObjectConfig<T> WithRefreshInterval(TimeSpan interval)
@@ -44,6 +51,12 @@ namespace CacheMeIfYouCan
                 throw new ArgumentOutOfRangeException(nameof(percentage));
 
             _jitterPercentage = percentage;
+            return this;
+        }
+
+        public CachedObjectConfig<T> OnRefreshResult(Action<CachedObjectRefreshResult<T>> onRefreshResult)
+        {
+            _onRefreshResult = onRefreshResult;
             return this;
         }
 
@@ -73,7 +86,7 @@ namespace CacheMeIfYouCan
                 intervalFunc = () => TimeSpan.FromTicks((long)(_intervalFunc().Ticks * (1 + (JitterFunc() / 100))));
             }
 
-            var cachedObject = new CachedObject<T>(_getValueFunc, intervalFunc, _onError);
+            var cachedObject = new CachedObject<T>(_getValueFunc, intervalFunc, _onRefreshResult, _onError);
             
             if (registerGlobally)
                 CachedObjectInitialiser.Register(cachedObject);

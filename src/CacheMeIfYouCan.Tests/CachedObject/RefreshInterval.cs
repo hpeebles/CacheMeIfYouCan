@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
+using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -13,35 +14,21 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
+            var refreshResults = new List<CachedObjectRefreshResult>();
+            
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(2))
+                .OnRefreshResult(refreshResults.Add)
                 .Build(false);
 
             await date.Init();
 
-            var results = new HashSet<DateTime>();
+            await Task.Delay(TimeSpan.FromSeconds(20));
 
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
+            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
 
-            while (!cancellationTokenSource.IsCancellationRequested)
-            {
-                results.Add(date.Value);
-
-                await Task.Delay(TimeSpan.FromMilliseconds(10));
-            }
-
-            var sorted = results
-                .OrderBy(r => r)
-                .ToArray();
-            
-            var diffs = sorted
-                .Zip(sorted.Skip(1), (l, r) => r - l)
-                .ToArray();
-            
-            var min = diffs.Min();
-            var max = diffs.Max();
-            
             Assert.True(TimeSpan.FromMilliseconds(1800) <= min);
             Assert.True(max <= TimeSpan.FromMilliseconds(2500));
         }
@@ -49,39 +36,24 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task JitterCausesRefreshIntervalsToFluctuate()
         {
+            var refreshResults = new List<CachedObjectRefreshResult>();
+            
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .WithJitterPercentage(50)
+                .OnRefreshResult(refreshResults.Add)
                 .Build(false);
 
             await date.Init();
 
-            var results = new HashSet<DateTime>();
-
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-
-            while (!cancellationTokenSource.IsCancellationRequested)
-            {
-                results.Add(date.Value);
-
-                await Task.Delay(TimeSpan.FromMilliseconds(10));
-            }
-
-            var sorted = results
-                .Skip(1) // skip first one as it is always slow due to JITting
-                .OrderBy(r => r)
-                .ToArray();
+            await Task.Delay(TimeSpan.FromSeconds(20));
             
-            var diffs = sorted
-                .Zip(sorted.Skip(1), (l, r) => r - l)
-                .ToArray();
-
-            var min = diffs.Min();
-            var max = diffs.Max();
+            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
+            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
             
-            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(1000));
-            Assert.InRange(max, TimeSpan.FromMilliseconds(1000), TimeSpan.FromMilliseconds(2000));
+            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(800));
+            Assert.InRange(max, TimeSpan.FromMilliseconds(1200), TimeSpan.FromMilliseconds(2000));
         }
     }
 }

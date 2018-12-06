@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
 {
@@ -6,6 +7,8 @@ namespace CacheMeIfYouCan.Configuration
     {
         internal TimeSpan? RefreshInterval { get; private set; }
         internal double? JitterPercentage { get; private set; }
+        internal Action<CachedObjectRefreshResult> OnRefreshResult { get; private set; }
+        internal Action<Exception> OnError { get; private set; }
 
         public DefaultCachedObjectConfiguration WithRefreshInterval(TimeSpan refreshInterval)
         {
@@ -22,6 +25,18 @@ namespace CacheMeIfYouCan.Configuration
                 throw new ArgumentOutOfRangeException(nameof(jitterPercentage));
 
             JitterPercentage = jitterPercentage;
+            return this;
+        }
+
+        public DefaultCachedObjectConfiguration WithOnRefreshResultAction(Action<CachedObjectRefreshResult> onRefreshResult)
+        {
+            OnRefreshResult = onRefreshResult;
+            return this;
+        }
+
+        public DefaultCachedObjectConfiguration WithOnErrorAction(Action<Exception> onError)
+        {
+            OnError = onError;
             return this;
         }
     }
