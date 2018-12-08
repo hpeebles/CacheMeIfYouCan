@@ -5,7 +5,7 @@ namespace CacheMeIfYouCan.Configuration
 {
     public class DefaultCachedObjectConfiguration
     {
-        internal TimeSpan? RefreshInterval { get; private set; }
+        internal Func<CachedObjectRefreshResult, TimeSpan> RefreshIntervalFunc { get; private set; }
         internal double? JitterPercentage { get; private set; }
         internal Action<CachedObjectRefreshResult> OnRefreshResult { get; private set; }
         internal Action<Exception> OnError { get; private set; }
@@ -15,7 +15,13 @@ namespace CacheMeIfYouCan.Configuration
             if (refreshInterval == TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(refreshInterval));
 
-            RefreshInterval = refreshInterval;
+            return WithRefreshIntervalFunc(r => refreshInterval);
+        }
+
+        public DefaultCachedObjectConfiguration WithRefreshIntervalFunc(
+            Func<CachedObjectRefreshResult, TimeSpan> refreshIntervalFunc)
+        {
+            RefreshIntervalFunc = refreshIntervalFunc;
             return this;
         }
 

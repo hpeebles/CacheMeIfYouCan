@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
@@ -54,6 +52,31 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(800));
             Assert.InRange(max, TimeSpan.FromMilliseconds(1200), TimeSpan.FromMilliseconds(2000));
+        }
+
+        [Fact]
+        public async Task VariableRefreshInterval()
+        {
+            var refreshResults = new List<CachedObjectRefreshResult>();
+            
+            var date = CachedObjectFactory
+                .ConfigureFor(() => DateTime.UtcNow)
+                .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
+                .OnRefreshResult(refreshResults.Add)
+                .Build(false);
+
+            await date.Init();
+
+            await Task.Delay(TimeSpan.FromSeconds(12));
+            
+            Assert.Equal(5, refreshResults.Count);
+            foreach (var result in refreshResults.Skip(1))
+            {
+                Assert.InRange(
+                    result.Start - result.LastRefreshAttempt,
+                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1),
+                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount));
+            }
         }
     }
 }

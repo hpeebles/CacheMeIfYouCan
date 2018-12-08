@@ -10,26 +10,27 @@ namespace CacheMeIfYouCan.Internal
     internal class CachedObject<T> : ICachedObject<T>, IDisposable
     {
         private readonly Func<Task<T>> _getValueFunc;
-        private readonly Func<TimeSpan> _intervalFunc;
+        private readonly Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
         private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
         private readonly Action<Exception> _onError;
+        private readonly SemaphoreSlim _semaphore;
         private int _refreshAttemptCount;
         private int _successfulRefreshCount;
         private DateTime _lastRefreshAttempt;
         private DateTime _lastSuccessfulRefresh;
-        private readonly SemaphoreSlim _semaphore;
         private T _value;
         private bool _initialised;
         private IDisposable _refreshTask;
+        private TimeSpan _nextRefreshInterval;
 
         public CachedObject(
             Func<Task<T>> getValueFunc,
-            Func<TimeSpan> intervalFunc,
+            Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc,
             Action<CachedObjectRefreshResult<T>> onRefresh,
             Action<Exception> onError)
         {
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
-            _intervalFunc = intervalFunc ?? throw new ArgumentNullException(nameof(intervalFunc));
+            _refreshIntervalFunc = refreshIntervalFunc ?? throw new ArgumentNullException(nameof(refreshIntervalFunc));
             _onRefresh = onRefresh;
             _onError = onError;
             _semaphore = new SemaphoreSlim(1);
@@ -66,10 +67,13 @@ namespace CacheMeIfYouCan.Internal
                 if (!result.Success)
                     return false;
 
+                _nextRefreshInterval = _refreshIntervalFunc(result);
+
                 _refreshTask = Observable
                     .Defer(() => Observable
                         .FromAsync(RefreshValue)
-                        .DelaySubscription(_intervalFunc()))
+                        .Do(r => _nextRefreshInterval = _refreshIntervalFunc(r))
+                        .DelaySubscription(_nextRefreshInterval))
                     .Repeat()
                     .Subscribe();
                     
