@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
