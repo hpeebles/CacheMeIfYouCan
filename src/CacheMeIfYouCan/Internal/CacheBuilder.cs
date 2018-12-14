@@ -8,11 +8,11 @@ namespace CacheMeIfYouCan.Internal
 {
     internal static class CacheBuilder
     {
-        public static ICache<TK, TV> Build<TK, TV>(
+        public static ICacheInternal<TK, TV> Build<TK, TV>(
             string cacheName,
             ILocalCacheFactory<TK, TV> localCacheFactory,
             IDistributedCacheFactory<TK, TV> distributedCacheFactory,
-            DistributedCacheFactoryConfig<TK, TV> config,
+            DistributedCacheConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheException<TK>> onCacheError,
@@ -24,20 +24,19 @@ namespace CacheMeIfYouCan.Internal
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
             var localCache = localCacheFactory?
-                .Configure(c => c
-                    .OnGetResult(onCacheGet)
-                    .OnSetResult(onCacheSet)
-                    .OnError(onCacheError))
+                .OnGetResult(onCacheGet)
+                .OnSetResult(onCacheSet)
+                .OnError(onCacheError)
                 .Build(cacheName);
 
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
             var distributedCache = distributedCacheFactory?
-                .Configure(c => c
-                    .OnGetResult(onCacheGet)
-                    .OnSetResult(onCacheSet)
-                    .OnError(onCacheError))
+                .OnGetResult(onCacheGet)
+                .OnSetResult(onCacheSet)
+                .OnError(onCacheError)
+                .WithKeyspacePrefix(config.KeyspacePrefix)
                 .Build(config);
 
             if (distributedCache is ICachedItemCounter distributedItemCounter)
@@ -51,7 +50,7 @@ namespace CacheMeIfYouCan.Internal
                 if (distributedCache != null)
                     return new TwoTierCache<TK, TV>(localCache, distributedCache, keyComparer);
 
-                return new LocalCacheAdaptor<TK, TV>(localCache);
+                return new LocalCacheAdaptorInternal<TK, TV>(localCache);
             }
 
             if (distributedCache == null)
@@ -60,7 +59,7 @@ namespace CacheMeIfYouCan.Internal
             if (!distributedCacheFactory.RequiresStringKeys)
                 keyComparer = new GenericKeyComparer<TK>();
             
-            return new DistributedCacheAdaptor<TK, TV>(distributedCache);
+            return new DistributedCacheAdaptorInternal<TK, TV>(distributedCache);
         }
 
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()

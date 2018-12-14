@@ -33,8 +33,7 @@ namespace CacheMeIfYouCan.Redis
         {
             lock (_lock)
             {
-                if (_onKeyChangedActions == null || !_onKeyChangedActions.Contains(dbIndex))
-                    StartSubscriber(dbIndex);
+                var startSubscriber = _onKeyChangedActions == null || !_onKeyChangedActions.Contains(dbIndex);
             
                 var updated = new List<KeyValuePair<int, Action<string>>>
                 {
@@ -45,6 +44,9 @@ namespace CacheMeIfYouCan.Redis
                     updated.AddRange(_onKeyChangedActions.SelectMany(x => x, (g, x) => new KeyValuePair<int, Action<string>>(g.Key, x)));
                 
                 Interlocked.Exchange(ref _onKeyChangedActions, updated.ToLookup(kv => kv.Key, kv => kv.Value));
+
+                if (startSubscriber)
+                    StartSubscriber(dbIndex);
             }
         }
 

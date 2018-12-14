@@ -23,6 +23,7 @@ namespace CacheMeIfYouCan.Redis
 
         public RedisCache(
             RedisConnection connection,
+            string cacheName,
             int database,
             string keySpacePrefix,
             Func<string, TK> keyDeserializer,
@@ -50,6 +51,8 @@ namespace CacheMeIfYouCan.Redis
             _recentlySetKeysManager = new RecentlySetKeysManager();
             _keyChanges = new Subject<Key<TK>>();
 
+            CacheName = cacheName;
+            
             connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
         }
 

@@ -103,8 +103,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var errors = new List<CacheException>();
 
             var cache = new TestCacheFactory(error: () => true)
-                .Configure(x => { })
-                .Build(new DistributedCacheFactoryConfig<string, string>());
+                .Build<string, string>("test");
             
             var cachedEcho = echo
                 .Cached()

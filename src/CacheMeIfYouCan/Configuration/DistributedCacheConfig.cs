@@ -3,15 +3,18 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class DistributedCacheFactoryConfig<TK, TV>
+    public class DistributedCacheConfig<TK, TV>
     {
+        public readonly string CacheName;
         public string KeyspacePrefix;
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;
         public Func<string, TV> ValueDeserializer;
 
-        public DistributedCacheFactoryConfig()
+        public DistributedCacheConfig(string cacheName = null)
         {
+            CacheName = cacheName;
+            
             if (DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out keyDeserializer))
             {

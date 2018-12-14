@@ -221,13 +221,13 @@ namespace CacheMeIfYouCan.Configuration
             return WithDistributedCacheFactory(cacheFactory.Build, keyspacePrefix);
         }
         
-        public TConfig WithDistributedCacheFactory(Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, string keyspacePrefix)
+        public TConfig WithDistributedCacheFactory(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, string keyspacePrefix)
         {
             SetDistributedCacheFactory(cacheFactoryFunc, true, keyspacePrefix);
             return (TConfig)this;
         }
         
-        public TConfig WithDistributedCacheFactory(Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
+        public TConfig WithDistributedCacheFactory(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc, bool requiresStringKeys = true)
         {
             SetDistributedCacheFactory(cacheFactoryFunc, requiresStringKeys, null);
             return (TConfig)this;
@@ -334,9 +334,9 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer);
         }
 
-        private ICache<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
+        private ICacheInternal<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
         {
-            var cacheConfig = new DistributedCacheFactoryConfig<TK, TV>
+            var cacheConfig = new DistributedCacheConfig<TK, TV>(_functionName)
             {
                 KeyspacePrefix = _keyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
@@ -344,7 +344,7 @@ namespace CacheMeIfYouCan.Configuration
                 ValueDeserializer = GetValueDeserializer()
             };
 
-            ICache<TK, TV> cache = null;
+            ICacheInternal<TK, TV> cache = null;
             if (_disableCache ?? DefaultCacheConfig.Configuration.DisableCache)
             {
                 keyComparer = new NoMatchesComparer<Key<TK>>();
@@ -378,7 +378,7 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         private void SetDistributedCacheFactory(
-            Func<DistributedCacheFactoryConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
+            Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
             bool requiresStringKeys,
             string keyspacePrefix)
         {

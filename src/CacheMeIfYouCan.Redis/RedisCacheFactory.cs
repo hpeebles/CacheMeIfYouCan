@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Redis
 
         public bool RequiresStringKeys => true;
 
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (config.KeyDeserializer == null) throw new ArgumentNullException(nameof(config.KeyDeserializer));
@@ -25,6 +25,7 @@ namespace CacheMeIfYouCan.Redis
             
             return new RedisCache<TK, TV>(
                 connection,
+                config.CacheName,
                 _redisConfig.Database,
                 config.KeyspacePrefix,
                 config.KeyDeserializer,

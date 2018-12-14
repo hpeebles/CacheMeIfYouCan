@@ -1,8 +1,8 @@
 using System;
 
-namespace CacheMeIfYouCan.Configuration
+namespace CacheMeIfYouCan.Internal
 {
-    public static class ActionsHelper
+    internal static class ActionsHelper
     {
         public static Action<T> Combine<T>(Action<T> current, Action<T> action, ActionOrdering ordering)
         {

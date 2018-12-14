@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<TK, Task<TV>> _func;
         private readonly string _functionName;
-        private readonly ICache<TK, TV> _cache;
+        private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
         private readonly bool _earlyFetchEnabled;
@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Internal
         public FunctionCacheSingle(
             Func<TK, Task<TV>> func,
             string functionName,
-            ICache<TK, TV> cache,
+            ICacheInternal<TK, TV> cache,
             Func<TK, TV, TimeSpan> timeToLiveFactory,
             Func<TK, string> keySerializer,
             bool earlyFetchEnabled,

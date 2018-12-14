@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests
         
         public bool RequiresStringKeys => true;
         
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
             return new TestCache<TK, TV>(config.ValueSerializer, config.ValueDeserializer, null, _delay, _error);
         }

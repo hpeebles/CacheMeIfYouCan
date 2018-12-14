@@ -2,7 +2,7 @@ using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class DistributedCacheFactoryWrapper : IDistributedCacheFactory
+    internal class DistributedCacheFactoryWrapper : IDistributedCacheFactory
     {
         private readonly IDistributedCacheFactory _cacheFactory;
         private readonly IDistributedCacheWrapperFactory _cacheWrapper;
@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
         
         public bool RequiresStringKeys { get; }
         
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
             var cache = _cacheFactory.Build(config);
 
@@ -40,7 +40,7 @@ namespace CacheMeIfYouCan.Internal
         
         public bool RequiresStringKeys { get; }
         
-        public IDistributedCache<TK, TV> Build(DistributedCacheFactoryConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
         {
             var cache = _cacheFactory.Build(config);
 

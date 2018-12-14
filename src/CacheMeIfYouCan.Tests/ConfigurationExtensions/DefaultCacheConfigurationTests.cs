@@ -148,13 +148,11 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             {
                 DefaultCacheConfig.Configuration.WithOnCacheErrorObservable(x => x.Subscribe(errors.Add));
 
-                var cache = new TestCacheFactory(error: () => true)
-                    .Configure(x => { })
-                    .Build(new DistributedCacheFactoryConfig<string, string>());
+                var cacheFactory = new TestCacheFactory(error: () => true);
 
                 cachedEcho = echo
                     .Cached()
-                    .WithDistributedCache(cache)
+                    .WithDistributedCacheFactory(cacheFactory)
                     .Build();
 
                 DefaultCacheConfig.Configuration.WithOnCacheErrorAction(null, ActionOrdering.Overwrite);

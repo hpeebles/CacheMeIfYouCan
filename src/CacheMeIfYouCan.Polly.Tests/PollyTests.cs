@@ -22,8 +22,8 @@ namespace CacheMeIfYouCan.Polly.Tests
             var index = 0;
             
             var cache = new TestCacheFactory(error: () => errorIndexes.Contains(index++))
-                .Configure(c => c.WithPolicy(policy))
-                .Build(new DistributedCacheFactoryConfig<string, string>());
+                .WithPolicy(policy)
+                .Build<string, string>("test");
             
             var key = new Key<string>("123", "123");
 
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Polly.Tests
             
             var exception = await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
 
-            Assert.True(exception.InnerException is BrokenCircuitException);
+            Assert.IsAssignableFrom<BrokenCircuitException>(exception.InnerException);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             

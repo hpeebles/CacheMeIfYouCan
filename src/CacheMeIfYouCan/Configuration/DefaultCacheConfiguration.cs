@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 

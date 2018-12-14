@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public class DistributedCacheAdaptor<TK, TV> : ICache<TK, TV>
+    internal class DistributedCacheAdaptorInternal<TK, TV> : ICacheInternal<TK, TV>
     {
         private readonly IDistributedCache<TK, TV> _cache;
 
-        public DistributedCacheAdaptor(IDistributedCache<TK, TV> cache)
+        public DistributedCacheAdaptorInternal(IDistributedCache<TK, TV> cache)
         {
             _cache = cache;
 

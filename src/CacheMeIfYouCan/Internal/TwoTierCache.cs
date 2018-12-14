@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class TwoTierCache<TK, TV> : ICache<TK, TV>
+    internal class TwoTierCache<TK, TV> : ICacheInternal<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _localCache;
         private readonly IDistributedCache<TK, TV> _distributedCache;

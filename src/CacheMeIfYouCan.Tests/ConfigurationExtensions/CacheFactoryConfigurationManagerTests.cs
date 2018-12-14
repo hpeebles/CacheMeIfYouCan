@@ -15,8 +15,8 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var results = new List<CacheGetResult>();
 
             var cache = new TestCacheFactory()
-                .Configure(c => c.OnGetResultObservable(x => x.Subscribe(results.Add)))
-                .Build(new DistributedCacheFactoryConfig<string, string>());
+                .OnGetResultObservable(x => x.Subscribe(results.Add))
+                .Build<string, string>("test");
 
             await cache.Get(new Key<string>("123", "123"));
 
@@ -29,8 +29,8 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var results = new List<CacheSetResult>();
 
             var cache = new TestCacheFactory()
-                .Configure(c => c.OnSetResultObservable(x => x.Subscribe(results.Add)))
-                .Build(new DistributedCacheFactoryConfig<string, string>());
+                .OnSetResultObservable(x => x.Subscribe(results.Add))
+                .Build<string, string>("test");
 
             await cache.Set(new Key<string>("123", "123"), "123", TimeSpan.FromMinutes(1));
 
@@ -43,8 +43,8 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var errors = new List<CacheException>();
 
             var cache = new TestCacheFactory(error: () => true)
-                .Configure(c => c.OnErrorObservable(x => x.Subscribe(errors.Add)))
-                .Build(new DistributedCacheFactoryConfig<string, string>());
+                .OnErrorObservable(x => x.Subscribe(errors.Add))
+                .Build<string, string>("test");
 
             await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(new Key<string>("123", "123")));
 

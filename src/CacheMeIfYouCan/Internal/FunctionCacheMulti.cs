@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly string _functionName;
-        private readonly ICache<TK, TV> _cache;
+        private readonly ICacheInternal<TK, TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
         private readonly bool _earlyFetchEnabled;
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Internal
         public FunctionCacheMulti(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func,
             string functionName,
-            ICache<TK, TV> cache,
+            ICacheInternal<TK, TV> cache,
             TimeSpan timeToLive,
             Func<TK, string> keySerializer,
             bool earlyFetchEnabled,
