@@ -67,8 +67,12 @@ namespace CacheMeIfYouCan.Internal
                 {
                     if (_cache != null)
                     {
-                        var fromCache = await _cache.Get(key);
+                        var fromCacheTask = _cache.Get(key);
 
+                        var fromCache = fromCacheTask.IsCompleted
+                            ? fromCacheTask.Result
+                            : await fromCacheTask;
+                        
                         if (fromCache.Success)
                         {
                             result = new FunctionCacheGetResultInner<TK, TV>(
@@ -169,7 +173,12 @@ namespace CacheMeIfYouCan.Internal
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
                     if (_cache != null)
-                        await _cache.Set(key, fetched, _timeToLiveFactory(key, fetched));
+                    {
+                        var setValueTask = _cache.Set(key, fetched, _timeToLiveFactory(key, fetched));
+
+                        if (!setValueTask.IsCompleted)
+                            await setValueTask;
+                    }
 
                     result = new FunctionCacheFetchResultInner<TK, TV>(key, fetched, true, false, duration);
                 }

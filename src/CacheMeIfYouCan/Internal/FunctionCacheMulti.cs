@@ -83,7 +83,11 @@ namespace CacheMeIfYouCan.Internal
                 IList<Key<TK>> missingKeys = null;
                 if (_cache != null)
                 {
-                    var fromCache = await _cache.Get(keys);
+                    var fromCacheTask = _cache.Get(keys);
+
+                    var fromCache = fromCacheTask.IsCompleted
+                        ? fromCacheTask.Result
+                        : await fromCacheTask;
                     
                     if (fromCache != null && fromCache.Any())
                     {
@@ -215,7 +219,12 @@ namespace CacheMeIfYouCan.Internal
                         results.AddRange(fetchedDictionary.Select(f => new FunctionCacheFetchResultInner<TK, TV>(f.Key, f.Value, true, false, duration)));
                         
                         if (_cache != null)
-                            await _cache.Set(fetchedDictionary, _timeToLive);
+                        {
+                            var setValueTask = _cache.Set(fetchedDictionary, _timeToLive);
+
+                            if (!setValueTask.IsCompleted)
+                                await setValueTask;
+                        }
                     }
                 }
                 else
