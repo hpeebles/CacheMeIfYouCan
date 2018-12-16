@@ -248,7 +248,7 @@ namespace CacheMeIfYouCan.Internal
                     .Except(fetchedKeys)
                     .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
                 
-                var exception = new FunctionCacheException<TK>(
+                var exception = new FunctionCacheFetchException<TK>(
                     _functionName,
                     keys.Select(k => (Key<TK>)k).ToArray(),
                     Timestamp.Now,
@@ -316,7 +316,7 @@ namespace CacheMeIfYouCan.Internal
                 ? "Unable to get value(s). Default being returned"
                 : "Unable to get value(s)";
 
-            var exception = new FunctionCacheException<TK>(
+            var exception = new FunctionCacheGetException<TK>(
                 _functionName,
                 keys,
                 Timestamp.Now,

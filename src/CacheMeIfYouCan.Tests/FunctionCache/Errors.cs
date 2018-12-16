@@ -31,10 +31,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 
                 if (i % 2 == 0)
                 {
-                    await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
+                    var exception = await Assert.ThrowsAsync<FunctionCacheGetException<string>>(() => cachedEcho(key));
+                    
                     Assert.Equal(previousErrorCount += 2, errors.Count); // one for failing the fetch, one for failing the get
                     Assert.Equal(key, errors[errors.Count - 1].Keys.Single());
                     Assert.Equal(key, errors[errors.Count - 2].Keys.Single());
+                    Assert.IsType<FunctionCacheFetchException<string>>(exception.InnerException);
                 }
                 else
                 {

@@ -83,10 +83,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var start = Timestamp.Now;
             
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
+            
             Assert.Single(errors);
             Assert.Single(errors[0].Keys);
             Assert.Equal("123", errors[0].Keys.First());
             Assert.InRange(errors[0].Timestamp, start, Timestamp.Now);
+            Assert.IsType<CacheGetException<string>>(errors[0]);
         }
 
         [Fact]

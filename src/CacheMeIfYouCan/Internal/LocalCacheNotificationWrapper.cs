@@ -12,6 +12,8 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
         private readonly Action<CacheException<TK>> _onError;
+        private const string CacheGetErrorMessage = "LocalCache.Get exception";
+        private const string CacheSetErrorMessage = "LocalCache.Set exception";
 
         public LocalCacheNotificationWrapper(
             ILocalCache<TK, TV> cache,
@@ -46,12 +48,12 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                var exception = new CacheException<TK>(
+                var exception = new CacheGetException<TK>(
                     CacheName,
                     CacheType,
                     new[] { key },
                     timestamp,
-                    "LocalCache.Get exception",
+                    CacheGetErrorMessage,
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -92,12 +94,13 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                var exception = new CacheException<TK>(
+                var exception = new CacheSetException<TK, TV>(
                     CacheName,
                     CacheType,
-                    new[] { key },
+                    new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
+                    timeToLive,
                     timestamp,
-                    "LocalCache.Set exception",
+                    CacheSetErrorMessage,
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -136,12 +139,12 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                var exception = new CacheException<TK>(
+                var exception = new CacheGetException<TK>(
                     CacheName,
                     CacheType,
                     keys,
                     timestamp,
-                    "LocalCache.Get exception",
+                    CacheGetErrorMessage,
                     ex);
                 
                 _onError?.Invoke(exception);
@@ -186,12 +189,13 @@ namespace CacheMeIfYouCan.Internal
             {
                 error = true;
 
-                var exception = new CacheException<TK>(
+                var exception = new CacheSetException<TK, TV>(
                     CacheName,
                     CacheType,
-                    values.Select(kv => kv.Key).ToArray(),
+                    values,
+                    timeToLive,
                     timestamp,
-                    "LocalCache.Set exception",
+                    CacheSetErrorMessage,
                     ex);
                 
                 _onError?.Invoke(exception);
