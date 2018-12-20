@@ -7,7 +7,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CachedObject<T> : ICachedObject<T>, IDisposable
+    internal class CachedObject<T> : ICachedObject<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
         private readonly Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;

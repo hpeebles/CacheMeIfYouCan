@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICachedObject<out T>
+    public interface ICachedObject<out T> : IDisposable
     {
         T Value { get; }
 

@@ -23,6 +23,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             
+            date.Dispose();
+            
             Assert.True(refreshResults.Count > 3);
 
             foreach (var result in refreshResults)
