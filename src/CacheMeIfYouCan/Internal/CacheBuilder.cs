@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.Internal
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
-            var localCache = localCacheFactory?
-                .OnGetResult(onCacheGet)
+            var localCache = localCacheFactory
+                ?.OnGetResult(onCacheGet)
                 .OnSetResult(onCacheSet)
                 .OnError(onCacheError)
                 .Build(cacheName);
@@ -32,8 +32,8 @@ namespace CacheMeIfYouCan.Internal
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            var distributedCache = distributedCacheFactory?
-                .OnGetResult(onCacheGet)
+            var distributedCache = distributedCacheFactory
+                ?.OnGetResult(onCacheGet)
                 .OnSetResult(onCacheSet)
                 .OnError(onCacheError)
                 .WithKeyspacePrefix(config.KeyspacePrefix)

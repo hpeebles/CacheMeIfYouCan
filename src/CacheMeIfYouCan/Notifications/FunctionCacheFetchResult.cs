@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Notifications
         public Key<TK> Key { get; }
         public TV Value { get; }
         
-        public string KeyString => Key.AsString;
+        public string KeyString => Key.AsStringSafe;
         public bool Success { get; }
         public bool Duplicate { get; }
         public long Duration { get; }

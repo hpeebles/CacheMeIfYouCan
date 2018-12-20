@@ -64,8 +64,8 @@ namespace CacheMeIfYouCan.Notifications
             duration,
             hits.Count,
             misses.Count,
-            new Lazy<IList<string>>(() => hits.Select(r => r.Key.AsString).ToArray()),
-            new Lazy<IList<string>>(() => misses.Select(m => m.AsString).ToArray()))
+            new Lazy<IList<string>>(() => hits.Select(r => r.Key.AsStringSafe).ToArray()),
+            new Lazy<IList<string>>(() => misses.Select(m => m.AsStringSafe).ToArray()))
         {
             Hits = hits;
             Misses = misses;

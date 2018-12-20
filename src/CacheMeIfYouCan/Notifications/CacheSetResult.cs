@@ -53,7 +53,7 @@ namespace CacheMeIfYouCan.Notifications
             start,
             duration,
             values.Count,
-            new Lazy<IList<string>>(() => values.Select(kv => kv.Key.AsString).ToArray()))
+            new Lazy<IList<string>>(() => values.Select(kv => kv.Key.AsStringSafe).ToArray()))
         {
             Values = values;
         }

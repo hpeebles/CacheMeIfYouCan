@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Caches
         {
             var expiry = DateTime.UtcNow + timeToLive;
             
-            _cache.Set(key, new ValueWithExpiry<TV>(value, expiry), expiry);
+            _cache.Set(key.AsString, new ValueWithExpiry<TV>(value, expiry), expiry);
         }
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)

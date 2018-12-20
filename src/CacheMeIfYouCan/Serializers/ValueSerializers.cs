@@ -5,8 +5,8 @@ namespace CacheMeIfYouCan.Serializers
 {
     public class ValueSerializers
     {
-        private readonly IDictionary<Type, object> _serializers = new Dictionary<Type, object>();
-        private readonly IDictionary<Type, object> _deserializers = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _serializers = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _deserializers = new Dictionary<Type, object>();
         private ISerializer _default;
 
         internal bool TryGetSerializer<T>(out Func<T, string> serializer)
@@ -42,15 +42,15 @@ namespace CacheMeIfYouCan.Serializers
 
         public ValueSerializers Set<T>(ISerializer serializer)
         {
-            _serializers[typeof(T)] = (Func<T, string>)(serializer.Serialize);
-            _deserializers[typeof(T)] = (Func<string, T>)(serializer.Deserialize<T>);
+            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
+            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize<T>;
             return this;
         }
 
         public ValueSerializers Set<T>(ISerializer<T> serializer)
         {
-            _serializers[typeof(T)] = (Func<T, string>)(serializer.Serialize);
-            _deserializers[typeof(T)] = (Func<string, T>)(serializer.Deserialize);
+            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
+            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize;
             return this;
         }
 

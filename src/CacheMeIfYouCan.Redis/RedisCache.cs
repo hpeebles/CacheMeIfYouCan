@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Redis
         {
             var redisDb = GetDatabase();
 
-            var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key));
+            var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key.AsString));
 
             if (!valueWithExpiry.Value.HasValue)
                 return new GetFromCacheResult<TK, TV>();
@@ -79,11 +79,11 @@ namespace CacheMeIfYouCan.Redis
         {
             var redisDb = GetDatabase();
             
-            var redisKey = _toRedisKey(key);
+            var redisKey = _toRedisKey(key.AsString);
 
             var serializedValue = _serializer(value);
             
-            _recentlySetKeysManager?.Mark(key);
+            _recentlySetKeysManager?.Mark(key.AsString);
         
             await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
         }
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan.Redis
 
             async Task<KeyValuePair<Key<TK>, RedisValueWithExpiry>> GetSingle(Key<TK> key)
             {
-                var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key));
+                var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key.AsString));
                 
                 return new KeyValuePair<Key<TK>, RedisValueWithExpiry>(key, valueWithExpiry);
             }
@@ -122,19 +122,17 @@ namespace CacheMeIfYouCan.Redis
         {
             var redisDb = GetDatabase();
             
-            async Task SetSingle(Key<TK> key, TV value)
+            async Task SetSingle(string key, string value)
             {
                 var redisKey = _toRedisKey(key);
 
-                var serializedValue = _serializer(value);
-
                 _recentlySetKeysManager?.Mark(key);
             
-                await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
+                await redisDb.StringSetAsync(redisKey, value, timeToLive);
             }
             
             var tasks = values
-                .Select(kv => SetSingle(kv.Key, kv.Value))
+                .Select(kv => SetSingle(kv.Key.AsString, _serializer(kv.Value)))
                 .ToArray();
 
             await Task.WhenAll(tasks);
