@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Internal
         private DateTime _lastRefreshAttempt;
         private DateTime _lastSuccessfulRefresh;
         private T _value;
-        private bool _initialised;
+        private State _state;
         private IDisposable _refreshTask;
         private TimeSpan _nextRefreshInterval;
 
@@ -34,14 +34,21 @@ namespace CacheMeIfYouCan.Internal
             _onRefresh = onRefresh;
             _onError = onError;
             _semaphore = new SemaphoreSlim(1);
+            _state = State.PendingInitialisation;
         }
 
         public T Value
         {
             get
             {
-                if (!_initialised)
+                if (_state == State.Ready)
+                    return _value;
+                
+                if (_state == State.PendingInitialisation)
                     Init().GetAwaiter().GetResult();
+                
+                if (_state == State.Disposed)
+                    throw new ObjectDisposedException(nameof(CachedObject<T>));
                 
                 return _value;
             }
@@ -49,12 +56,12 @@ namespace CacheMeIfYouCan.Internal
 
         public async Task<bool> Init()
         {
-            if (_initialised)
+            if (_state != State.PendingInitialisation)
                 return true;
 
             await _semaphore.WaitAsync();
 
-            if (_initialised)
+            if (_state != State.PendingInitialisation)
             {
                 _semaphore.Release();
                 return true;
@@ -77,18 +84,19 @@ namespace CacheMeIfYouCan.Internal
                     .Repeat()
                     .Subscribe();
                     
-                _initialised = true;
+                _state = State.Ready;
             }
             finally
             {
                 _semaphore.Release();
             }
 
-            return _initialised;
+            return _state == State.Ready;
         }
 
         public void Dispose()
         {
+            _state = State.Disposed;
             _refreshTask?.Dispose();
         }
 
@@ -137,6 +145,13 @@ namespace CacheMeIfYouCan.Internal
             _onRefresh?.Invoke(result);
             
             return result;
+        }
+
+        private enum State
+        {
+            PendingInitialisation,
+            Ready,
+            Disposed
         }
     }
 }

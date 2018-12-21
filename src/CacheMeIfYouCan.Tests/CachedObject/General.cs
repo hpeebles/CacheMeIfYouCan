@@ -71,5 +71,22 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build());
         }
+
+        [Fact]
+        public async Task ThrowsIfAccessedAfterDisposed()
+        {
+            var date = CachedObjectFactory
+                .ConfigureFor(() => DateTime.UtcNow)
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .Build(false);
+
+            await date.Init();
+
+            Assert.True(date.Value > DateTime.MinValue);
+            
+            date.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => date.Value);
+        }
     }
 }

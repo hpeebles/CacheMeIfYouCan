@@ -57,8 +57,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
-            var millis = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow.Millisecond)
+            var date = CachedObjectFactory
+                .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
@@ -70,13 +70,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             await CachedObjectInitialiser.InitAll();
             
             var ticksValue = ticks.Value;
-            var millisValue = millis.Value;
+            var dateValue = date.Value;
             var ticksDoubleValue = ticksDouble.Value;
 
             await Task.Delay(TimeSpan.FromSeconds(2));
             
             Assert.NotEqual(ticksValue, ticks.Value);
-            Assert.NotEqual(millisValue, millis.Value);
+            Assert.NotEqual(dateValue, date.Value);
             Assert.NotEqual(ticksDoubleValue, ticksDouble.Value);
         }
 
