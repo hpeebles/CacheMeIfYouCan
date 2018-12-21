@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -9,25 +11,28 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task RefreshedValueIsImmediatelyExposed()
         {
+            var results = new List<CachedObjectRefreshResult>();
+            
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .OnRefreshResult(r =>
+                {
+                    results.Add(r);
+                    Assert.InRange(
+                        r.NewValue,
+                        DateTime.UtcNow.AddMilliseconds(-100),
+                        DateTime.UtcNow.AddMilliseconds(100));
+                })
                 .Build(false);
 
             await date.Init();
 
-            var first = date.Value;
-
-            DateTime next;
-            do
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(1));
-                
-                next = date.Value;
-            }
-            while (next == first);
+            await Task.Delay(TimeSpan.FromSeconds(10));
             
-            Assert.True(DateTime.UtcNow - next < TimeSpan.FromMilliseconds(100));
+            date.Dispose();
+            
+            Assert.NotEmpty(results);
         }
 
         [Fact]

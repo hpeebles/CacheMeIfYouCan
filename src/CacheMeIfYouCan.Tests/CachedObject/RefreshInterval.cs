@@ -24,11 +24,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             await Task.Delay(TimeSpan.FromSeconds(20));
 
+            date.Dispose();
+            
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
 
             Assert.True(TimeSpan.FromMilliseconds(1800) <= min);
-            Assert.True(max <= TimeSpan.FromMilliseconds(2500));
+            Assert.True(max <= TimeSpan.FromMilliseconds(3000));
         }
         
         [Fact]
@@ -46,6 +48,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             await date.Init();
 
             await Task.Delay(TimeSpan.FromSeconds(20));
+            
+            date.Dispose();
             
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
@@ -69,12 +73,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             await Task.Delay(TimeSpan.FromSeconds(12));
             
+            date.Dispose();
+            
             Assert.Equal(5, refreshResults.Count);
             foreach (var result in refreshResults.Skip(1))
             {
                 Assert.InRange(
                     result.Start - result.LastRefreshAttempt,
-                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1),
+                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1),
                     TimeSpan.FromSeconds(result.SuccessfulRefreshCount));
             }
         }
