@@ -6,14 +6,6 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class CacheGetResult
     {
-        public readonly string CacheName;
-        public readonly string CacheType;
-        public readonly bool Success;
-        public readonly long Start;
-        public readonly long Duration;
-        public readonly int HitsCount;
-        public readonly int MissesCount;
-        
         private readonly Lazy<IList<string>> _hits;
         private readonly Lazy<IList<string>> _misses;
 
@@ -39,15 +31,19 @@ namespace CacheMeIfYouCan.Notifications
             _misses = misses;
         }
 
+        public string CacheName { get; }
+        public string CacheType { get; }
+        public bool Success { get; }
+        public long Start { get; }
+        public long Duration { get; }
+        public int HitsCount { get; }
+        public int MissesCount { get; }
         public IList<string> Hits => _hits.Value;
         public IList<string> Misses => _misses.Value;
     }
     
     public sealed class CacheGetResult<TK, TV> : CacheGetResult
     {
-        public new readonly ICollection<GetFromCacheResult<TK, TV>> Hits;
-        public new readonly ICollection<Key<TK>> Misses;
-
         internal CacheGetResult(
             string cacheName,
             string cacheType,
@@ -70,5 +66,8 @@ namespace CacheMeIfYouCan.Notifications
             Hits = hits;
             Misses = misses;
         }
+        
+        public new ICollection<GetFromCacheResult<TK, TV>> Hits { get; }
+        public new ICollection<Key<TK>> Misses { get; }
     }
 }

@@ -4,15 +4,9 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheGetResult
     {
-        public readonly string FunctionName;
-        public readonly IEnumerable<IFunctionCacheGetResultInner> Results;
-        public readonly bool Success;
-        public readonly long Start;
-        public readonly long Duration;
-
         internal FunctionCacheGetResult(
             string functionName,
-            IEnumerable<IFunctionCacheGetResultInner> results,
+            IReadOnlyCollection<IFunctionCacheGetResultInner> results,
             bool success,
             long start,
             long duration)
@@ -23,20 +17,28 @@ namespace CacheMeIfYouCan.Notifications
             Start = start;
             Duration = duration;
         }
+        
+        public string FunctionName { get; }
+        public IReadOnlyCollection<IFunctionCacheGetResultInner> Results { get; }
+        public bool Success { get; }
+        public long Start { get; }
+        public long Duration { get; }
     }
 
     public sealed class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
     {
         internal FunctionCacheGetResult(
             string functionName,
-            IEnumerable<FunctionCacheGetResultInner<TK, TV>> results,
+            IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> results,
             bool success,
             long start,
             long duration)
             : base(functionName, results, success, start, duration)
-        { }
+        {
+            Results = results;
+        }
 
-        public new IEnumerable<FunctionCacheGetResultInner<TK, TV>> Results => base.Results as IEnumerable<FunctionCacheGetResultInner<TK, TV>>;
+        public new IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> Results { get; }
     }
 
     public interface IFunctionCacheGetResultInner

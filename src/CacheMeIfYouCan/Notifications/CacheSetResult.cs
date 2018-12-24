@@ -6,12 +6,6 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class CacheSetResult
     {
-        public readonly string CacheName;
-        public readonly string CacheType;
-        public readonly bool Success;
-        public readonly long Start;
-        public readonly long Duration;
-        public readonly int KeysCount;
         private readonly Lazy<IList<string>> _keys;
 
         internal CacheSetResult(
@@ -31,14 +25,18 @@ namespace CacheMeIfYouCan.Notifications
             KeysCount = keysCount;
             _keys = keys;
         }
-
+        
+        public string CacheName { get; }
+        public string CacheType { get; }
+        public bool Success { get; }
+        public long Start { get; }
+        public long Duration { get; }
+        public int KeysCount { get; }
         public IList<string> Keys => _keys.Value;
     }
     
     public sealed class CacheSetResult<TK, TV> : CacheSetResult
     {
-        public readonly ICollection<KeyValuePair<Key<TK>, TV>> Values;
-
         internal CacheSetResult(
             string cacheName,
             string cacheType,
@@ -57,5 +55,7 @@ namespace CacheMeIfYouCan.Notifications
         {
             Values = values;
         }
+        
+        public ICollection<KeyValuePair<Key<TK>, TV>> Values { get; }
     }
 }

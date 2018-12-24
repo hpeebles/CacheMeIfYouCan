@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Notifications
             long timestamp,
             string message,
             Exception exception)
-        : base(message, exception)
+            : base(message, exception)
         {
             FunctionName = functionName;
             _keys = keys;

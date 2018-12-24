@@ -4,16 +4,9 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class FunctionCacheFetchResult
     {
-        public readonly string FunctionName;
-        public readonly IEnumerable<IFunctionCacheFetchResultInner> Results;
-        public readonly bool Success;
-        public readonly long Start;
-        public readonly long Duration;
-        public readonly FetchReason Reason;
-
         internal FunctionCacheFetchResult(
             string functionName,
-            IEnumerable<IFunctionCacheFetchResultInner> results,
+            IReadOnlyCollection<IFunctionCacheFetchResultInner> results,
             bool success,
             long start,
             long duration,
@@ -26,21 +19,30 @@ namespace CacheMeIfYouCan.Notifications
             Duration = duration;
             Reason = reason;
         }
+        
+        public string FunctionName { get; }
+        public IReadOnlyCollection<IFunctionCacheFetchResultInner> Results { get; }
+        public bool Success { get; }
+        public long Start { get; }
+        public long Duration { get; }
+        public FetchReason Reason { get; }
     }
     
     public sealed class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
     {
         internal FunctionCacheFetchResult(
             string functionName,
-            ICollection<FunctionCacheFetchResultInner<TK, TV>> results,
+            IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> results,
             bool success,
             long start,
             long duration,
             FetchReason reason)
             : base(functionName, results, success, start, duration, reason)
-        { }
+        {
+            Results = results;
+        }
         
-        public new ICollection<FunctionCacheFetchResultInner<TK, TV>> Results => base.Results as ICollection<FunctionCacheFetchResultInner<TK, TV>>;
+        public new IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> Results { get; }
     }
     
     public interface IFunctionCacheFetchResultInner

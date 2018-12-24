@@ -4,15 +4,6 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class CachedObjectRefreshResult
     {
-        public DateTime Start { get; }
-        public TimeSpan Duration { get; }
-        public bool Success { get; }
-        public Exception Exception { get; }
-        public int RefreshAttemptCount { get; }
-        public int SuccessfulRefreshCount { get; }
-        public DateTime LastRefreshAttempt { get; }
-        public DateTime LastSuccessfulRefresh { get; }
-
         private protected CachedObjectRefreshResult(
             DateTime start,
             TimeSpan duration,
@@ -31,12 +22,19 @@ namespace CacheMeIfYouCan.Notifications
             LastRefreshAttempt = lastRefreshAttempt;
             LastSuccessfulRefresh = lastSuccessfulRefresh;
         }
+        
+        public DateTime Start { get; }
+        public TimeSpan Duration { get; }
+        public bool Success { get; }
+        public Exception Exception { get; }
+        public int RefreshAttemptCount { get; }
+        public int SuccessfulRefreshCount { get; }
+        public DateTime LastRefreshAttempt { get; }
+        public DateTime LastSuccessfulRefresh { get; }
     }
 
     public sealed class CachedObjectRefreshResult<T> : CachedObjectRefreshResult
     {
-        public T NewValue { get; }
-
         internal CachedObjectRefreshResult(
             DateTime start,
             TimeSpan duration,
@@ -50,5 +48,7 @@ namespace CacheMeIfYouCan.Notifications
         {
             NewValue = newValue;
         }
+        
+        public T NewValue { get; }
     }
 }

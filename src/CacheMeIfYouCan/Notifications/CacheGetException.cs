@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Notifications
             long timestamp,
             string message,
             Exception exception)
-            : base(cacheName, cacheType, new Lazy<ICollection<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), timestamp, message, exception)
+            : base(cacheName, cacheType, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), timestamp, message, exception)
         {
             Keys = keys;
         }
