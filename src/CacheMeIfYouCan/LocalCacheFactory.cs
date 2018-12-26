@@ -22,8 +22,6 @@ namespace CacheMeIfYouCan
             _cacheFactory = cacheFactory;
         }
 
-        public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
-
         public LocalCacheFactory OnGetResult(
             Action<CacheGetResult> onGetResult,
             ActionOrdering ordering = ActionOrdering.Append)
@@ -83,8 +81,6 @@ namespace CacheMeIfYouCan
         {
             _cacheFactory = cacheFactory;
         }
-
-        public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
 
         public LocalCacheFactory<TK, TV> OnGetResult(
             Action<CacheGetResult<TK, TV>> onGetResult,

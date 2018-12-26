@@ -4,13 +4,11 @@ namespace CacheMeIfYouCan
 {
     public interface ILocalCacheFactory
     {
-        bool RequiresStringKeys { get; }
         ILocalCache<TK, TV> Build<TK, TV>(string cacheName);
     }
     
     public interface ILocalCacheFactory<TK, TV>
     {
-        bool RequiresStringKeys { get; }
         ILocalCache<TK, TV> Build(string cacheName);
     }
 
@@ -22,8 +20,6 @@ namespace CacheMeIfYouCan
         {
             _factory = factory;
         }
-
-        public bool RequiresStringKeys => _factory.RequiresStringKeys;
         
         public ILocalCache<TK, TV> Build(string cacheName)
         {
@@ -35,13 +31,10 @@ namespace CacheMeIfYouCan
     {
         private readonly Func<string, ILocalCache<TK, TV>> _func;
 
-        public LocalCacheFactoryFuncAdaptor(Func<string, ILocalCache<TK, TV>> func, bool requiresStringKeys)
+        public LocalCacheFactoryFuncAdaptor(Func<string, ILocalCache<TK, TV>> func)
         {
             _func = func;
-            RequiresStringKeys = requiresStringKeys;
         }
-        
-        public bool RequiresStringKeys { get; }
 
         public ILocalCache<TK, TV> Build(string cacheName)
         {

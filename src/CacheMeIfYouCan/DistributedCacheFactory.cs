@@ -26,8 +26,6 @@ namespace CacheMeIfYouCan
             _valueSerializers = new ValueSerializers();
         }
 
-        public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
-
         public DistributedCacheFactory OnGetResult(
             Action<CacheGetResult> onGetResult,
             ActionOrdering ordering = ActionOrdering.Append)
@@ -134,8 +132,6 @@ namespace CacheMeIfYouCan
             _cacheFactory = cacheFactory ?? throw new ArgumentNullException(nameof(cacheFactory));
         }
 
-        public bool RequiresStringKeys => _cacheFactory.RequiresStringKeys;
-        
         public DistributedCacheFactory<TK, TV> OnGetResult(
             Action<CacheGetResult<TK, TV>> onGetResult,
             ActionOrdering ordering = ActionOrdering.Append)

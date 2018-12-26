@@ -11,11 +11,7 @@ namespace CacheMeIfYouCan.Internal
         {
             _cacheFactory = cacheFactory;
             _cacheWrapper = cacheWrapper;
-
-            RequiresStringKeys = cacheFactory.RequiresStringKeys;
         }
-        
-        public bool RequiresStringKeys { get; }
         
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
@@ -34,11 +30,7 @@ namespace CacheMeIfYouCan.Internal
         {
             _cacheFactory = cacheFactory;
             _cacheWrapper = cacheWrapper;
-
-            RequiresStringKeys = cacheFactory.RequiresStringKeys;
         }
-        
-        public bool RequiresStringKeys { get; }
         
         public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
         {

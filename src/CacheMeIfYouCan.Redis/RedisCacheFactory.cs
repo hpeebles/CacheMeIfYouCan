@@ -12,8 +12,6 @@ namespace CacheMeIfYouCan.Redis
             _redisConfig = redisConfig;
         }
 
-        public bool RequiresStringKeys => true;
-
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));

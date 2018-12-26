@@ -16,10 +16,8 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheException<TK>> onCacheError,
-            out IEqualityComparer<Key<TK>> keyComparer)
+            IEqualityComparer<Key<TK>> keyComparer)
         {
-            keyComparer = new StringKeyComparer<TK>();
-
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
@@ -44,9 +42,6 @@ namespace CacheMeIfYouCan.Internal
 
             if (localCache != null)
             {
-                if (!localCacheFactory.RequiresStringKeys)
-                    keyComparer = new GenericKeyComparer<TK>();
-                
                 if (distributedCache != null)
                     return new TwoTierCache<TK, TV>(localCache, distributedCache, keyComparer);
 
@@ -56,9 +51,6 @@ namespace CacheMeIfYouCan.Internal
             if (distributedCache == null)
                 throw new Exception("Cache factory returned null");
 
-            if (!distributedCacheFactory.RequiresStringKeys)
-                keyComparer = new GenericKeyComparer<TK>();
-            
             return new DistributedCacheAdaptorInternal<TK, TV>(distributedCache);
         }
 

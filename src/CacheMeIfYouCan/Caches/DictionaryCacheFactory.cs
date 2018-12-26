@@ -4,8 +4,6 @@
     {
         private readonly int? _maxItems; 
         
-        public bool RequiresStringKeys => false;
-
         public DictionaryCacheFactory(int? maxItems = null)
         {
             _maxItems = maxItems;
