@@ -53,49 +53,49 @@ namespace CacheMeIfYouCan.Configuration
 
         public DefaultCacheConfiguration WithOnResultAction(
             Action<FunctionCacheGetResult> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnResult = ActionsHelper.Combine(OnResult, onResult, ordering);
+            OnResult = ActionsHelper.Combine(OnResult, onResult, behaviour);
             return this;
         }
 
         public DefaultCacheConfiguration WithOnFetchAction(
             Action<FunctionCacheFetchResult> onFetch,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnFetch = ActionsHelper.Combine(OnFetch, onFetch, ordering);
+            OnFetch = ActionsHelper.Combine(OnFetch, onFetch, behaviour);
             return this;
         }
 
         public DefaultCacheConfiguration WithOnErrorAction(
             Action<FunctionCacheException> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnError = ActionsHelper.Combine(OnError, onError, ordering);
+            OnError = ActionsHelper.Combine(OnError, onError, behaviour);
             return this;
         }
 
         public DefaultCacheConfiguration WithOnCacheGetAction(
             Action<CacheGetResult> onCacheGet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheGet = ActionsHelper.Combine(OnCacheGet, onCacheGet, ordering);
+            OnCacheGet = ActionsHelper.Combine(OnCacheGet, onCacheGet, behaviour);
             return this;
         }
 
         public DefaultCacheConfiguration WithOnCacheSetAction(
             Action<CacheSetResult> onCacheSet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheSet = ActionsHelper.Combine(OnCacheSet, onCacheSet, ordering);
+            OnCacheSet = ActionsHelper.Combine(OnCacheSet, onCacheSet, behaviour);
             return this;
         }
 
         public DefaultCacheConfiguration WithOnCacheErrorAction(
             Action<CacheException> onCacheError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheError = ActionsHelper.Combine(OnCacheError, onCacheError, ordering);
+            OnCacheError = ActionsHelper.Combine(OnCacheError, onCacheError, behaviour);
             return this;
         }
 

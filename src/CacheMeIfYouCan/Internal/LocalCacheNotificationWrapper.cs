@@ -12,8 +12,6 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
         private readonly Action<CacheException<TK>> _onError;
-        private const string CacheGetErrorMessage = "LocalCache.Get exception";
-        private const string CacheSetErrorMessage = "LocalCache.Set exception";
 
         public LocalCacheNotificationWrapper(
             ILocalCache<TK, TV> cache,
@@ -32,49 +30,40 @@ namespace CacheMeIfYouCan.Internal
 
         public string CacheName { get; }
         public string CacheType { get; }
-
+        
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
             var result = new GetFromCacheResult<TK, TV>();
-            
+
             try
             {
                 result = _cache.Get(key);
             }
-            catch (Exception ex)
+            catch (CacheGetException<TK> ex)
             {
                 error = true;
+                _onError?.Invoke(ex);
 
-                var exception = new CacheGetException<TK>(
-                    CacheName,
-                    CacheType,
-                    new[] { key },
-                    timestamp,
-                    CacheGetErrorMessage,
-                    ex);
-                
-                _onError?.Invoke(exception);
-
-                throw exception;
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            {
+                error = true;
+                throw;
             }
             finally
             {
-                if (_onCacheGetResult != null)
-                {
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    _onCacheGetResult(new CacheGetResult<TK, TV>(
-                        CacheName,
-                        CacheType,
-                        result.Success ? new[] { result } : new GetFromCacheResult<TK, TV>[0],
-                        result.Success ? new Key<TK>[0] : new[] { key },
-                        !error,
-                        timestamp,
-                        duration));
-                }
+                _onCacheGetResult?.Invoke(new CacheGetResult<TK, TV>(
+                    CacheName,
+                    CacheType,
+                    result.Success ? new[] { result } : new GetFromCacheResult<TK, TV>[0],
+                    result.Success ? new Key<TK>[0] : new[] { key },
+                    !error,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
             return result;
@@ -90,40 +79,30 @@ namespace CacheMeIfYouCan.Internal
             {
                 _cache.Set(key, value, timeToLive);
             }
-            catch (Exception ex)
+            catch (CacheSetException<TK, TV> ex)
             {
                 error = true;
+                _onError?.Invoke(ex);
 
-                var exception = new CacheSetException<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
-                    timeToLive,
-                    timestamp,
-                    CacheSetErrorMessage,
-                    ex);
-                
-                _onError?.Invoke(exception);
-
-                throw exception;
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            {
+                error = true;
+                throw;
             }
             finally
             {
-                if (_onCacheSetResult != null)
-                {
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    _onCacheSetResult(new CacheSetResult<TK, TV>(
-                        CacheName,
-                        CacheType,
-                        new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
-                        !error,
-                        timestamp,
-                        duration));
-                }
+                _onCacheSetResult?.Invoke(new CacheSetResult<TK, TV>(
+                    CacheName,
+                    CacheType,
+                    new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
+                    !error,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }
-        
+
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
             var timestamp = Timestamp.Now;
@@ -135,41 +114,30 @@ namespace CacheMeIfYouCan.Internal
             {
                 results = _cache.Get(keys);
             }
-            catch (Exception ex)
+            catch (CacheGetException<TK> ex)
             {
                 error = true;
+                _onError?.Invoke(ex);
 
-                var exception = new CacheGetException<TK>(
-                    CacheName,
-                    CacheType,
-                    keys,
-                    timestamp,
-                    CacheGetErrorMessage,
-                    ex);
-                
-                _onError?.Invoke(exception);
-
-                throw exception;
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            {
+                error = true;
+                throw;
             }
             finally
             {
-                if (_onCacheGetResult != null)
-                {
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    var misses = results == null || !results.Any()
+                _onCacheGetResult?.Invoke(new CacheGetResult<TK, TV>(
+                    CacheName,
+                    CacheType,
+                    results,
+                    results == null || !results.Any()
                         ? keys
-                        : keys.Except(results.Select(r => r.Key)).ToArray();
-                
-                    _onCacheGetResult(new CacheGetResult<TK, TV>(
-                        CacheName,
-                        CacheType,
-                        results,
-                        misses,
-                        !error,
-                        timestamp,
-                        duration));
-                }
+                        : keys.Except(results.Select(r => r.Key)).ToArray(),
+                    !error,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
             return results;
@@ -185,37 +153,27 @@ namespace CacheMeIfYouCan.Internal
             {
                 _cache.Set(values, timeToLive);
             }
-            catch (Exception ex)
+            catch (CacheSetException<TK, TV> ex)
             {
                 error = true;
+                _onError?.Invoke(ex);
 
-                var exception = new CacheSetException<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    values,
-                    timeToLive,
-                    timestamp,
-                    CacheSetErrorMessage,
-                    ex);
-                
-                _onError?.Invoke(exception);
-
-                throw exception;
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            {
+                error = true;
+                throw;
             }
             finally
             {
-                if (_onCacheSetResult != null)
-                {
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    _onCacheSetResult(new CacheSetResult<TK, TV>(
-                        CacheName,
-                        CacheType,
-                        values,
-                        !error,
-                        timestamp,
-                        duration));
-                }
+                _onCacheSetResult?.Invoke(new CacheSetResult<TK, TV>(
+                    CacheName,
+                    CacheType,
+                    values,
+                    !error,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }
 

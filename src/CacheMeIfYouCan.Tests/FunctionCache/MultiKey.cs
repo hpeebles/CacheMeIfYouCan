@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             //     typeof(HashSet<string>),
             //     typeof(SortedSet<string>)
             // };
-// 
+            // 
             // // Supported return types (+ async versions)
             // var returnTypes = new[]
             // {

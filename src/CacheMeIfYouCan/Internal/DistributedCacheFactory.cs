@@ -7,13 +7,14 @@ using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Internal
 {
     internal class DistributedCacheFactory : IDistributedCacheFactory
     {
+        private readonly IDistributedCacheFactory _cacheFactory;
         private readonly KeySerializers _keySerializers;
         private readonly ValueSerializers _valueSerializers;
-        private IDistributedCacheFactory _cacheFactory;
+        private readonly List<IDistributedCacheWrapperFactory> _wrapperFactories;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheException> _onError;
@@ -24,29 +25,30 @@ namespace CacheMeIfYouCan
             _cacheFactory = cacheFactory;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
+            _wrapperFactories = new List<IDistributedCacheWrapperFactory>();
         }
 
         public DistributedCacheFactory OnGetResult(
             Action<CacheGetResult> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, ordering);
+            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, behaviour);
             return this;
         }
 
         public DistributedCacheFactory OnSetResult(
             Action<CacheSetResult> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, ordering);
+            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
             return this;
         }
 
         public DistributedCacheFactory OnError(
             Action<CacheException> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return this;
         }
         
@@ -73,17 +75,43 @@ namespace CacheMeIfYouCan
             return this;
         }
         
-        public DistributedCacheFactory AddWrapper(IDistributedCacheWrapperFactory wrapper)
+        public DistributedCacheFactory WithWrapper(IDistributedCacheWrapperFactory wrapperFactory, AdditionBehaviour behaviour)
         {
-            _cacheFactory = new DistributedCacheFactoryWrapper(_cacheFactory, wrapper);
+            switch (behaviour)
+            {
+                case AdditionBehaviour.Append:
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+
+                case AdditionBehaviour.Prepend:
+                    _wrapperFactories.Insert(0, wrapperFactory);
+                    break;
+                
+                case AdditionBehaviour.Overwrite:
+                    _wrapperFactories.Clear();
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+            }
+            
             return this;
         }
 
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
             var cache = _cacheFactory.Build(config);
+
+            // First wrapper formats any exceptions
+            cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
             
-            return new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            // Next apply any custom wrappers
+            foreach (var wrapperFactory in _wrapperFactories)
+                cache = wrapperFactory.Wrap(cache);
+            
+            // Last wrapper handles notifications (if any actions are set)
+            if (_onGetResult != null || _onSetResult != null || _onError != null)
+                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+
+            return cache;
         }
 
         public IDistributedCache<TK, TV> Build<TK, TV>(string cacheName)
@@ -117,7 +145,8 @@ namespace CacheMeIfYouCan
     
     public class DistributedCacheFactory<TK, TV> : IDistributedCacheFactory<TK, TV>
     {
-        private IDistributedCacheFactory<TK, TV> _cacheFactory;
+        private readonly IDistributedCacheFactory<TK, TV> _cacheFactory;
+        private readonly List<IDistributedCacheWrapperFactory<TK, TV>> _wrapperFactories;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
         private Action<CacheException<TK>> _onError;
@@ -130,29 +159,30 @@ namespace CacheMeIfYouCan
         internal DistributedCacheFactory(IDistributedCacheFactory<TK, TV> cacheFactory)
         {
             _cacheFactory = cacheFactory ?? throw new ArgumentNullException(nameof(cacheFactory));
+            _wrapperFactories = new List<IDistributedCacheWrapperFactory<TK, TV>>();
         }
 
         public DistributedCacheFactory<TK, TV> OnGetResult(
             Action<CacheGetResult<TK, TV>> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, ordering);
+            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, behaviour);
             return this;
         }
 
         public DistributedCacheFactory<TK, TV> OnSetResult(
             Action<CacheSetResult<TK, TV>> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, ordering);
+            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
             return this;
         }
 
         public DistributedCacheFactory<TK, TV> OnError(
             Action<CacheException<TK>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return this;
         }
 
@@ -200,9 +230,26 @@ namespace CacheMeIfYouCan
             return this;
         }
 
-        public DistributedCacheFactory<TK, TV> AddWrapper(IDistributedCacheWrapperFactory<TK, TV> wrapper)
+        public DistributedCacheFactory<TK, TV> WithWrapper(
+            IDistributedCacheWrapperFactory<TK, TV> wrapperFactory,
+            AdditionBehaviour behaviour)
         {
-            _cacheFactory = new DistributedCacheFactoryWrapper<TK, TV>(_cacheFactory, wrapper);
+            switch (behaviour)
+            {
+                case AdditionBehaviour.Append:
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+
+                case AdditionBehaviour.Prepend:
+                    _wrapperFactories.Insert(0, wrapperFactory);
+                    break;
+                
+                case AdditionBehaviour.Overwrite:
+                    _wrapperFactories.Clear();
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+            }
+            
             return this;
         }
 
@@ -215,10 +262,21 @@ namespace CacheMeIfYouCan
                 ValueSerializer = _valueSerializer ?? config.ValueSerializer,
                 ValueDeserializer = _valueDeserializer ?? config.ValueDeserializer
             };
-
+            
             var cache = _cacheFactory.Build(cacheConfig);
 
-            return new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            // First wrapper formats any exceptions
+            cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
+            
+            // Next apply any custom wrappers
+            foreach (var wrapperFactory in _wrapperFactories)
+                cache = wrapperFactory.Wrap(cache);
+            
+            // Last wrapper handles notifications (if any actions are set)
+            if (_onGetResult != null || _onSetResult != null || _onError != null)
+                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+
+            return cache;
         }
 
         internal IDistributedCache<TK, TV> Build(string cacheName)

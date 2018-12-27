@@ -156,10 +156,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Theory]
-        [InlineData(ActionOrdering.Append)]
-        [InlineData(ActionOrdering.Prepend)]
-        [InlineData(ActionOrdering.Overwrite)]
-        public async Task CombinedActions(ActionOrdering secondActionOrdering)
+        [InlineData(AdditionBehaviour.Append)]
+        [InlineData(AdditionBehaviour.Prepend)]
+        [InlineData(AdditionBehaviour.Overwrite)]
+        public async Task CombinedActions(AdditionBehaviour secondActionAdditionBehaviour)
         {
             var list = new List<int>();
             
@@ -168,24 +168,24 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var cachedEcho = echo
                 .Cached()
                 .OnResult(x => list.Add(1))
-                .OnResult(x => list.Add(2), secondActionOrdering)
+                .OnResult(x => list.Add(2), secondActionAdditionBehaviour)
                 .Build();
 
             await cachedEcho("123");
 
-            if (secondActionOrdering == ActionOrdering.Append)
+            if (secondActionAdditionBehaviour == AdditionBehaviour.Append)
             {
                 Assert.Equal(2, list.Count);
                 Assert.Equal(1, list[0]);
                 Assert.Equal(2, list[1]);
             }
-            else if (secondActionOrdering == ActionOrdering.Prepend)
+            else if (secondActionAdditionBehaviour == AdditionBehaviour.Prepend)
             {
                 Assert.Equal(2, list.Count);
                 Assert.Equal(2, list[0]);
                 Assert.Equal(1, list[1]);
             }
-            else if (secondActionOrdering == ActionOrdering.Overwrite)
+            else if (secondActionAdditionBehaviour == AdditionBehaviour.Overwrite)
             {
                 Assert.Single(list);
                 Assert.Equal(2, list.Single());

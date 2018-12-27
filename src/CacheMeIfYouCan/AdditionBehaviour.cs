@@ -1,6 +1,6 @@
 namespace CacheMeIfYouCan
 {
-    public enum ActionOrdering
+    public enum AdditionBehaviour
     {
         Append,
         Prepend,

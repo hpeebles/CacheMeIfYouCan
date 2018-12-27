@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnResultAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnResultAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnFetchAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnFetchAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnErrorAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnErrorAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
@@ -120,7 +120,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheGetAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnCacheGetAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -149,7 +149,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheSetAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnCacheSetAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -177,7 +177,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .WithDistributedCacheFactory(cacheFactory)
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheErrorAction(null, ActionOrdering.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnCacheErrorAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));

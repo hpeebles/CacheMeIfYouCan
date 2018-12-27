@@ -7,7 +7,7 @@ using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Internal
 {
     internal class LocalCacheFactory : ILocalCacheFactory
     {
@@ -24,25 +24,25 @@ namespace CacheMeIfYouCan
 
         public LocalCacheFactory OnGetResult(
             Action<CacheGetResult> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, ordering);
+            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, behaviour);
             return this;
         }
 
         public LocalCacheFactory OnSetResult(
             Action<CacheSetResult> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, ordering);
+            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
             return this;
         }
 
         public LocalCacheFactory OnError(
             Action<CacheException> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return this;
         }
 
@@ -56,7 +56,12 @@ namespace CacheMeIfYouCan
         {
             var cache = _cacheFactory.Build<TK ,TV>(cacheName);
 
-            return new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
+            
+            if (_onGetResult != null || _onSetResult != null || _onError != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+
+            return cache;
         }
 
         public ICache<TK, TV> BuildAsCache<TK, TV>(string cacheName)
@@ -84,25 +89,25 @@ namespace CacheMeIfYouCan
 
         public LocalCacheFactory<TK, TV> OnGetResult(
             Action<CacheGetResult<TK, TV>> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, ordering);
+            _onGetResult = ActionsHelper.Combine(_onGetResult, onGetResult, behaviour);
             return this;
         }
 
         public LocalCacheFactory<TK, TV> OnSetResult(
             Action<CacheSetResult<TK, TV>> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, ordering);
+            _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
             return this;
         }
 
         public LocalCacheFactory<TK, TV> OnError(
             Action<CacheException<TK>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return this;
         }
         
@@ -121,7 +126,12 @@ namespace CacheMeIfYouCan
         {
             var cache = _cacheFactory.Build(cacheName);
 
-            return new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
+            
+            if (_onGetResult != null || _onSetResult != null || _onError != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+
+            return cache;
         }
 
         public ICache<TK, TV> BuildAsCache(string cacheName)

@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
@@ -8,49 +9,49 @@ namespace CacheMeIfYouCan.Configuration
         public static CachedProxyConfigurationManager<T> OnResultObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<FunctionCacheGetResult>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, configManager.OnResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, configManager.OnResult, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnFetchObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<FunctionCacheFetchResult>> onFetch,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, ordering);
+            return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnErrorObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<FunctionCacheException>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, configManager.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, configManager.OnError, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheGetObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<CacheGetResult>> onCacheGet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheGet, configManager.OnCacheGet, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheSetObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<CacheSetResult>> onCacheSet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, ordering);
+            return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheErrorObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
             Action<IObservable<CacheException>> onCacheError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, ordering);
+            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, behaviour);
         }
     }
 }

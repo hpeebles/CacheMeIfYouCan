@@ -1,5 +1,5 @@
 using System;
-using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
@@ -10,31 +10,31 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory OnGetResult(
             this IDistributedCacheFactory cacheFactory,
             Action<CacheGetResult> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnGetResult(onGetResult, ordering);
+                .OnGetResult(onGetResult, behaviour);
         }
 
         public static IDistributedCacheFactory OnSetResult(
             this IDistributedCacheFactory cacheFactory,
             Action<CacheSetResult> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnSetResult(onSetResult, ordering);
+                .OnSetResult(onSetResult, behaviour);
         }
         
         public static IDistributedCacheFactory OnError(
             this IDistributedCacheFactory cacheFactory,
             Action<CacheException> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnError(onError, ordering);
+                .OnError(onError, behaviour);
         }
 
         public static IDistributedCacheFactory WithKeySerializers(
@@ -73,13 +73,14 @@ namespace CacheMeIfYouCan
                 .WithKeyspacePrefix(keyspacePrefixFunc);
         }
 
-        public static IDistributedCacheFactory AddWrapper(
+        public static IDistributedCacheFactory WithWrapper(
             this IDistributedCacheFactory cacheFactory,
-            IDistributedCacheWrapperFactory wrapper)
+            IDistributedCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
         {
             return cacheFactory
                 .AsFactory()
-                .AddWrapper(wrapper);
+                .WithWrapper(wrapperFactory, behaviour);
         }
         
         public static IDistributedCache<TK, TV> Build<TK, TV>(
@@ -103,31 +104,31 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory<TK, TV> OnGetResult<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<CacheGetResult<TK, TV>> onGetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnGetResult(onGetResult, ordering);
+                .OnGetResult(onGetResult, behaviour);
         }
 
         public static IDistributedCacheFactory<TK, TV> OnSetResult<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<CacheSetResult<TK, TV>> onSetResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnSetResult(onSetResult, ordering);
+                .OnSetResult(onSetResult, behaviour);
         }
         
         public static IDistributedCacheFactory<TK, TV> OnError<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<CacheException<TK>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
-                .OnError(onError, ordering);
+                .OnError(onError, behaviour);
         }
 
         public static IDistributedCacheFactory<TK, TV> WithKeySerializer<TK, TV>(
@@ -195,13 +196,24 @@ namespace CacheMeIfYouCan
                 .WithKeyspacePrefix(keyspacePrefixFunc);
         }
         
-        public static IDistributedCacheFactory<TK, TV> AddWrapper<TK, TV>(
+        public static IDistributedCacheFactory<TK, TV> WithWrapper<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
-            IDistributedCacheWrapperFactory<TK, TV> wrapper)
+            IDistributedCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
         {
             return cacheFactory
                 .AsFactory()
-                .AddWrapper(wrapper);
+                .WithWrapper(new DistributedCacheWrapperFactoryAdaptor<TK, TV>(wrapperFactory), behaviour);
+        } 
+        
+        public static IDistributedCacheFactory<TK, TV> WithWrapper<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            IDistributedCacheWrapperFactory<TK, TV> wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(wrapperFactory, behaviour);
         }
         
         public static IDistributedCache<TK, TV> Build<TK, TV>(
@@ -225,49 +237,49 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory OnGetResultObservable(
             this IDistributedCacheFactory cacheFactory,
             Action<IObservable<CacheGetResult>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnGetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnGetResult, behaviour);
         }
         
         public static IDistributedCacheFactory OnSetResultObservable(
             this IDistributedCacheFactory cacheFactory,
             Action<IObservable<CacheSetResult>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnSetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnSetResult, behaviour);
         }
         
         public static IDistributedCacheFactory OnErrorObservable(
             this IDistributedCacheFactory cacheFactory,
             Action<IObservable<CacheException>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, cacheFactory.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, cacheFactory.OnError, behaviour);
         }
         
         public static IDistributedCacheFactory<TK, TV> OnGetResultObservable<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<IObservable<CacheGetResult<TK, TV>>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnGetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnGetResult, behaviour);
         }
         
         public static IDistributedCacheFactory<TK, TV> OnSetResultObservable<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<IObservable<CacheSetResult<TK, TV>>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnSetResult, ordering);
+            return ObservablesHelper.SetupObservable(onResult, cacheFactory.OnSetResult, behaviour);
         }
         
         public static IDistributedCacheFactory<TK, TV> OnErrorObservable<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             Action<IObservable<CacheException<TK>>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, cacheFactory.OnError, ordering);
+            return ObservablesHelper.SetupObservable(onError, cacheFactory.OnError, behaviour);
         }
 
         private static DistributedCacheFactory AsFactory(this IDistributedCacheFactory cacheFactory)

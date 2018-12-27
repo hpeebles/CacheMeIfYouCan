@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             for (var i = 0; i < 2000; i++)
                 cache.Set(new Key<int>(i, i.ToString()), Guid.NewGuid(), TimeSpan.FromMinutes(1));
 
-            await Task.Delay(TimeSpan.FromSeconds(12));
+            await Task.Delay(TimeSpan.FromSeconds(15));
             
             Assert.Equal(1000, cache.Count);
         }

@@ -97,49 +97,49 @@ namespace CacheMeIfYouCan.Configuration
         
         public CachedProxyConfigurationManager<T> OnResult(
             Action<FunctionCacheGetResult> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onResult = ActionsHelper.Combine(_onResult, onResult, ordering);
+            _onResult = ActionsHelper.Combine(_onResult, onResult, behaviour);
             return this;
         }
         
         public CachedProxyConfigurationManager<T> OnFetch(
             Action<FunctionCacheFetchResult> onFetch,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onFetch = ActionsHelper.Combine(_onFetch, onFetch, ordering);
+            _onFetch = ActionsHelper.Combine(_onFetch, onFetch, behaviour);
             return this;
         }
 
         public CachedProxyConfigurationManager<T> OnError(
             Action<FunctionCacheException> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return this;
         }
         
         public CachedProxyConfigurationManager<T> OnCacheGet(
             Action<CacheGetResult> onCacheGet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheGet = ActionsHelper.Combine(_onCacheGet, onCacheGet, ordering);
+            _onCacheGet = ActionsHelper.Combine(_onCacheGet, onCacheGet, behaviour);
             return this;
         }
         
         public CachedProxyConfigurationManager<T> OnCacheSet(
             Action<CacheSetResult> onCacheSet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, ordering);
+            _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, behaviour);
             return this;
         }
         
         public CachedProxyConfigurationManager<T> OnCacheError(
             Action<CacheException> onCacheError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, ordering);
+            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, behaviour);
             return this;
         }
 

@@ -197,7 +197,7 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithLocalCacheFactory(ILocalCacheFactory<TK, TV> cacheFactory)
         {
-            return WithLocalCacheFactory(cacheFactory.Build<TK, TV>);
+            return WithLocalCacheFactory(cacheFactory.Build);
         }
         
         public TConfig WithLocalCacheFactory(Func<string, ILocalCache<TK, TV>> cacheFactoryFunc)
@@ -238,49 +238,49 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig OnResult(
             Action<FunctionCacheGetResult<TK, TV>> onResult,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onResult = ActionsHelper.Combine(_onResult, onResult, ordering);
+            _onResult = ActionsHelper.Combine(_onResult, onResult, behaviour);
             return (TConfig)this;
         }
         
         public TConfig OnFetch(
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onFetch = ActionsHelper.Combine(_onFetch, onFetch, ordering);
+            _onFetch = ActionsHelper.Combine(_onFetch, onFetch, behaviour);
             return (TConfig)this;
         }
 
         public TConfig OnError(
             Action<FunctionCacheException<TK>> onError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, ordering);
+            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
             return (TConfig)this;
         }
         
         public TConfig OnCacheGet(
             Action<CacheGetResult<TK, TV>> onCacheGet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheGet = ActionsHelper.Combine(_onCacheGet, onCacheGet, ordering);
+            _onCacheGet = ActionsHelper.Combine(_onCacheGet, onCacheGet, behaviour);
             return (TConfig)this;
         }
         
         public TConfig OnCacheSet(
             Action<CacheSetResult<TK, TV>> onCacheSet,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, ordering);
+            _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, behaviour);
             return (TConfig)this;
         }
 
         public TConfig OnCacheError(
             Action<CacheException<TK>> onCacheError,
-            ActionOrdering ordering = ActionOrdering.Append)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, ordering);
+            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, behaviour);
             return (TConfig)this;
         }
         

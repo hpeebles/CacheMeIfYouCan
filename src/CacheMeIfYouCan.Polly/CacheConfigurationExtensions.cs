@@ -6,16 +6,18 @@ namespace CacheMeIfYouCan.Polly
     {
         public static IDistributedCacheFactory WithPolicy(
             this IDistributedCacheFactory configurationManager,
-            Policy policy)
+            Policy policy,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return configurationManager.AddWrapper(new CachePollyWrapperFactory(policy));
+            return configurationManager.WithWrapper(new CachePollyWrapperFactory(policy), behaviour);
         }
         
         public static IDistributedCacheFactory<TK, TV> WithPolicy<TK, TV>(
             this IDistributedCacheFactory<TK, TV> configurationManager,
-            Policy policy)
+            Policy policy,
+            AdditionBehaviour behaviour)
         {
-            return configurationManager.AddWrapper(new CachePollyWrapperFactory<TK, TV>(policy));
+            return configurationManager.WithWrapper(new CachePollyWrapperFactory<TK, TV>(policy), behaviour);
         }
     }
 }
