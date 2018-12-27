@@ -18,10 +18,10 @@ namespace CacheMeIfYouCan.Internal
         private static readonly IDictionary<Type, object> Deserializers = new Dictionary<Type, object>
         {
             { typeof(string), (Func<string, string>) (x => x) },
-            { typeof(byte), (Func<string, byte>) (Byte.Parse) },
-            { typeof(short), (Func<string, short>) (Int16.Parse) },
-            { typeof(int), (Func<string, int>) (Int32.Parse) },
-            { typeof(long), (Func<string, long>) (Int64.Parse) }
+            { typeof(byte), (Func<string, byte>) Byte.Parse },
+            { typeof(short), (Func<string, short>) Int16.Parse },
+            { typeof(int), (Func<string, int>) Int32.Parse },
+            { typeof(long), (Func<string, long>) Int64.Parse }
         };
 
         public static bool TryGetSerializer<T>(out Func<T, string> serializer)

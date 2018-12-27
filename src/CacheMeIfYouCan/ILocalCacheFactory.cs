@@ -12,11 +12,11 @@ namespace CacheMeIfYouCan
         ILocalCache<TK, TV> Build(string cacheName);
     }
 
-    internal class LocalCacheFactoryAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
+    internal class LocalCacheFactoryToGenericAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly ILocalCacheFactory _factory;
 
-        public LocalCacheFactoryAdaptor(ILocalCacheFactory factory)
+        public LocalCacheFactoryToGenericAdaptor(ILocalCacheFactory factory)
         {
             _factory = factory;
         }
@@ -27,11 +27,11 @@ namespace CacheMeIfYouCan
         }
     }
     
-    internal class LocalCacheFactoryFuncAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
+    internal class LocalCacheFactoryFromFuncAdaptor<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly Func<string, ILocalCache<TK, TV>> _func;
 
-        public LocalCacheFactoryFuncAdaptor(Func<string, ILocalCache<TK, TV>> func)
+        public LocalCacheFactoryFromFuncAdaptor(Func<string, ILocalCache<TK, TV>> func)
         {
             _func = func;
         }

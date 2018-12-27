@@ -203,7 +203,7 @@ namespace CacheMeIfYouCan
         {
             return cacheFactory
                 .AsFactory()
-                .WithWrapper(new DistributedCacheWrapperFactoryAdaptor<TK, TV>(wrapperFactory), behaviour);
+                .WithWrapper(new DistributedCacheWrapperFactoryToGenericAdaptor<TK, TV>(wrapperFactory), behaviour);
         } 
         
         public static IDistributedCacheFactory<TK, TV> WithWrapper<TK, TV>(

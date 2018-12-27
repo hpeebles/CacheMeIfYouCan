@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Internal
 
             _keySerializers.TryGetSerializer<TK>(out var serializer);
             
-            return new LocalCacheAdaptor<TK, TV>(cache, serializer);
+            return new LocalCacheToCacheAdaptor<TK, TV>(cache, serializer);
         }
     }
     
@@ -138,16 +138,16 @@ namespace CacheMeIfYouCan.Internal
         {
             var cache = Build(cacheName);
 
-            return new LocalCacheAdaptor<TK, TV>(cache, _keySerializer);
+            return new LocalCacheToCacheAdaptor<TK, TV>(cache, _keySerializer);
         }
     }
     
-    internal class LocalCacheAdaptor<TK, TV> : ICache<TK, TV>
+    internal class LocalCacheToCacheAdaptor<TK, TV> : ICache<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _cache;
         private readonly Func<TK, string> _keySerializer;
 
-        public LocalCacheAdaptor(ILocalCache<TK, TV> cache, Func<TK, string> keySerializer)
+        public LocalCacheToCacheAdaptor(ILocalCache<TK, TV> cache, Func<TK, string> keySerializer)
         {
             _cache = cache;
 

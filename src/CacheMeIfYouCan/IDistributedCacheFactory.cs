@@ -13,11 +13,11 @@ namespace CacheMeIfYouCan
         IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config);
     }
 
-    internal class DistributedCacheFactoryGenericAdaptor<TK, TV> : IDistributedCacheFactory<TK, TV>
+    internal class DistributedCacheFactoryToGenericAdaptor<TK, TV> : IDistributedCacheFactory<TK, TV>
     {
         private readonly IDistributedCacheFactory _factory;
 
-        public DistributedCacheFactoryGenericAdaptor(IDistributedCacheFactory factory)
+        public DistributedCacheFactoryToGenericAdaptor(IDistributedCacheFactory factory)
         {
             _factory = factory;
         }
@@ -28,11 +28,11 @@ namespace CacheMeIfYouCan
         }
     }
 
-    internal class DistributedCacheFactoryFuncAdaptor<TK, TV> : IDistributedCacheFactory<TK, TV>
+    internal class DistributedCacheFactoryFromFuncAdaptor<TK, TV> : IDistributedCacheFactory<TK, TV>
     {
         private readonly Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> _func;
 
-        public DistributedCacheFactoryFuncAdaptor(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> func)
+        public DistributedCacheFactoryFromFuncAdaptor(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> func)
         {
             _func = func;
         }

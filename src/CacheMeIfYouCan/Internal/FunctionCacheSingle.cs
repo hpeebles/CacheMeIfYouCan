@@ -111,15 +111,12 @@ namespace CacheMeIfYouCan.Internal
                 }
                 finally
                 {
-                    if (_onResult != null)
-                    {
-                        _onResult(new FunctionCacheGetResult<TK, TV>(
-                            _functionName,
-                            new[] { result },
-                            !error,
-                            timestamp,
-                            StopwatchHelper.GetDuration(stopwatchStart)));
-                    }
+                    _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
+                        _functionName,
+                        new[] { result },
+                        !error,
+                        timestamp,
+                        StopwatchHelper.GetDuration(stopwatchStart)));
                 }
 
                 return result.Value;
