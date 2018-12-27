@@ -3,15 +3,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class FunctionCacheMulti<TK, TV>
+    internal sealed class FunctionCacheMulti<TK, TV> : IPendingRequestsCounter, IDisposable
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _func;
-        private readonly string _functionName;
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
@@ -24,7 +24,9 @@ namespace CacheMeIfYouCan.Internal
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
         private readonly ConcurrentDictionary<Key<TK>, Task<FetchResults>> _activeFetches;
         private readonly Random _rng;
+        private int _pendingRequestsCount;
         private long _averageFetchDuration;
+        private bool _disposed;
         
         public FunctionCacheMulti(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func,
@@ -39,8 +41,9 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheException<TK>> onError,
             IEqualityComparer<Key<TK>> keyComparer)
         {
+            Name = functionName;
+            Type = GetType().Name;
             _func = func;
-            _functionName = functionName;
             _cache = cache;
             _timeToLive = timeToLive;
             _keySerializer = keySerializer;
@@ -55,8 +58,21 @@ namespace CacheMeIfYouCan.Internal
             _rng = new Random();
         }
 
+        public string Name { get; }
+        public string Type { get; }
+        public int PendingRequestsCount => _pendingRequestsCount;
+        
+        public void Dispose()
+        {
+            _disposed = true;
+            PendingRequestsCounterContainer.Remove(this);
+        }
+        
         public async Task<IDictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)
         {
+            if (_disposed)
+                throw new ObjectDisposedException($"{Name} - {Type}");
+            
             using (SynchronizationContextRemover.StartNew())
             {
                 var results = await GetImpl(keyObjs as ICollection<TK> ?? keyObjs.ToArray());
@@ -80,6 +96,8 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
+                Interlocked.Increment(ref _pendingRequestsCount);
+                
                 IList<Key<TK>> missingKeys = null;
                 if (_cache != null)
                 {
@@ -146,8 +164,10 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
+                Interlocked.Decrement(ref _pendingRequestsCount);
+                
                 _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
-                    _functionName,
+                    Name,
                     results.Values,
                     !error,
                     timestamp,
@@ -246,7 +266,7 @@ namespace CacheMeIfYouCan.Internal
                     .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
                 
                 var exception = new FunctionCacheFetchException<TK>(
-                    _functionName,
+                    Name,
                     keys.Select(k => (Key<TK>)k).ToArray(),
                     Timestamp.Now,
                     "Unable to fetch value(s)",
@@ -269,7 +289,7 @@ namespace CacheMeIfYouCan.Internal
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
                     _onFetch(new FunctionCacheFetchResult<TK, TV>(
-                        _functionName,
+                        Name,
                         results,
                         !error,
                         timestamp,
@@ -314,7 +334,7 @@ namespace CacheMeIfYouCan.Internal
                 : "Unable to get value(s)";
 
             var exception = new FunctionCacheGetException<TK>(
-                _functionName,
+                Name,
                 keys,
                 Timestamp.Now,
                 message,

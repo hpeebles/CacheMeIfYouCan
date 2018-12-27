@@ -13,15 +13,19 @@ namespace CacheMeIfYouCan.Tests
         private readonly TimeSpan? _delay;
         private readonly Func<bool> _error;
 
-        public TestLocalCache(TimeSpan? delay = null, Func<bool> error = null)
+        public TestLocalCache(TimeSpan? delay = null, Func<bool> error = null, string cacheName = "test-local-name")
         {
             _delay = delay;
             _error = error;
+
+            CacheName = cacheName;
         }
 
-        public string CacheName { get; } = "test-local-name";
+        public string CacheName { get; }
         public string CacheType { get; } = "test-local";
         
+        public void Dispose() { }
+
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
             return Get(new[] { key }).SingleOrDefault();

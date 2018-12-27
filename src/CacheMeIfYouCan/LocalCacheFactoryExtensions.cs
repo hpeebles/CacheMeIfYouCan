@@ -56,6 +56,15 @@ namespace CacheMeIfYouCan
                 .WithWrapper(wrapperFactory, behaviour);
         }
         
+        public static ILocalCacheFactory WithPendingRequestsCounter(
+            this ILocalCacheFactory cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new LocalCachePendingRequestsCounterWrapperFactory(), behaviour);
+        }
+        
         public static ICache<TK, TV> BuildAsCache<TK, TV>(
             this ILocalCacheFactory cacheFactory,
             string cacheName)
@@ -131,6 +140,15 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .WithWrapper(wrapperFactory, behaviour);
+        }
+        
+        public static ILocalCacheFactory<TK, TV> WithPendingRequestsCounter<TK, TV>(
+            this ILocalCacheFactory<TK, TV> cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new LocalCachePendingRequestsCounterWrapperFactory(), behaviour);
         }
         
         public static ICache<TK, TV> BuildAsCache<TK, TV>(

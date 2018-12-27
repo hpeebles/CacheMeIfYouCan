@@ -2,15 +2,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class FunctionCacheSingle<TK, TV>
+    internal sealed class FunctionCacheSingle<TK, TV> : IPendingRequestsCounter, IDisposable
     {
         private readonly Func<TK, Task<TV>> _func;
-        private readonly string _functionName;
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
@@ -22,7 +22,9 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheException<TK>> _onError;
         private readonly ConcurrentDictionary<Key<TK>, Task<FetchResult>> _activeFetches;
         private readonly Random _rng;
+        private int _pendingRequestsCount;
         private long _averageFetchDuration;
+        private bool _disposed;
         
         public FunctionCacheSingle(
             Func<TK, Task<TV>> func,
@@ -37,8 +39,9 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheException<TK>> onError,
             IEqualityComparer<Key<TK>> keyComparer)
         {
+            Name = functionName;
+            Type = GetType().Name;
             _func = func;
-            _functionName = functionName;
             _cache = cache;
             _timeToLiveFactory = timeToLiveFactory;
             _keySerializer = keySerializer;
@@ -52,8 +55,21 @@ namespace CacheMeIfYouCan.Internal
             _rng = new Random();
         }
 
+        public string Name { get; }
+        public string Type { get; }
+        public int PendingRequestsCount => _pendingRequestsCount;
+
+        public void Dispose()
+        {
+            PendingRequestsCounterContainer.Remove(this);
+            _disposed = true;
+        }
+        
         public async Task<TV> Get(TK keyObj)
         {
+            if (_disposed)
+                throw new ObjectDisposedException($"{Name} - {Type}");
+            
             using (SynchronizationContextRemover.StartNew())
             {
                 var timestamp = Timestamp.Now;
@@ -65,6 +81,8 @@ namespace CacheMeIfYouCan.Internal
                 FunctionCacheGetResultInner<TK, TV> result = null;
                 try
                 {
+                    Interlocked.Increment(ref _pendingRequestsCount);
+                    
                     if (_cache != null)
                     {
                         var fromCacheTask = _cache.Get(key);
@@ -111,8 +129,10 @@ namespace CacheMeIfYouCan.Internal
                 }
                 finally
                 {
+                    Interlocked.Decrement(ref _pendingRequestsCount);
+                    
                     _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
-                        _functionName,
+                        Name,
                         new[] { result },
                         !error,
                         timestamp,
@@ -189,7 +209,7 @@ namespace CacheMeIfYouCan.Internal
                 result = new FunctionCacheFetchResultInner<TK, TV>(key, default, false, false, duration);
                 
                 var exception = new FunctionCacheFetchException<TK>(
-                    _functionName,
+                    Name,
                     new[] { key },
                     Timestamp.Now,
                     "Unable to fetch value",
@@ -211,7 +231,7 @@ namespace CacheMeIfYouCan.Internal
                     _averageFetchDuration += (duration - _averageFetchDuration) / 10;
 
                     _onFetch(new FunctionCacheFetchResult<TK, TV>(
-                        _functionName,
+                        Name,
                         new[] { result },
                         !error,
                         timestamp,
@@ -230,7 +250,7 @@ namespace CacheMeIfYouCan.Internal
                 : "Unable to get value";
 
             var exception = new FunctionCacheGetException<TK>(
-                _functionName,
+                Name,
                 new[] { key },
                 Timestamp.Now,
                 message,

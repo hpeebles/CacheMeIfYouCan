@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Histogram GetDurationsMs;
         private static readonly Histogram SetDurationsMs;
         private static readonly Gauge CachedItemsCounter;
+        private static readonly Gauge PendingRequestsCounter;
         private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static CacheMetricsTracker()
@@ -26,10 +27,12 @@ namespace CacheMeIfYouCan.Prometheus
             GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, cacheDurationBuckets, labels);
             SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, cacheDurationBuckets, labels);
             CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "name", "cachetype");
+            PendingRequestsCounter = Metrics.CreateGauge("PendingRequestsCounter", null, "name", "type");
 
             Observable
                 .Interval(TimeSpan.FromSeconds(5))
                 .Do(_ => TrackCachedItemCounts())
+                .Do(_ => TrackPendingRequestCounts())
                 .Retry()
                 .Subscribe();
         }
@@ -70,6 +73,16 @@ namespace CacheMeIfYouCan.Prometheus
             {
                 CachedItemsCounter
                     .Labels(count.CacheName, count.CacheType)
+                    .Set(count.Count);
+            }
+        }
+
+        private static void TrackPendingRequestCounts()
+        {
+            foreach (var count in PendingRequestsCounterContainer.GetCounts())
+            {
+                PendingRequestsCounter
+                    .Labels(count.Name, count.Type)
                     .Set(count.Count);
             }
         }

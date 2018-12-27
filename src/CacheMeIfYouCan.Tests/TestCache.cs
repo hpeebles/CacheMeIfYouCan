@@ -16,17 +16,27 @@ namespace CacheMeIfYouCan.Tests
         private readonly Func<bool> _error;
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
         
-        public TestCache(Func<TV, string> serializer, Func<string, TV> deserializer, Action<Key<string>> removeKeyFromLocalCacheAction = null, TimeSpan? delay = null, Func<bool> error = null)
+        public TestCache(
+            Func<TV, string> serializer,
+            Func<string, TV> deserializer,
+            Action<Key<string>> removeKeyFromLocalCacheAction = null,
+            TimeSpan? delay = null,
+            Func<bool> error = null,
+            string cacheName = "test-name")
         {
             _serializer = serializer;
             _deserializer = deserializer;
             _removeKeyFromLocalCacheAction = removeKeyFromLocalCacheAction;
             _delay = delay;
             _error = error;
+
+            CacheName = cacheName;
         }
 
-        public string CacheName { get; } = "test-name";
+        public string CacheName { get; }
         public string CacheType { get; } = "test";
+        
+        public void Dispose() { }
         
         public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {

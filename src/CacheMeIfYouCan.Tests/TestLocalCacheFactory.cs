@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests
         
         public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
-            return new TestLocalCache<TK, TV>(_delay, _error);
+            return new TestLocalCache<TK, TV>(_delay, _error, cacheName);
         }
     }
 }

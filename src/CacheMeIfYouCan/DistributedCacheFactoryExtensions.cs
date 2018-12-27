@@ -83,6 +83,15 @@ namespace CacheMeIfYouCan
                 .WithWrapper(wrapperFactory, behaviour);
         }
         
+        public static IDistributedCacheFactory WithPendingRequestsCounter(
+            this IDistributedCacheFactory cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new DistributedCachePendingRequestsCounterWrapperFactory(), behaviour);
+        }
+        
         public static IDistributedCache<TK, TV> Build<TK, TV>(
             this IDistributedCacheFactory cacheFactory,
             string cacheName)
@@ -214,6 +223,15 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .WithWrapper(wrapperFactory, behaviour);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> WithPendingRequestsCounter<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new DistributedCachePendingRequestsCounterWrapperFactory(), behaviour);
         }
         
         public static IDistributedCache<TK, TV> Build<TK, TV>(

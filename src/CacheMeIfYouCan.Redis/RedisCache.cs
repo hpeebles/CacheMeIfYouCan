@@ -59,6 +59,8 @@ namespace CacheMeIfYouCan.Redis
         public string CacheName { get; }
         public string CacheType { get; } = "redis";
         
+        public void Dispose() { }
+        
         public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
             var redisDb = GetDatabase();

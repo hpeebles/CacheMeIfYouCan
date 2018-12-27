@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CacheMeIfYouCan
 {
-    public interface ILocalCache<TK, TV>
+    public interface ILocalCache<TK, TV> : IDisposable
     {
         string CacheName { get; }
         string CacheType { get; }

@@ -22,6 +22,8 @@ namespace CacheMeIfYouCan.Internal
 
         public string CacheName { get; }
         public string CacheType { get; }
+
+        public void Dispose() => _cache.Dispose();
         
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {

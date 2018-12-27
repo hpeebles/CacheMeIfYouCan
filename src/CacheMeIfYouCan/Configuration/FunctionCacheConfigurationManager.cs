@@ -37,6 +37,8 @@ namespace CacheMeIfYouCan.Configuration
 
             _cachedFunc = functionCache.Get;
             
+            PendingRequestsCounterContainer.Add(functionCache);
+            
             return _cachedFunc;
         }
         

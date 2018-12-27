@@ -22,6 +22,8 @@ namespace CacheMeIfYouCan.Polly
         public string CacheName { get; }
         public string CacheType { get; }
         
+        public void Dispose() => _cache.Dispose();
+        
         public Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
             return _policy.ExecuteAsync(() => _cache.Get(key));
