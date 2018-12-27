@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public ICachedObject<T> Build(bool registerGlobally = true)
+        public ICachedObject<T> Build()
         {
             Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc;
 
@@ -93,8 +93,7 @@ namespace CacheMeIfYouCan.Configuration
 
             var cachedObject = new CachedObject<T>(_getValueFunc, refreshIntervalFunc, _onRefreshResult, _onError);
             
-            if (registerGlobally)
-                CachedObjectInitialiser.Register(cachedObject);
+            CachedObjectInitializer.Add(cachedObject);
 
             return cachedObject;
         }

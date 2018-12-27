@@ -7,10 +7,10 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class Initialisation
+    public class Initialization
     {
         [Fact]
-        public void NotInitialisedWillInitialiseOnFirstCall()
+        public void NotInitializedWillInitializeOnFirstCall()
         {
             var ticks = CachedObjectFactory
                 .ConfigureFor(() =>
@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     return DateTime.UtcNow.Ticks;
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build(false);
+                .Build();
 
             var timer = Stopwatch.StartNew();
 
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public async Task CanBeInitialisedDirectly()
+        public async Task CanBeInitializedDirectly()
         {
             var ticks = CachedObjectFactory
                 .ConfigureFor(() =>
@@ -38,9 +38,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     return DateTime.UtcNow.Ticks;
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build(false);
+                .Build();
 
-            await ticks.Init();
+            await ticks.Initialize();
 
             var timer = Stopwatch.StartNew();
 
@@ -48,40 +48,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(20));
         }
-        
-        [Fact]
-        public async Task MultipleCanBeInitialisedViaCachedObjectInitialiser()
-        {
-            var ticks = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow.Ticks)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-            
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-            
-            var ticksDouble = CachedObjectFactory
-                .ConfigureFor(() => (double)DateTime.UtcNow.Ticks)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-
-            await CachedObjectInitialiser.InitAll();
-            
-            var ticksValue = ticks.Value;
-            var dateValue = date.Value;
-            var ticksDoubleValue = ticksDouble.Value;
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            
-            Assert.NotEqual(ticksValue, ticks.Value);
-            Assert.NotEqual(dateValue, date.Value);
-            Assert.NotEqual(ticksDoubleValue, ticksDouble.Value);
-        }
 
         [Fact]
-        public void InitialisationOnlyRunsOnce()
+        public void InitializationOnlyRunsOnce()
         {
             var count = 0;
             
@@ -92,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     return Task.Delay(100).ContinueWith(t => DateTime.UtcNow.Ticks);
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build(false);
+                .Build();
 
             var values = Enumerable
                 .Range(0, 1000)

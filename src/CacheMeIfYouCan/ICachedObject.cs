@@ -3,10 +3,13 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICachedObject<out T> : IDisposable
+    public interface ICachedObject<out T> : ICachedObjectInitializer, IDisposable
     {
         T Value { get; }
+    }
 
-        Task<bool> Init();
+    public interface ICachedObjectInitializer
+    {
+        Task<CachedObjectInitializeOutcome> Initialize();
     }
 }

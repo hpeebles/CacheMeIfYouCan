@@ -24,9 +24,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                         DateTime.UtcNow.AddMilliseconds(-100),
                         DateTime.UtcNow.AddMilliseconds(100));
                 })
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
             
@@ -49,27 +49,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     return DateTime.UtcNow;
                 })
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(100))
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
             Assert.True(DateTime.UtcNow - date.Value < TimeSpan.FromMilliseconds(200));
-        }
-
-        [Fact]
-        public void CannotRegisterTwoOfTheSameType()
-        {
-            CachedObjectFactory
-                .ConfigureFor(Guid.NewGuid)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-            
-            Assert.Throws<Exception>(() => CachedObjectFactory
-                .ConfigureFor(Guid.NewGuid)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build());
         }
 
         [Fact]
@@ -78,9 +64,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             Assert.True(date.Value > DateTime.MinValue);
             

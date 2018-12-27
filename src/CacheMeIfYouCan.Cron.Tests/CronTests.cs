@@ -20,9 +20,9 @@ namespace CacheMeIfYouCan.Cron.Tests
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshSchedule(cronExpression, true)
                 .OnRefreshResult(refreshResults.Add)
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
             

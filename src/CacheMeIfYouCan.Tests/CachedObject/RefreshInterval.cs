@@ -18,9 +18,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(2))
                 .OnRefreshResult(refreshResults.Add)
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(20));
 
@@ -43,9 +43,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .WithJitterPercentage(50)
                 .OnRefreshResult(refreshResults.Add)
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(20));
             
@@ -67,9 +67,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
                 .OnRefreshResult(refreshResults.Add)
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(12));
             

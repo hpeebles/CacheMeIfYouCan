@@ -17,9 +17,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .OnRefreshResult(refreshResults.Add)
-                .Build(false);
+                .Build();
 
-            await date.Init();
+            await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             

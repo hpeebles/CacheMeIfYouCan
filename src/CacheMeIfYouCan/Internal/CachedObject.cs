@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Internal
             _onRefresh = onRefresh;
             _onError = onError;
             _semaphore = new SemaphoreSlim(1);
-            _state = State.PendingInitialisation;
+            _state = State.PendingInitialization;
         }
 
         public T Value
@@ -44,8 +44,8 @@ namespace CacheMeIfYouCan.Internal
                 if (_state == State.Ready)
                     return _value;
                 
-                if (_state == State.PendingInitialisation)
-                    Init().GetAwaiter().GetResult();
+                if (_state == State.PendingInitialization)
+                    Initialize().GetAwaiter().GetResult();
                 
                 if (_state == State.Disposed)
                     throw new ObjectDisposedException(nameof(CachedObject<T>));
@@ -54,25 +54,41 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public async Task<bool> Init()
+        public async Task<CachedObjectInitializeOutcome> Initialize()
         {
-            if (_state != State.PendingInitialisation)
-                return true;
-
-            await _semaphore.WaitAsync();
-
-            if (_state != State.PendingInitialisation)
+            if (_state == State.PendingInitialization)
             {
-                _semaphore.Release();
-                return true;
+                await _semaphore.WaitAsync();
+
+                try
+                {
+                    if (_state == State.PendingInitialization)
+                        await InitImpl();
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
             }
 
-            try
+            switch (_state)
+            {
+                case State.Ready:
+                    return CachedObjectInitializeOutcome.Success;
+                
+                case State.Disposed:
+                    return CachedObjectInitializeOutcome.Disposed;
+
+                default:
+                    return CachedObjectInitializeOutcome.Failure;
+            }
+            
+            async Task InitImpl()
             {
                 var result = await RefreshValue();
 
                 if (!result.Success)
-                    return false;
+                    return;
 
                 _nextRefreshInterval = _refreshIntervalFunc(result);
 
@@ -83,20 +99,15 @@ namespace CacheMeIfYouCan.Internal
                         .DelaySubscription(_nextRefreshInterval))
                     .Repeat()
                     .Subscribe();
-                    
+                
                 _state = State.Ready;
             }
-            finally
-            {
-                _semaphore.Release();
-            }
-
-            return _state == State.Ready;
         }
 
         public void Dispose()
         {
             _state = State.Disposed;
+            CachedObjectInitializer.Remove(this);
             _refreshTask?.Dispose();
         }
 
@@ -149,7 +160,7 @@ namespace CacheMeIfYouCan.Internal
 
         private enum State
         {
-            PendingInitialisation,
+            PendingInitialization,
             Ready,
             Disposed
         }
