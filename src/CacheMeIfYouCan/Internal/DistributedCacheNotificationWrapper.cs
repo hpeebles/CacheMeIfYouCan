@@ -50,7 +50,14 @@ namespace CacheMeIfYouCan.Internal
 
                 throw;
             }
-            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheGetException<TK>>(ex, out var innerException))
+            {
+                error = true;
+                _onError?.Invoke(innerException);
+
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered in this scenario
             {
                 error = true;
                 throw;
@@ -87,7 +94,14 @@ namespace CacheMeIfYouCan.Internal
 
                 throw;
             }
-            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheSetException<TK, TV>>(ex, out var innerException))
+            {
+                error = true;
+                _onError?.Invoke(innerException);
+
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered in this scenario
             {
                 error = true;
                 throw;
@@ -122,7 +136,14 @@ namespace CacheMeIfYouCan.Internal
 
                 throw;
             }
-            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheGetException<TK>>(ex, out var innerException))
+            {
+                error = true;
+                _onError?.Invoke(innerException);
+
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered in this scenario
             {
                 error = true;
                 throw;
@@ -161,7 +182,14 @@ namespace CacheMeIfYouCan.Internal
 
                 throw;
             }
-            catch (Exception) // _onError will not be triggered if the exception type has been changed
+            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheSetException<TK, TV>>(ex, out var innerException))
+            {
+                error = true;
+                _onError?.Invoke(innerException);
+
+                throw;
+            }
+            catch (Exception) // _onError will not be triggered in this scenario
             {
                 error = true;
                 throw;

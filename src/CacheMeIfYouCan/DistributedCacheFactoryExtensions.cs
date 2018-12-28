@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory WithWrapper(
             this IDistributedCacheFactory cacheFactory,
             IDistributedCacheWrapperFactory wrapperFactory,
-            AdditionBehaviour behaviour)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
@@ -199,7 +199,7 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory<TK, TV> WithWrapper<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             IDistributedCacheWrapperFactory wrapperFactory,
-            AdditionBehaviour behaviour)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
@@ -209,7 +209,7 @@ namespace CacheMeIfYouCan
         public static IDistributedCacheFactory<TK, TV> WithWrapper<TK, TV>(
             this IDistributedCacheFactory<TK, TV> cacheFactory,
             IDistributedCacheWrapperFactory<TK, TV> wrapperFactory,
-            AdditionBehaviour behaviour)
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return cacheFactory
                 .AsFactory()
