@@ -66,18 +66,17 @@ namespace CacheMeIfYouCan.Tests
             return results;
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            if (_delay.HasValue)
-                await Task.Delay(_delay.Value);
-
             if (timeToLive <= TimeSpan.Zero)
-                return;
+                return Task.CompletedTask;
             
             var expiry = DateTimeOffset.UtcNow + timeToLive;
             
             foreach (var kv in values)
                 Values[kv.Key.AsString] = Tuple.Create(_serializer(kv.Value), expiry);
+            
+            return Task.CompletedTask;
         }
 
         public void OnKeyChangedRemotely(string key)

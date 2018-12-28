@@ -75,7 +75,9 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
-        public DistributedCacheFactory WithWrapper(IDistributedCacheWrapperFactory wrapperFactory, AdditionBehaviour behaviour)
+        public DistributedCacheFactory WithWrapper(
+            IDistributedCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
         {
             switch (behaviour)
             {

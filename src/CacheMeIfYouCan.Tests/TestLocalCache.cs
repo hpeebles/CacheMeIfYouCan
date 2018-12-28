@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
@@ -9,6 +10,14 @@ namespace CacheMeIfYouCan.Tests
     public class TestLocalCache<TK, TV> : ILocalCache<TK, TV>
     {
         public readonly ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>> Values = new ConcurrentDictionary<TK, Tuple<TV, DateTimeOffset>>();
+        private readonly TimeSpan? _delay;
+        private readonly Func<bool> _error;
+
+        public TestLocalCache(TimeSpan? delay = null, Func<bool> error = null)
+        {
+            _delay = delay;
+            _error = error;
+        }
 
         public string CacheName { get; } = "test-local-name";
         public string CacheType { get; } = "test-local";
@@ -25,6 +34,12 @@ namespace CacheMeIfYouCan.Tests
 
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
+            if (_delay.HasValue)
+                Thread.Sleep(_delay.Value);
+
+            if (_error?.Invoke() ?? false)
+                throw new Exception();
+            
             var results = new List<GetFromCacheResult<TK, TV>>();
 
             foreach (var key in keys)

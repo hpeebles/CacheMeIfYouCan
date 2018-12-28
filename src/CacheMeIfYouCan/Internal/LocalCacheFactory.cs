@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ILocalCacheFactory _cacheFactory;
         private readonly KeySerializers _keySerializers = new KeySerializers();
+        private readonly List<ILocalCacheWrapperFactory> _wrapperFactories;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheException> _onError;
@@ -20,6 +21,7 @@ namespace CacheMeIfYouCan.Internal
         public LocalCacheFactory(ILocalCacheFactory cacheFactory)
         {
             _cacheFactory = cacheFactory;
+            _wrapperFactories = new List<ILocalCacheWrapperFactory>();
         }
 
         public LocalCacheFactory OnGetResult(
@@ -52,12 +54,41 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
+        public LocalCacheFactory WithWrapper(
+            ILocalCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            switch (behaviour)
+            {
+                case AdditionBehaviour.Append:
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+
+                case AdditionBehaviour.Prepend:
+                    _wrapperFactories.Insert(0, wrapperFactory);
+                    break;
+                
+                case AdditionBehaviour.Overwrite:
+                    _wrapperFactories.Clear();
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+            }
+            
+            return this;
+        }
+        
         public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
-            var cache = _cacheFactory.Build<TK ,TV>(cacheName);
+            var cache = _cacheFactory.Build<TK, TV>(cacheName);
 
+            // First wrapper formats any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
             
+            // Next apply any custom wrappers
+            foreach (var wrapperFactory in _wrapperFactories)
+                cache = wrapperFactory.Wrap(cache);
+            
+            // Last wrapper handles notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onError != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
@@ -77,6 +108,7 @@ namespace CacheMeIfYouCan.Internal
     public class LocalCacheFactory<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly ILocalCacheFactory<TK, TV> _cacheFactory;
+        private readonly List<ILocalCacheWrapperFactory<TK, TV>> _wrapperFactories;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
         private Action<CacheException<TK>> _onError;
@@ -85,6 +117,7 @@ namespace CacheMeIfYouCan.Internal
         internal LocalCacheFactory(ILocalCacheFactory<TK, TV> cacheFactory)
         {
             _cacheFactory = cacheFactory;
+            _wrapperFactories = new List<ILocalCacheWrapperFactory<TK, TV>>();
         }
 
         public LocalCacheFactory<TK, TV> OnGetResult(
@@ -121,13 +154,42 @@ namespace CacheMeIfYouCan.Internal
             _keySerializer = serializer;
             return this;
         }
+        
+        public LocalCacheFactory<TK, TV> WithWrapper(
+            ILocalCacheWrapperFactory<TK, TV> wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            switch (behaviour)
+            {
+                case AdditionBehaviour.Append:
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
 
+                case AdditionBehaviour.Prepend:
+                    _wrapperFactories.Insert(0, wrapperFactory);
+                    break;
+                
+                case AdditionBehaviour.Overwrite:
+                    _wrapperFactories.Clear();
+                    _wrapperFactories.Add(wrapperFactory);
+                    break;
+            }
+            
+            return this;
+        }
+        
         public ILocalCache<TK, TV> Build(string cacheName)
         {
             var cache = _cacheFactory.Build(cacheName);
 
+            // First wrapper formats any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
             
+            // Next apply any custom wrappers
+            foreach (var wrapperFactory in _wrapperFactories)
+                cache = wrapperFactory.Wrap(cache);
+            
+            // Last wrapper handles notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onError != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 

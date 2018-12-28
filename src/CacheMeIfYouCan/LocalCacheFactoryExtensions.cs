@@ -46,6 +46,16 @@ namespace CacheMeIfYouCan
                 .WithKeySerializers(configAction);
         }
         
+        public static ILocalCacheFactory WithWrapper(
+            this ILocalCacheFactory cacheFactory,
+            ILocalCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(wrapperFactory, behaviour);
+        }
+        
         public static ICache<TK, TV> BuildAsCache<TK, TV>(
             this ILocalCacheFactory cacheFactory,
             string cacheName)
@@ -103,6 +113,26 @@ namespace CacheMeIfYouCan
                 .WithKeySerializer(serializer);
         }
 
+        public static ILocalCacheFactory<TK, TV> WithWrapper<TK, TV>(
+            this ILocalCacheFactory<TK, TV> cacheFactory,
+            ILocalCacheWrapperFactory wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new LocalCacheWrapperFactoryToGenericAdaptor<TK, TV>(wrapperFactory), behaviour);
+        } 
+        
+        public static ILocalCacheFactory<TK, TV> WithWrapper<TK, TV>(
+            this ILocalCacheFactory<TK, TV> cacheFactory,
+            ILocalCacheWrapperFactory<TK, TV> wrapperFactory,
+            AdditionBehaviour behaviour)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(wrapperFactory, behaviour);
+        }
+        
         public static ICache<TK, TV> BuildAsCache<TK, TV>(
             this ILocalCacheFactory<TK, TV> cacheFactory,
             string cacheName)

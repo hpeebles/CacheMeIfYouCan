@@ -5,15 +5,16 @@ using Polly;
 
 namespace CacheMeIfYouCan.Polly
 {
-    internal class CachePollyWrapper<TK, TV> : IDistributedCache<TK, TV>
+    internal class DistributedCachePollyWrapper<TK, TV> : IDistributedCache<TK, TV>
     {
         private readonly IDistributedCache<TK, TV> _cache;
         private readonly Policy _policy;
 
-        public CachePollyWrapper(IDistributedCache<TK, TV> cache, Policy policy)
+        public DistributedCachePollyWrapper(IDistributedCache<TK, TV> cache, Policy policy)
         {
             _cache = cache;
             _policy = policy;
+            
             CacheName = _cache.CacheName;
             CacheType = _cache.CacheType;
         }
