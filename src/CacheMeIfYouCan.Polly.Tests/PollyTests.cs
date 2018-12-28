@@ -36,9 +36,9 @@ namespace CacheMeIfYouCan.Polly.Tests
             await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
             await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
             
-            var exception = await Assert.ThrowsAnyAsync<BrokenCircuitException>(() => cache.Get(key));
+            var exception = await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
 
-            Assert.IsAssignableFrom<CacheException>(exception.InnerException);
+            Assert.IsType<BrokenCircuitException>(exception.InnerException);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
@@ -69,9 +69,9 @@ namespace CacheMeIfYouCan.Polly.Tests
             Assert.ThrowsAny<CacheException>(() => cache.Get(key));
             Assert.ThrowsAny<CacheException>(() => cache.Get(key));
             
-            var exception = Assert.ThrowsAny<BrokenCircuitException>(() => cache.Get(key));
+            var exception = Assert.ThrowsAny<CacheException>(() => cache.Get(key));
 
-            Assert.IsAssignableFrom<CacheException>(exception.InnerException);
+            Assert.IsType<BrokenCircuitException>(exception.InnerException);
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
             

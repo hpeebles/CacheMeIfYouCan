@@ -36,6 +36,38 @@ namespace CacheMeIfYouCan
                 .AsFactory()
                 .OnError(onError, behaviour);
         }
+        
+        public static IDistributedCacheFactory OnError(
+            this IDistributedCacheFactory cacheFactory,
+            Func<CacheException, bool> predicate,
+            Action<CacheException> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (predicate(ex)) onError(ex); }, behaviour);
+        }
+        
+        public static IDistributedCacheFactory OnError<TException>(
+            this IDistributedCacheFactory cacheFactory,
+            Action<TException> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append) where TException : CacheException
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (ex is TException typed) onError(typed); }, behaviour);
+        }
+        
+        public static IDistributedCacheFactory OnError<TException>(
+            this IDistributedCacheFactory cacheFactory,
+            Func<TException, bool> predicate,
+            Action<TException> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append) where TException : CacheException
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (ex is TException typed && predicate(typed)) onError(typed); }, behaviour);
+        }
 
         public static IDistributedCacheFactory WithKeySerializers(
             this IDistributedCacheFactory cacheFactory,
@@ -138,6 +170,38 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .OnError(onError, behaviour);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> OnError<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<CacheException<TK>, bool> predicate,
+            Action<CacheException<TK>> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (predicate(ex)) onError(ex); }, behaviour);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> OnError<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Action<TException> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append) where TException : CacheException<TK>
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (ex is TException typed) onError(typed); }, behaviour);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> OnError<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<TException, bool> predicate,
+            Action<TException> onError,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append) where TException : CacheException<TK>
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnError(ex => { if (ex is TException typed && predicate(typed)) onError(typed); }, behaviour);
         }
 
         public static IDistributedCacheFactory<TK, TV> WithKeySerializer<TK, TV>(

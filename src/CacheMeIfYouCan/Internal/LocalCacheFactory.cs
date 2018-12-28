@@ -81,14 +81,14 @@ namespace CacheMeIfYouCan.Internal
         {
             var cache = _cacheFactory.Build<TK, TV>(cacheName);
 
-            // First wrapper formats any exceptions
-            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
-            
-            // Next apply any custom wrappers
+            // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Last wrapper handles notifications (if any actions are set)
+            // Next add a wrapper to catch and format any exceptions
+            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
+
+            // Final wrapper handles notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onError != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 
@@ -182,14 +182,14 @@ namespace CacheMeIfYouCan.Internal
         {
             var cache = _cacheFactory.Build(cacheName);
 
-            // First wrapper formats any exceptions
-            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
-            
-            // Next apply any custom wrappers
+            // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Last wrapper handles notifications (if any actions are set)
+            // Next add a wrapper to catch and format any exceptions
+            cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
+
+            // Final wrapper handles notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onError != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
 

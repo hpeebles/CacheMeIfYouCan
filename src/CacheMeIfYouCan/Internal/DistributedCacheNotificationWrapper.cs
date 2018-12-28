@@ -45,23 +45,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 result = await _cache.Get(key);
             }
-            catch (CacheGetException<TK> ex)
+            catch (CacheException<TK> ex)
             {
                 error = true;
                 _onError?.Invoke(ex);
 
-                throw;
-            }
-            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheGetException<TK>>(ex, out var innerException))
-            {
-                error = true;
-                _onError?.Invoke(innerException);
-
-                throw;
-            }
-            catch (Exception) // _onError will not be triggered in this scenario
-            {
-                error = true;
                 throw;
             }
             finally
@@ -89,23 +77,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 await _cache.Set(key, value, timeToLive);
             }
-            catch (CacheSetException<TK, TV> ex)
+            catch (CacheException<TK> ex)
             {
                 error = true;
                 _onError?.Invoke(ex);
 
-                throw;
-            }
-            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheSetException<TK, TV>>(ex, out var innerException))
-            {
-                error = true;
-                _onError?.Invoke(innerException);
-
-                throw;
-            }
-            catch (Exception) // _onError will not be triggered in this scenario
-            {
-                error = true;
                 throw;
             }
             finally
@@ -131,23 +107,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 results = await _cache.Get(keys);
             }
-            catch (CacheGetException<TK> ex)
+            catch (CacheException<TK> ex)
             {
                 error = true;
                 _onError?.Invoke(ex);
 
-                throw;
-            }
-            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheGetException<TK>>(ex, out var innerException))
-            {
-                error = true;
-                _onError?.Invoke(innerException);
-
-                throw;
-            }
-            catch (Exception) // _onError will not be triggered in this scenario
-            {
-                error = true;
                 throw;
             }
             finally
@@ -177,23 +141,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 await _cache.Set(values, timeToLive);
             }
-            catch (CacheSetException<TK, TV> ex)
+            catch (CacheException<TK> ex)
             {
                 error = true;
                 _onError?.Invoke(ex);
 
-                throw;
-            }
-            catch (Exception ex) when (ExceptionsHelper.TryGetInnerExceptionOfType<CacheSetException<TK, TV>>(ex, out var innerException))
-            {
-                error = true;
-                _onError?.Invoke(innerException);
-
-                throw;
-            }
-            catch (Exception) // _onError will not be triggered in this scenario
-            {
-                error = true;
                 throw;
             }
             finally

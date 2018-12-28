@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,36 +10,54 @@ namespace CacheMeIfYouCan.Tests.Cache
 {
     public class Notifications
     {
-        [Fact]
-        public async Task WhenExceptionChangedOnErrorIsStillTriggeredForDistributedCache()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ExceptionsCanBeFilteredForDistributedCache(bool filterSucceeds)
         {
             var errors = new List<CacheException>();
             
             var cache = new TestCacheFactory(error: () => true)
                 .WithWrapper(new DistributedCacheExceptionChangingWrapperFactory())
-                .OnError(errors.Add)
+                .OnError(ex => ex.InnerException is CrazyException == filterSucceeds, errors.Add)
                 .Build<string, string>("test");
 
-            await Assert.ThrowsAsync<CrazyException>(() => cache.Get(new Key<string>("abc", "abc")));
+            await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));
 
-            Assert.Single(errors);
-            Assert.Equal("abc", errors[0].Keys.Single());
+            if (filterSucceeds)
+            {
+                Assert.Single(errors);
+                Assert.Equal("abc", errors[0].Keys.Single());
+            }
+            else
+            {
+                Assert.Empty(errors);
+            }
         }
         
-        [Fact]
-        public void WhenExceptionChangedOnErrorIsStillTriggeredForLocalCache()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ExceptionsCanBeFilteredForLocalCache(bool filterSucceeds)
         {
             var errors = new List<CacheException>();
             
             var cache = new TestLocalCacheFactory(error: () => true)
                 .WithWrapper(new LocalCacheExceptionChangingWrapperFactory())
-                .OnError(errors.Add)
+                .OnError(ex => ex.InnerException is CrazyException == filterSucceeds, errors.Add)
                 .Build<string, string>("test");
 
-            Assert.Throws<CrazyException>(() => cache.Get(new Key<string>("abc", "abc")));
+            Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));
 
-            Assert.Single(errors);
-            Assert.Equal("abc", errors[0].Keys.Single());
+            if (filterSucceeds)
+            {
+                Assert.Single(errors);
+                Assert.Equal("abc", errors[0].Keys.Single());
+            }
+            else
+            {
+                Assert.Empty(errors);
+            }
         }
     }
 }
