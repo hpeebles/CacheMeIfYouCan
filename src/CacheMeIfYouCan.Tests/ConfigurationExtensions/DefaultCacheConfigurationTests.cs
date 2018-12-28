@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         }
         
         [Fact]
-        public async Task OnError()
+        public async Task OnException()
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnErrorObservable(x => x
+                DefaultCacheConfig.Configuration.WithOnExceptionObservable(x => x
                     .Where(r => r.Keys.Contains(key))
                     .Subscribe(errors.Add));
 
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnErrorAction(null, AdditionBehaviour.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
@@ -158,7 +158,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         }
         
         [Fact]
-        public async Task OnCacheError()
+        public async Task OnCacheException()
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             
@@ -168,7 +168,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnCacheErrorObservable(x => x.Subscribe(errors.Add));
+                DefaultCacheConfig.Configuration.WithOnCacheExceptionObservable(x => x.Subscribe(errors.Add));
 
                 var cacheFactory = new TestCacheFactory(error: () => true);
 
@@ -177,7 +177,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .WithDistributedCacheFactory(cacheFactory)
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheErrorAction(null, AdditionBehaviour.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnCacheExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));

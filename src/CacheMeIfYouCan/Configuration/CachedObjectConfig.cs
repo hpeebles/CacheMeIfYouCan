@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Configuration
         private Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
         private double _jitterPercentage;
         private Action<CachedObjectRefreshResult<T>> _onRefreshResult;
-        private Action<Exception> _onError;
+        private Action<Exception> _onException;
 
         internal CachedObjectConfig(Func<Task<T>> getValueFunc)
         {
@@ -26,8 +26,8 @@ namespace CacheMeIfYouCan.Configuration
             if (DefaultCachedObjectConfig.Configuration.OnRefreshResult != null)
                 OnRefreshResult(DefaultCachedObjectConfig.Configuration.OnRefreshResult);
             
-            if (DefaultCachedObjectConfig.Configuration.OnError != null)
-                OnError(DefaultCachedObjectConfig.Configuration.OnError);
+            if (DefaultCachedObjectConfig.Configuration.OnException != null)
+                OnException(DefaultCachedObjectConfig.Configuration.OnException);
         }
         
         public CachedObjectConfig<T> WithRefreshInterval(TimeSpan refreshInterval)
@@ -65,9 +65,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedObjectConfig<T> OnError(Action<Exception> onError)
+        public CachedObjectConfig<T> OnException(Action<Exception> onException)
         {
-            _onError = onError;
+            _onException = onException;
             return this;
         }
 
@@ -91,7 +91,7 @@ namespace CacheMeIfYouCan.Configuration
                 refreshIntervalFunc = r => TimeSpan.FromTicks((long)(_refreshIntervalFunc(r).Ticks * (1 + (JitterFunc() / 100))));
             }
 
-            var cachedObject = new CachedObject<T>(_getValueFunc, refreshIntervalFunc, _onRefreshResult, _onError);
+            var cachedObject = new CachedObject<T>(_getValueFunc, refreshIntervalFunc, _onRefreshResult, _onException);
             
             CachedObjectInitializer.Add(cachedObject);
 

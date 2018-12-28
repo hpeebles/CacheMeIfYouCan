@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new CrazyException("test", ex);
+                    throw new TestException("test", ex);
                 }
             }
 
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new CrazyException("test", ex);
+                    throw new TestException("test", ex);
                 }
             }
 
@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new CrazyException("test", ex);
+                    throw new TestException("test", ex);
                 }
             }
 
@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new CrazyException("test", ex);
+                    throw new TestException("test", ex);
                 }
             }
         }

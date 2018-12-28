@@ -38,12 +38,12 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         }
         
         [Fact]
-        public async Task OnError()
+        public async Task OnException()
         {
             var errors = new List<CacheException>();
 
             var cache = new TestCacheFactory(error: () => true)
-                .OnErrorObservable(x => x.Subscribe(errors.Add))
+                .OnExceptionObservable(x => x.Subscribe(errors.Add))
                 .Build<string, string>("test");
 
             await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(new Key<string>("123", "123")));

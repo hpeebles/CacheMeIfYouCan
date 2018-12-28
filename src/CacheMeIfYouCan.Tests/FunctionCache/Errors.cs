@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
     public class Errors
     {
         [Fact]
-        public async Task OnErrorIsTriggered()
+        public async Task OnExceptionIsTriggered()
         {
             var count = 0;
             
@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .OnError(errors.Add)
+                .OnException(errors.Add)
                 .Build();
 
             var previousErrorCount = 0;
@@ -107,7 +107,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var cachedEcho = echo
                 .Cached()
-                .OnError(errors.Add)
+                .OnException(errors.Add)
                 .OnFetch(fetches.Add)
                 .Build();
 
@@ -177,7 +177,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var cachedEcho = echo
                 .Cached()
-                .OnError(errors.Add)
+                .OnException(errors.Add)
                 .Build();
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("warmup"));

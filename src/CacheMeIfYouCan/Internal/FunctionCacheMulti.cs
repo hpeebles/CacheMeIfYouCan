@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
-        private readonly Action<FunctionCacheException<TK>> _onError;
+        private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
         private readonly ConcurrentDictionary<Key<TK>, Task<FetchResults>> _activeFetches;
         private readonly Random _rng;
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Internal
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
-            Action<FunctionCacheException<TK>> onError,
+            Action<FunctionCacheException<TK>> onException,
             IEqualityComparer<Key<TK>> keyComparer)
         {
             Name = functionName;
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Internal
             _continueOnException = defaultValueFactory != null;
             _onResult = onResult;
             _onFetch = onFetch;
-            _onError = onError;
+            _onException = onException;
             _keyComparer = keyComparer;
             _activeFetches = new ConcurrentDictionary<Key<TK>, Task<FetchResults>>(keyComparer);
             _rng = new Random();
@@ -272,7 +272,7 @@ namespace CacheMeIfYouCan.Internal
                     "Unable to fetch value(s)",
                     ex);
                 
-                _onError?.Invoke(exception);
+                _onException?.Invoke(exception);
                 
                 error = true;
                 throw exception;
@@ -340,7 +340,7 @@ namespace CacheMeIfYouCan.Internal
                 message,
                 ex);
             
-            _onError?.Invoke(exception);
+            _onException?.Invoke(exception);
 
             if (!_continueOnException)
                 throw exception;

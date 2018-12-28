@@ -22,12 +22,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, behaviour);
         }
         
-        public static FunctionCacheConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
+        public static FunctionCacheConfigurationManager<TK, TV> OnExceptionObservable<TK, TV>(
             this FunctionCacheConfigurationManager<TK, TV> configManager,
-            Action<IObservable<FunctionCacheException<TK>>> onError,
+            Action<IObservable<FunctionCacheException<TK>>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, configManager.OnError, behaviour);
+            return ObservablesHelper.SetupObservable(onException, configManager.OnException, behaviour);
         }
         
         public static FunctionCacheConfigurationManager<TK, TV> OnCacheGetObservable<TK, TV>(
@@ -46,12 +46,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, behaviour);
         }
         
-        public static FunctionCacheConfigurationManager<TK, TV> OnCacheErrorObservable<TK, TV>(
+        public static FunctionCacheConfigurationManager<TK, TV> OnCacheExceptionObservable<TK, TV>(
             this FunctionCacheConfigurationManager<TK, TV> configManager,
-            Action<IObservable<CacheException<TK>>> onCacheError,
+            Action<IObservable<CacheException<TK>>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheException, configManager.OnCacheException, behaviour);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnResultObservable<TK, TV>(
@@ -70,12 +70,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, behaviour);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnErrorObservable<TK, TV>(
+        public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnExceptionObservable<TK, TV>(
             this MultiKeyFunctionCacheConfigurationManager<TK, TV> configManager,
-            Action<IObservable<FunctionCacheException<TK>>> onError,
+            Action<IObservable<FunctionCacheException<TK>>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, configManager.OnError, behaviour);
+            return ObservablesHelper.SetupObservable(onException, configManager.OnException, behaviour);
         }
         
         public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheGetObservable<TK, TV>(
@@ -94,12 +94,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, behaviour);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheErrorObservable<TK, TV>(
+        public static MultiKeyFunctionCacheConfigurationManager<TK, TV> OnCacheExceptionObservable<TK, TV>(
             this MultiKeyFunctionCacheConfigurationManager<TK, TV> configManager,
-            Action<IObservable<CacheException<TK>>> onCacheError,
+            Action<IObservable<CacheException<TK>>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheException, configManager.OnCacheException, behaviour);
         }
     }
 }

@@ -22,12 +22,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onFetch, configManager.OnFetch, behaviour);
         }
         
-        public static CachedProxyConfigurationManager<T> OnErrorObservable<T>(
+        public static CachedProxyConfigurationManager<T> OnExceptionObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
-            Action<IObservable<FunctionCacheException>> onError,
+            Action<IObservable<FunctionCacheException>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, configManager.OnError, behaviour);
+            return ObservablesHelper.SetupObservable(onException, configManager.OnException, behaviour);
         }
         
         public static CachedProxyConfigurationManager<T> OnCacheGetObservable<T>(
@@ -46,12 +46,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheSet, configManager.OnCacheSet, behaviour);
         }
         
-        public static CachedProxyConfigurationManager<T> OnCacheErrorObservable<T>(
+        public static CachedProxyConfigurationManager<T> OnCacheExceptionObservable<T>(
             this CachedProxyConfigurationManager<T> configManager,
-            Action<IObservable<CacheException>> onCacheError,
+            Action<IObservable<CacheException>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheError, configManager.OnCacheError, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheException, configManager.OnCacheException, behaviour);
         }
     }
 }

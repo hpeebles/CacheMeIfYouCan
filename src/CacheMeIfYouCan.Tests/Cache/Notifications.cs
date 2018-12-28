@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             
             var cache = new TestCacheFactory(error: () => true)
                 .WithWrapper(new DistributedCacheExceptionChangingWrapperFactory())
-                .OnError(ex => ex.InnerException is CrazyException == filterSucceeds, errors.Add)
+                .OnException(ex => ex.InnerException is TestException == filterSucceeds, errors.Add)
                 .Build<string, string>("test");
 
             await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));
@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             
             var cache = new TestLocalCacheFactory(error: () => true)
                 .WithWrapper(new LocalCacheExceptionChangingWrapperFactory())
-                .OnError(ex => ex.InnerException is CrazyException == filterSucceeds, errors.Add)
+                .OnException(ex => ex.InnerException is TestException == filterSucceeds, errors.Add)
                 .Build<string, string>("test");
 
             Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));

@@ -54,12 +54,12 @@ namespace CacheMeIfYouCan.Tests.Cache
         }
         
         [Fact]
-        public async Task OnError()
+        public async Task OnException()
         {
             var errors = new List<CacheException>();
             
             var cache = new TestCacheFactory(error: () => true)
-                .OnError(errors.Add)
+                .OnException(errors.Add)
                 .BuildAsCache<string, int>("abc");
 
             const string key = "abc";

@@ -68,7 +68,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
-        public async Task OnCacheError()
+        public async Task OnCacheException()
         {
             Func<string, Task<string>> echo = new Echo();
             
@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var cachedEcho = echo
                 .Cached()
                 .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
-                .OnCacheError(errors.Add)
+                .OnCacheException(errors.Add)
                 .Build();
 
             var start = Timestamp.Now;

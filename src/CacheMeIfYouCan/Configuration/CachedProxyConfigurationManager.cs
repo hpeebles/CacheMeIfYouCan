@@ -22,10 +22,10 @@ namespace CacheMeIfYouCan.Configuration
         private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
-        private Action<FunctionCacheException> _onError;
+        private Action<FunctionCacheException> _onException;
         private Action<CacheGetResult> _onCacheGet;
         private Action<CacheSetResult> _onCacheSet;
-        private Action<CacheException> _onCacheError;
+        private Action<CacheException> _onCacheException;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -35,10 +35,10 @@ namespace CacheMeIfYouCan.Configuration
             _valueSerializers = new ValueSerializers();
             _onResult = DefaultCacheConfig.Configuration.OnResult;
             _onFetch = DefaultCacheConfig.Configuration.OnFetch;
-            _onError = DefaultCacheConfig.Configuration.OnError;
+            _onException = DefaultCacheConfig.Configuration.OnException;
             _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
             _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
-            _onCacheError = DefaultCacheConfig.Configuration.OnCacheError;
+            _onCacheException = DefaultCacheConfig.Configuration.OnCacheException;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -111,11 +111,11 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedProxyConfigurationManager<T> OnError(
-            Action<FunctionCacheException> onError,
+        public CachedProxyConfigurationManager<T> OnException(
+            Action<FunctionCacheException> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
         
@@ -135,11 +135,11 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheError(
-            Action<CacheException> onCacheError,
+        public CachedProxyConfigurationManager<T> OnCacheException(
+            Action<CacheException> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, behaviour);
+            _onCacheException = ActionsHelper.Combine(_onCacheException, onCacheException, behaviour);
             return this;
         }
 
@@ -170,10 +170,10 @@ namespace CacheMeIfYouCan.Configuration
                 _keyspacePrefixFunc,
                 _onResult,
                 _onFetch,
-                _onError,
+                _onException,
                 _onCacheGet,
                 _onCacheSet,
-                _onCacheError,
+                _onCacheException,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

@@ -57,7 +57,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnError(bool multiKey)
+        public async Task OnException(bool multiKey)
         {
             ITest impl = new TestImpl();
 
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var proxy = impl
                 .Cached()
                 .WithDistributedCacheFactory(new TestCacheFactory(error: () => true))
-                .OnErrorObservable(x => x.Subscribe(errors.Add))
+                .OnExceptionObservable(x => x.Subscribe(errors.Add))
                 .Build();
             
             if (multiKey)
@@ -124,7 +124,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnCacheError(bool multiKey)
+        public async Task OnCacheException(bool multiKey)
         {
             ITest impl = new TestImpl();
 
@@ -133,7 +133,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var proxy = impl
                 .Cached()
                 .WithDistributedCacheFactory(new TestCacheFactory(error: () => true))
-                .OnCacheErrorObservable(x => x.Subscribe(errors.Add))
+                .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
                 .Build();
             
             if (multiKey)

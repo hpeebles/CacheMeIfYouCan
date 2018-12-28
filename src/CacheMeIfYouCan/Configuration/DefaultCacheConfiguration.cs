@@ -14,10 +14,10 @@ namespace CacheMeIfYouCan.Configuration
         internal IDistributedCacheFactory DistributedCacheFactory { get; private set; }
         internal Action<FunctionCacheGetResult> OnResult { get; private set; }
         internal Action<FunctionCacheFetchResult> OnFetch { get; private set; }
-        internal Action<FunctionCacheException> OnError { get; private set; }
+        internal Action<FunctionCacheException> OnException { get; private set; }
         internal Action<CacheGetResult> OnCacheGet { get; private set; }
         internal Action<CacheSetResult> OnCacheSet { get; private set; }
-        internal Action<CacheException> OnCacheError { get; private set; }
+        internal Action<CacheException> OnCacheException { get; private set; }
         internal readonly KeySerializers KeySerializers = new KeySerializers();
         internal readonly ValueSerializers ValueSerializers = new ValueSerializers();
 
@@ -67,11 +67,11 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnErrorAction(
-            Action<FunctionCacheException> onError,
+        public DefaultCacheConfiguration WithOnExceptionAction(
+            Action<FunctionCacheException> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnError = ActionsHelper.Combine(OnError, onError, behaviour);
+            OnException = ActionsHelper.Combine(OnException, onException, behaviour);
             return this;
         }
 
@@ -91,11 +91,11 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheErrorAction(
-            Action<CacheException> onCacheError,
+        public DefaultCacheConfiguration WithOnCacheExceptionAction(
+            Action<CacheException> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheError = ActionsHelper.Combine(OnCacheError, onCacheError, behaviour);
+            OnCacheException = ActionsHelper.Combine(OnCacheException, onCacheException, behaviour);
             return this;
         }
 

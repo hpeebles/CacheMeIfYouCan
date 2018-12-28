@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly List<ILocalCacheWrapperFactory> _wrapperFactories;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
-        private Action<CacheException> _onError;
+        private Action<CacheException> _onException;
 
         public LocalCacheFactory(ILocalCacheFactory cacheFactory)
         {
@@ -40,11 +40,11 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public LocalCacheFactory OnError(
-            Action<CacheException> onError,
+        public LocalCacheFactory OnException(
+            Action<CacheException> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
 
@@ -89,8 +89,8 @@ namespace CacheMeIfYouCan.Internal
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Final wrapper handles notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            if (_onGetResult != null || _onSetResult != null || _onException != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
             return cache;
         }
@@ -111,7 +111,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly List<ILocalCacheWrapperFactory<TK, TV>> _wrapperFactories;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
-        private Action<CacheException<TK>> _onError;
+        private Action<CacheException<TK>> _onException;
         private Func<TK, string> _keySerializer;
         
         internal LocalCacheFactory(ILocalCacheFactory<TK, TV> cacheFactory)
@@ -136,11 +136,11 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public LocalCacheFactory<TK, TV> OnError(
-            Action<CacheException<TK>> onError,
+        public LocalCacheFactory<TK, TV> OnException(
+            Action<CacheException<TK>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
         
@@ -190,8 +190,8 @@ namespace CacheMeIfYouCan.Internal
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Final wrapper handles notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            if (_onGetResult != null || _onSetResult != null || _onException != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
             return cache;
         }

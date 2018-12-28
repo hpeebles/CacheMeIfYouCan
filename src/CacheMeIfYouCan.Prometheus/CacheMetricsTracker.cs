@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Prometheus
                 .Observe(ConvertToMilliseconds(result.Duration));
         }
 
-        public static void OnCacheError(CacheException exception)
+        public static void OnCacheException(CacheException exception)
         {
             var labels = new[]
             {

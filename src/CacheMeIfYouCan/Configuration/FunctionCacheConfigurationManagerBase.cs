@@ -20,10 +20,10 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
-        private Action<FunctionCacheException<TK>> _onError;
+        private Action<FunctionCacheException<TK>> _onException;
         private Action<CacheGetResult<TK, TV>> _onCacheGet;
         private Action<CacheSetResult<TK, TV>> _onCacheSet;
-        private Action<CacheException<TK>> _onCacheError;
+        private Action<CacheException<TK>> _onCacheException;
         private Func<TK, string> _keySerializer;
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
@@ -89,10 +89,10 @@ namespace CacheMeIfYouCan.Configuration
                 _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
                 _onResult = interfaceConfig.OnResult;
                 _onFetch = interfaceConfig.OnFetch;
-                _onError = interfaceConfig.OnError;
+                _onException = interfaceConfig.OnException;
                 _onCacheGet = interfaceConfig.OnCacheGet;
                 _onCacheSet = interfaceConfig.OnCacheSet;
-                _onCacheError = interfaceConfig.OnCacheError;
+                _onCacheException = interfaceConfig.OnCacheException;
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
@@ -109,10 +109,10 @@ namespace CacheMeIfYouCan.Configuration
             {
                 _onResult = DefaultCacheConfig.Configuration.OnResult;
                 _onFetch = DefaultCacheConfig.Configuration.OnFetch;
-                _onError = DefaultCacheConfig.Configuration.OnError;
+                _onException = DefaultCacheConfig.Configuration.OnException;
                 _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
                 _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
-                _onCacheError = DefaultCacheConfig.Configuration.OnCacheError;
+                _onCacheException = DefaultCacheConfig.Configuration.OnCacheException;
             }
         }
 
@@ -252,11 +252,11 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig OnError(
-            Action<FunctionCacheException<TK>> onError,
+        public TConfig OnException(
+            Action<FunctionCacheException<TK>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return (TConfig)this;
         }
         
@@ -276,11 +276,11 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig OnCacheError(
-            Action<CacheException<TK>> onCacheError,
+        public TConfig OnCacheException(
+            Action<CacheException<TK>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheError = ActionsHelper.Combine(_onCacheError, onCacheError, behaviour);
+            _onCacheException = ActionsHelper.Combine(_onCacheException, onCacheException, behaviour);
             return (TConfig)this;
         }
         
@@ -312,7 +312,7 @@ namespace CacheMeIfYouCan.Configuration
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
-                _onError,
+                _onException,
                 keyComparer);
         }
         
@@ -333,7 +333,7 @@ namespace CacheMeIfYouCan.Configuration
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
-                _onError,
+                _onException,
                 keyComparer);
         }
 
@@ -375,7 +375,7 @@ namespace CacheMeIfYouCan.Configuration
                     cacheConfig,
                     _onCacheGet,
                     _onCacheSet,
-                    _onCacheError,
+                    _onCacheException,
                     keyComparer);
             }
 

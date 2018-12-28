@@ -18,10 +18,10 @@ namespace CacheMeIfYouCan.Internal
         public readonly Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc;
         public readonly Action<FunctionCacheGetResult> OnResult;
         public readonly Action<FunctionCacheFetchResult> OnFetch;
-        public readonly Action<FunctionCacheException> OnError;
+        public readonly Action<FunctionCacheException> OnException;
         public readonly Action<CacheGetResult> OnCacheGet;
         public readonly Action<CacheSetResult> OnCacheSet;
-        public readonly Action<CacheException> OnCacheError;
+        public readonly Action<CacheException> OnCacheException;
         public readonly IDictionary<MethodInfoKey, object> FunctionCacheConfigActions;
         
         public CachedProxyConfig(
@@ -36,10 +36,10 @@ namespace CacheMeIfYouCan.Internal
             Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
-            Action<FunctionCacheException> onError,
+            Action<FunctionCacheException> onException,
             Action<CacheGetResult> onCacheGet,
             Action<CacheSetResult> onCacheSet,
-            Action<CacheException> onCacheError,
+            Action<CacheException> onCacheException,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -53,10 +53,10 @@ namespace CacheMeIfYouCan.Internal
             KeyspacePrefixFunc = keyspacePrefixFunc;
             OnResult = onResult;
             OnFetch = onFetch;
-            OnError = onError;
+            OnException = onException;
             OnCacheGet = onCacheGet;
             OnCacheSet = onCacheSet;
-            OnCacheError = onCacheError;
+            OnCacheException = onCacheException;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
     }

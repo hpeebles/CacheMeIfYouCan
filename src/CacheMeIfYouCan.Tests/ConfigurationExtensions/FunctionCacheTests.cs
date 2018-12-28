@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         }
         
         [Fact]
-        public async Task OnError()
+        public async Task OnException()
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             var cachedEcho = echo
                 .Cached()
-                .OnErrorObservable(x => x.Subscribe(errors.Add))
+                .OnExceptionObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
@@ -96,7 +96,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         }
         
         [Fact]
-        public async Task OnCacheError()
+        public async Task OnCacheException()
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             
@@ -108,7 +108,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var cachedEcho = echo
                 .Cached()
                 .WithDistributedCache(cache)
-                .OnCacheErrorObservable(x => x.Subscribe(errors.Add))
+                .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
                 .Build();
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));

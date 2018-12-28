@@ -79,7 +79,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Fact]
-        public async Task DefaultOnErrorIsTriggered()
+        public async Task DefaultOnExceptionIsTriggered()
         {
             var count = 0;
             
@@ -91,7 +91,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnErrorAction(x =>
+                DefaultCacheConfig.Configuration.WithOnExceptionAction(x =>
                 {
                     if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
                         errors.Add(x);
@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnErrorAction(null, AdditionBehaviour.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             var previousErrorCount = 0;
@@ -211,7 +211,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
-        public async Task DefaultOnCacheErrorIsTriggered()
+        public async Task DefaultOnCacheExceptionIsTriggered()
         {
             Func<string, Task<string>> echo = new Echo();
 
@@ -223,7 +223,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnCacheErrorAction(x =>
+                DefaultCacheConfig.Configuration.WithOnCacheExceptionAction(x =>
                 {
                     if (x.Keys.Contains(key))
                         errors.Add(x);
@@ -234,7 +234,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnErrorAction(null, AdditionBehaviour.Overwrite);
+                DefaultCacheConfig.Configuration.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));

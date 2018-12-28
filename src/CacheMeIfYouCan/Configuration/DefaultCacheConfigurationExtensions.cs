@@ -22,12 +22,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onFetch, config.WithOnFetchAction, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnErrorObservable(
+        public static DefaultCacheConfiguration WithOnExceptionObservable(
             this DefaultCacheConfiguration config,
-            Action<IObservable<FunctionCacheException>> onError,
+            Action<IObservable<FunctionCacheException>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onError, config.WithOnErrorAction, behaviour);
+            return ObservablesHelper.SetupObservable(onException, config.WithOnExceptionAction, behaviour);
         }
         
         public static DefaultCacheConfiguration WithOnCacheGetObservable(
@@ -46,12 +46,12 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheSet, config.WithOnCacheSetAction, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnCacheErrorObservable(
+        public static DefaultCacheConfiguration WithOnCacheExceptionObservable(
             this DefaultCacheConfiguration config,
-            Action<IObservable<CacheException>> onCacheError,
+            Action<IObservable<CacheException>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheError, config.WithOnCacheErrorAction, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheException, config.WithOnCacheExceptionAction, behaviour);
         }
     }
 }

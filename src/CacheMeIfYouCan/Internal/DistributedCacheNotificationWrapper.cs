@@ -12,18 +12,18 @@ namespace CacheMeIfYouCan.Internal
         private readonly IDistributedCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
-        private readonly Action<CacheException<TK>> _onError;
+        private readonly Action<CacheException<TK>> _onException;
 
         public DistributedCacheNotificationWrapper(
             IDistributedCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
-            Action<CacheException<TK>> onError)
+            Action<CacheException<TK>> onException)
         {
             _cache = cache;
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
-            _onError = onError;
+            _onException = onException;
 
             CacheName = _cache.CacheName;
             CacheType = _cache.CacheType;
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Internal
             catch (CacheException<TK> ex)
             {
                 error = true;
-                _onError?.Invoke(ex);
+                _onException?.Invoke(ex);
 
                 throw;
             }
@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Internal
             catch (CacheException<TK> ex)
             {
                 error = true;
-                _onError?.Invoke(ex);
+                _onException?.Invoke(ex);
 
                 throw;
             }
@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Internal
             catch (CacheException<TK> ex)
             {
                 error = true;
-                _onError?.Invoke(ex);
+                _onException?.Invoke(ex);
 
                 throw;
             }
@@ -144,7 +144,7 @@ namespace CacheMeIfYouCan.Internal
             catch (CacheException<TK> ex)
             {
                 error = true;
-                _onError?.Invoke(ex);
+                _onException?.Invoke(ex);
 
                 throw;
             }

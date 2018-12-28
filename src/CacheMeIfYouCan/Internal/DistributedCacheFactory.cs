@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly List<IDistributedCacheWrapperFactory> _wrapperFactories;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
-        private Action<CacheException> _onError;
+        private Action<CacheException> _onException;
         private Func<string, string> _keyspacePrefixFunc;
 
         public DistributedCacheFactory(IDistributedCacheFactory cacheFactory)
@@ -44,11 +44,11 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public DistributedCacheFactory OnError(
-            Action<CacheException> onError,
+        public DistributedCacheFactory OnException(
+            Action<CacheException> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
         
@@ -110,8 +110,8 @@ namespace CacheMeIfYouCan.Internal
             cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Final wrapper handles notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            if (_onGetResult != null || _onSetResult != null || _onException != null)
+                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
             return cache;
         }
@@ -151,7 +151,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly List<IDistributedCacheWrapperFactory<TK, TV>> _wrapperFactories;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
-        private Action<CacheException<TK>> _onError;
+        private Action<CacheException<TK>> _onException;
         private Func<TK, string> _keySerializer;
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
@@ -180,11 +180,11 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public DistributedCacheFactory<TK, TV> OnError(
-            Action<CacheException<TK>> onError,
+        public DistributedCacheFactory<TK, TV> OnException(
+            Action<CacheException<TK>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onError = ActionsHelper.Combine(_onError, onError, behaviour);
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
 
@@ -275,8 +275,8 @@ namespace CacheMeIfYouCan.Internal
             cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Final wrapper handles notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onError != null)
-                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onError);
+            if (_onGetResult != null || _onSetResult != null || _onException != null)
+                cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
             return cache;
         }
