@@ -7,7 +7,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             return configManager
                 .OnGetResult(CacheMetricsTracker.OnCacheGet)
-                .OnSetResult(CacheMetricsTracker.OnCacheSet);
+                .OnSetResult(CacheMetricsTracker.OnCacheSet)
+                .OnError(CacheMetricsTracker.OnCacheError);
         }
         
         public static IDistributedCacheFactory<TK, TV> WithMetrics<TK, TV>(
@@ -15,7 +16,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             return configManager
                 .OnGetResult(CacheMetricsTracker.OnCacheGet)
-                .OnSetResult(CacheMetricsTracker.OnCacheSet);
+                .OnSetResult(CacheMetricsTracker.OnCacheSet)
+                .OnError(CacheMetricsTracker.OnCacheError);
         }
         
         public static ILocalCacheFactory WithMetrics(
@@ -23,7 +25,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             return configManager
                 .OnGetResult(CacheMetricsTracker.OnCacheGet)
-                .OnSetResult(CacheMetricsTracker.OnCacheSet);
+                .OnSetResult(CacheMetricsTracker.OnCacheSet)
+                .OnError(CacheMetricsTracker.OnCacheError);
         }
         
         public static ILocalCacheFactory<TK, TV> WithMetrics<TK, TV>(
@@ -31,7 +34,8 @@ namespace CacheMeIfYouCan.Prometheus
         {
             return configManager
                 .OnGetResult(CacheMetricsTracker.OnCacheGet)
-                .OnSetResult(CacheMetricsTracker.OnCacheSet);
+                .OnSetResult(CacheMetricsTracker.OnCacheSet)
+                .OnError(CacheMetricsTracker.OnCacheError);
         }
     }
 }

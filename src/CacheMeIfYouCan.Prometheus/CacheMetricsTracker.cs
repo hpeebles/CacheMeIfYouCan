@@ -7,23 +7,26 @@ namespace CacheMeIfYouCan.Prometheus
 {
     internal static class CacheMetricsTracker
     {
-        private static readonly Counter TotalHitsCounter;
-        private static readonly Counter TotalMissesCounter;
-        private static readonly Counter TotalItemsSetCounter;
+        private static readonly Counter HitsCounter;
+        private static readonly Counter MissesCounter;
+        private static readonly Counter ItemsSetCounter;
+        private static readonly Counter ExceptionsCounter;
         private static readonly Histogram GetDurationsMs;
         private static readonly Histogram SetDurationsMs;
         private static readonly Gauge CachedItemsCounter;
         private static readonly Gauge PendingRequestsCounter;
         private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
+        private const string NullString = "null";
         
         static CacheMetricsTracker()
         {
             var labels = new[] { "name", "cachetype", "success" };
             var cacheDurationBuckets = new[] { 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000 };
             
-            TotalHitsCounter = Metrics.CreateCounter("Cache_TotalHitsCounter", null, labels);
-            TotalMissesCounter = Metrics.CreateCounter("Cache_TotalMissesCounter", null, labels);
-            TotalItemsSetCounter = Metrics.CreateCounter("Cache_TotalItemsSetCounter", null, labels);
+            HitsCounter = Metrics.CreateCounter("Cache_HitsCounter", null, labels);
+            MissesCounter = Metrics.CreateCounter("Cache_MissesCounter", null, labels);
+            ItemsSetCounter = Metrics.CreateCounter("Cache_ItemsSetCounter", null, labels);
+            ExceptionsCounter = Metrics.CreateCounter("Cache_ExceptionsCounter", null, "name", "cachetype", "exceptiontype", "innerexceptiontype");
             GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, cacheDurationBuckets, labels);
             SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, cacheDurationBuckets, labels);
             CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "name", "cachetype");
@@ -41,11 +44,11 @@ namespace CacheMeIfYouCan.Prometheus
         {
             var labels = new[] { result.CacheName, result.CacheType, result.Success.ToString() };
             
-            TotalHitsCounter
+            HitsCounter
                 .Labels(labels)
                 .Inc(result.HitsCount);
             
-            TotalMissesCounter
+            MissesCounter
                 .Labels(labels)
                 .Inc(result.MissesCount);
             
@@ -58,13 +61,28 @@ namespace CacheMeIfYouCan.Prometheus
         {
             var labels = new[] { result.CacheName, result.CacheType, result.Success.ToString() };
             
-            TotalItemsSetCounter
+            ItemsSetCounter
                 .Labels(labels)
                 .Inc(result.KeysCount);
             
             SetDurationsMs
                 .Labels(labels)
                 .Observe(ConvertToMilliseconds(result.Duration));
+        }
+
+        public static void OnCacheError(CacheException exception)
+        {
+            var labels = new[]
+            {
+                exception.CacheName,
+                exception.CacheType,
+                exception.GetType().Name,
+                exception.InnerException?.GetType().Name ?? NullString
+            };
+            
+            ExceptionsCounter
+                .Labels(labels)
+                .Inc();
         }
 
         private static void TrackCachedItemCounts()
