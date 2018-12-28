@@ -45,18 +45,18 @@ namespace CacheMeIfYouCan.Internal
                 if (distributedCache != null)
                     return new TwoTierCache<TK, TV>(localCache, distributedCache, keyComparer);
 
-                return new LocalCacheToCacheInternalAdaptor<TK, TV>(localCache);
+                return new LocalCacheToCacheInternalAdapter<TK, TV>(localCache);
             }
 
             if (distributedCache == null)
                 throw new Exception("Cache factory returned null");
 
-            return new DistributedCacheToCacheInternalAdaptor<TK, TV>(distributedCache);
+            return new DistributedCacheToCacheInternalAdapter<TK, TV>(distributedCache);
         }
 
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()
         {
-            return new LocalCacheFactoryToGenericAdaptor<TK, TV>(new MemoryCacheFactory());
+            return new LocalCacheFactoryToGenericAdapter<TK, TV>(new MemoryCacheFactory());
         }
     }
 }

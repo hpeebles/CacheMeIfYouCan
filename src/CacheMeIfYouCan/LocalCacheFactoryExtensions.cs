@@ -129,7 +129,7 @@ namespace CacheMeIfYouCan
         {
             return cacheFactory
                 .AsFactory()
-                .WithWrapper(new LocalCacheWrapperFactoryToGenericAdaptor<TK, TV>(wrapperFactory), behaviour);
+                .WithWrapper(new LocalCacheWrapperFactoryToGenericAdapter<TK, TV>(wrapperFactory), behaviour);
         } 
         
         public static ILocalCacheFactory<TK, TV> WithWrapper<TK, TV>(

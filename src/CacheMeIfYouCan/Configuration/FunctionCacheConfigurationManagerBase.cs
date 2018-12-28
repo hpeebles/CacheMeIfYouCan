@@ -81,10 +81,10 @@ namespace CacheMeIfYouCan.Configuration
                 _disableCache = interfaceConfig.DisableCache;
 
                 if (interfaceConfig.LocalCacheFactory != null)
-                    _localCacheFactory = new LocalCacheFactoryToGenericAdaptor<TK, TV>(interfaceConfig.LocalCacheFactory);
+                    _localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.LocalCacheFactory);
                                 
                 if (interfaceConfig.DistributedCacheFactory != null)
-                    _distributedCacheFactory = new DistributedCacheFactoryToGenericAdaptor<TK, TV>(interfaceConfig.DistributedCacheFactory);
+                    _distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.DistributedCacheFactory);
 
                 _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
                 _onResult = interfaceConfig.OnResult;
@@ -202,7 +202,7 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithLocalCacheFactory(Func<string, ILocalCache<TK, TV>> cacheFactoryFunc)
         {
-            _localCacheFactory = new LocalCacheFactoryFromFuncAdaptor<TK, TV>(cacheFactoryFunc);
+            _localCacheFactory = new LocalCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             return (TConfig)this;
         }
         
@@ -231,7 +231,7 @@ namespace CacheMeIfYouCan.Configuration
             Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
             string keyspacePrefix = null)
         {
-            _distributedCacheFactory = new DistributedCacheFactoryFromFuncAdaptor<TK, TV>(cacheFactoryFunc);
+            _distributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             _keyspacePrefix = keyspacePrefix;
             return (TConfig)this;
         }
@@ -358,13 +358,13 @@ namespace CacheMeIfYouCan.Configuration
                 if (_localCacheFactory != null)
                     localCacheFactory = _localCacheFactory;
                 else if (DefaultCacheConfig.Configuration.LocalCacheFactory != null)
-                    localCacheFactory = new LocalCacheFactoryToGenericAdaptor<TK, TV>(DefaultCacheConfig.Configuration.LocalCacheFactory);
+                    localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(DefaultCacheConfig.Configuration.LocalCacheFactory);
 
                 IDistributedCacheFactory<TK, TV> distributedCacheFactory = null;
                 if (_distributedCacheFactory != null)
                     distributedCacheFactory = _distributedCacheFactory;
                 else if (DefaultCacheConfig.Configuration.DistributedCacheFactory != null)
-                    distributedCacheFactory = new DistributedCacheFactoryToGenericAdaptor<TK, TV>(DefaultCacheConfig.Configuration.DistributedCacheFactory);
+                    distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultCacheConfig.Configuration.DistributedCacheFactory);
 
                 keyComparer = KeyComparerResolver.Get<TK>();
 

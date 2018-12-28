@@ -10,11 +10,11 @@ namespace CacheMeIfYouCan
         ILocalCache<TK, TV> Wrap(ILocalCache<TK, TV> cache);
     }
     
-    internal class LocalCacheWrapperFactoryToGenericAdaptor<TK, TV> : ILocalCacheWrapperFactory<TK, TV>
+    internal class LocalCacheWrapperFactoryToGenericAdapter<TK, TV> : ILocalCacheWrapperFactory<TK, TV>
     {
         private readonly ILocalCacheWrapperFactory _wrapperFactory;
 
-        public LocalCacheWrapperFactoryToGenericAdaptor(ILocalCacheWrapperFactory wrapperFactory)
+        public LocalCacheWrapperFactoryToGenericAdapter(ILocalCacheWrapperFactory wrapperFactory)
         {
             _wrapperFactory = wrapperFactory;
         }
