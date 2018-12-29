@@ -99,9 +99,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task InitializeDurationIsAccurate()
         {
             CachedObjectFactory
-                .ConfigureFor(() =>
+                .ConfigureFor(async () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                     return new Dummy3();
                 })
                 .WithRefreshInterval(TimeSpan.FromMinutes(1))

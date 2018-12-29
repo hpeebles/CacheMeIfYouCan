@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests
 {
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Tests
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
         {
             if (_delay.HasValue)
-                Thread.Sleep(_delay.Value);
+                Task.Delay(_delay.Value).Wait();
 
             if (_error?.Invoke() ?? false)
                 throw new Exception();
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Tests
         public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             if (_delay.HasValue)
-                Thread.Sleep(_delay.Value);
+                Task.Delay(_delay.Value).Wait();
 
             if (_error?.Invoke() ?? false)
                 throw new Exception();

@@ -73,7 +73,7 @@ namespace CacheMeIfYouCan.Polly.Tests
 
             Assert.IsType<BrokenCircuitException>(exception.InnerException);
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            Task.Delay(TimeSpan.FromSeconds(1)).Wait();
             
             Assert.Equal("abc", cache.Get(key));
         }

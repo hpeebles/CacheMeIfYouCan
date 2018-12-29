@@ -13,9 +13,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public void NotInitializedWillInitializeOnFirstCall()
         {
             var ticks = CachedObjectFactory
-                .ConfigureFor(() =>
+                .ConfigureFor(async () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                     return DateTime.UtcNow.Ticks;
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
@@ -32,9 +32,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task CanBeInitializedDirectly()
         {
             var ticks = CachedObjectFactory
-                .ConfigureFor(() =>
+                .ConfigureFor(async () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                     return DateTime.UtcNow.Ticks;
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
