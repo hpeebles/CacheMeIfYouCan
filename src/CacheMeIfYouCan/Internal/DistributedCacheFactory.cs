@@ -114,8 +114,10 @@ namespace CacheMeIfYouCan.Internal
 
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
-            var cache = _cacheFactory.Build(config);
+            var originalCache = _cacheFactory.Build(config);
 
+            var cache = originalCache;
+            
             // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
@@ -127,9 +129,13 @@ namespace CacheMeIfYouCan.Internal
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
-            // Finally add a wrapper to swallow exceptions (if required)
+            // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
                 cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
+
+            // If the original cache implemented INotifyKeyChanges, add a wrapper to maintain the INotifyKeyChanges implementation
+            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges)
+                cache = new DistributedCacheNotifyKeyChangesWrapper<TK, TV>(cache, notifyKeyChanges);
             
             return cache;
         }
@@ -298,8 +304,10 @@ namespace CacheMeIfYouCan.Internal
                 ValueDeserializer = _valueDeserializer ?? config.ValueDeserializer
             };
             
-            var cache = _cacheFactory.Build(cacheConfig);
+            var originalCache = _cacheFactory.Build(cacheConfig);
 
+            var cache = originalCache;
+            
             // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
@@ -311,10 +319,14 @@ namespace CacheMeIfYouCan.Internal
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
-            // Finally add a wrapper to swallow exceptions (if required)
+            // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
                 cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
-            
+
+            // If the original cache implemented INotifyKeyChanges, add a wrapper to maintain the INotifyKeyChanges implementation
+            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges)
+                cache = new DistributedCacheNotifyKeyChangesWrapper<TK, TV>(cache, notifyKeyChanges);
+
             return cache;
         }
 

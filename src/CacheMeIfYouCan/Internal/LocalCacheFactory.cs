@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan.Internal
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
-            // Finally add a wrapper to swallow exceptions (if required)
+            // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
             
@@ -226,7 +226,7 @@ namespace CacheMeIfYouCan.Internal
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
-            // Finally add a wrapper to swallow exceptions (if required)
+            // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
             

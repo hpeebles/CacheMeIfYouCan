@@ -16,10 +16,12 @@ namespace CacheMeIfYouCan.Redis.Tests
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
             var results = new List<FunctionCacheGetResult>();
-            
+
+            var connectionString = Environment.GetEnvironmentVariable("RedisTestConnectionString", EnvironmentVariableTarget.Machine);
+
             var cachedEcho = echo
                 .Cached()
-                .WithRedis(c => c.ConnectionString = "redis-test")
+                .WithRedis(c => c.ConnectionString = connectionString)
                 .OnResult(results.Add)
                 .Build();
 

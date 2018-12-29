@@ -21,18 +21,20 @@ namespace CacheMeIfYouCan.Redis.Tests
             
             var localCache = new TestLocalCache<string, string>();
             
+            var connectionString = Environment.GetEnvironmentVariable("RedisTestConnectionString", EnvironmentVariableTarget.Machine);
+            
             var cachedEcho = echo
                 .Cached()
                 .WithRedis(c =>
                 {
-                    c.ConnectionString = "redis-test";
+                    c.ConnectionString = connectionString;
                     c.KeySpacePrefix = "CacheMeIfYouCanTest";
                 })
                 .WithLocalCache(localCache)
                 .OnResult(results.Add)
                 .Build();
 
-            var redisClient = ConnectionMultiplexer.Connect("redis-test");
+            var redisClient = ConnectionMultiplexer.Connect(connectionString);
 
             var key = Guid.NewGuid().ToString();
             var redisKey = "CacheMeIfYouCanTest" + key;
