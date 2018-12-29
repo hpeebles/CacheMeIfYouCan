@@ -22,7 +22,9 @@ namespace CacheMeIfYouCan.Cron
                 return schedule.GetNextOccurrence(DateTime.UtcNow) - DateTime.UtcNow;
             }
 
-            return config.WithRefreshInterval(GetNextInterval);
+            return config
+                .WithJitterPercentage(0)
+                .WithRefreshInterval(GetNextInterval);
         }
     }
 }

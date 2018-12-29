@@ -17,7 +17,11 @@ namespace CacheMeIfYouCan.Cron.Tests
             var refreshResults = new List<CachedObjectRefreshResult>();
             
             var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
+                .ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    return DateTime.UtcNow;
+                })
                 .WithRefreshSchedule(cronExpression, true)
                 .OnRefreshResult(refreshResults.Add)
                 .Build();
