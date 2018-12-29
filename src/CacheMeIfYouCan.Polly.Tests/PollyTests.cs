@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Polly.Tests
         {
             var policy = Policy.Handle<Exception>().CircuitBreakerAsync(2, TimeSpan.FromSeconds(1));
             
-            var errorIndexes = new[] { 0, 2, 3 };
+            var errorIndexes = new[] { 1, 3, 4 };
 
             var index = 0;
             
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Polly.Tests
         {
             var policy = Policy.Handle<Exception>().CircuitBreaker(2, TimeSpan.FromSeconds(1));
             
-            var errorIndexes = new[] { 0, 2, 3 };
+            var errorIndexes = new[] { 1, 3, 4 };
 
             var index = 0;
             

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
@@ -20,8 +21,8 @@ namespace CacheMeIfYouCan.Internal
             _distributedCache = distributedCache;
             _keyComparer = keyComparer;
 
-            if (_distributedCache is IKeyChangeNotifier<TK> notifier)
-                notifier.KeyChanges.Subscribe(_localCache.Remove);
+            if (_distributedCache is INotifyKeyChanges<TK> notifier)
+                notifier.KeyChanges.Do(_localCache.Remove).Retry().Subscribe();
 
             CacheName = _localCache.CacheName;
             CacheType = $"{_localCache.CacheType}+{_distributedCache.CacheType}";

@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan
 {
-    public interface IKeyChangeNotifier<TK>
+    public interface INotifyKeyChanges<TK>
     {
         IObservable<Key<TK>> KeyChanges { get; }
     }
