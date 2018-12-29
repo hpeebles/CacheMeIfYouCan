@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
@@ -19,6 +18,7 @@ namespace CacheMeIfYouCan.Internal
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheException> _onException;
         private Func<string, string> _keyspacePrefixFunc;
+        private Func<Exception, bool> _swallowExceptionsPredicate;
 
         public DistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
@@ -97,6 +97,20 @@ namespace CacheMeIfYouCan.Internal
             
             return this;
         }
+        
+        public DistributedCacheFactory SwallowExceptions(Func<Exception, bool> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            
+            var current = _swallowExceptionsPredicate;
+
+            if (current == null)
+                _swallowExceptionsPredicate = predicate;
+            else
+                _swallowExceptionsPredicate = ex => current(ex) || predicate(ex);
+
+            return this;
+        }
 
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
@@ -106,13 +120,17 @@ namespace CacheMeIfYouCan.Internal
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Next add a wrapper to catch and format any exceptions
+            // Then add a wrapper to catch and format any exceptions
             cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Final wrapper handles notifications (if any actions are set)
+            // Then add a wrapper to handle notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
+            // Finally add a wrapper to swallow exceptions (if required)
+            if (_swallowExceptionsPredicate != null)
+                cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
+            
             return cache;
         }
 
@@ -157,6 +175,7 @@ namespace CacheMeIfYouCan.Internal
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
         private Func<string, string> _keyspacePrefixFunc;
+        private Func<Exception, bool> _swallowExceptionsPredicate;
         
         internal DistributedCacheFactory(IDistributedCacheFactory<TK, TV> cacheFactory)
         {
@@ -254,6 +273,20 @@ namespace CacheMeIfYouCan.Internal
             
             return this;
         }
+        
+        public DistributedCacheFactory<TK, TV> SwallowExceptions(Func<Exception, bool> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            
+            var current = _swallowExceptionsPredicate;
+
+            if (current == null)
+                _swallowExceptionsPredicate = predicate;
+            else
+                _swallowExceptionsPredicate = ex => current(ex) || predicate(ex);
+
+            return this;
+        }
 
         public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
         {
@@ -271,13 +304,17 @@ namespace CacheMeIfYouCan.Internal
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Next add a wrapper to catch and format any exceptions
+            // Then add a wrapper to catch and format any exceptions
             cache = new DistributedCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Final wrapper handles notifications (if any actions are set)
+            // Then add a wrapper to handle notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new DistributedCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
+            // Finally add a wrapper to swallow exceptions (if required)
+            if (_swallowExceptionsPredicate != null)
+                cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
+            
             return cache;
         }
 

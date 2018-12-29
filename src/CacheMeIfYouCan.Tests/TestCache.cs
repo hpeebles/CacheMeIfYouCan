@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
 {
@@ -76,17 +75,21 @@ namespace CacheMeIfYouCan.Tests
             return results;
         }
 
-        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            if (_error?.Invoke() ?? false)
+                throw new Exception();
+
             if (timeToLive <= TimeSpan.Zero)
-                return Task.CompletedTask;
+                return;
             
             var expiry = DateTimeOffset.UtcNow + timeToLive;
             
             foreach (var kv in values)
                 Values[kv.Key.AsString] = Tuple.Create(_serializer(kv.Value), expiry);
-            
-            return Task.CompletedTask;
         }
 
         public void OnKeyChangedRemotely(string key)

@@ -124,6 +124,67 @@ namespace CacheMeIfYouCan
                 .WithWrapper(new DistributedCachePendingRequestsCounterWrapperFactory(), behaviour);
         }
         
+        public static IDistributedCacheFactory SwallowExceptions(this IDistributedCacheFactory cacheFactory)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => true);
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptions(
+            this IDistributedCacheFactory cacheFactory,
+            Func<Exception, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(predicate);
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptions<TException>(
+            this IDistributedCacheFactory cacheFactory)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex is TException);
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptions<TException>(
+            this IDistributedCacheFactory cacheFactory,
+            Func<TException, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex is TException typed && predicate(typed));
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptionsInner(
+            this IDistributedCacheFactory cacheFactory,
+            Func<Exception, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => predicate(ex.InnerException));
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptionsInner<TException>(
+            this IDistributedCacheFactory cacheFactory)
+            where TException : Exception
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex.InnerException is TException);
+        }
+        
+        public static IDistributedCacheFactory SwallowExceptionsInner<TException>(
+            this IDistributedCacheFactory cacheFactory,
+            Func<TException, bool> predicate)
+            where TException : Exception
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex.InnerException is TException typed && predicate(typed));
+        }
+        
         public static IDistributedCache<TK, TV> Build<TK, TV>(
             this IDistributedCacheFactory cacheFactory,
             string cacheName)
@@ -296,6 +357,67 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .WithWrapper(new DistributedCachePendingRequestsCounterWrapperFactory(), behaviour);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptions<TK, TV>(this IDistributedCacheFactory<TK, TV> cacheFactory)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => true);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptions<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<Exception, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(predicate);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptions<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex is TException);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptions<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<TException, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex is TException typed && predicate(typed));
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptionsInner<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<Exception, bool> predicate)
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => predicate(ex.InnerException));
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptionsInner<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory)
+            where TException : Exception
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex.InnerException is TException);
+        }
+        
+        public static IDistributedCacheFactory<TK, TV> SwallowExceptionsInner<TK, TV, TException>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            Func<TException, bool> predicate)
+            where TException : Exception
+        {
+            return cacheFactory
+                .AsFactory()
+                .SwallowExceptions(ex => ex.InnerException is TException typed && predicate(typed));
         }
         
         public static IDistributedCache<TK, TV> Build<TK, TV>(

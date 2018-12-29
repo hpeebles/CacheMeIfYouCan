@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CacheMeIfYouCan.Tests.Cache.Helpers
 {
@@ -35,7 +36,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new TestException("test", ex);
+                    throw new TestException(key.AsStringSafe, ex);
                 }
             }
 
@@ -47,7 +48,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new TestException("test", ex);
+                    throw new TestException(key.AsStringSafe, ex);
                 }
             }
 
@@ -59,7 +60,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new TestException("test", ex);
+                    throw new TestException(String.Join(",", keys.Select(k => k.AsStringSafe)), ex);
                 }
             }
 
@@ -71,7 +72,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new TestException("test", ex);
+                    throw new TestException(String.Join(",", values.Select(kv => kv.Key.AsStringSafe)), ex);
                 }
             }
 
@@ -83,7 +84,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
                 catch (Exception ex)
                 {
-                    throw new TestException("test", ex);
+                    throw new TestException(key.AsStringSafe, ex);
                 }
             }
         }

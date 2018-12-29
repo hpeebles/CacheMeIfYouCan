@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
@@ -17,6 +16,7 @@ namespace CacheMeIfYouCan.Internal
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheException> _onException;
+        private Func<Exception, bool> _swallowExceptionsPredicate;
 
         public LocalCacheFactory(ILocalCacheFactory cacheFactory)
         {
@@ -76,6 +76,20 @@ namespace CacheMeIfYouCan.Internal
             
             return this;
         }
+
+        public LocalCacheFactory SwallowExceptions(Func<Exception, bool> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            
+            var current = _swallowExceptionsPredicate;
+
+            if (current == null)
+                _swallowExceptionsPredicate = predicate;
+            else
+                _swallowExceptionsPredicate = ex => current(ex) || predicate(ex);
+
+            return this;
+        }
         
         public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
@@ -85,13 +99,17 @@ namespace CacheMeIfYouCan.Internal
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Next add a wrapper to catch and format any exceptions
+            // Then add a wrapper to catch and format any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Final wrapper handles notifications (if any actions are set)
+            // Then add a wrapper to handle notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
+            // Finally add a wrapper to swallow exceptions (if required)
+            if (_swallowExceptionsPredicate != null)
+                cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
+            
             return cache;
         }
 
@@ -113,6 +131,7 @@ namespace CacheMeIfYouCan.Internal
         private Action<CacheSetResult<TK, TV>> _onSetResult;
         private Action<CacheException<TK>> _onException;
         private Func<TK, string> _keySerializer;
+        private Func<Exception, bool> _swallowExceptionsPredicate;
         
         internal LocalCacheFactory(ILocalCacheFactory<TK, TV> cacheFactory)
         {
@@ -178,6 +197,20 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
+        public LocalCacheFactory<TK, TV> SwallowExceptions(Func<Exception, bool> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            
+            var current = _swallowExceptionsPredicate;
+
+            if (current == null)
+                _swallowExceptionsPredicate = predicate;
+            else
+                _swallowExceptionsPredicate = ex => current(ex) || predicate(ex);
+
+            return this;
+        }
+        
         public ILocalCache<TK, TV> Build(string cacheName)
         {
             var cache = _cacheFactory.Build(cacheName);
@@ -186,13 +219,17 @@ namespace CacheMeIfYouCan.Internal
             foreach (var wrapperFactory in _wrapperFactories)
                 cache = wrapperFactory.Wrap(cache);
             
-            // Next add a wrapper to catch and format any exceptions
+            // Then add a wrapper to catch and format any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Final wrapper handles notifications (if any actions are set)
+            // Then add a wrapper to handle notifications (if any actions are set)
             if (_onGetResult != null || _onSetResult != null || _onException != null)
                 cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
 
+            // Finally add a wrapper to swallow exceptions (if required)
+            if (_swallowExceptionsPredicate != null)
+                cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
+            
             return cache;
         }
 

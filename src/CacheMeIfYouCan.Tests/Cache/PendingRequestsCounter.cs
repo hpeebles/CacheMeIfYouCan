@@ -21,14 +21,14 @@ namespace CacheMeIfYouCan.Tests.Cache
             Assert.Equal(0, pendingRequests.Count);
 
             var tasks = Enumerable
-                .Range(0, 10)
+                .Range(0, 5)
                 .Select(i => i.ToString())
                 .Select(k => cache.Get(new Key<string>(k, k)))
                 .ToArray();
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            Assert.Equal(5, pendingRequests.Count);
 
             await Task.WhenAll(tasks);
             
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var name = Guid.NewGuid().ToString();
             
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(3))
+            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2))
                 .WithPendingRequestsCounter()
                 .Build<string, string>(name);
 
@@ -51,16 +51,16 @@ namespace CacheMeIfYouCan.Tests.Cache
             Assert.Equal(0, pendingRequests.Count);
 
             var tasks = Enumerable
-                .Range(0, 10)
+                .Range(0, 5)
                 .Select(i => i.ToString())
                 .Select(k => Task.Run(() => cache.Get(new Key<string>(k, k))))
                 .ToArray();
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            Assert.Equal(5, pendingRequests.Count);
 
             await Task.WhenAll(tasks);
             
@@ -84,14 +84,14 @@ namespace CacheMeIfYouCan.Tests.Cache
             Assert.Equal(0, pendingRequests.Count);
 
             var tasks = Enumerable
-                .Range(0, 10)
+                .Range(0, 5)
                 .Select(i => i.ToString())
                 .Select(k => cache.Get(new Key<string>(k, k)))
                 .ToArray();
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            Assert.Equal(5, pendingRequests.Count);
 
             await Assert.ThrowsAnyAsync<Exception>(() => Task.WhenAll(tasks));
             
@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var name = Guid.NewGuid().ToString();
             var index = 0;
             
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(3), () => index++ % 2 == 0)
+            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2), () => index++ % 2 == 0)
                 .WithPendingRequestsCounter()
                 .Build<string, string>(name);
 
@@ -115,16 +115,16 @@ namespace CacheMeIfYouCan.Tests.Cache
             Assert.Equal(0, pendingRequests.Count);
 
             var tasks = Enumerable
-                .Range(0, 10)
+                .Range(0, 5)
                 .Select(i => i.ToString())
                 .Select(k => Task.Run(() => cache.Get(new Key<string>(k, k))))
                 .ToArray();
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            Assert.Equal(5, pendingRequests.Count);
 
             await Assert.ThrowsAnyAsync<Exception>(() => Task.WhenAll(tasks));
             

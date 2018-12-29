@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.Tests
 {
@@ -64,6 +63,12 @@ namespace CacheMeIfYouCan.Tests
 
         public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
+            if (_delay.HasValue)
+                Thread.Sleep(_delay.Value);
+
+            if (_error?.Invoke() ?? false)
+                throw new Exception();
+            
             if (timeToLive <= TimeSpan.Zero)
                 return;
             
