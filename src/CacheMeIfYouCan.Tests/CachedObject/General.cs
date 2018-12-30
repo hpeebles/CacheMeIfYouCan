@@ -49,13 +49,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     
                     return DateTime.UtcNow;
                 })
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(100))
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
                 .OnRefreshResult(refreshResults.Add)
                 .Build();
 
             await date.Initialize();
             
-            await Task.Delay(TimeSpan.FromSeconds(4));
+            await Task.Delay(TimeSpan.FromSeconds(5));
             
             date.Dispose();
             

@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            Assert.True(refreshResults.Count > 5);
+            Assert.True(refreshResults.Count > 2);
 
             foreach (var result in refreshResults)
             {
