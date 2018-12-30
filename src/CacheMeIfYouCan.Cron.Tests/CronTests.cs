@@ -15,11 +15,13 @@ namespace CacheMeIfYouCan.Cron.Tests
         public async Task CachedObjectRefreshSchedule(string cronExpression, int intervalSeconds)
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
+
+            var funcDuration = TimeSpan.FromMilliseconds(100);
             
             var date = CachedObjectFactory
                 .ConfigureFor(async () =>
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    await Task.Delay(funcDuration);
                     return DateTime.UtcNow;
                 })
                 .WithRefreshSchedule(cronExpression, true)
@@ -29,13 +31,15 @@ namespace CacheMeIfYouCan.Cron.Tests
             await date.Initialize();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
+
+            var expectedInterval = TimeSpan.FromSeconds(intervalSeconds) - funcDuration;
             
             foreach (var result in refreshResults.Skip(2))
             {
                 Assert.InRange(
                     result.Start - result.LastRefreshAttempt,
-                    TimeSpan.FromSeconds(intervalSeconds - 0.2),
-                    TimeSpan.FromSeconds(intervalSeconds + 0.2));
+                    expectedInterval - TimeSpan.FromMilliseconds(200),
+                    expectedInterval + TimeSpan.FromMilliseconds(200));
             }
         }
     }
