@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -11,33 +12,43 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task MultipleCanBeInitializedViaInitializeAll()
         {
             var ticks = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow.Ticks)
+                .ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    return DateTime.UtcNow.Ticks;
+                })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
             var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
+                .ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    return DateTime.UtcNow;
+                })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
             
             var ticksDouble = CachedObjectFactory
-                .ConfigureFor(() => (double)DateTime.UtcNow.Ticks)
+                .ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    return (double) DateTime.UtcNow.Ticks;
+                })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
 
             var initializeResults = await CachedObjectInitializer.InitializeAll();
             
             Assert.True(initializeResults.Success);
+
+            var timer = Stopwatch.StartNew();
             
             var ticksValue = ticks.Value;
             var dateValue = date.Value;
             var ticksDoubleValue = ticksDouble.Value;
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            
-            Assert.NotEqual(ticksValue, ticks.Value);
-            Assert.NotEqual(dateValue, date.Value);
-            Assert.NotEqual(ticksDoubleValue, ticksDouble.Value);
+            Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
         }
         
         [Fact]
@@ -107,11 +118,15 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .WithRefreshInterval(TimeSpan.FromMinutes(1))
                 .Build();
 
+            var timer = Stopwatch.StartNew();
+            
             var initializeResult = await CachedObjectInitializer.Initialize<Dummy3>();
+            
+            timer.Stop();
             
             Assert.True(initializeResult.Success);
             Assert.Single(initializeResult.Results);
-            Assert.InRange(initializeResult.Results[0].Duration, TimeSpan.FromSeconds(0.9), TimeSpan.FromSeconds(1.1));
+            Assert.InRange(initializeResult.Results[0].Duration, TimeSpan.FromSeconds(0.9), timer.Elapsed);
         }
 
         private class Dummy1

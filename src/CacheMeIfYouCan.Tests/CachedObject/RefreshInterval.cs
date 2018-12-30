@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(2))
+                .WithRefreshInterval(TimeSpan.FromSeconds(4))
                 .OnRefreshResult(refreshResults.Add)
                 .Build();
 
@@ -29,8 +29,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
 
-            Assert.True(TimeSpan.FromMilliseconds(1800) <= min);
-            Assert.True(max <= TimeSpan.FromMilliseconds(3000));
+            Assert.True(TimeSpan.FromMilliseconds(3800) <= min);
+            Assert.True(max <= TimeSpan.FromMilliseconds(6000));
         }
         
         [Fact]

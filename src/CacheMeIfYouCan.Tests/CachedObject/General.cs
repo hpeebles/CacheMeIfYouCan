@@ -39,23 +39,37 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task ContinuesToRefreshAfterException()
         {
             var index = 0;
+            var refreshResults = new List<CachedObjectRefreshResult>();
             
             var date = CachedObjectFactory
                 .ConfigureFor(() =>
                 {
-                    if (index++ == 2)
+                    if (index++ == 1)
                         throw new Exception();
                     
                     return DateTime.UtcNow;
                 })
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(100))
+                .OnRefreshResult(refreshResults.Add)
                 .Build();
 
             await date.Initialize();
-
-            await Task.Delay(TimeSpan.FromSeconds(1));
             
-            Assert.True(DateTime.UtcNow - date.Value < TimeSpan.FromMilliseconds(200));
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            
+            date.Dispose();
+            
+            Assert.True(refreshResults.Count > 2);
+
+            for (var i = 0; i < refreshResults.Count; i++)
+            {
+                var result = refreshResults[i];
+                
+                if (i == 1)
+                    Assert.False(result.Success);
+                else
+                    Assert.True(result.Success);
+            }
         }
 
         [Fact]

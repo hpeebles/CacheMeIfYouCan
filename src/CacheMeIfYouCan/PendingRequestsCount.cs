@@ -2,7 +2,7 @@ namespace CacheMeIfYouCan
 {
     public readonly struct PendingRequestsCount
     {
-        internal PendingRequestsCount(string name, string type, long count)
+        internal PendingRequestsCount(string name, string type, int count)
         {
             Name = name;
             Type = type;
@@ -11,6 +11,6 @@ namespace CacheMeIfYouCan
         
         public string Name { get; }
         public string Type { get; }
-        public long Count { get; }
+        public int Count { get; }
     }
 }

@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             var date = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
                 .OnRefreshResult(refreshResults.Add)
                 .Build();
 
@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            Assert.True(refreshResults.Count > 3);
+            Assert.True(refreshResults.Count > 5);
 
             foreach (var result in refreshResults)
             {
