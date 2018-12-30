@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             Assert.Equal(2, results.Count);
-            Assert.InRange(results[1].Duration, delay.Ticks * 0.99, delay.Ticks * 1.2);
+            Assert.InRange(results[1].Duration.Ticks, delay.Ticks * 0.99, delay.Ticks * 1.2);
         }
         
         [Fact]

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using CacheMeIfYouCan.Notifications;
+﻿using CacheMeIfYouCan.Notifications;
 using Prometheus;
 
 namespace CacheMeIfYouCan.Prometheus
@@ -9,7 +7,6 @@ namespace CacheMeIfYouCan.Prometheus
     {
         private static readonly Counter TotalItemsRequestedCounter;
         private static readonly Histogram RequestDurationsMs;
-        private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static FunctionCacheGetResultMetricsTracker()
         {
@@ -26,16 +23,11 @@ namespace CacheMeIfYouCan.Prometheus
             
             TotalItemsRequestedCounter
                 .Labels(labels)
-                .Inc(result.Results.Count());
+                .Inc(result.Results.Count);
             
             RequestDurationsMs
                 .Labels(labels)
-                .Observe(ConvertToMilliseconds(result.Duration));
-        }
-
-        private static double ConvertToMilliseconds(long ticks)
-        {
-            return ticks / TicksPerMs;
+                .Observe(result.Duration.TotalMilliseconds);
         }
     }
 }

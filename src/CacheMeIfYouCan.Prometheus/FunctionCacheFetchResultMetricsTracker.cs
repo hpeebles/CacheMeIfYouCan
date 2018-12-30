@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using CacheMeIfYouCan.Notifications;
+﻿using CacheMeIfYouCan.Notifications;
 using Prometheus;
 
 namespace CacheMeIfYouCan.Prometheus
@@ -10,7 +8,6 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Counter TotalItemsRequestedCounter;
         private static readonly Histogram RequestDurationsMs;
         private static readonly Histogram EarlyFetchTimeToLivesMs;
-        private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         
         static FunctionCacheFetchResultMetricsTracker()
         {
@@ -28,13 +25,13 @@ namespace CacheMeIfYouCan.Prometheus
             
             TotalItemsRequestedCounter
                 .Labels(name, result.Success.ToString())
-                .Inc(result.Results.Count());
+                .Inc(result.Results.Count);
             
             foreach (var fetch in result.Results)
             {
                 RequestDurationsMs
                     .Labels(name, fetch.Success.ToString(), fetch.Duplicate.ToString(), result.Reason.ToString())
-                    .Observe(ConvertToMilliseconds(fetch.Duration));
+                    .Observe(fetch.Duration.TotalMilliseconds);
             }
 
 //            if (result.ExistingTtl.HasValue)
@@ -43,11 +40,6 @@ namespace CacheMeIfYouCan.Prometheus
 //                    .Labels(interfaceName, functionName, result.Success.ToString(), result.Reason.ToString())
 //                    .Observe(result.ExistingTtl.Value.TotalMilliseconds);
 //            }
-        }
-
-        private static double ConvertToMilliseconds(long ticks)
-        {
-            return ticks / TicksPerMs;
         }
     }
 }

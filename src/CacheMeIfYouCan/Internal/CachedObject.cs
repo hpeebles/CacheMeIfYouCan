@@ -136,11 +136,9 @@ namespace CacheMeIfYouCan.Internal
                 _refreshAttemptCount++;
             }
             
-            var duration = StopwatchHelper.GetDuration(stopwatchStart);
-            
             var result = new CachedObjectRefreshResult<T>(
                 start,
-                TimeSpan.FromTicks(duration),
+                StopwatchHelper.GetDuration(stopwatchStart),
                 exception,
                 newValue,
                 _refreshAttemptCount,

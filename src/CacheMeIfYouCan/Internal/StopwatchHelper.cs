@@ -8,14 +8,14 @@ namespace CacheMeIfYouCan.Internal
     {
         private static readonly double Multiplier = (double) TimeSpan.TicksPerSecond / Stopwatch.Frequency;
         
-        public static long GetDuration(long start)
+        public static TimeSpan GetDuration(long start)
         {
             return GetDuration(start, Stopwatch.GetTimestamp());
         }
 
-        public static long GetDuration(long start, long end)
+        public static TimeSpan GetDuration(long start, long end)
         {
-            return (long) ((end - start) * Multiplier);
+            return TimeSpan.FromTicks((long)((end - start) * Multiplier));
         }
     }
 }

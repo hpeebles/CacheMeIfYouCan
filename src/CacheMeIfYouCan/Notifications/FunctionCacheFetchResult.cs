@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Notifications
 {
@@ -9,7 +10,7 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<IFunctionCacheFetchResultInner> results,
             bool success,
             long start,
-            long duration,
+            TimeSpan duration,
             FetchReason reason)
         {
             FunctionName = functionName;
@@ -24,7 +25,7 @@ namespace CacheMeIfYouCan.Notifications
         public IReadOnlyCollection<IFunctionCacheFetchResultInner> Results { get; }
         public bool Success { get; }
         public long Start { get; }
-        public long Duration { get; }
+        public TimeSpan Duration { get; }
         public FetchReason Reason { get; }
     }
     
@@ -35,7 +36,7 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> results,
             bool success,
             long start,
-            long duration,
+            TimeSpan duration,
             FetchReason reason)
             : base(functionName, results, success, start, duration, reason)
         {
@@ -50,12 +51,12 @@ namespace CacheMeIfYouCan.Notifications
         string KeyString { get; }
         bool Success { get; }
         bool Duplicate { get; }
-        long Duration { get; }
+        TimeSpan Duration { get; }
     }
     
     public sealed class FunctionCacheFetchResultInner<TK, TV> : IFunctionCacheFetchResultInner
     {
-        internal FunctionCacheFetchResultInner(Key<TK> key, TV value, bool success, bool duplicate, long duration)
+        internal FunctionCacheFetchResultInner(Key<TK> key, TV value, bool success, bool duplicate, TimeSpan duration)
         {
             Key = key;
             Value = value;
@@ -70,7 +71,7 @@ namespace CacheMeIfYouCan.Notifications
         public string KeyString => Key.AsStringSafe;
         public bool Success { get; }
         public bool Duplicate { get; }
-        public long Duration { get; }
+        public TimeSpan Duration { get; }
     }
     
     public enum FetchReason

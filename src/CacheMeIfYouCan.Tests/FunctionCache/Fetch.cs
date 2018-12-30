@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             Assert.Single(fetches);
-            Assert.InRange(fetches[0].Duration, duration.Ticks * 0.99, duration.Ticks * 1.1);
+            Assert.InRange(fetches[0].Duration.Ticks, duration.Ticks * 0.99, duration.Ticks * 1.1);
         }
         
         [Fact]

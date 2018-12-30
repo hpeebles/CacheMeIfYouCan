@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Notifications
 {
@@ -9,7 +10,7 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<IFunctionCacheGetResultInner> results,
             bool success,
             long start,
-            long duration)
+            TimeSpan duration)
         {
             FunctionName = functionName;
             Results = results;
@@ -22,7 +23,7 @@ namespace CacheMeIfYouCan.Notifications
         public IReadOnlyCollection<IFunctionCacheGetResultInner> Results { get; }
         public bool Success { get; }
         public long Start { get; }
-        public long Duration { get; }
+        public TimeSpan Duration { get; }
     }
 
     public sealed class FunctionCacheGetResult<TK, TV> : FunctionCacheGetResult
@@ -32,7 +33,7 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> results,
             bool success,
             long start,
-            long duration)
+            TimeSpan duration)
             : base(functionName, results, success, start, duration)
         {
             Results = results;

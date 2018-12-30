@@ -286,7 +286,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
-                    _averageFetchDuration += (duration - _averageFetchDuration) / 10;
+                    _averageFetchDuration += (duration.Ticks - _averageFetchDuration) / 10;
 
                     _onFetch(new FunctionCacheFetchResult<TK, TV>(
                         Name,

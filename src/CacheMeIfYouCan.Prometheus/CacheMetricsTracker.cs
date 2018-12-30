@@ -15,7 +15,6 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Histogram SetDurationsMs;
         private static readonly Gauge CachedItemsCounter;
         private static readonly Gauge PendingRequestsCounter;
-        private const double TicksPerMs = TimeSpan.TicksPerMillisecond;
         private const string NullString = "null";
         
         static CacheMetricsTracker()
@@ -54,7 +53,7 @@ namespace CacheMeIfYouCan.Prometheus
             
             GetDurationsMs
                 .Labels(labels)
-                .Observe(ConvertToMilliseconds(result.Duration));
+                .Observe(result.Duration.TotalMilliseconds);
         }
         
         public static void OnCacheSet(CacheSetResult result)
@@ -67,7 +66,7 @@ namespace CacheMeIfYouCan.Prometheus
             
             SetDurationsMs
                 .Labels(labels)
-                .Observe(ConvertToMilliseconds(result.Duration));
+                .Observe(result.Duration.TotalMilliseconds);
         }
 
         public static void OnCacheException(CacheException exception)
@@ -103,11 +102,6 @@ namespace CacheMeIfYouCan.Prometheus
                     .Labels(count.Name, count.Type)
                     .Set(count.Count);
             }
-        }
-
-        private static double ConvertToMilliseconds(long ticks)
-        {
-            return ticks / TicksPerMs;
         }
     }
 }

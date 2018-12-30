@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Notifications
             string cacheType,
             bool success,
             long start,
-            long duration,
+            TimeSpan duration,
             int hitsCount,
             int missesCount,
             Lazy<IList<string>> hits,
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Notifications
         public string CacheType { get; }
         public bool Success { get; }
         public long Start { get; }
-        public long Duration { get; }
+        public TimeSpan Duration { get; }
         public int HitsCount { get; }
         public int MissesCount { get; }
         public IList<string> Hits => _hits.Value;
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Notifications
             ICollection<Key<TK>> misses,
             bool success,
             long start,
-            long duration)
+            TimeSpan duration)
         : base(
             cacheName,
             cacheType,
