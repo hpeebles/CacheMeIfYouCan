@@ -1,0 +1,11 @@
+image: Visual Studio 2017
+environment:
+  RedisTestPassword:
+    secure: wj5VI/BQkunSJ8RY5/LYrJFg2PfaOeCOLVR5VBi8T/na8iOYimNovMZYO3iL5GG1
+  RedisTestPort: 14456
+hosts:
+  redis-test: 54.246.212.237
+before_build:
+- cmd: nuget restore ./src/CacheMeIfYouCan.sln
+build:
+  verbosity: normal
