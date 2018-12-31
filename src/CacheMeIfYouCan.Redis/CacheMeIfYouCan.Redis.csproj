@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.0.1</Version>
     <PackageId>CacheMeIfYouCan.Redis</PackageId>
-    <PackageTags>Cache;Redis;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
+    <PackageTags>Cache;Redis;</PackageTags>
     <Authors>hpeebles</Authors>
     <Description>Extends CacheMeIfYouCan with the option to cache data in Redis</Description>
+    <RepositoryUrl>https://github.com/hpeebles/CacheMeIfYouCan</RepositoryUrl>
+    <Copyright>Copyright 2019 Hamish Peebles</Copyright>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>

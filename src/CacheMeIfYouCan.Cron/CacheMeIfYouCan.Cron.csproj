@@ -1,20 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.0.1</Version>
     <PackageId>CacheMeIfYouCan.Cron</PackageId>
-    <PackageTags>Cache;Cron;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
+    <PackageTags>Cache;Cron;</PackageTags>
     <Authors>hpeebles</Authors>
     <Description>Extends CacheMeIfYouCan with the ability to refresh cached objects on schedules defined by Cron expressions</Description>
+    <RepositoryUrl>https://github.com/hpeebles/CacheMeIfYouCan</RepositoryUrl>
+    <Copyright>Copyright 2019 Hamish Peebles</Copyright>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ncrontab" Version="3.3.0" />
+    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+    <PackageReference Include="ncrontab" Version="3.3.0" />
   </ItemGroup>
 </Project>
