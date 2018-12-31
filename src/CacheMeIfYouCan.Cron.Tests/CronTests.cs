@@ -38,8 +38,8 @@ namespace CacheMeIfYouCan.Cron.Tests
             {
                 Assert.InRange(
                     result.Start - result.LastRefreshAttempt,
-                    expectedInterval - TimeSpan.FromMilliseconds(200),
-                    expectedInterval + TimeSpan.FromMilliseconds(200));
+                    expectedInterval - TimeSpan.FromMilliseconds(500),
+                    expectedInterval + TimeSpan.FromMilliseconds(500));
             }
         }
     }
