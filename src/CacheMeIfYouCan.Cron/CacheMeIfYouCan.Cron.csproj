@@ -5,6 +5,7 @@
     <PackageTags>Cache;Cron;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <Description>Extends CacheMeIfYouCan with the ability to refresh cached objects on schedules defined by Cron expressions</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>

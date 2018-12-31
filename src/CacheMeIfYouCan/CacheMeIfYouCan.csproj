@@ -5,6 +5,7 @@
     <PackageTags>Cache;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <Description>CacheMeIfYouCan is a high performance, highly configurable caching library</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>

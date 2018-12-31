@@ -5,6 +5,7 @@
     <PackageTags>Cache;Prometheus;Metrics</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <Description>Extends CacheMeIfYouCan with the option to collect detailed cache metrics using Prometheus</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>

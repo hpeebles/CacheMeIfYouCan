@@ -5,6 +5,7 @@
     <PackageTags>Cache;Polly;CircuitBreaker</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <Description>Extends CacheMeIfYouCan with the option to wrap cache calls with Polly policies (eg. CircuitBreaker, Retry, etc.)</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>

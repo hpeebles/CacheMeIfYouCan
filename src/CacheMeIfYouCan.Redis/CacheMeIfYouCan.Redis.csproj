@@ -5,6 +5,7 @@
     <PackageTags>Cache;Redis;</PackageTags>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
+    <Description>Extends CacheMeIfYouCan with the option to cache data in Redis</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
