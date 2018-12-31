@@ -1,4 +1,10 @@
+version: 0.1.{build}
 image: Visual Studio 2017
+configuration: Release
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
 environment:
   RedisTestPassword:
     secure: wj5VI/BQkunSJ8RY5/LYrJFg2PfaOeCOLVR5VBi8T/na8iOYimNovMZYO3iL5GG1
@@ -8,4 +14,10 @@ hosts:
 before_build:
 - cmd: nuget restore ./src/CacheMeIfYouCan.sln
 build:
-  verbosity: normal
+  publish_nuget: true
+deploy:
+- provider: NuGet
+  api_key:
+    secure: uasmn1KlP1l2JFJjq3aypRW7OCmIbohgOU8k+vUwdJnGcSDNxty7ElcI1tumvzqx
+  on:
+    branch: master
