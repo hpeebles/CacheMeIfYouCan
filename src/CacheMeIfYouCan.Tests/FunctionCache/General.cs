@@ -9,22 +9,25 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class General
+    public class General : CacheTestBase
     {
         [Theory]
         [InlineData("memory")]
         [InlineData("dictionary")]
         public async Task SubsequentCallsAreCached(string cacheType)
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
-            
             var fetches = new List<FunctionCacheFetchResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithLocalCacheFactory(GetCacheFactory(cacheType))
-                .OnFetch(fetches.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithLocalCacheFactory(GetCacheFactory(cacheType))
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
 
             var first = true;
             for (var i = 0; i < 10; i++)
@@ -52,17 +55,20 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData("dictionary")]
         public async Task ShortTimeToLiveExpiresCorrectly(string cacheType)
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                .WithLocalCacheFactory(GetCacheFactory(cacheType))
-                .OnResult(results.Add)
-                .Build();
-            
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .WithLocalCacheFactory(GetCacheFactory(cacheType))
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
             for (var i = 0; i < 10; i++)
             {
                 await cachedEcho("abc");
@@ -77,15 +83,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task TimeToLiveFactory()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLiveFactory((k, v) => TimeSpan.FromMilliseconds(Int32.Parse(k)))
-                .OnResult(results.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLiveFactory((k, v) => TimeSpan.FromMilliseconds(Int32.Parse(k)))
+                    .OnResult(results.Add)
+                    .Build();
+            }
 
             await cachedEcho("100");
             await cachedEcho("100");

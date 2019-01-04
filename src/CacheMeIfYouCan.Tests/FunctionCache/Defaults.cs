@@ -8,20 +8,18 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Defaults
+    public class Defaults : CacheTestBase
     {
         private const string KeyPrefix = "DefaultsTests";
         
         [Fact]
         public async Task DefaultOnResultIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo();
-
             var results = new List<FunctionCacheGetResult>();
 
+            Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnResultAction(x =>
                 {
@@ -48,13 +46,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnFetchIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo();
-
             var results = new List<FunctionCacheFetchResult>();
 
+            Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnFetchAction(x =>
                 {
@@ -81,15 +77,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnExceptionIsTriggered()
         {
+            var errors = new List<FunctionCacheException>();
+
             var count = 0;
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
-
-            var errors = new List<FunctionCacheException>();
-
             Func<string, Task<string>> cachedEcho;
-
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnExceptionAction(x =>
                 {
@@ -126,15 +120,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnCacheGetIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo();
-
             var results = new List<CacheGetResult>();
 
             var key = Guid.NewGuid().ToString();
             
+            Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheGetAction(x =>
                 {
@@ -174,15 +166,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnCacheSetIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo();
-
             var results = new List<CacheSetResult>();
 
             var key = Guid.NewGuid().ToString();
 
+            Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheSetAction(x =>
                 {
@@ -213,15 +203,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task DefaultOnCacheExceptionIsTriggered()
         {
-            Func<string, Task<string>> echo = new Echo();
-
             var errors = new List<CacheException>();
 
             var key = Guid.NewGuid().ToString();
 
+            Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheExceptionAction(x =>
                 {

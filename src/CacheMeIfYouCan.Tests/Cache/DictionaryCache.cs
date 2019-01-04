@@ -5,7 +5,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
-    public class DictionaryCache
+    public class DictionaryCache : CacheTestBase
     {
         [Fact]
         public async Task KeysAreRemovedAutomaticallyOnceTheyExpire()
@@ -14,11 +14,15 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var cache = new DictionaryCache<string, string>("echo");
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromTicks(1))
-                .WithLocalCache(cache)
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromTicks(1))
+                    .WithLocalCache(cache)
+                    .Build();
+            }
 
             await cachedEcho("123");
             
@@ -36,11 +40,15 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var cache = new DictionaryCache<string, string>("echo");
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMinutes(1))
-                .WithLocalCache(cache)
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMinutes(1))
+                    .WithLocalCache(cache)
+                    .Build();
+            }
 
             await cachedEcho("123");
             

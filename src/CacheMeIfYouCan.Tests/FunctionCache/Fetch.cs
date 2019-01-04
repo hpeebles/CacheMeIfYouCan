@@ -10,19 +10,22 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Fetch
+    public class Fetch : CacheTestBase
     {
         [Fact]
         public async Task AtMostOneActiveFetchPerKey()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
-
             var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
-            var cachedEcho = echo
-                .Cached()
-                .OnFetch(fetches.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
 
             async Task<TimeSpan> MeasureDuration()
             {
@@ -49,15 +52,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task EarlyFetchEnabledCausesValuesToBeFetchedEarly()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100));
-
             var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .OnFetch(fetches.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(100));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1))
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
 
             async Task<TimeSpan> MeasureDuration()
             {
@@ -87,18 +93,21 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData(3)]
         public async Task FetchDurationIsAccurate(int seconds)
         {
+            var fetches = new List<FunctionCacheFetchResult>();
+            
             var duration = TimeSpan.FromSeconds(seconds);
             
             Func<string, Task<string>> echo = new Echo(duration);
-            
-            var fetches = new List<FunctionCacheFetchResult>();
-            
-            var cachedEcho = echo
-                .Cached()
-                .DisableCache()
-                .OnFetch(fetches.Add)
-                .Build();
-            
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .DisableCache()
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
             await cachedEcho("warmup");
             
             fetches.Clear();
@@ -112,15 +121,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task FetchTimestampIsAccurate()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
-            
             var fetches = new List<FunctionCacheFetchResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnFetch(fetches.Add)
-                .Build();
-            
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
             var now = Timestamp.Now;
             
             await cachedEcho("abc");

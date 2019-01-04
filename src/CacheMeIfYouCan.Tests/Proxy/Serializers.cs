@@ -3,23 +3,26 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class Serializers
+    public class Serializers : CacheTestBase
     {
         [Fact]
         public async Task SetKeySerializer()
         {
-            ITest impl = new TestImpl();
-
             var serializerA = new TestSerializer();
             var serializerB = new TestSerializer();
 
-            var proxy = impl
-                .Cached()
-                .WithDistributedCacheFactory(new TestCacheFactory())
-                .WithKeySerializers(c => c
-                    .SetDefault(serializerA)
-                    .Set<string>(serializerB))
-                .Build();
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithKeySerializers(c => c
+                        .SetDefault(serializerA)
+                        .Set<string>(serializerB))
+                    .Build();
+            }
 
             await proxy.LongToInt(123);
             Assert.Equal(1, serializerA.SerializeCount);
@@ -55,18 +58,21 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public async Task SetValueSerializer()
         {
-            ITest impl = new TestImpl();
-
             var serializerA = new TestSerializer();
             var serializerB = new TestSerializer();
 
-            var proxy = impl
-                .Cached()
-                .WithDistributedCacheFactory(new TestCacheFactory())
-                .WithValueSerializers(c => c
-                    .SetDefault(serializerA)
-                    .Set<string>(serializerB))
-                .Build();
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithValueSerializers(c => c
+                        .SetDefault(serializerA)
+                        .Set<string>(serializerB))
+                    .Build();
+            }
 
             await proxy.LongToInt(123);
             Assert.Equal(1, serializerA.SerializeCount);

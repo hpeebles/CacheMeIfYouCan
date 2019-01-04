@@ -7,28 +7,32 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Generic
+    public class Generic : CacheTestBase
     {
         [Fact]
         public async Task KeyIsSerializedCorrectly()
         {
-            Func<List<int>, int> func = x => x.Sum();
-
             var results1 = new List<FunctionCacheGetResult<List<int>, int>>();
             var results2 = new List<FunctionCacheGetResult<List<int>, int>>();
             
-            var cachedFuncWithConstantSerializer = func
-                .Cached()
-                .WithKeySerializer(x => "test")
-                .OnResult(results1.Add)
-                .Build();
-            
-            var cachedFuncWithSerializer = func
-                .Cached()
-                .WithKeySerializer(x => String.Join(",", x))
-                .OnResult(results2.Add)
-                .Build();
-            
+            Func<List<int>, int> func = x => x.Sum();
+            Func<List<int>, Task<int>> cachedFuncWithConstantSerializer;
+            Func<List<int>, Task<int>> cachedFuncWithSerializer;
+            using (EnterSetup(false))
+            {
+                cachedFuncWithConstantSerializer = func
+                    .Cached()
+                    .WithKeySerializer(x => "test")
+                    .OnResult(results1.Add)
+                    .Build();
+
+                cachedFuncWithSerializer = func
+                    .Cached()
+                    .WithKeySerializer(x => String.Join(",", x))
+                    .OnResult(results2.Add)
+                    .Build();
+            }
+
             var key1 = new List<int> { 1 };
             var key2 = new List<int> { 2, 3 };
             var key3 = new List<int> { 2, 3 };

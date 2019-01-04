@@ -1,42 +1,47 @@
 using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class CachedObjectInitializerTests
+    public class CachedObjectInitializerTests : CachedObjectTestBase
     {
         [Fact]
         public async Task MultipleCanBeInitializedViaInitializeAll()
         {
-            var ticks = CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return DateTime.UtcNow.Ticks;
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-            
-            var date = CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return DateTime.UtcNow;
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
-            
-            var ticksDouble = CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return (double) DateTime.UtcNow.Ticks;
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+            ICachedObject<long> ticks;
+            ICachedObject<DateTime> date;
+            ICachedObject<double> ticksDouble;
+            using (EnterSetup(false))
+            {
+                ticks = CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return DateTime.UtcNow.Ticks;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+
+                date = CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return DateTime.UtcNow;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+
+                ticksDouble = CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return (double) DateTime.UtcNow.Ticks;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
 
             var initializeResults = await CachedObjectInitializer.InitializeAll();
             
@@ -54,12 +59,15 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task CanInitializeMultipleOfTheSameType()
         {
-            for (var i = 0; i < 10; i++)
+            using (EnterSetup(false))
             {
-                CachedObjectFactory
-                    .ConfigureFor(Guid.NewGuid)
-                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                    .Build();
+                for (var i = 0; i < 10; i++)
+                {
+                    CachedObjectFactory
+                        .ConfigureFor(Guid.NewGuid)
+                        .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                        .Build();
+                }
             }
 
             var initializeResults = await CachedObjectInitializer.Initialize<Guid>();
@@ -71,10 +79,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task CallingInitializeMultipleTimesSucceeds()
         {
-            CachedObjectFactory
-                .ConfigureFor(() => new Dummy1())
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+            using (EnterSetup(false))
+            {
+                CachedObjectFactory
+                    .ConfigureFor(() => new Dummy1())
+                    .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                    .Build();
+            }
 
             for (var i = 0; i < 10; i++)
             {
@@ -88,17 +99,21 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task RemovedFromInitializerOnceDisposed()
         {
-            var cachedFloat = CachedObjectFactory
-                .ConfigureFor(() => new Dummy2())
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+            ICachedObject<Dummy2> cachedObj;
+            using (EnterSetup(false))
+            {
+                cachedObj = CachedObjectFactory
+                    .ConfigureFor(() => new Dummy2())
+                    .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                    .Build();
+            }
 
             var initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
 
             Assert.True(initializeResults.Success);
             Assert.Single(initializeResults.Results);
 
-            cachedFloat.Dispose();
+            cachedObj.Dispose();
 
             initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
 
@@ -109,14 +124,17 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task InitializeDurationIsAccurate()
         {
-            CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return new Dummy3();
-                })
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+            using (EnterSetup(false))
+            {
+                CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return new Dummy3();
+                    })
+                    .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                    .Build();
+            }
 
             var timer = Stopwatch.StartNew();
             

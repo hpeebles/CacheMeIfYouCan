@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class MultiKey
+    public class MultiKey : CacheTestBase
     {
         [Fact]
         public void MultiKeyCacheGetsBuilt()
@@ -202,17 +202,20 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task OnlyFetchKeysWhichAreNotAlreadyCached()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             FunctionCacheGetResult mostRecentResult = null;
             FunctionCacheFetchResult mostRecentFetch = null;
             
-            var cachedEcho = echo
-                .Cached()
-                .WithLocalCache(new TestLocalCache<string, string>())
-                .OnResult(r => mostRecentResult = r)
-                .OnFetch(f => mostRecentFetch = f)
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithLocalCache(new TestLocalCache<string, string>())
+                    .OnResult(r => mostRecentResult = r)
+                    .OnFetch(f => mostRecentFetch = f)
+                    .Build();
+            }
 
             for (var i = 1; i < 10; i++)
             {

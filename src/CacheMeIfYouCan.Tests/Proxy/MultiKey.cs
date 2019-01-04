@@ -6,20 +6,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class MultiKey
+    public class MultiKey : CacheTestBase
     {
         [Fact]
         public async Task MultiKeyCachedIsProduced()
         {
-            ITest impl = new TestImpl();
-
             var results = new List<FunctionCacheGetResult>();
             
-            var proxy = impl
-                .Cached()
-                .OnResult(results.Add)
-                .Build();
-            
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
             await proxy.MultiEcho(new[] { "123", "abc" });
             
             Assert.Single(results);
@@ -29,15 +32,18 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public async Task ListParameterSucceeds()
         {
-            ITest impl = new TestImpl();
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var proxy = impl
-                .Cached()
-                .OnResult(results.Add)
-                .Build();
-            
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
             await proxy.MultiEchoList(new[] { "123", "abc" });
             
             Assert.Single(results);

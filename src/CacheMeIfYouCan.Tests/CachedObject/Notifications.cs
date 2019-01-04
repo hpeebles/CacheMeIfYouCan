@@ -6,18 +6,22 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class Notifications
+    public class Notifications : CachedObjectTestBase
     {
         [Fact]
         public async Task OnRefreshResult()
         {
             var refreshResults = new List<CachedObjectRefreshResult<DateTime>>();
             
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                .OnRefreshResult(refreshResults.Add)
-                .Build();
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
+                    .OnRefreshResult(refreshResults.Add)
+                    .Build();
+            }
 
             await date.Initialize();
 

@@ -7,18 +7,22 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class RefreshInterval
+    public class RefreshInterval : CachedObjectTestBase
     {
         [Fact]
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
-            
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(4))
-                .OnRefreshResult(refreshResults.Add)
-                .Build();
+
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(4))
+                    .OnRefreshResult(refreshResults.Add)
+                    .Build();
+            }
 
             await date.Initialize();
 
@@ -38,12 +42,16 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
             
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .WithJitterPercentage(50)
-                .OnRefreshResult(refreshResults.Add)
-                .Build();
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .WithJitterPercentage(50)
+                    .OnRefreshResult(refreshResults.Add)
+                    .Build();
+            }
 
             await date.Initialize();
 
@@ -63,11 +71,15 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
             
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
-                .OnRefreshResult(refreshResults.Add)
-                .Build();
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
+                    .OnRefreshResult(refreshResults.Add)
+                    .Build();
+            }
 
             await date.Initialize();
 

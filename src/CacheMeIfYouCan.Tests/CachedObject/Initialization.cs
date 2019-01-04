@@ -7,19 +7,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class Initialization
+    public class Initialization : CachedObjectTestBase
     {
         [Fact]
         public void NotInitializedWillInitializeOnFirstCall()
         {
-            var ticks = CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return DateTime.UtcNow.Ticks;
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+            ICachedObject<long> ticks;
+            using (EnterSetup(false))
+            {
+                ticks = CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return DateTime.UtcNow.Ticks;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
 
             var timer = Stopwatch.StartNew();
 
@@ -31,14 +35,18 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task CanBeInitializedDirectly()
         {
-            var ticks = CachedObjectFactory
-                .ConfigureFor(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    return DateTime.UtcNow.Ticks;
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+            ICachedObject<long> ticks;
+            using (EnterSetup(false))
+            {
+                ticks = CachedObjectFactory
+                    .ConfigureFor(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        return DateTime.UtcNow.Ticks;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
 
             await ticks.Initialize();
 
@@ -54,19 +62,23 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var count = 0;
             
-            var ticksAsync = CachedObjectFactory
-                .ConfigureFor(() =>
-                {
-                    Interlocked.Increment(ref count);
-                    return Task.Delay(100).ContinueWith(t => DateTime.UtcNow.Ticks);
-                })
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+            ICachedObject<long> ticks;
+            using (EnterSetup(false))
+            {
+                ticks = CachedObjectFactory
+                    .ConfigureFor(() =>
+                    {
+                        Interlocked.Increment(ref count);
+                        return Task.Delay(100).ContinueWith(t => DateTime.UtcNow.Ticks);
+                    })
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
 
             var values = Enumerable
                 .Range(0, 1000)
                 .AsParallel()
-                .Select(i => ticksAsync.Value)
+                .Select(i => ticks.Value)
                 .ToArray();
 
             Assert.Equal(1, count);

@@ -7,19 +7,22 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class FunctionCacheTests
+    public class FunctionCacheTests : CacheTestBase
     {
         [Fact]
         public async Task OnResult()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnResultObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnResultObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho("123");
 
@@ -29,14 +32,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnFetch()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var fetches = new List<FunctionCacheFetchResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnFetchObservable(x => x.Subscribe(fetches.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnFetchObservable(x => x.Subscribe(fetches.Add))
+                    .Build();
+            }
 
             await cachedEcho("123");
 
@@ -46,14 +52,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnException()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            
             var errors = new List<FunctionCacheException>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnExceptionObservable(x => x.Subscribe(errors.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnExceptionObservable(x => x.Subscribe(errors.Add))
+                    .Build();
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
 
@@ -64,14 +73,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheGet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnCacheGetObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnCacheGetObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho("123");
 
@@ -81,14 +93,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheSet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheSetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnCacheSetObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnCacheSetObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho("123");
 
@@ -98,18 +113,21 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheException()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            
             var errors = new List<CacheException>();
 
-            var cache = new TestCacheFactory(error: () => true)
-                .Build<string, string>("test");
-            
-            var cachedEcho = echo
-                .Cached()
-                .WithDistributedCache(cache)
-                .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                var cache = new TestCacheFactory(error: () => true)
+                    .Build<string, string>("test");
+
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCache(cache)
+                    .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
+                    .Build();
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
 

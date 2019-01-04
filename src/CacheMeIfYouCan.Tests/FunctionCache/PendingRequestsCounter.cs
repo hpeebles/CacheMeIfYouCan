@@ -5,18 +5,21 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class PendingRequestsCounter
+    public class PendingRequestsCounter : CacheTestBase
     {
         [Fact]
         public async Task CountsAreCorrect()
         {
-            Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1));
-
             var name = Guid.NewGuid().ToString();
 
-            var cachedEcho = echo
-                .Cached(name)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached(name)
+                    .Build();
+            }
 
             var pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
@@ -41,13 +44,16 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task CountsAreCorrectAfterExceptions()
         {
-            Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1), k => Int32.Parse(k) % 2 == 0);
-
             var name = Guid.NewGuid().ToString();
 
-            var cachedEcho = echo
-                .Cached(name)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1), k => Int32.Parse(k) % 2 == 0);
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached(name)
+                    .Build();
+            }
 
             var pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             

@@ -7,19 +7,22 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class MultiKeyFunctionCacheTests
+    public class MultiKeyFunctionCacheTests : CacheTestBase
     {
         [Fact]
         public async Task OnResult()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnResultObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnResultObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho(new[] { "123" });
 
@@ -29,14 +32,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnFetch()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             var fetches = new List<FunctionCacheFetchResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnFetchObservable(x => x.Subscribe(fetches.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnFetchObservable(x => x.Subscribe(fetches.Add))
+                    .Build();
+            }
 
             await cachedEcho(new[] { "123" });
 
@@ -46,14 +52,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnException()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
-            
             var errors = new List<FunctionCacheException>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnExceptionObservable(x => x.Subscribe(errors.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnExceptionObservable(x => x.Subscribe(errors.Add))
+                    .Build();
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(new[] { "123" }));
 
@@ -64,14 +73,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheGet()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             var results = new List<CacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnCacheGetObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnCacheGetObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho(new[] { "123" });
 
@@ -81,14 +93,17 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheSet()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             var results = new List<CacheSetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnCacheSetObservable(x => x.Subscribe(results.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnCacheSetObservable(x => x.Subscribe(results.Add))
+                    .Build();
+            }
 
             await cachedEcho(new[] { "123" });
 
@@ -98,18 +113,21 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheException()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
-            
             var errors = new List<CacheException>();
 
-            var cache = new TestCacheFactory(error: () => true)
-                .Build<string, string>("test");
-            
-            var cachedEcho = echo
-                .Cached()
-                .WithDistributedCache(cache)
-                .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                var cache = new TestCacheFactory(error: () => true)
+                    .Build<string, string>("test");
+
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCache(cache)
+                    .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
+                    .Build();
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(new[] { "123" }));
 

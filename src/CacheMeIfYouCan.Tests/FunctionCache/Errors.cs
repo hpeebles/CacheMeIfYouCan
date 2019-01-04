@@ -8,21 +8,24 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Errors
+    public class Errors : CacheTestBase
     {
         [Fact]
         public async Task OnExceptionIsTriggered()
         {
+            var errors = new List<FunctionCacheException>();
+            
             var count = 0;
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
-
-            var errors = new List<FunctionCacheException>();
-            
-            var cachedEcho = echo
-                .Cached()
-                .OnException(errors.Add)
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnException(errors.Add)
+                    .Build();
+            }
 
             var previousErrorCount = 0;
             for (var i = 0; i < 10; i++)
@@ -51,12 +54,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var count = 0;
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
-
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                .ContinueOnException()
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .ContinueOnException()
+                    .Build();
+            }
 
             for (var i = 0; i < 10; i++)
             {
@@ -77,12 +83,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var count = 0;
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
-
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                .ContinueOnException("defaultValue")
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .ContinueOnException("defaultValue")
+                    .Build();
+            }
 
             for (var i = 0; i < 10; i++)
             {
@@ -100,16 +109,19 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task CacheStillWorksForOtherKeys()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => x.Equals("error!"));
-
             var errors = new List<FunctionCacheException>();
             var fetches = new List<FunctionCacheFetchResult>();
 
-            var cachedEcho = echo
-                .Cached()
-                .OnException(errors.Add)
-                .OnFetch(fetches.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => x.Equals("error!"));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnException(errors.Add)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
 
             var keys = new[] { "one", "error!", "two" };
 
@@ -151,11 +163,14 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var count = 0;
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(10), x => count++ % 4 == 2);
-
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .Build();
+            }
 
             for (var i = 0; i < 20; i++)
             {
@@ -171,14 +186,17 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task ErrorTimestampIsAccurate()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            
             var errors = new List<FunctionCacheException>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnException(errors.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnException(errors.Add)
+                    .Build();
+            }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("warmup"));
             

@@ -1,4 +1,4 @@
-namespace CacheMeIfYouCan.Tests.FunctionCache
+namespace CacheMeIfYouCan.Tests
 {
     public enum TestEnum
     {

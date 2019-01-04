@@ -8,26 +8,28 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class CacheFactoryPresets
+    public class CacheFactoryPresets : CacheTestBase
     {
         [Fact]
         public async Task ValidIdSucceeds()
         {
             var results = new List<CacheGetResult>();
             
-            var cacheFactory = new TestCacheFactory()
-                .OnGetResult(results.Add);
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(true))
+            {
+                var cacheFactory = new TestCacheFactory().OnGetResult(results.Add);
+
+                DefaultSettings.Cache.CreateCacheFactoryPreset(21, cacheFactory);
+
+                proxy = impl
+                    .Cached()
+                    .WithCacheFactoryPreset(21)
+                    .Build();
+            }
 
             var key = Guid.NewGuid().ToString();
-
-            DefaultSettings.Cache.CreateCacheFactoryPreset(21, cacheFactory);
-
-            ITest impl = new TestImpl();
-
-            var proxy = impl
-                .Cached()
-                .WithCacheFactoryPreset(21)
-                .Build();
 
             await proxy.StringToString(key);
 
@@ -41,19 +43,21 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             var results = new List<CacheGetResult>();
             
-            var cacheFactory = new TestCacheFactory()
-                .OnGetResult(results.Add);
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(true))
+            {
+                var cacheFactory = new TestCacheFactory().OnGetResult(results.Add);
+
+                DefaultSettings.Cache.CreateCacheFactoryPreset(TestEnum.TwentyTwo, cacheFactory);
+
+                proxy = impl
+                    .Cached()
+                    .WithCacheFactoryPreset(TestEnum.TwentyTwo)
+                    .Build();
+            }
 
             var key = Guid.NewGuid().ToString();
-
-            DefaultSettings.Cache.CreateCacheFactoryPreset(TestEnum.TwentyTwo, cacheFactory);
-            
-            ITest impl = new TestImpl();
-
-            var proxy = impl
-                .Cached()
-                .WithCacheFactoryPreset(TestEnum.TwentyTwo)
-                .Build();
 
             await proxy.StringToString(key);
 
@@ -66,11 +70,13 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public void InvalidIdFails()
         {
             ITest impl = new TestImpl();
-
-            Assert.Throws<Exception>(() => impl
-                .Cached()
-                .WithCacheFactoryPreset(1000)
-                .Build());
+            using (EnterSetup(false))
+            {
+                Assert.Throws<Exception>(() => impl
+                    .Cached()
+                    .WithCacheFactoryPreset(1000)
+                    .Build());
+            }
         }
         
         [Theory]
@@ -80,31 +86,34 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             var resultsInt = new List<CacheGetResult>();
             var resultsEnum = new List<CacheGetResult>();
-            
-            var cacheFactoryInt = new TestCacheFactory().OnGetResult(resultsInt.Add);
-            var cacheFactoryEnum = new TestCacheFactory().OnGetResult(resultsEnum.Add);
-
-            var key = Guid.NewGuid().ToString();
-
-            DefaultSettings.Cache.CreateCacheFactoryPreset(intValue, cacheFactoryInt);
-            DefaultSettings.Cache.CreateCacheFactoryPreset(enumValue, cacheFactoryEnum);
 
             ITest impl = new TestImpl();
             ITest proxy;
-            if (useInt)
+            using (EnterSetup(true))
             {
-                proxy = impl
-                    .Cached()
-                    .WithCacheFactoryPreset(intValue)
-                    .Build();
+                var cacheFactoryInt = new TestCacheFactory().OnGetResult(resultsInt.Add);
+                var cacheFactoryEnum = new TestCacheFactory().OnGetResult(resultsEnum.Add);
+
+                DefaultSettings.Cache.CreateCacheFactoryPreset(intValue, cacheFactoryInt);
+                DefaultSettings.Cache.CreateCacheFactoryPreset(enumValue, cacheFactoryEnum);
+
+                if (useInt)
+                {
+                    proxy = impl
+                        .Cached()
+                        .WithCacheFactoryPreset(intValue)
+                        .Build();
+                }
+                else
+                {
+                    proxy = impl
+                        .Cached()
+                        .WithCacheFactoryPreset(enumValue)
+                        .Build();
+                }
             }
-            else
-            {
-                proxy = impl
-                    .Cached()
-                    .WithCacheFactoryPreset(enumValue)
-                    .Build();
-            }
+
+            var key = Guid.NewGuid().ToString();
 
             await proxy.StringToString(key);
 
@@ -122,16 +131,15 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             var shouldBePopulated = new List<CacheGetResult>();
             var shouldBeEmpty = new List<CacheGetResult>();
-            
-            var shouldRemain = new TestCacheFactory().OnGetResult(shouldBePopulated.Add);
-            var shouldBeRemoved = new TestLocalCacheFactory().OnGetResult(shouldBeEmpty.Add);
 
-            DefaultSettings.Cache.CreateCacheFactoryPreset(25, shouldRemain);
-            
             ITest impl = new TestImpl();
             ITest proxy;
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
+                var shouldRemain = new TestCacheFactory().OnGetResult(shouldBePopulated.Add);
+                var shouldBeRemoved = new TestLocalCacheFactory().OnGetResult(shouldBeEmpty.Add);
+
+                DefaultSettings.Cache.CreateCacheFactoryPreset(25, shouldRemain);
                 DefaultSettings.Cache.WithLocalCacheFactory(shouldBeRemoved);
 
                 proxy = impl
@@ -158,15 +166,14 @@ namespace CacheMeIfYouCan.Tests.Proxy
             var shouldBePopulated = new List<CacheGetResult>();
             var shouldBeEmpty = new List<CacheGetResult>();
             
-            var shouldRemain = new TestLocalCacheFactory().OnGetResult(shouldBePopulated.Add);
-            var shouldBeRemoved = new TestCacheFactory().OnGetResult(shouldBeEmpty.Add);
-
-            DefaultSettings.Cache.CreateCacheFactoryPreset(26, shouldRemain);
-            
             ITest impl = new TestImpl();
             ITest proxy;
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
+                var shouldRemain = new TestLocalCacheFactory().OnGetResult(shouldBePopulated.Add);
+                var shouldBeRemoved = new TestCacheFactory().OnGetResult(shouldBeEmpty.Add);
+
+                DefaultSettings.Cache.CreateCacheFactoryPreset(26, shouldRemain);
                 DefaultSettings.Cache.WithDistributedCacheFactory(shouldBeRemoved);
 
                 proxy = impl

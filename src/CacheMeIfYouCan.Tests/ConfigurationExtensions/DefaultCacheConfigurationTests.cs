@@ -9,20 +9,18 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class DefaultCacheConfigurationTests
+    public class DefaultCacheConfigurationTests : CacheTestBase
     {
         [Fact]
         public async Task OnResult()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<FunctionCacheGetResult>();
-            
-            Func<string, Task<string>> cachedEcho;
             
             var key = Guid.NewGuid().ToString();
             
-            lock (DefaultSettingsLock.Lock)
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnResultObservable(x => x
                     .Where(r => r.Results.Any(g => g.KeyString == key))
@@ -43,15 +41,13 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnFetch()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var fetches = new List<FunctionCacheFetchResult>();
             
-            Func<string, Task<string>> cachedEcho;
-
             var key = Guid.NewGuid().ToString();
             
-            lock (DefaultSettingsLock.Lock)
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnFetchObservable(x => x
                     .Where(r => r.Results.Any(f => f.KeyString == key))
@@ -72,15 +68,13 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnException()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            
             var errors = new List<FunctionCacheException>();
             
-            Func<string, Task<string>> cachedEcho;
-
             var key = Guid.NewGuid().ToString();
-            
-            lock (DefaultSettingsLock.Lock)
+
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnExceptionObservable(x => x
                     .Where(r => r.Keys.Contains(key))
@@ -102,15 +96,13 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheGet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheGetResult>();
-
-            Func<string, Task<string>> cachedEcho;
 
             var key = Guid.NewGuid().ToString();
             
-            lock (DefaultSettingsLock.Lock)
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheGetObservable(x => x
                     .Where(r => r.Hits.Concat(r.Misses).Contains(key))
@@ -131,15 +123,13 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheSet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheSetResult>();
-
-            Func<string, Task<string>> cachedEcho;
 
             var key = Guid.NewGuid().ToString();
             
-            lock (DefaultSettingsLock.Lock)
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheSetObservable(x => x
                     .Where(r => r.Keys.Contains(key))
@@ -160,13 +150,11 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Fact]
         public async Task OnCacheException()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            
             var errors = new List<CacheException>();
 
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-
-            lock (DefaultSettingsLock.Lock)
+            using (EnterSetup(true))
             {
                 DefaultSettings.Cache.WithOnCacheExceptionObservable(x => x.Subscribe(errors.Add));
 

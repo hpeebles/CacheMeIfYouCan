@@ -6,25 +6,29 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class General
+    public class General : CachedObjectTestBase
     {
         [Fact]
         public async Task RefreshedValueIsImmediatelyExposed()
         {
             var results = new List<CachedObjectRefreshResult>();
-            
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .OnRefreshResult(r =>
-                {
-                    results.Add(r);
-                    Assert.InRange(
-                        r.NewValue,
-                        DateTime.UtcNow.AddMilliseconds(-100),
-                        DateTime.UtcNow.AddMilliseconds(100));
-                })
-                .Build();
+
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .OnRefreshResult(r =>
+                    {
+                        results.Add(r);
+                        Assert.InRange(
+                            r.NewValue,
+                            DateTime.UtcNow.AddMilliseconds(-100),
+                            DateTime.UtcNow.AddMilliseconds(100));
+                    })
+                    .Build();
+            }
 
             await date.Initialize();
 
@@ -40,18 +44,22 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var index = 0;
             var refreshResults = new List<CachedObjectRefreshResult>();
-            
-            var date = CachedObjectFactory
-                .ConfigureFor(() =>
-                {
-                    if (index++ == 1)
-                        throw new Exception();
-                    
-                    return DateTime.UtcNow;
-                })
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                .OnRefreshResult(refreshResults.Add)
-                .Build();
+
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() =>
+                    {
+                        if (index++ == 1)
+                            throw new Exception();
+
+                        return DateTime.UtcNow;
+                    })
+                    .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
+                    .OnRefreshResult(refreshResults.Add)
+                    .Build();
+            }
 
             await date.Initialize();
             
@@ -75,10 +83,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task ThrowsIfAccessedAfterDisposed()
         {
-            var date = CachedObjectFactory
-                .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+            ICachedObject<DateTime> date;
+            using (EnterSetup(false))
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
 
             await date.Initialize();
 

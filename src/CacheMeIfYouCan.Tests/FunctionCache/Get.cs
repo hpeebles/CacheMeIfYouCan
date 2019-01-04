@@ -7,25 +7,28 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Get
+    public class Get : CacheTestBase
     {
         [Theory]
         [InlineData(1)]
         [InlineData(3)]
         public async Task GetDurationIsAccurate(int seconds)
         {
+            var results = new List<FunctionCacheGetResult>();
+            
             var delay = TimeSpan.FromSeconds(seconds);
             
             Func<string, Task<string>> echo = new Echo();
-            
-            var results = new List<FunctionCacheGetResult>();
-            
-            var cachedEcho = echo
-                .Cached()
-                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, delay: delay))
-                .OnResult(results.Add)
-                .Build();
-            
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCache(new TestCache<string, string>(x => x, x => x, delay: delay))
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
             await cachedEcho("abc");
             await cachedEcho("abc");
             
@@ -36,15 +39,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task GetTimestampIsAccurate()
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
-            
             var results = new List<FunctionCacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnResult(results.Add)
-                .Build();
-            
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
             var now = Timestamp.Now;
 
             await cachedEcho("abc");

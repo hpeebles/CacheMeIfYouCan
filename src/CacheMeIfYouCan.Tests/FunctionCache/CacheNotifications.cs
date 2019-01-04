@@ -7,20 +7,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class CacheNotifications
+    public class CacheNotifications : CacheTestBase
     {
         [Fact]
         public async Task OnCacheGet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheGetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .OnCacheGet(results.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1))
+                    .OnCacheGet(results.Add)
+                    .Build();
+            }
 
             var start = Timestamp.Now;
             
@@ -45,15 +48,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task OnCacheSet()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var results = new List<CacheSetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .OnCacheSet(results.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1))
+                    .OnCacheSet(results.Add)
+                    .Build();
+            }
 
             var start = Timestamp.Now;
             
@@ -70,15 +76,18 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task OnCacheException()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var errors = new List<CacheException>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
-                .OnCacheException(errors.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
+                    .OnCacheException(errors.Add)
+                    .Build();
+            }
 
             var start = Timestamp.Now;
             
@@ -94,19 +103,22 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task TwoTierCache()
         {
-            Func<string, Task<string>> echo = new Echo();
-            
             var getResults = new List<CacheGetResult>();
             var setResults = new List<CacheSetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .WithLocalCache(new TestLocalCache<string, string>())
-                .WithDistributedCacheFactory(new TestCacheFactory())
-                .OnCacheGet(getResults.Add)
-                .OnCacheSet(setResults.Add)
-                .Build();
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1))
+                    .WithLocalCache(new TestLocalCache<string, string>())
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .OnCacheGet(getResults.Add)
+                    .OnCacheSet(setResults.Add)
+                    .Build();
+            }
 
             await cachedEcho("123");
             Assert.Equal(2, getResults.Count);
@@ -125,16 +137,19 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task MultiKey()
         {
-            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
-            
             var getResults = new List<CacheGetResult>();
             var setResults = new List<CacheSetResult>();
             
-            var cachedEcho = echo
-                .Cached()
-                .OnCacheGet(getResults.Add)
-                .OnCacheSet(setResults.Add)
-                .Build();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnCacheGet(getResults.Add)
+                    .OnCacheSet(setResults.Add)
+                    .Build();
+            }
 
             await cachedEcho(new[] {"123", "abc"});
             Assert.Single(getResults);
@@ -164,12 +179,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var list = new List<int>();
             
             Func<string, Task<string>> echo = new Echo();
-            
-            var cachedEcho = echo
-                .Cached()
-                .OnResult(x => list.Add(1))
-                .OnResult(x => list.Add(2), secondActionAdditionBehaviour)
-                .Build();
+            Func<string, Task<string>> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnResult(x => list.Add(1))
+                    .OnResult(x => list.Add(2), secondActionAdditionBehaviour)
+                    .Build();
+            }
 
             await cachedEcho("123");
 

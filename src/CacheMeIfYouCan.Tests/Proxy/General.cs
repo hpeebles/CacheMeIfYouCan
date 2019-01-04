@@ -6,7 +6,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class General
+    public class General : CacheTestBase
     {
         private readonly Random _rng = new Random();
         
@@ -14,10 +14,13 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public async Task ReturnsExpectedValue()
         {
             ITest impl = new TestImpl();
-
-            var proxy = impl
-                .Cached()
-                .Build();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .Build();
+            }
 
             var randomString = Guid.NewGuid().ToString();
             Assert.Equal(randomString, await proxy.StringToString(randomString));
@@ -32,14 +35,17 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public async Task IsCached()
         {
-            ITest impl = new TestImpl();
-
             FunctionCacheGetResult lastResult = null;
             
-            var proxy = impl
-                .Cached()
-                .OnResult(r => lastResult = r)
-                .Build();
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .OnResult(r => lastResult = r)
+                    .Build();
+            }
 
             for (var i = 0; i < 10; i++)
             {

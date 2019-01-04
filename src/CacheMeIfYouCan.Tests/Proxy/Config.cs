@@ -7,22 +7,25 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class Config
+    public class Config : CacheTestBase
     {
         [Fact]
         public async Task ConfigureForTests()
         {
-            ITest impl = new TestImpl();
-
             FunctionCacheGetResult lastResult = null;
-            
-            var proxy = impl
-                .Cached()
-                .WithTimeToLive(TimeSpan.FromMilliseconds(500))
-                .OnResult(x => lastResult = x)
-                .ConfigureFor<int, string>(x => x.IntToString, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)))
-                .ConfigureFor<long, int>(x => x.LongToInt, c => c.WithTimeToLive(TimeSpan.FromSeconds(2)))
-                .Build();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(500))
+                    .OnResult(x => lastResult = x)
+                    .ConfigureFor<int, string>(x => x.IntToString, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)))
+                    .ConfigureFor<long, int>(x => x.LongToInt, c => c.WithTimeToLive(TimeSpan.FromSeconds(2)))
+                    .Build();
+            }
 
             // Run the functions with dummy data otherwise the first test usages will be slow
             await proxy.StringToString(String.Empty);
