@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
@@ -18,8 +19,11 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<CacheGetResult> OnCacheGet { get; private set; }
         internal Action<CacheSetResult> OnCacheSet { get; private set; }
         internal Action<CacheException> OnCacheException { get; private set; }
-        internal readonly KeySerializers KeySerializers = new KeySerializers();
-        internal readonly ValueSerializers ValueSerializers = new ValueSerializers();
+        internal KeySerializers KeySerializers { get; } = new KeySerializers();
+        internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
+        
+        internal Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory local, IDistributedCacheFactory distributed)> CacheFactoryPresets { get; }
+            = new Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory, IDistributedCacheFactory)>();
 
         public DefaultCacheConfiguration WithTimeToLive(TimeSpan timeToLive)
         {
@@ -110,10 +114,35 @@ namespace CacheMeIfYouCan.Configuration
             config(ValueSerializers);
             return this;
         }
-    }
-    
-    public static class DefaultCacheConfig
-    {
-        public static readonly DefaultCacheConfiguration Configuration = new DefaultCacheConfiguration();
+        
+        public DefaultCacheConfiguration CreateCacheFactoryPreset(
+            int id,
+            ILocalCacheFactory localCacheFactory,
+            IDistributedCacheFactory distributedCacheFactory)
+        {
+            var key = CacheFactoryPresetKeyFactory.Create(id);
+
+            return CreateCacheFactoryPresetImpl(key, localCacheFactory, distributedCacheFactory);
+        }
+        
+        public DefaultCacheConfiguration CreateCacheFactoryPreset<TEnum>(
+            TEnum id,
+            ILocalCacheFactory localCacheFactory,
+            IDistributedCacheFactory distributedCacheFactory)
+            where TEnum : struct, Enum
+        {
+            var key = CacheFactoryPresetKeyFactory.Create(id);
+
+            return CreateCacheFactoryPresetImpl(key, localCacheFactory, distributedCacheFactory);
+        }
+
+        private DefaultCacheConfiguration CreateCacheFactoryPresetImpl(
+            CacheFactoryPresetKey key,
+            ILocalCacheFactory localCacheFactory,
+            IDistributedCacheFactory distributedCacheFactory)
+        {
+            CacheFactoryPresets.Add(key, (localCacheFactory, distributedCacheFactory));
+            return this;
+        }
     }
 }

@@ -17,9 +17,9 @@ namespace CacheMeIfYouCan.Internal
             IDistributedCache<TK, TV> distributedCache,
             IEqualityComparer<Key<TK>> keyComparer)
         {
-            _localCache = localCache;
-            _distributedCache = distributedCache;
-            _keyComparer = keyComparer;
+            _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
+            _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+            _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
 
             if (_distributedCache is INotifyKeyChanges<TK> notifier)
                 notifier.KeyChanges.Do(_localCache.Remove).Retry().Subscribe();

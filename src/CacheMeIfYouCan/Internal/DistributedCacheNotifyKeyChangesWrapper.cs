@@ -11,8 +11,8 @@ namespace CacheMeIfYouCan.Internal
 
         public DistributedCacheNotifyKeyChangesWrapper(IDistributedCache<TK, TV> cache, INotifyKeyChanges<TK> notifyKeyChanges)
         {
-            _cache = cache;
-            _notifyKeyChanges = notifyKeyChanges;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _notifyKeyChanges = notifyKeyChanges ?? throw new ArgumentNullException(nameof(notifyKeyChanges));
 
             CacheName = cache.CacheName;
             CacheType = cache.CacheType;

@@ -4,7 +4,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public static class FunctionCacheConfigurationManagerObservableExtensions
+    public static class FunctionCacheConfigurationManagerExtensions
     {
         public static FunctionCacheConfigurationManager<TK, TV> OnResultObservable<TK, TV>(
             this FunctionCacheConfigurationManager<TK, TV> configManager,

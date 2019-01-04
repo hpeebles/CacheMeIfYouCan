@@ -13,8 +13,8 @@ namespace CacheMeIfYouCan.Internal
             IDistributedCache<TK, TV> cache,
             Func<Exception, bool> predicate)
         {
-            _cache = cache;
-            _predicate = predicate;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
             CacheName = cache.CacheName;
             CacheType = cache.CacheType;

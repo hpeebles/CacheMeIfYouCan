@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
             Action<CacheException<TK>> onException)
         {
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
             _onException = onException;

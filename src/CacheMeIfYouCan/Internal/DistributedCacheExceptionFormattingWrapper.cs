@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Internal
 
         public DistributedCacheExceptionFormattingWrapper(IDistributedCache<TK, TV> cache)
         {
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             
             CacheName = cache.CacheName;
             CacheType = cache.CacheType;

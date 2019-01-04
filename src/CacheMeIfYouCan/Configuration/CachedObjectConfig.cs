@@ -17,17 +17,17 @@ namespace CacheMeIfYouCan.Configuration
         {
             _getValueFunc = getValueFunc;
 
-            if (DefaultCachedObjectConfig.Configuration.RefreshIntervalFunc != null)
-                WithRefreshInterval(DefaultCachedObjectConfig.Configuration.RefreshIntervalFunc);
+            if (DefaultSettings.CachedObject.RefreshIntervalFunc != null)
+                WithRefreshInterval(DefaultSettings.CachedObject.RefreshIntervalFunc);
 
-            if (DefaultCachedObjectConfig.Configuration.JitterPercentage.HasValue)
-                WithJitterPercentage(DefaultCachedObjectConfig.Configuration.JitterPercentage.Value);
+            if (DefaultSettings.CachedObject.JitterPercentage.HasValue)
+                WithJitterPercentage(DefaultSettings.CachedObject.JitterPercentage.Value);
 
-            if (DefaultCachedObjectConfig.Configuration.OnRefreshResult != null)
-                OnRefreshResult(DefaultCachedObjectConfig.Configuration.OnRefreshResult);
+            if (DefaultSettings.CachedObject.OnRefreshResult != null)
+                OnRefreshResult(DefaultSettings.CachedObject.OnRefreshResult);
             
-            if (DefaultCachedObjectConfig.Configuration.OnException != null)
-                OnException(DefaultCachedObjectConfig.Configuration.OnException);
+            if (DefaultSettings.CachedObject.OnException != null)
+                OnException(DefaultSettings.CachedObject.OnException);
         }
         
         public CachedObjectConfig<T> WithRefreshInterval(TimeSpan refreshInterval)

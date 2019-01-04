@@ -80,10 +80,14 @@ namespace CacheMeIfYouCan.Configuration
                 _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
                 _disableCache = interfaceConfig.DisableCache;
 
-                if (interfaceConfig.LocalCacheFactory != null)
+                if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
+                    _localCacheFactory = new NullLocalCacheFactory<TK, TV>();
+                else if (interfaceConfig.LocalCacheFactory != null)
                     _localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.LocalCacheFactory);
-                                
-                if (interfaceConfig.DistributedCacheFactory != null)
+                
+                if (interfaceConfig.DistributedCacheFactory is NullDistributedCacheFactory)
+                    _distributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
+                else if (interfaceConfig.DistributedCacheFactory != null)
                     _distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.DistributedCacheFactory);
 
                 _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
@@ -107,12 +111,12 @@ namespace CacheMeIfYouCan.Configuration
             }
             else
             {
-                _onResult = DefaultCacheConfig.Configuration.OnResult;
-                _onFetch = DefaultCacheConfig.Configuration.OnFetch;
-                _onException = DefaultCacheConfig.Configuration.OnException;
-                _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
-                _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
-                _onCacheException = DefaultCacheConfig.Configuration.OnCacheException;
+                _onResult = DefaultSettings.Cache.OnResult;
+                _onFetch = DefaultSettings.Cache.OnFetch;
+                _onException = DefaultSettings.Cache.OnException;
+                _onCacheGet = DefaultSettings.Cache.OnCacheGet;
+                _onCacheSet = DefaultSettings.Cache.OnCacheSet;
+                _onCacheException = DefaultSettings.Cache.OnCacheException;
             }
         }
 
@@ -206,12 +210,20 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
+        public TConfig SkipLocalCache(bool skipLocalCache = true)
+        {
+            if (skipLocalCache)
+                _localCacheFactory = new NullLocalCacheFactory<TK, TV>();
+            
+            return (TConfig)this;
+        }
+        
         public TConfig WithDistributedCache(
             IDistributedCache<TK, TV> cache,
             string keyspacePrefix = null)
         {
             return WithDistributedCacheFactory(c => cache, keyspacePrefix);
-        } 
+        }
         
         public TConfig WithDistributedCacheFactory(
             IDistributedCacheFactory cacheFactory,
@@ -233,6 +245,45 @@ namespace CacheMeIfYouCan.Configuration
         {
             _distributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             _keyspacePrefix = keyspacePrefix;
+            return (TConfig)this;
+        }
+        
+        public TConfig SkipDistributedCache(bool skipDistributedCache = true)
+        {
+            if (skipDistributedCache)
+            {
+                _distributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
+                _keyspacePrefix = null;
+            }
+
+            return (TConfig)this;
+        }
+        
+        public TConfig WithCacheFactoryPreset(int id)
+        {
+            return WithCacheFactoryPresetImpl(CacheFactoryPresetKeyFactory.Create(id));
+        }
+        
+        public TConfig WithCacheFactoryPreset<TEnum>(TEnum id) where TEnum : struct, Enum
+        {
+            return WithCacheFactoryPresetImpl(CacheFactoryPresetKeyFactory.Create(id));
+        }
+        
+        private TConfig WithCacheFactoryPresetImpl(CacheFactoryPresetKey key)
+        {
+            if (!DefaultSettings.Cache.CacheFactoryPresets.TryGetValue(key, out var cacheFactories))
+                throw new Exception("No cache factory preset found. " + key);
+
+            if (cacheFactories.local == null)
+                SkipLocalCache();
+            else
+                WithLocalCacheFactory(cacheFactories.local);
+
+            if (cacheFactories.distributed == null)
+                SkipDistributedCache();
+            else
+                WithDistributedCacheFactory(cacheFactories.distributed);
+
             return (TConfig)this;
         }
         
@@ -298,7 +349,7 @@ namespace CacheMeIfYouCan.Configuration
             }
             else
             {
-                var timeToLive = _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive;
+                var timeToLive = _timeToLive ?? DefaultSettings.Cache.TimeToLive;
                 timeToLiveFactory = (k, v) => timeToLive;
             }
 
@@ -308,7 +359,7 @@ namespace CacheMeIfYouCan.Configuration
                 cache,
                 timeToLiveFactory,
                 _keySerializer ?? GetKeySerializer(),
-                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
+                _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
@@ -327,9 +378,9 @@ namespace CacheMeIfYouCan.Configuration
                 _inputFuncMulti,
                 _functionName,
                 cache,
-                _timeToLive ?? DefaultCacheConfig.Configuration.TimeToLive,
+                _timeToLive ?? DefaultSettings.Cache.TimeToLive,
                 _keySerializer ?? GetKeySerializer(),
-                _earlyFetchEnabled ?? DefaultCacheConfig.Configuration.EarlyFetchEnabled,
+                _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
@@ -348,7 +399,7 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICacheInternal<TK, TV> cache = null;
-            if (_disableCache ?? DefaultCacheConfig.Configuration.DisableCache)
+            if (_disableCache ?? DefaultSettings.Cache.DisableCache)
             {
                 keyComparer = new NoMatchesComparer<Key<TK>>();
             }
@@ -357,14 +408,14 @@ namespace CacheMeIfYouCan.Configuration
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
                 if (_localCacheFactory != null)
                     localCacheFactory = _localCacheFactory;
-                else if (DefaultCacheConfig.Configuration.LocalCacheFactory != null)
-                    localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(DefaultCacheConfig.Configuration.LocalCacheFactory);
+                else if (DefaultSettings.Cache.LocalCacheFactory != null)
+                    localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.LocalCacheFactory);
 
                 IDistributedCacheFactory<TK, TV> distributedCacheFactory = null;
                 if (_distributedCacheFactory != null)
                     distributedCacheFactory = _distributedCacheFactory;
-                else if (DefaultCacheConfig.Configuration.DistributedCacheFactory != null)
-                    distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultCacheConfig.Configuration.DistributedCacheFactory);
+                else if (DefaultSettings.Cache.DistributedCacheFactory != null)
+                    distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.DistributedCacheFactory);
 
                 keyComparer = KeyComparerResolver.Get<TK>();
 
@@ -387,7 +438,7 @@ namespace CacheMeIfYouCan.Configuration
             var serializer = _keySerializer;
             
             if (serializer == null)
-                DefaultCacheConfig.Configuration.KeySerializers.TryGetSerializer<TK>(out serializer);
+                DefaultSettings.Cache.KeySerializers.TryGetSerializer<TK>(out serializer);
 
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
@@ -400,7 +451,7 @@ namespace CacheMeIfYouCan.Configuration
             var deserializer = _keyDeserializer;
             
             if (deserializer == null)
-                DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out deserializer);
+                DefaultSettings.Cache.KeySerializers.TryGetDeserializer<TK>(out deserializer);
 
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
@@ -413,7 +464,7 @@ namespace CacheMeIfYouCan.Configuration
             var serializer = _valueSerializer;
 
             if (serializer == null)
-                DefaultCacheConfig.Configuration.ValueSerializers.TryGetSerializer<TV>(out serializer);
+                DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out serializer);
 
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
@@ -426,7 +477,7 @@ namespace CacheMeIfYouCan.Configuration
             var deserializer = _valueDeserializer;
             
             if (deserializer == null)
-                DefaultCacheConfig.Configuration.ValueSerializers.TryGetDeserializer<TV>(out deserializer);
+                DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out deserializer);
             
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);

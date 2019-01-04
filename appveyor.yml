@@ -1,4 +1,8 @@
 version: 0.1.{build}
+branches:
+  except:
+  - /.*-wip/
+skip_tags: true
 image: Visual Studio 2017
 configuration: Release
 dotnet_csproj:
@@ -20,4 +24,9 @@ deploy:
   api_key:
     secure: uasmn1KlP1l2JFJjq3aypRW7OCmIbohgOU8k+vUwdJnGcSDNxty7ElcI1tumvzqx
   on:
-    branch: master
+    branch: release
+after_deploy:
+- cmd: >-
+    git tag v$(APPVEYOR_BUILD_VERSION)
+
+    git push --tags

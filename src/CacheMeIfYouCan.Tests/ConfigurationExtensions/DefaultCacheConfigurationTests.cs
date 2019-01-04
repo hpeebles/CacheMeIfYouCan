@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnResultObservable(x => x
+                DefaultSettings.Cache.WithOnResultObservable(x => x
                     .Where(r => r.Results.Any(g => g.KeyString == key))
                     .Subscribe(results.Add));
 
@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnResultAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnResultAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -53,7 +53,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnFetchObservable(x => x
+                DefaultSettings.Cache.WithOnFetchObservable(x => x
                     .Where(r => r.Results.Any(f => f.KeyString == key))
                     .Subscribe(fetches.Add));
 
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnFetchAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnFetchAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnExceptionObservable(x => x
+                DefaultSettings.Cache.WithOnExceptionObservable(x => x
                     .Where(r => r.Keys.Contains(key))
                     .Subscribe(errors.Add));
 
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
@@ -112,7 +112,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnCacheGetObservable(x => x
+                DefaultSettings.Cache.WithOnCacheGetObservable(x => x
                     .Where(r => r.Hits.Concat(r.Misses).Contains(key))
                     .Subscribe(results.Add));
 
@@ -120,7 +120,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheGetAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnCacheGetAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -141,7 +141,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnCacheSetObservable(x => x
+                DefaultSettings.Cache.WithOnCacheSetObservable(x => x
                     .Where(r => r.Keys.Contains(key))
                     .Subscribe(results.Add));
 
@@ -149,7 +149,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Cached()
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheSetAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnCacheSetAction(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -168,7 +168,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             lock (DefaultSettingsLock.Lock)
             {
-                DefaultCacheConfig.Configuration.WithOnCacheExceptionObservable(x => x.Subscribe(errors.Add));
+                DefaultSettings.Cache.WithOnCacheExceptionObservable(x => x.Subscribe(errors.Add));
 
                 var cacheFactory = new TestCacheFactory(error: () => true);
 
@@ -177,7 +177,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .WithDistributedCacheFactory(cacheFactory)
                     .Build();
 
-                DefaultCacheConfig.Configuration.WithOnCacheExceptionAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.WithOnCacheExceptionAction(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));

@@ -12,8 +12,8 @@ namespace CacheMeIfYouCan.Polly
 
         public DistributedCachePollyWrapper(IDistributedCache<TK, TV> cache, Policy policy)
         {
-            _cache = cache;
-            _policy = policy;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _policy = policy ?? throw new ArgumentNullException(nameof(policy));
             
             CacheName = _cache.CacheName;
             CacheType = _cache.CacheType;

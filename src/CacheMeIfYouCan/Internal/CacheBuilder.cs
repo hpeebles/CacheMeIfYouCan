@@ -21,21 +21,37 @@ namespace CacheMeIfYouCan.Internal
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
 
-            var localCache = localCacheFactory
-                ?.OnGetResult(onCacheGet)
-                .OnSetResult(onCacheSet)
-                .OnException(onCacheException)
-                .Build(cacheName);
+            ILocalCache<TK, TV> localCache;
+            if (localCacheFactory is NullLocalCacheFactory<TK, TV>)
+            {
+                localCache = null;
+            }
+            else
+            {
+                localCache = localCacheFactory
+                    ?.OnGetResult(onCacheGet)
+                    .OnSetResult(onCacheSet)
+                    .OnException(onCacheException)
+                    .Build(cacheName);
+            }
 
             if (localCache is ICachedItemCounter localItemCounter)
                 CachedItemCounterContainer.Register(localItemCounter);
             
-            var distributedCache = distributedCacheFactory
-                ?.OnGetResult(onCacheGet)
-                .OnSetResult(onCacheSet)
-                .OnException(onCacheException)
-                .WithKeyspacePrefix(config.KeyspacePrefix)
-                .Build(config);
+            IDistributedCache<TK, TV> distributedCache;
+            if (distributedCacheFactory is NullDistributedCacheFactory<TK, TV>)
+            {
+                distributedCache = null;
+            }
+            else
+            {
+                distributedCache = distributedCacheFactory
+                    ?.OnGetResult(onCacheGet)
+                    .OnSetResult(onCacheSet)
+                    .OnException(onCacheException)
+                    .WithKeyspacePrefix(config.KeyspacePrefix)
+                    .Build(config);
+            }
 
             if (distributedCache is ICachedItemCounter distributedItemCounter)
                 CachedItemCounterContainer.Register(distributedItemCounter);

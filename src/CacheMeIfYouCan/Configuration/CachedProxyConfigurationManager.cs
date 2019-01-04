@@ -33,12 +33,12 @@ namespace CacheMeIfYouCan.Configuration
             _impl = impl;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
-            _onResult = DefaultCacheConfig.Configuration.OnResult;
-            _onFetch = DefaultCacheConfig.Configuration.OnFetch;
-            _onException = DefaultCacheConfig.Configuration.OnException;
-            _onCacheGet = DefaultCacheConfig.Configuration.OnCacheGet;
-            _onCacheSet = DefaultCacheConfig.Configuration.OnCacheSet;
-            _onCacheException = DefaultCacheConfig.Configuration.OnCacheException;
+            _onResult = DefaultSettings.Cache.OnResult;
+            _onFetch = DefaultSettings.Cache.OnFetch;
+            _onException = DefaultSettings.Cache.OnException;
+            _onCacheGet = DefaultSettings.Cache.OnCacheGet;
+            _onCacheSet = DefaultSettings.Cache.OnCacheSet;
+            _onCacheException = DefaultSettings.Cache.OnCacheException;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
                 
@@ -77,6 +77,14 @@ namespace CacheMeIfYouCan.Configuration
             _localCacheFactory = cacheFactory;
             return this;
         }
+        
+        public CachedProxyConfigurationManager<T> SkipLocalCache(bool skipLocalCache = true)
+        {
+            if (skipLocalCache)
+                _localCacheFactory = new NullLocalCacheFactory();
+            
+            return this;
+        }
 
         public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
@@ -92,6 +100,45 @@ namespace CacheMeIfYouCan.Configuration
         {
             _distributedCacheFactory = cacheFactory;
             _keyspacePrefixFunc = keyspacePrefixFunc;
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> SkipDistributedCache(bool skipDistributedCache = true)
+        {
+            if (skipDistributedCache)
+            {
+                _distributedCacheFactory = new NullDistributedCacheFactory();
+                _keyspacePrefixFunc = null;
+            }
+
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithCacheFactoryPreset(int id)
+        {
+            return WithCacheFactoryPresetImpl(CacheFactoryPresetKeyFactory.Create(id));
+        }
+        
+        public CachedProxyConfigurationManager<T> WithCacheFactoryPreset<TEnum>(TEnum id) where TEnum : struct, Enum
+        {
+            return WithCacheFactoryPresetImpl(CacheFactoryPresetKeyFactory.Create(id));
+        }
+        
+        private CachedProxyConfigurationManager<T> WithCacheFactoryPresetImpl(CacheFactoryPresetKey key)
+        {
+            if (!DefaultSettings.Cache.CacheFactoryPresets.TryGetValue(key, out var cacheFactories))
+                throw new Exception("No cache factory preset found. " + key);
+
+            if (cacheFactories.local == null)
+                SkipLocalCache();
+            else
+                WithLocalCacheFactory(cacheFactories.local);
+
+            if (cacheFactories.distributed == null)
+                SkipDistributedCache();
+            else
+                WithDistributedCacheFactory(cacheFactories.distributed);
+
             return this;
         }
         

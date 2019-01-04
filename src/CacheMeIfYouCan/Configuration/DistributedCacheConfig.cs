@@ -15,19 +15,19 @@ namespace CacheMeIfYouCan.Configuration
         {
             CacheName = cacheName;
             
-            if (DefaultCacheConfig.Configuration.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
+            if (DefaultSettings.Cache.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out keyDeserializer))
             {
                 KeyDeserializer = keyDeserializer;
             }
 
-            if (DefaultCacheConfig.Configuration.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer) ||
+            if (DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer) ||
                 ProvidedSerializers.TryGetSerializer(out valueSerializer))
             {
                 ValueSerializer = valueSerializer;
             }
 
-            if (DefaultCacheConfig.Configuration.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer) ||
+            if (DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out valueDeserializer))
             {
                 ValueDeserializer = valueDeserializer;

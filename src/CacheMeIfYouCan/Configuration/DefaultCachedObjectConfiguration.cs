@@ -46,9 +46,4 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
     }
-
-    public static class DefaultCachedObjectConfig
-    {
-        public static readonly DefaultCachedObjectConfiguration Configuration = new DefaultCachedObjectConfiguration();
-    }
 }

@@ -371,7 +371,7 @@ namespace CacheMeIfYouCan.Internal
                 _keySerializer = keySerializer;
             }
             else if (
-                DefaultCacheConfig.Configuration.KeySerializers.TryGetSerializer<TK>(out var s) ||
+                DefaultSettings.Cache.KeySerializers.TryGetSerializer<TK>(out var s) ||
                 ProvidedSerializers.TryGetSerializer(out s))
             {
                 _keySerializer = s;
