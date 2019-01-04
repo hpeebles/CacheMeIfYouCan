@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan.Cron
 {
     public static class CachedObjectConfigExtensions
     {
-        public static CachedObjectConfig<T> WithRefreshSchedule<T>(
-            this CachedObjectConfig<T> config,
+        public static CachedObjectConfigManager<T> WithRefreshSchedule<T>(
+            this CachedObjectConfigManager<T> config,
             string cronExpression,
             bool includingSeconds = false)
         {

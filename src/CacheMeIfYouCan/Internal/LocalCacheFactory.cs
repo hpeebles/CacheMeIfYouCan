@@ -123,7 +123,7 @@ namespace CacheMeIfYouCan.Internal
         }
     }
     
-    public class LocalCacheFactory<TK, TV> : ILocalCacheFactory<TK, TV>
+    internal class LocalCacheFactory<TK, TV> : ILocalCacheFactory<TK, TV>
     {
         private readonly ILocalCacheFactory<TK, TV> _cacheFactory;
         private readonly List<ILocalCacheWrapperFactory<TK, TV>> _wrapperFactories;

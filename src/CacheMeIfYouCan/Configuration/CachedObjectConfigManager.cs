@@ -5,7 +5,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class CachedObjectConfig<T>
+    public class CachedObjectConfigManager<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
         private Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<CachedObjectRefreshResult<T>> _onRefreshResult;
         private Action<Exception> _onException;
 
-        internal CachedObjectConfig(Func<Task<T>> getValueFunc)
+        internal CachedObjectConfigManager(Func<Task<T>> getValueFunc)
         {
             _getValueFunc = getValueFunc;
 
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Configuration
                 OnException(DefaultSettings.CachedObject.OnException);
         }
         
-        public CachedObjectConfig<T> WithRefreshInterval(TimeSpan refreshInterval)
+        public CachedObjectConfigManager<T> WithRefreshInterval(TimeSpan refreshInterval)
         {
             if (refreshInterval == TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(refreshInterval));
@@ -38,19 +38,19 @@ namespace CacheMeIfYouCan.Configuration
             return WithRefreshInterval(r => refreshInterval);
         }
 
-        public CachedObjectConfig<T> WithRefreshInterval(Func<TimeSpan> refreshIntervalFunc)
+        public CachedObjectConfigManager<T> WithRefreshInterval(Func<TimeSpan> refreshIntervalFunc)
         {
             return WithRefreshInterval(r => refreshIntervalFunc());
         }
 
-        public CachedObjectConfig<T> WithRefreshInterval(
+        public CachedObjectConfigManager<T> WithRefreshInterval(
             Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc)
         {
             _refreshIntervalFunc = refreshIntervalFunc;
             return this;
         }
         
-        public CachedObjectConfig<T> WithJitterPercentage(double percentage)
+        public CachedObjectConfigManager<T> WithJitterPercentage(double percentage)
         {
             if (percentage < 0 || percentage > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentage));
@@ -59,13 +59,13 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedObjectConfig<T> OnRefreshResult(Action<CachedObjectRefreshResult<T>> onRefreshResult)
+        public CachedObjectConfigManager<T> OnRefreshResult(Action<CachedObjectRefreshResult<T>> onRefreshResult)
         {
             _onRefreshResult = onRefreshResult;
             return this;
         }
 
-        public CachedObjectConfig<T> OnException(Action<Exception> onException)
+        public CachedObjectConfigManager<T> OnException(Action<Exception> onException)
         {
             _onException = onException;
             return this;

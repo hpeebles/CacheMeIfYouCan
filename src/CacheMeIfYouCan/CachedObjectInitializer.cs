@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan
 {
+    /// <summary>
+    /// Singleton which holds all of the registered <see cref="ICachedObject{T}"/> instances and exposes the option to
+    /// initialize them all.
+    /// </summary>
+    /// <remarks>When using <see cref="ICachedObject{T}"/> instances in production it is recommended that you call
+    /// <see cref="InitializeAll"/> during your service startup</remarks>
     public static class CachedObjectInitializer
     {
         private static readonly Dictionary<Type, List<ICachedObjectInitializer>> Initializers;
@@ -16,6 +22,10 @@ namespace CacheMeIfYouCan
             Initializers = new Dictionary<Type, List<ICachedObjectInitializer>>();
         }
         
+        /// <summary>
+        /// Initializes all instances of <see cref="ICachedObject{T}"/>
+        /// </summary>
+        /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
         public static async Task<CachedObjectInitializeManyResult> InitializeAll()
         {
             ICachedObjectInitializer[] initializers;
@@ -41,6 +51,10 @@ namespace CacheMeIfYouCan
             return new CachedObjectInitializeManyResult(results);
         }
 
+        /// <summary>
+        /// Initializes all instances of <see cref="ICachedObject{T}"/> where the generic argument is of type <typeparamref name="T"/>
+        /// </summary>
+        /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
         public static async Task<CachedObjectInitializeManyResult> Initialize<T>()
         {
             List<ICachedObjectInitializer> initializers;
