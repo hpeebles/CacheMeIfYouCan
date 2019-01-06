@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheNotificationWrapper<TK, TV> : IDistributedCache<TK, TV> 
     {

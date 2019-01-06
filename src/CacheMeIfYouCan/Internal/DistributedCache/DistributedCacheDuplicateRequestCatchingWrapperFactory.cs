@@ -1,4 +1,4 @@
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheDuplicateRequestCatchingWrapperFactory : IDistributedCacheWrapperFactory
     {

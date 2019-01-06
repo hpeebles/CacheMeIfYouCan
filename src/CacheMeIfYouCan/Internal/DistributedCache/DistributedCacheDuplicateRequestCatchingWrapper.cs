@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheDuplicateRequestCatchingWrapper<TK, TV> : IDistributedCache<TK, TV>
     {

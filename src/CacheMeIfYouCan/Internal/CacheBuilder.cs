@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Internal.DistributedCache;
+using CacheMeIfYouCan.Internal.LocalCache;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal

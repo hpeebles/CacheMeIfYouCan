@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCacheNotificationWrapper<TK, TV> : ILocalCache<TK, TV> 
     {

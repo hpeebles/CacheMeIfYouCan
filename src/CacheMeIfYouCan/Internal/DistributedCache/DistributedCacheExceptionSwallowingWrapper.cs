@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheExceptionSwallowingWrapper<TK, TV> : IDistributedCache<TK, TV>
     {

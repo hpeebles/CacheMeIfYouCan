@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal class DuplicateTaskCatcherMulti<TK, TV>
     {

@@ -1,4 +1,4 @@
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal readonly struct DuplicateTaskCatcherMultiResult<TK, TV>
     {

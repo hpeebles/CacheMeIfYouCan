@@ -1,4 +1,4 @@
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCachePendingRequestsCounterWrapperFactory : ILocalCacheWrapperFactory
     {

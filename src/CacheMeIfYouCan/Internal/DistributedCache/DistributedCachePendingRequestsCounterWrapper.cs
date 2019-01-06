@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCachePendingRequestsCounterWrapper<TK, TV> : IDistributedCache<TK, TV>, IPendingRequestsCounter
     {

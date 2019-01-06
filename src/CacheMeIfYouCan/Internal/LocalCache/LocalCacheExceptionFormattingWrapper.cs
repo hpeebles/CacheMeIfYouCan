@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
-using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCacheExceptionFormattingWrapper<TK, TV> : ILocalCache<TK, TV>
     {

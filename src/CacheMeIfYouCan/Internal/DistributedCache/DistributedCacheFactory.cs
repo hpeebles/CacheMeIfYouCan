@@ -6,7 +6,7 @@ using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheFactory : IDistributedCacheFactory
     {

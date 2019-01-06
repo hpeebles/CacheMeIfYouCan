@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCachePendingRequestsCounterWrapper<TK, TV> : ILocalCache<TK, TV>, IPendingRequestsCounter
     {

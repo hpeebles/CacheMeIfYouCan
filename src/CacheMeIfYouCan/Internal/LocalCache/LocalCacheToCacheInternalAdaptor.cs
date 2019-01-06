@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCacheToCacheInternalAdapter<TK, TV> : ICacheInternal<TK, TV>
     {

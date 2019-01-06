@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal

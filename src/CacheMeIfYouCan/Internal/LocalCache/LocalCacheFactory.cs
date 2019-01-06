@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCacheFactory : ILocalCacheFactory
     {

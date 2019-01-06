@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.LocalCache
 {
     internal class LocalCacheExceptionSwallowingWrapper<TK, TV> : ILocalCache<TK, TV>
     {

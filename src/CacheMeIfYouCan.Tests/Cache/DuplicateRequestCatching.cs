@@ -7,7 +7,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
-    public class DuplicateRequestCatching
+    public class DuplicateRequestCatching : CacheTestBase
     {
         private const int DuplicateStatusCode = 11;
         
@@ -15,11 +15,15 @@ namespace CacheMeIfYouCan.Tests.Cache
         public async Task DuplicatesAreCaught_Single()
         {
             var results = new List<CacheGetResult>();
-            
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                .WithDuplicateRequestCatching()
-                .OnGetResult(results.Add)
-                .Build<string, string>(Guid.NewGuid().ToString());
+
+            IDistributedCache<string, string> cache;
+            using (EnterSetup(false))
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                    .WithDuplicateRequestCatching()
+                    .OnGetResult(results.Add)
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var guid = Guid.NewGuid().ToString();
             var key = new Key<string>(guid, guid);
@@ -47,11 +51,15 @@ namespace CacheMeIfYouCan.Tests.Cache
         public async Task DuplicatesAreCaught_Multi()
         {
             var results = new List<CacheGetResult>();
-            
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                .WithDuplicateRequestCatching()
-                .OnGetResult(results.Add)
-                .Build<string, string>(Guid.NewGuid().ToString());
+
+            IDistributedCache<string, string> cache;
+            using (EnterSetup(false))
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                    .WithDuplicateRequestCatching()
+                    .OnGetResult(results.Add)
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var guid = Guid.NewGuid().ToString();
             var key = new Key<string>(guid, guid);
