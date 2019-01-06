@@ -86,7 +86,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             var untilLongToIntExpires = TimeSpan.FromSeconds(2) - timer.Elapsed;
 
             if (untilLongToIntExpires.Ticks > 0)
-                await Task.Delay(untilIntToStringExpires);
+                await Task.Delay(untilLongToIntExpires);
             
             await proxy.LongToInt(123);
             Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);

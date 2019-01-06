@@ -214,6 +214,22 @@ namespace CacheMeIfYouCan
         }
         
         /// <summary>
+        /// Adds a wrapper which prevents duplicate requests from being sent to the cache. When a duplicate is found we
+        /// await the original rather than sending the duplicate
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory being configured</param>
+        /// <param name="behaviour">How to add the wrapper which catches the duplicate requests to the existing list of wrapperFactories</param>
+        /// <returns></returns>
+        public static IDistributedCacheFactory WithDuplicateRequestCatching(
+            this IDistributedCacheFactory cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new DistributedCacheDuplicateRequestCatchingWrapperFactory(), behaviour);
+        }
+        
+        /// <summary>
         /// Swallows all exceptions thrown by the cache.
         /// Any OnException actions are run before the exceptions are swallowed
         /// </summary>
@@ -650,6 +666,22 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .WithWrapper(new DistributedCachePendingRequestsCounterWrapperFactory(), behaviour);
+        }
+
+        /// <summary>
+        /// Adds a wrapper which prevents duplicate requests from being sent to the cache. When a duplicate is found we
+        /// await the original rather than sending the duplicate
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory being configured</param>
+        /// <param name="behaviour">How to add the wrapper which catches the duplicate requests to the existing list of wrapperFactories</param>
+        /// <returns></returns>
+        public static IDistributedCacheFactory<TK, TV> WithDuplicateRequestCatching<TK, TV>(
+            this IDistributedCacheFactory<TK, TV> cacheFactory,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .WithWrapper(new DistributedCacheDuplicateRequestCatchingWrapperFactory());
         }
         
         /// <summary>

@@ -11,7 +11,6 @@ namespace CacheMeIfYouCan.Internal
 {
     internal sealed class FunctionCacheMulti<TK, TV> : IPendingRequestsCounter, IDisposable
     {
-        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly TimeSpan _timeToLive;
         private readonly Func<TK, string> _keySerializer;
@@ -22,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
-        private readonly ConcurrentDictionary<Key<TK>, Task<FetchResults>> _activeFetches;
+        private readonly DuplicateTaskCatcherMulti<Key<TK>, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
         private long _averageFetchDuration;
@@ -43,7 +42,6 @@ namespace CacheMeIfYouCan.Internal
         {
             Name = functionName;
             Type = GetType().Name;
-            _func = func;
             _cache = cache;
             _timeToLive = timeToLive;
             _keySerializer = keySerializer;
@@ -54,8 +52,24 @@ namespace CacheMeIfYouCan.Internal
             _onFetch = onFetch;
             _onException = onException;
             _keyComparer = keyComparer;
-            _activeFetches = new ConcurrentDictionary<Key<TK>, Task<FetchResults>>(keyComparer);
+            _fetchHandler = new DuplicateTaskCatcherMulti<Key<TK>, TV>(Fetch, keyComparer);
             _rng = new Random();
+            
+            async Task<IDictionary<Key<TK>, TV>> Fetch(ICollection<Key<TK>> keys)
+            {
+                var keysAsObj = new List<TK>(keys.Count);
+                var keysMap = new Dictionary<TK, Key<TK>>(keys.Count);
+
+                foreach (var k in keys)
+                {
+                    keysAsObj.Add(k);
+                    keysMap[k] = k;
+                }
+
+                var results = await func(keysAsObj);
+
+                return results?.ToDictionary(kv => keysMap[kv.Key], kv => kv.Value);
+            }
         }
 
         public string Name { get; }
@@ -200,62 +214,40 @@ namespace CacheMeIfYouCan.Internal
             var error = false;
 
             var results = new List<FunctionCacheFetchResultInner<TK, TV>>();
-            
-            var tcs = new TaskCompletionSource<FetchResults>();
-            var toFetch = new Dictionary<TK, Key<TK>>();
-            var alreadyPendingFetches = new List<KeyValuePair<Key<TK>, Task<FetchResults>>>();
-            
-            foreach (var key in keys)
-            {
-                var task = _activeFetches.GetOrAdd(key, k => tcs.Task);
-                
-                if (task == tcs.Task)
-                    toFetch.Add(key.Key.AsObject, key.Key);
-                else
-                    alreadyPendingFetches.Add(new KeyValuePair<Key<TK>, Task<FetchResults>>(key, task));
-            }
 
-            var waitForPendingFetchesTask = alreadyPendingFetches.Any()
-                ? WaitForPendingFetches(alreadyPendingFetches, stopwatchStart)
-                : null;
-            
             try
             {
-                if (toFetch.Any())
+                var fetched = await _fetchHandler.ExecuteAsync(keys.Select(k => k.Key).ToArray());
+                
+                if (fetched != null && fetched.Any())
                 {
-                    var fetched = await _func(toFetch.Keys);
-    
-                    tcs.SetResult(new FetchResults(fetched, Stopwatch.GetTimestamp()));
-                    
-                    if (fetched != null && fetched.Any())
+                    results.AddRange(fetched
+                        .Select(kv => kv.Value)
+                        .Select(f => new FunctionCacheFetchResultInner<TK, TV>(
+                            f.Key,
+                            f.Value,
+                            true,
+                            f.Duplicate,
+                            StopwatchHelper.GetDuration(stopwatchStart, f.StopwatchTimestampCompleted))));
+
+                    if (_cache != null)
                     {
-                        var duration = StopwatchHelper.GetDuration(stopwatchStart);
-    
-                        var fetchedDictionary = fetched.ToDictionary(f => toFetch[f.Key], f => f.Value);
-                        
-                        results.AddRange(fetchedDictionary.Select(f => new FunctionCacheFetchResultInner<TK, TV>(f.Key, f.Value, true, false, duration)));
-                        
-                        if (_cache != null)
+                        var nonDuplicates = fetched
+                            .Where(kv => !kv.Value.Duplicate)
+                            .ToDictionary(kv => kv.Key, kv => kv.Value.Value, _keyComparer);
+
+                        if (nonDuplicates.Any())
                         {
-                            var setValueTask = _cache.Set(fetchedDictionary, _timeToLive);
+                            var setValueTask = _cache.Set(nonDuplicates, _timeToLive);
 
                             if (!setValueTask.IsCompleted)
                                 await setValueTask;
                         }
                     }
                 }
-                else
-                {
-                    tcs.SetCanceled();
-                }
-
-                if (waitForPendingFetchesTask != null)
-                    results.AddRange(await waitForPendingFetchesTask);
             }
             catch (Exception ex)
             {
-                tcs.TrySetException(ex);
-
                 var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
                 var fetchedKeys = new HashSet<Key<TK>>(results.Select(r => r.Key), _keyComparer);
@@ -279,9 +271,6 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                foreach (var key in toFetch)
-                    _activeFetches.TryRemove(key.Value, out _);
-                
                 if (_onFetch != null)
                 {
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
@@ -301,32 +290,6 @@ namespace CacheMeIfYouCan.Internal
             return results;
         }
 
-        private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> WaitForPendingFetches(
-            IList<KeyValuePair<Key<TK>, Task<FetchResults>>> fetches,
-            long stopwatchStart)
-        {
-            await Task.WhenAll(fetches.Select(f => f.Value).Distinct());
-
-            var results = new List<FunctionCacheFetchResultInner<TK, TV>>(fetches.Count);
-
-            foreach (var fetch in fetches)
-            {
-                var result = fetch.Value.Result;
-                
-                if (!result.Results.TryGetValue(fetch.Key, out var value))
-                    continue;
-                
-                results.Add(new FunctionCacheFetchResultInner<TK, TV>(
-                    fetch.Key,
-                    value,
-                    true,
-                    true,
-                    StopwatchHelper.GetDuration(stopwatchStart, result.StopwatchTimestampCompleted)));
-            }
-
-            return results;
-        }
-        
         private IEnumerable<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
         {
             var message = _continueOnException
@@ -362,30 +325,18 @@ namespace CacheMeIfYouCan.Internal
         
         private readonly struct KeyToFetch
         {
-            public Key<TK> Key { get; }
-            public TimeSpan? TimeToLive { get; }
-
             public KeyToFetch(Key<TK> key, TimeSpan? timeToLive = null)
             {
                 Key = key;
                 TimeToLive = timeToLive;
             }
 
+            public Key<TK> Key { get; }
+            public TimeSpan? TimeToLive { get; }
+
             public static implicit operator Key<TK>(KeyToFetch value)
             {
                 return value.Key;
-            }
-        }
-        
-        private readonly struct FetchResults
-        {
-            public IDictionary<TK, TV> Results { get; }
-            public long StopwatchTimestampCompleted { get; }
-
-            public FetchResults(IDictionary<TK, TV> results, long stopwatchTimestampCompleted)
-            {
-                Results = results;
-                StopwatchTimestampCompleted = stopwatchTimestampCompleted;
             }
         }
     }

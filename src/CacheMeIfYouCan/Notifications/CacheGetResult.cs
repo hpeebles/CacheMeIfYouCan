@@ -8,6 +8,7 @@ namespace CacheMeIfYouCan.Notifications
     {
         private readonly Lazy<IList<string>> _hits;
         private readonly Lazy<IList<string>> _misses;
+        private readonly Lazy<IList<StatusCodeCount>> _statusCodeCounts;
 
         internal CacheGetResult(
             string cacheName,
@@ -18,7 +19,8 @@ namespace CacheMeIfYouCan.Notifications
             int hitsCount,
             int missesCount,
             Lazy<IList<string>> hits,
-            Lazy<IList<string>> misses)
+            Lazy<IList<string>> misses,
+            Lazy<IList<StatusCodeCount>> statusCodeCounts)
         {
             CacheName = cacheName;
             CacheType = cacheType;
@@ -29,6 +31,7 @@ namespace CacheMeIfYouCan.Notifications
             MissesCount = missesCount;
             _hits = hits;
             _misses = misses;
+            _statusCodeCounts = statusCodeCounts;
         }
 
         public string CacheName { get; }
@@ -40,6 +43,30 @@ namespace CacheMeIfYouCan.Notifications
         public int MissesCount { get; }
         public IList<string> Hits => _hits.Value;
         public IList<string> Misses => _misses.Value;
+        public IList<StatusCodeCount> StatusCodeCounts => _statusCodeCounts.Value;
+
+        public readonly struct StatusCodeCount
+        {
+            internal StatusCodeCount(int statusCode, int count)
+            {
+                StatusCode = statusCode;
+                Count = count;
+            }
+            
+            public int StatusCode { get; }
+            public int Count { get; }
+
+            public void Deconstruct(out int statusCode, out int count)
+            {
+                statusCode = StatusCode;
+                count = Count;
+            }
+
+            public override string ToString()
+            {
+                return $"StatusCode: '{StatusCode}' Count: '{Count}";
+            }
+        }
     }
     
     public sealed class CacheGetResult<TK, TV> : CacheGetResult
@@ -61,7 +88,12 @@ namespace CacheMeIfYouCan.Notifications
             hits.Count,
             misses.Count,
             new Lazy<IList<string>>(() => hits.Select(r => r.Key.AsStringSafe).ToArray()),
-            new Lazy<IList<string>>(() => misses.Select(m => m.AsStringSafe).ToArray()))
+            new Lazy<IList<string>>(() => misses.Select(m => m.AsStringSafe).ToArray()),
+            new Lazy<IList<StatusCodeCount>>(() => hits
+                .Where(h => h.StatusCode > 0)
+                .GroupBy(h => h.StatusCode)
+                .Select(g => new StatusCodeCount(g.Key, g.Count()))
+                .ToArray()))
         {
             Hits = hits;
             Misses = misses;

@@ -11,6 +11,7 @@ namespace CacheMeIfYouCan.Prometheus
         private static readonly Counter MissesCounter;
         private static readonly Counter ItemsSetCounter;
         private static readonly Counter ExceptionsCounter;
+        private static readonly Counter StatusCodesCounter;
         private static readonly Histogram GetDurationsMs;
         private static readonly Histogram SetDurationsMs;
         private static readonly Gauge CachedItemsCounter;
@@ -26,6 +27,7 @@ namespace CacheMeIfYouCan.Prometheus
             MissesCounter = Metrics.CreateCounter("Cache_MissesCounter", null, labels);
             ItemsSetCounter = Metrics.CreateCounter("Cache_ItemsSetCounter", null, labels);
             ExceptionsCounter = Metrics.CreateCounter("Cache_ExceptionsCounter", null, "name", "cachetype", "exceptiontype", "innerexceptiontype");
+            StatusCodesCounter = Metrics.CreateCounter("Cache_StatusCodesCounter", null, "name", "cachetype", "statuscode");
             GetDurationsMs = Metrics.CreateHistogram("Cache_GetDurationsMs", null, cacheDurationBuckets, labels);
             SetDurationsMs = Metrics.CreateHistogram("Cache_SetDurationsMs", null, cacheDurationBuckets, labels);
             CachedItemsCounter = Metrics.CreateGauge("Cache_ItemsCounter", null, "name", "cachetype");
@@ -50,6 +52,13 @@ namespace CacheMeIfYouCan.Prometheus
             MissesCounter
                 .Labels(labels)
                 .Inc(result.MissesCount);
+
+            foreach (var (statusCode, count) in result.StatusCodeCounts)
+            {
+                StatusCodesCounter
+                    .Labels(result.CacheName, result.CacheType, statusCode.ToString())
+                    .Inc(count);
+            }
             
             GetDurationsMs
                 .Labels(labels)

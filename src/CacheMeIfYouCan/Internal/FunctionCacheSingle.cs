@@ -10,7 +10,6 @@ namespace CacheMeIfYouCan.Internal
 {
     internal sealed class FunctionCacheSingle<TK, TV> : IPendingRequestsCounter, IDisposable
     {
-        private readonly Func<TK, Task<TV>> _func;
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
@@ -20,7 +19,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
-        private readonly ConcurrentDictionary<Key<TK>, Task<FetchResult>> _activeFetches;
+        private readonly DuplicateTaskCatcherSingle<Key<TK>, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
         private long _averageFetchDuration;
@@ -41,7 +40,6 @@ namespace CacheMeIfYouCan.Internal
         {
             Name = functionName;
             Type = GetType().Name;
-            _func = func;
             _cache = cache;
             _timeToLiveFactory = timeToLiveFactory;
             _keySerializer = keySerializer;
@@ -51,7 +49,7 @@ namespace CacheMeIfYouCan.Internal
             _onResult = onResult;
             _onFetch = onFetch;
             _onException = onException;
-            _activeFetches = new ConcurrentDictionary<Key<TK>, Task<FetchResult>>(keyComparer);
+            _fetchHandler = new DuplicateTaskCatcherSingle<Key<TK>, TV>(k => func(k.AsObject), keyComparer);
             _rng = new Random();
         }
 
@@ -161,49 +159,29 @@ namespace CacheMeIfYouCan.Internal
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
-            var tcs = new TaskCompletionSource<FetchResult>();
-            
-            var task = _activeFetches.GetOrAdd(key, k => tcs.Task);
-            
-            var fetchAlreadyPending = task != tcs.Task;
 
             FunctionCacheFetchResultInner<TK, TV> result = null;
             try
             {
-                if (fetchAlreadyPending)
+                var (fetched, duplicate) = await _fetchHandler.ExecuteAsync(key);
+
+                result = new FunctionCacheFetchResultInner<TK, TV>(
+                    key,
+                    fetched.Value,
+                    true,
+                    duplicate,
+                    StopwatchHelper.GetDuration(stopwatchStart, fetched.StopwatchTimestampCompleted));
+
+                if (_cache != null && !duplicate)
                 {
-                    var value = await task;
+                    var setValueTask = _cache.Set(key, fetched.Value, _timeToLiveFactory(key, fetched.Value));
 
-                    result = new FunctionCacheFetchResultInner<TK, TV>(
-                        key,
-                        value.Value,
-                        true,
-                        true,
-                        StopwatchHelper.GetDuration(stopwatchStart, value.StopwatchTimestampCompleted));
-                }
-                else
-                {
-                    var fetched = await _func(key);
-
-                    tcs.SetResult(new FetchResult(fetched, Stopwatch.GetTimestamp()));
-
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    if (_cache != null)
-                    {
-                        var setValueTask = _cache.Set(key, fetched, _timeToLiveFactory(key, fetched));
-
-                        if (!setValueTask.IsCompleted)
-                            await setValueTask;
-                    }
-
-                    result = new FunctionCacheFetchResultInner<TK, TV>(key, fetched, true, false, duration);
+                    if (!setValueTask.IsCompleted)
+                        await setValueTask;
                 }
             }
             catch (Exception ex)
             {
-                tcs.TrySetException(ex);
-
                 var duration = StopwatchHelper.GetDuration(stopwatchStart);
                 
                 result = new FunctionCacheFetchResultInner<TK, TV>(key, default, false, false, duration);
@@ -222,8 +200,6 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                _activeFetches.TryRemove(key, out _);
-                
                 if (_onFetch != null)
                 {
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
@@ -273,18 +249,6 @@ namespace CacheMeIfYouCan.Internal
             var random = _rng.NextDouble();
 
             return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
-        }
-        
-        private readonly struct FetchResult
-        {
-            public TV Value { get; }
-            public long StopwatchTimestampCompleted { get; }
-
-            public FetchResult(TV value, long stopwatchTimestampCompleted)
-            {
-                Value = value;
-                StopwatchTimestampCompleted = stopwatchTimestampCompleted;
-            }
         }
     }
 }
