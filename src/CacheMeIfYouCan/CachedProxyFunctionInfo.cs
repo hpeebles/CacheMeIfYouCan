@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan
     /// <summary>
     /// Represents the details of a single method within an interface being proxied
     /// </summary>
-    public class CachedProxyFunctionInfo
+    public sealed class CachedProxyFunctionInfo
     {
         internal CachedProxyFunctionInfo(Type interfaceType, MethodInfo methodInfo, Type keyType, Type valueType)
         {

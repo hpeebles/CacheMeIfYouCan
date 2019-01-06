@@ -7,8 +7,8 @@ namespace CacheMeIfYouCan
     /// <summary>
     /// Represents a distributed cache
     /// </summary>
-    /// <typeparam name="TK">The type of the cache key (the underlying cache may convert this to string before use)</typeparam>
-    /// <typeparam name="TV">The type of the cache value</typeparam>
+    /// <typeparam name="TK">The type of the cache keys (the underlying cache may convert this to string before use)</typeparam>
+    /// <typeparam name="TV">The type of the cache values</typeparam>
     public interface IDistributedCache<TK, TV> : IDisposable
     {
         /// <summary>
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan
         /// Sets a collection of values in the cache
         /// </summary>
         /// <param name="values">The collection of key/value pairs to store in the cache</param>
-        /// <param name="timeToLive">The time to live for each newly stored keys</param>
+        /// <param name="timeToLive">The time to live for each newly stored key</param>
         Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);
     }
 }

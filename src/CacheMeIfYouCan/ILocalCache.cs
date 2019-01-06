@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan
     /// <summary>
     /// Represents a cache which stores its data within the currently running process
     /// </summary>
-    /// <typeparam name="TK">The type of the cache key (the underlying cache may convert this to string before use)</typeparam>
-    /// <typeparam name="TV">The type of the cache value</typeparam>
+    /// <typeparam name="TK">The type of the cache keys (the underlying cache may convert this to string before use)</typeparam>
+    /// <typeparam name="TV">The type of the cache values</typeparam>
     public interface ILocalCache<TK, TV> : IDisposable
     {
         /// <summary>
