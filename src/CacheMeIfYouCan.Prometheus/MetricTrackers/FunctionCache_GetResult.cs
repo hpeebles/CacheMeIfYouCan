@@ -1,14 +1,14 @@
 ﻿using CacheMeIfYouCan.Notifications;
 using Prometheus;
 
-namespace CacheMeIfYouCan.Prometheus
+namespace CacheMeIfYouCan.Prometheus.MetricTrackers
 {
-    internal static class FunctionCacheGetResultMetricsTracker
+    internal static class FunctionCache_GetResult
     {
         private static readonly Counter TotalItemsRequestedCounter;
         private static readonly Histogram RequestDurationsMs;
         
-        static FunctionCacheGetResultMetricsTracker()
+        static FunctionCache_GetResult()
         {
             var labels = new[] { "name", "success" };
             var requestDurationBuckets = new[] { 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000 };
