@@ -67,16 +67,13 @@ namespace CacheMeIfYouCan.Internal
                 var definition = GetMethodDefinition(methodInfo);
                 
                 // Create a field called _methodName of type Func<TK, Task<TV>> in which to store the cached function
-                var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}";
+                var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}_{index}";
                 var field = typeBuilder.DefineField(fieldName, definition.FieldType, FieldAttributes.Private);
                 var fieldCtor = definition.FieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
                 
                 // Either FunctionCacheConfigurationManager<TK, TV> or MultiKeyFunctionCacheConfigurationManager
                 // depending on if the key is Enumerable or not
-                var configManagerType = definition.IsMultiKey
-                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,>).MakeGenericType(definition.KeyType, definition.ValueType)
-                    : typeof(FunctionCacheConfigurationManager<,>).MakeGenericType(definition.KeyType, definition.ValueType);
-                
+                var configManagerType = GetConfigManagerType(definition);
                 var configManagerTypeCtor = configManagerType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
@@ -130,8 +127,11 @@ namespace CacheMeIfYouCan.Internal
                     throw new Exception("Method must have exactly 1 input");
 
                 var returnType = methodInfo.ReturnType;
-                if (returnType.GetGenericTypeDefinition() != typeof(Task<>))
-                    throw new Exception("Method must return Task<T>");
+                if (returnType == typeof(void) || returnType == typeof(Task))
+                {
+                    throw new Exception($@"
+Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{returnType.Name}'");
+                }
             }
         }
 
@@ -145,7 +145,8 @@ namespace CacheMeIfYouCan.Internal
             var parameterType = methodInfo.GetParameters().First().ParameterType;
 
             var isMultiKey = parameterType != typeof(String) && typeof(IEnumerable).IsAssignableFrom(parameterType);
-
+            var isAsync = typeof(Task).IsAssignableFrom(methodInfo.ReturnType);
+            
             Type keyType;
             if (isMultiKey)
             {
@@ -160,11 +161,9 @@ namespace CacheMeIfYouCan.Internal
             }
             
             var returnType = methodInfo.ReturnType;
-            
-            if (!typeof(Task).IsAssignableFrom(returnType) || returnType.GenericTypeArguments.Length != 1)
-                throw new Exception(String.Format(messageFormat, "Return type must be a Task<T>"));
-            
-            var returnTypeInner = returnType.GenericTypeArguments.Single();
+            var returnTypeInner = isAsync
+                ? returnType.GenericTypeArguments.Single()
+                : returnType;
 
             Type valueType;
             Type fieldType;
@@ -202,8 +201,28 @@ namespace CacheMeIfYouCan.Internal
                 KeyType = keyType,
                 ValueType = valueType,
                 FieldType = fieldType,
-                IsMultiKey = isMultiKey
+                IsMultiKey = isMultiKey,
+                IsAsync = isAsync
             };
+        }
+
+        private static Type GetConfigManagerType(MethodDefinition definition)
+        {
+            Type type;
+            if (definition.IsMultiKey)
+            {
+                type = definition.IsAsync
+                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,>)
+                    : typeof(MultiKeyFunctionCacheConfigurationManagerSync<,>);
+            }
+            else
+            {
+                type = definition.IsAsync
+                    ? typeof(FunctionCacheConfigurationManager<,>)
+                    : typeof(FunctionCacheConfigurationManagerSync<,>);
+            }
+            
+            return type.MakeGenericType(definition.KeyType, definition.ValueType);
         }
 
         private static string GetProxyName(Type type)
@@ -221,6 +240,7 @@ namespace CacheMeIfYouCan.Internal
             public Type ValueType;
             public Type FieldType;
             public bool IsMultiKey;
+            public bool IsAsync;
         }
     }
 }

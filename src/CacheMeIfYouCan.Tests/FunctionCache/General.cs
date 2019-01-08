@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Theory]
         [InlineData("memory")]
         [InlineData("dictionary")]
-        public async Task SubsequentCallsAreCached(string cacheType)
+        public async Task SubsequentCallsAreCached_Async(string cacheType)
         {
             var fetches = new List<FunctionCacheFetchResult>();
             
@@ -50,6 +50,45 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Single(fetches);
         }
 
+        [Theory]
+        [InlineData("memory")]
+        [InlineData("dictionary")]
+        public void SubsequentCallsAreCached_Sync(string cacheType)
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            Func<string, string> echo = new EchoSync(TimeSpan.FromSeconds(1));
+            Func<string, string> cachedEcho;
+            using (EnterSetup(false))
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithLocalCacheFactory(GetCacheFactory(cacheType))
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            var first = true;
+            for (var i = 0; i < 10; i++)
+            {
+                var timer = Stopwatch.StartNew();
+                var result = cachedEcho("test!");
+                
+                Assert.Equal("test!", result);
+                if (first)
+                {
+                    Assert.True(timer.Elapsed > TimeSpan.FromMilliseconds(900));
+                    first = false;
+                }
+                else
+                {
+                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(50));
+                }
+            }
+            
+            Assert.Single(fetches);
+        }
+        
         [Theory]
         [InlineData("memory")]
         [InlineData("dictionary")]

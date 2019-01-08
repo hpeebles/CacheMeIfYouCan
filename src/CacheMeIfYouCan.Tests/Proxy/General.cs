@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
@@ -58,6 +59,45 @@ namespace CacheMeIfYouCan.Tests.Proxy
                     Assert.Equal(j == 0 ? Outcome.Fetch : Outcome.FromCache, lastResult.Results.Single().Outcome);
                 }
             }
+        }
+
+        [Fact]
+        public async Task WorksSyncAndAsync()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var key = Guid.NewGuid().ToString();
+            
+            Assert.Equal(key, await proxy.StringToString(key));
+
+            Assert.Single(results);
+            Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
+
+            await proxy.StringToString(key);
+            
+            Assert.Equal(2, results.Count);
+            Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
+            
+            Assert.Equal(key, proxy.StringToStringSync(key));
+
+            Assert.Equal(3, results.Count);
+            Assert.Equal(Outcome.Fetch, results.Last().Results.Single().Outcome);
+
+            proxy.StringToStringSync(key);
+
+            Assert.Equal(4, results.Count);
+            Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
+
         }
     }
 }

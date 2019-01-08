@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan
             return Cached(func, BuildCacheName<TK, TV>());
         }
         
-        public static FunctionCacheConfigurationManager<TK, TV> Cached<TK, TV>(this Func<TK, TV> func)
+        public static FunctionCacheConfigurationManagerSync<TK, TV> Cached<TK, TV>(this Func<TK, TV> func)
         {
             return Cached(func, BuildCacheName<TK, TV>());
         }
@@ -25,9 +25,9 @@ namespace CacheMeIfYouCan
             return new FunctionCacheConfigurationManager<TK, TV>(func, cacheName);
         }
         
-        public static FunctionCacheConfigurationManager<TK, TV> Cached<TK, TV>(this Func<TK, TV> func, string cacheName)
+        public static FunctionCacheConfigurationManagerSync<TK, TV> Cached<TK, TV>(this Func<TK, TV> func, string cacheName)
         {
-            return new FunctionCacheConfigurationManager<TK, TV>(key => Task.FromResult(func(key)), cacheName);
+            return new FunctionCacheConfigurationManagerSync<TK, TV>(func, cacheName);
         }
         
         // MultiKey

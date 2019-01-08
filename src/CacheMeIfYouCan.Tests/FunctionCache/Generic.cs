@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var results1 = new List<FunctionCacheGetResult<List<int>, int>>();
             var results2 = new List<FunctionCacheGetResult<List<int>, int>>();
             
-            Func<List<int>, int> func = x => x.Sum();
+            Func<List<int>, Task<int>> func = x => Task.FromResult(x.Sum());
             Func<List<int>, Task<int>> cachedFuncWithConstantSerializer;
             Func<List<int>, Task<int>> cachedFuncWithSerializer;
             using (EnterSetup(false))

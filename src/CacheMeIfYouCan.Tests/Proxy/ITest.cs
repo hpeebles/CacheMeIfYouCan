@@ -14,5 +14,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys);
         
         Task<IDictionary<string, string>> MultiEchoList(IList<string> keys);
+
+        string StringToStringSync(string key);
     }
 }

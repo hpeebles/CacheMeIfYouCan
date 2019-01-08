@@ -5,45 +5,47 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class FunctionCacheConfigurationManager<TK, TV>
-        : FunctionCacheConfigurationManagerBase<FunctionCacheConfigurationManager<TK, TV>, TK, TV>
+    public class FunctionCacheConfigurationManagerSync<TK, TV>
+        : FunctionCacheConfigurationManagerBase<FunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>
     {
-        private Func<TK, Task<TV>> _cachedFunc;
+        private Func<TK, TV> _cachedFunc;
 
-        internal FunctionCacheConfigurationManager(
-            Func<TK, Task<TV>> inputFunc,
+        internal FunctionCacheConfigurationManagerSync(
+            Func<TK, TV> inputFunc,
             string functionName)
-            : base(inputFunc, functionName)
+            : base(k => Task.FromResult(inputFunc(k)), functionName)
         { }
 
-        internal FunctionCacheConfigurationManager(
-            Func<TK, Task<TV>> inputFunc,
+        internal FunctionCacheConfigurationManagerSync(
+            Func<TK, TV> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(
-                inputFunc,
+                k => Task.FromResult(inputFunc(k)),
                 $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
 
-        public new FunctionCacheConfigurationManager<TK, TV> WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
+        public new FunctionCacheConfigurationManagerSync<TK, TV> WithTimeToLiveFactory(
+            Func<TK, TV, TimeSpan> timeToLiveFactory)
         {
             return base.WithTimeToLiveFactory(timeToLiveFactory);
         }
         
-        public Func<TK, Task<TV>> Build()
+        public Func<TK, TV> Build()
         {
             var functionCache = BuildFunctionCacheSingle();
 
-            _cachedFunc = functionCache.Get;
+            _cachedFunc = k => functionCache.Get(k).GetAwaiter().GetResult();
             
             PendingRequestsCounterContainer.Add(functionCache);
             
             return _cachedFunc;
         }
         
-        public static implicit operator Func<TK, Task<TV>>(FunctionCacheConfigurationManager<TK, TV> cacheConfig)
+        public static implicit operator Func<TK, TV>(
+            FunctionCacheConfigurationManagerSync<TK, TV> cacheConfig)
         {
             return cacheConfig.Build();
         }

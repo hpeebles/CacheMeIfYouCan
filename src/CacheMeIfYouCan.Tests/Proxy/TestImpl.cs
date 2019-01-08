@@ -30,5 +30,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
         }
+
+        public string StringToStringSync(string key)
+        {
+            return key;
+        }
     }
 }
