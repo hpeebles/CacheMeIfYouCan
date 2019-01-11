@@ -62,7 +62,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         }
 
         [Fact]
-        public async Task WorksSyncAndAsync()
+        public async Task WorksForAsyncFunctions()
         {
             var results = new List<FunctionCacheGetResult>();
             
@@ -87,17 +87,34 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             Assert.Equal(2, results.Count);
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
+        }
+        
+        [Fact]
+        public void WorksForSyncFunctions()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (EnterSetup(false))
+            {
+                proxy = impl
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var key = Guid.NewGuid().ToString();
             
             Assert.Equal(key, proxy.StringToStringSync(key));
 
-            Assert.Equal(3, results.Count);
-            Assert.Equal(Outcome.Fetch, results.Last().Results.Single().Outcome);
+            Assert.Single(results);
+            Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             proxy.StringToStringSync(key);
-
-            Assert.Equal(4, results.Count);
+            
+            Assert.Equal(2, results.Count);
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
-
         }
     }
 }

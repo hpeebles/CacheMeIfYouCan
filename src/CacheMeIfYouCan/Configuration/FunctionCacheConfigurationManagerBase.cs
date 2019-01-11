@@ -367,7 +367,7 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer);
         }
         
-        internal FunctionCacheMulti<TK, TV> BuildFunctionCacheMulti()
+        internal FunctionCacheMulti<TK, TV> BuildFunctionCacheMulti(Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
         {
             if (!_multiKey)
                 throw new Exception("You can't build a FunctionCacheMulti since your function is single key");
@@ -385,7 +385,8 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onException,
-                keyComparer);
+                keyComparer,
+                dictionaryFactoryFunc);
         }
 
         private ICacheInternal<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)

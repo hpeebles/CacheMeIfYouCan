@@ -6,43 +6,35 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class MultiKeyFunctionCacheConfigurationManagerSync<TK, TV>
-        : FunctionCacheConfigurationManagerBase<MultiKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>
+    public class MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>
+        : FunctionCacheConfigurationManagerBase<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>
+        where TReq : IEnumerable<TK>
+        where TRes : IDictionary<TK, TV>
     {
-        private Func<IEnumerable<TK>, IDictionary<TK, TV>> _cachedFunc;
-
         internal MultiKeyFunctionCacheConfigurationManagerSync(
-            Func<IEnumerable<TK>, IDictionary<TK, TV>> inputFunc,
+            Func<TReq, TRes> inputFunc,
             string functionName)
-            : base(k => Task.FromResult(inputFunc(k)), functionName)
+            : base(inputFunc.ConvertInput<TReq, TRes, TK, TV>().ConvertToAsync().ConvertOutput<IEnumerable<TK>, TRes, TK, TV>(), functionName)
         { }
 
         internal MultiKeyFunctionCacheConfigurationManagerSync(
-            Func<IEnumerable<TK>, IDictionary<TK, TV>> inputFunc,
+            Func<TReq, TRes> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(
-                k => Task.FromResult(inputFunc(k)),
+                inputFunc.ConvertInput<TReq, TRes, TK, TV>().ConvertToAsync().ConvertOutput<IEnumerable<TK>, TRes, TK, TV>(),
                 $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
-        public Func<IEnumerable<TK>, IDictionary<TK, TV>> Build()
+        public Func<IEnumerable<TK>, TRes> Build()
         {
-            var functionCache = BuildFunctionCacheMulti();
-            
-            _cachedFunc = k => functionCache.GetMulti(k).GetAwaiter().GetResult();
+            var functionCache = BuildFunctionCacheMulti(DictionaryFactoryFuncResolver.Get<TRes, TK, TV>());
             
             PendingRequestsCounterContainer.Add(functionCache);
             
-            return _cachedFunc;
-        }
-
-        public static implicit operator Func<IEnumerable<TK>, IDictionary<TK, TV>>(
-            MultiKeyFunctionCacheConfigurationManagerSync<TK, TV> cacheConfig)
-        {
-            return cacheConfig.Build();
+            return k => (TRes)functionCache.GetMulti(k).GetAwaiter().GetResult();
         }
     }
 }

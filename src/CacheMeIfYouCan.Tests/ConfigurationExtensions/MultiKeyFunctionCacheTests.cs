@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnResultObservable(x => x.Subscribe(results.Add))
                     .Build();
             }
@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnFetchObservable(x => x.Subscribe(fetches.Add))
                     .Build();
             }
@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnExceptionObservable(x => x.Subscribe(errors.Add))
                     .Build();
             }
@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnCacheGetObservable(x => x.Subscribe(results.Add))
                     .Build();
             }
@@ -100,7 +100,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnCacheSetObservable(x => x.Subscribe(results.Add))
                     .Build();
             }
@@ -123,7 +123,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build<string, string>("test");
 
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .WithDistributedCache(cache)
                     .OnCacheExceptionObservable(x => x.Subscribe(errors.Add))
                     .Build();

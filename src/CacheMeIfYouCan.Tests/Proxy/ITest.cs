@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -14,7 +15,13 @@ namespace CacheMeIfYouCan.Tests.Proxy
         Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys);
         
         Task<IDictionary<string, string>> MultiEchoList(IList<string> keys);
+        
+        Task<IDictionary<string, string>> MultiEchoSet(ISet<string> keys);
 
         string StringToStringSync(string key);
+        
+        IDictionary<string, string> MultiStringToStringSync(ICollection<string> keys);
+
+        Task<ConcurrentDictionary<string, string>> MultiEchoToConcurrent(IEnumerable<string> keys);
     }
 }

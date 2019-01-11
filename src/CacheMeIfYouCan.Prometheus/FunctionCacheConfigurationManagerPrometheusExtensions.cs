@@ -1,4 +1,5 @@
-﻿using CacheMeIfYouCan.Configuration;
+﻿using System.Collections.Generic;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Prometheus.MetricTrackers;
 
 namespace CacheMeIfYouCan.Prometheus
@@ -16,12 +17,38 @@ namespace CacheMeIfYouCan.Prometheus
                 cacheMetrics);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TK, TV> WithMetrics<TK, TV>(
-            this MultiKeyFunctionCacheConfigurationManager<TK, TV> configManager,
+        public static FunctionCacheConfigurationManagerSync<TK, TV> WithMetrics<TK, TV>(
+            this FunctionCacheConfigurationManagerSync<TK, TV> configManager,
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
+            return WithMetrics<FunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
+            this MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TReq : IEnumerable<TK>
+            where TRes : IDictionary<TK, TV>
+        {
+            return WithMetrics<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
+            this MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TReq : IEnumerable<TK>
+            where TRes : IDictionary<TK, TV>
+        {
+            return WithMetrics<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);

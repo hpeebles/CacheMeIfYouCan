@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             using (EnterSetup(false))
             {
                 cachedEcho = echo
-                    .Cached()
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
                     .OnCacheGet(getResults.Add)
                     .OnCacheSet(setResults.Add)
                     .Build();

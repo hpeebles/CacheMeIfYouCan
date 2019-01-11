@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.PerformanceTests
     {
         private readonly IList<T> _keys;
         private readonly Func<T, Task<T>> _single;
-        private readonly Func<IList<T>, Task<IDictionary<T, T>>> _multi;
+        private readonly Func<IList<T>, Task<Dictionary<T, T>>> _multi;
         
         public SingleVsMulti()
         {
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.PerformanceTests
                 await func(key);
         }
 
-        private async Task RunMultiTest(Func<IList<T>, Task<IDictionary<T, T>>> func)
+        private async Task RunMultiTest(Func<IList<T>, Task<Dictionary<T, T>>> func)
         {
             await func(_keys);
         }
@@ -51,12 +51,12 @@ namespace CacheMeIfYouCan.PerformanceTests
                 .Build();
         }
 
-        private static Func<IList<T>, Task<IDictionary<T, T>>> BuildMulti()
+        private static Func<IList<T>, Task<Dictionary<T, T>>> BuildMulti()
         {
             Func<IList<T>, Task<Dictionary<T, T>>> func = DummyMultiFunc;
             
             return func
-                .Cached()
+                .Cached<IList<T>, Dictionary<T, T>, T, T>()
                 .WithTimeToLive(TimeSpan.FromMinutes(10))
                 .WithLocalCacheFactory(new DictionaryCacheFactory())
                 .Build();

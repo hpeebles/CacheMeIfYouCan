@@ -22,6 +22,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly IEqualityComparer<Key<TK>> _keyComparer;
+        private readonly Func<IDictionary<TK, TV>> _dictionaryFactoryFunc;
         private readonly DuplicateTaskCatcherMulti<Key<TK>, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
@@ -39,7 +40,8 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
-            IEqualityComparer<Key<TK>> keyComparer)
+            IEqualityComparer<Key<TK>> keyComparer,
+            Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -53,6 +55,7 @@ namespace CacheMeIfYouCan.Internal
             _onFetch = onFetch;
             _onException = onException;
             _keyComparer = keyComparer;
+            _dictionaryFactoryFunc = dictionaryFactoryFunc;
             _fetchHandler = new DuplicateTaskCatcherMulti<Key<TK>, TV>(Fetch, keyComparer);
             _rng = new Random();
             
@@ -92,7 +95,15 @@ namespace CacheMeIfYouCan.Internal
             {
                 var results = await GetImpl(keyObjs as ICollection<TK> ?? keyObjs.ToArray());
 
-                return results?.ToDictionary(kv => kv.Key.AsObject, kv => kv.Value);
+                if (results == null)
+                    return null;
+                
+                var dictionary = _dictionaryFactoryFunc();
+
+                foreach (var result in results)
+                    dictionary[result.Key.AsObject] = result.Value;
+
+                return dictionary;
             }
         }
 

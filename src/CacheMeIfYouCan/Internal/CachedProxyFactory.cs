@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Internal
                 var configManagerTypeCtor = configManagerType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
-                    new[] { definition.FieldType, typeof(CachedProxyConfig), typeof(MethodInfo) },
+                    new[] { definition.FuncType, typeof(CachedProxyConfig), typeof(MethodInfo) },
                     new ParameterModifier[0]);
                 
                 // Build a cached version of the function and store it in the newly created field
@@ -139,8 +139,12 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
         {
             var messageFormat = $"Invalid method signature. {{0}}. Method: '{methodInfo.Name}'";
             
-            if (methodInfo.GetParameters().Length > 1)
+            if (methodInfo.GetParameters().Length != 1)
                 throw new Exception(String.Format(messageFormat, "Method must have a single input parameter"));
+
+            var funcType = typeof(Func<,>).MakeGenericType(
+                methodInfo.GetParameters().Single().ParameterType,
+                methodInfo.ReturnType);
             
             var parameterType = methodInfo.GetParameters().First().ParameterType;
 
@@ -196,8 +200,10 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
 
             return new MethodDefinition
             {
+                FuncType = funcType,
                 ParameterType = parameterType,
                 ReturnType = returnType,
+                ReturnTypeInner = returnTypeInner,
                 KeyType = keyType,
                 ValueType = valueType,
                 FieldType = fieldType,
@@ -212,15 +218,15 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
             if (definition.IsMultiKey)
             {
                 type = definition.IsAsync
-                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,>)
-                    : typeof(MultiKeyFunctionCacheConfigurationManagerSync<,>);
+                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,,,>)
+                    : typeof(MultiKeyFunctionCacheConfigurationManagerSync<,,,>);
+
+                return type.MakeGenericType(definition.ParameterType, definition.ReturnTypeInner, definition.KeyType, definition.ValueType);
             }
-            else
-            {
-                type = definition.IsAsync
-                    ? typeof(FunctionCacheConfigurationManager<,>)
-                    : typeof(FunctionCacheConfigurationManagerSync<,>);
-            }
+            
+            type = definition.IsAsync
+                ? typeof(FunctionCacheConfigurationManager<,>)
+                : typeof(FunctionCacheConfigurationManagerSync<,>);
             
             return type.MakeGenericType(definition.KeyType, definition.ValueType);
         }
@@ -234,8 +240,10 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
 
         private class MethodDefinition
         {
+            public Type FuncType;
             public Type ParameterType;
             public Type ReturnType;
+            public Type ReturnTypeInner;
             public Type KeyType;
             public Type ValueType;
             public Type FieldType;
