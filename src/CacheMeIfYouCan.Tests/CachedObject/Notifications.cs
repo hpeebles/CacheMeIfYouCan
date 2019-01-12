@@ -6,15 +6,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class Notifications : CachedObjectTestBase
+    [Collection(TestCollections.CachedObject)]
+    public class Notifications
     {
+        private readonly CachedObjectSetupLock _setupLock;
+
+        public Notifications(CachedObjectSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task OnRefreshResult()
         {
             var refreshResults = new List<CachedObjectRefreshResult<DateTime>>();
             
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)

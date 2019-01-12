@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class Config : CacheTestBase
+    [Collection(TestCollections.Proxy)]
+    public class Config
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public Config(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task ConfigureForTests()
         {
@@ -16,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()

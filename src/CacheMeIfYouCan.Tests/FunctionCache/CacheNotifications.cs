@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class CacheNotifications : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class CacheNotifications
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public CacheNotifications(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnCacheGet()
         {
@@ -16,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -52,7 +60,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -80,7 +88,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -108,7 +116,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -142,7 +150,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -180,7 +188,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

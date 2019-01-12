@@ -5,8 +5,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class PendingRequestsCounter : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class PendingRequestsCounter
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public PendingRequestsCounter(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task CountsAreCorrect()
         {
@@ -14,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1));
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached(name)
@@ -48,7 +56,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo(k => TimeSpan.FromSeconds(1), k => Int32.Parse(k) % 2 == 0);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached(name)

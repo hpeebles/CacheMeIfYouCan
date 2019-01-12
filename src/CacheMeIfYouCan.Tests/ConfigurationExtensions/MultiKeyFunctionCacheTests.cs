@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class MultiKeyFunctionCacheTests : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class MultiKeyFunctionCacheTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public MultiKeyFunctionCacheTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnResult()
         {
@@ -16,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -36,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -56,7 +64,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -77,7 +85,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -97,7 +105,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
@@ -117,7 +125,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.Zero, () => true);
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 var cache = new TestCacheFactory(error: () => true)
                     .Build<string, string>("test");

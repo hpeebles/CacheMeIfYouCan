@@ -7,16 +7,28 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
+    [Collection(TestCollections.Cache)]
     public class PendingRequestsCounter
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public PendingRequestsCounter(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task CountsAreCorrectForDistributedCache()
         {
             var name = Guid.NewGuid().ToString();
             
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Equal(0, GetPendingRequestsCount(name));
 
@@ -38,9 +50,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var name = Guid.NewGuid().ToString();
             
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2))
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2))
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Equal(0, GetPendingRequestsCount(name));
 
@@ -99,9 +115,13 @@ namespace CacheMeIfYouCan.Tests.Cache
             var name = Guid.NewGuid().ToString();
             var index = 0;
             
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => index++ % 2 == 0)
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => index++ % 2 == 0)
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Equal(0, GetPendingRequestsCount(name));
 
@@ -124,9 +144,13 @@ namespace CacheMeIfYouCan.Tests.Cache
             var name = Guid.NewGuid().ToString();
             var index = 0;
             
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2), () => index++ % 2 == 0)
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2), () => index++ % 2 == 0)
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Equal(0, GetPendingRequestsCount(name));
 
@@ -190,9 +214,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var name = Guid.NewGuid().ToString();
             
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Single(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
             
@@ -206,9 +234,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var name = Guid.NewGuid().ToString();
             
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1))
-                .WithPendingRequestsCounter()
-                .Build<string, string>(name);
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1))
+                    .WithPendingRequestsCounter()
+                    .Build<string, string>(name);
+            }
 
             Assert.Single(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
             

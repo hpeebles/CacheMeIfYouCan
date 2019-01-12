@@ -8,16 +8,28 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
+    [Collection(TestCollections.Cache)]
     public class CacheFactoryTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public CacheFactoryTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task OnGetResult()
         {
             var results = new List<CacheGetResult>();
-            
-            var cache = new TestCacheFactory()
-                .OnGetResult(results.Add)
-                .BuildAsCache<string, int>("abc");
+
+            ICache<string, int> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory()
+                    .OnGetResult(results.Add)
+                    .BuildAsCache<string, int>("abc");
+            }
 
             const string key = "abc";
             
@@ -39,9 +51,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         {
             var results = new List<CacheSetResult>();
             
-            var cache = new TestCacheFactory()
-                .OnSetResult(results.Add)
-                .BuildAsCache<string, int>("abc");
+            ICache<string, int> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory()
+                    .OnSetResult(results.Add)
+                    .BuildAsCache<string, int>("abc");
+            }
 
             const string key = "abc";
             
@@ -57,10 +73,14 @@ namespace CacheMeIfYouCan.Tests.Cache
         public async Task OnException()
         {
             var errors = new List<CacheException>();
-            
-            var cache = new TestCacheFactory(error: () => true)
-                .OnException(errors.Add)
-                .BuildAsCache<string, int>("abc");
+
+            ICache<string, int> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(error: () => true)
+                    .OnException(errors.Add)
+                    .BuildAsCache<string, int>("abc");
+            }
 
             const string key = "abc";
             
@@ -74,8 +94,12 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task BuildAsCacheExtension()
         {
-            var cache = new TestCacheFactory()
-                .BuildAsCache<string, int>("abc");
+            ICache<string, int> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory()
+                    .BuildAsCache<string, int>("abc");
+            }
 
             await cache.Set("abc", 123, TimeSpan.FromSeconds(1));
             
@@ -91,17 +115,22 @@ namespace CacheMeIfYouCan.Tests.Cache
         [InlineData("dictionary")]
         public async Task CachesDontShareValues(string cacheType)
         {
-            ILocalCacheFactory cacheFactory;
-            if (cacheType == "memory")
-                cacheFactory = new MemoryCacheFactory();
-            else if (cacheType == "dictionary")
-                cacheFactory = new DictionaryCacheFactory();
-            else
-                throw new Exception($"CacheType not recognised '{cacheType}'");
+            ICache<int, int> cache1;
+            ICache<int, int> cache2;
+            using (_setupLock.Enter())
+            {
+                ILocalCacheFactory cacheFactory;
+                if (cacheType == "memory")
+                    cacheFactory = new MemoryCacheFactory();
+                else if (cacheType == "dictionary")
+                    cacheFactory = new DictionaryCacheFactory();
+                else
+                    throw new Exception($"CacheType not recognised '{cacheType}'");
 
-            var cache1 = cacheFactory.BuildAsCache<int, int>("1");
-            var cache2 = cacheFactory.BuildAsCache<int, int>("2");
-            
+                cache1 = cacheFactory.BuildAsCache<int, int>("1");
+                cache2 = cacheFactory.BuildAsCache<int, int>("2");
+            }
+
             await cache1.Set(123, 123, TimeSpan.FromSeconds(1));
             
             Assert.Equal(123, await cache1.Get(123));
@@ -114,16 +143,22 @@ namespace CacheMeIfYouCan.Tests.Cache
             var serializer1 = new TestSerializer();
             var serializer2 = new TestSerializer();
             var serializer3 = new TestSerializer();
-            
-            var cacheFactory = new TestCacheFactory()
-                .WithKeySerializers(c => c
-                    .Set<int>(serializer1)
-                    .Set<long>(serializer2)
-                    .SetDefault(serializer3));
 
-            var cacheInt = cacheFactory.BuildAsCache<int, int>("int");
-            var cacheLong = cacheFactory.BuildAsCache<long, long>("long");
-            var cacheString = cacheFactory.BuildAsCache<string, string>("string");
+            ICache<int, int> cacheInt;
+            ICache<long, long> cacheLong;
+            ICache<string, string> cacheString;
+            using (_setupLock.Enter())
+            {
+                var cacheFactory = new TestCacheFactory()
+                    .WithKeySerializers(c => c
+                        .Set<int>(serializer1)
+                        .Set<long>(serializer2)
+                        .SetDefault(serializer3));
+
+                cacheInt = cacheFactory.BuildAsCache<int, int>("int");
+                cacheLong = cacheFactory.BuildAsCache<long, long>("long");
+                cacheString = cacheFactory.BuildAsCache<string, string>("string");
+            }
 
             await cacheInt.Set(123, 123, TimeSpan.FromSeconds(1));
             

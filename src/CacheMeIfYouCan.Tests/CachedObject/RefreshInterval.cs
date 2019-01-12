@@ -7,15 +7,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class RefreshInterval : CachedObjectTestBase
+    [Collection(TestCollections.CachedObject)]
+    public class RefreshInterval
     {
+        private readonly CachedObjectSetupLock _setupLock;
+
+        public RefreshInterval(CachedObjectSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
 
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
@@ -43,7 +51,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var refreshResults = new List<CachedObjectRefreshResult>();
             
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
@@ -72,7 +80,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var refreshResults = new List<CachedObjectRefreshResult>();
             
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)

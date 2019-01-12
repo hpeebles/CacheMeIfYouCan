@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Generic : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class Generic
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public Generic(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task KeyIsSerializedCorrectly()
         {
@@ -18,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<List<int>, Task<int>> func = x => Task.FromResult(x.Sum());
             Func<List<int>, Task<int>> cachedFuncWithConstantSerializer;
             Func<List<int>, Task<int>> cachedFuncWithSerializer;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedFuncWithConstantSerializer = func
                     .Cached()

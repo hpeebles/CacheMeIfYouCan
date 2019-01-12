@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Get : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class Get
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public Get(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Theory]
         [InlineData(1)]
         [InlineData(3)]
@@ -20,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -43,7 +50,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

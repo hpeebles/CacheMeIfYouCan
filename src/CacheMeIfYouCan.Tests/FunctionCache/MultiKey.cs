@@ -9,8 +9,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class MultiKey : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class MultiKey
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public MultiKey(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public void MultiKeyCacheGetsBuilt()
         {
@@ -205,7 +213,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()

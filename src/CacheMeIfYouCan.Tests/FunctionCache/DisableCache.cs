@@ -6,8 +6,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class DisableCache : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class DisableCache
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public DisableCache(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -17,7 +25,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

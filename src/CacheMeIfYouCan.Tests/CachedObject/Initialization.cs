@@ -7,13 +7,21 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class Initialization : CachedObjectTestBase
+    [Collection(TestCollections.CachedObject)]
+    public class Initialization
     {
+        private readonly CachedObjectSetupLock _setupLock;
+
+        public Initialization(CachedObjectSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public void NotInitializedWillInitializeOnFirstCall()
         {
             ICachedObject<long> ticks;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 ticks = CachedObjectFactory
                     .ConfigureFor(async () =>
@@ -36,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task CanBeInitializedDirectly()
         {
             ICachedObject<long> ticks;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 ticks = CachedObjectFactory
                     .ConfigureFor(async () =>
@@ -63,7 +71,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var count = 0;
             
             ICachedObject<long> ticks;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 ticks = CachedObjectFactory
                     .ConfigureFor(() =>

@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class TwoTierCache : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class TwoTierCache
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public TwoTierCache(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task ChecksLocalFirstThenDistributed()
         {
@@ -22,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho1;
             Func<string, Task<string>> cachedEcho2;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho1 = echo
                     .Cached()
@@ -69,7 +77,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

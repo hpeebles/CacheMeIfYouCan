@@ -6,8 +6,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class MultiKey : CacheTestBase
+    [Collection(TestCollections.Proxy)]
+    public class MultiKey
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public MultiKey(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task MultiKeyCachedIsProduced()
         {
@@ -15,7 +23,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -36,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -57,7 +65,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -78,7 +86,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()

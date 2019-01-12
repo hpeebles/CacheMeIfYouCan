@@ -9,8 +9,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class DefaultCacheConfigurationTests : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class DefaultCacheConfigurationTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public DefaultCacheConfigurationTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnResult()
         {
@@ -20,7 +28,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnResultObservable(x => x
                     .Where(r => r.Results.Any(g => g.KeyString == key))
@@ -47,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnFetchObservable(x => x
                     .Where(r => r.Results.Any(f => f.KeyString == key))
@@ -74,7 +82,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnExceptionObservable(x => x
                     .Where(r => r.Keys.Contains(key))
@@ -102,7 +110,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheGetObservable(x => x
                     .Where(r => r.Hits.Concat(r.Misses).Contains(key))
@@ -129,7 +137,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheSetObservable(x => x
                     .Where(r => r.Keys.Contains(key))
@@ -154,7 +162,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheExceptionObservable(x => x.Subscribe(errors.Add));
 

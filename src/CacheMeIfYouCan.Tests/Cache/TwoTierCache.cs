@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
-    public class TwoTierCache : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class TwoTierCache
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public TwoTierCache(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task ChecksLocalThenDistributed()
         {
@@ -18,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var key = Guid.NewGuid().ToString();
             
             ICache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 var distributed = new TestCacheFactory()
                     .OnGetResult(distributedResults.Add)

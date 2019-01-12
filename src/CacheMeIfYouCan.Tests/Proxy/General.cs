@@ -7,16 +7,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class General : CacheTestBase
+    [Collection(TestCollections.Proxy)]
+    public class General
     {
         private readonly Random _rng = new Random();
+        private readonly CacheSetupLock _setupLock;
+
+        public General(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
         
         [Fact]
         public async Task ReturnsExpectedValue()
         {
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -40,7 +47,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -68,7 +75,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -96,7 +103,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()

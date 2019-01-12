@@ -7,9 +7,17 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
-    public class DuplicateRequestCatching : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class DuplicateRequestCatching
     {
         private const int DuplicateStatusCode = 11;
+        
+        private readonly CacheSetupLock _setupLock;
+
+        public DuplicateRequestCatching(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
         
         [Fact]
         public async Task DuplicatesAreCaught_Single()
@@ -17,7 +25,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var results = new List<CacheGetResult>();
 
             IDistributedCache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
                     .WithDuplicateRequestCatching()
@@ -53,7 +61,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var results = new List<CacheGetResult>();
 
             IDistributedCache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
                     .WithDuplicateRequestCatching()

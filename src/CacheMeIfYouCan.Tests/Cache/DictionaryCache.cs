@@ -5,8 +5,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
-    public class DictionaryCache : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class DictionaryCache
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public DictionaryCache(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task KeysAreRemovedAutomaticallyOnceTheyExpire()
         {
@@ -15,7 +23,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var cache = new DictionaryCache<string, string>("echo");
             
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -41,7 +49,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             var cache = new DictionaryCache<string, string>("echo");
             
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

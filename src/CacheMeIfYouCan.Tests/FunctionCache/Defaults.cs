@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Defaults : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class Defaults
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public Defaults(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         private const string KeyPrefix = "DefaultsTests";
         
         [Fact]
@@ -19,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnResultAction(x =>
                 {
@@ -50,7 +57,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnFetchAction(x =>
                 {
@@ -83,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnExceptionAction(x =>
                 {
@@ -126,7 +133,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheGetAction(x =>
                 {
@@ -172,7 +179,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheSetAction(x =>
                 {
@@ -209,7 +216,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.WithOnCacheExceptionAction(x =>
                 {

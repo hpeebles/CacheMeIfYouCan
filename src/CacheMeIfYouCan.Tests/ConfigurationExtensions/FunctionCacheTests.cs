@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class FunctionCacheTests : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class FunctionCacheTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public FunctionCacheTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnResult()
         {
@@ -16,7 +24,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -36,7 +44,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -56,7 +64,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -77,7 +85,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -97,7 +105,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -117,7 +125,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 var cache = new TestCacheFactory(error: () => true)
                     .Build<string, string>("test");

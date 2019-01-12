@@ -7,15 +7,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class CacheFactoryConfigurationManagerTests : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class CacheFactoryConfigurationManagerTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public CacheFactoryConfigurationManagerTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnGetResult()
         {
             var results = new List<CacheGetResult>();
 
             IDistributedCache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory()
                     .OnGetResultObservable(x => x.Subscribe(results.Add))
@@ -33,7 +41,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var results = new List<CacheSetResult>();
 
             IDistributedCache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory()
                     .OnSetResultObservable(x => x.Subscribe(results.Add))
@@ -51,7 +59,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             var errors = new List<CacheException>();
 
             IDistributedCache<string, string> cache;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory(error: () => true)
                     .OnExceptionObservable(x => x.Subscribe(errors.Add))

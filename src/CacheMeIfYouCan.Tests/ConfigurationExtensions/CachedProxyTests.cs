@@ -8,8 +8,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 {
-    public class CachedProxyTests : CacheTestBase
+    [Collection(TestCollections.Cache)]
+    public class CachedProxyTests
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public CachedProxyTests(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
@@ -19,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -44,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -69,7 +77,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -95,7 +103,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -120,7 +128,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()
@@ -145,7 +153,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             
             ITest impl = new TestImpl();
             ITest proxy;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 proxy = impl
                     .Cached()

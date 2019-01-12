@@ -5,15 +5,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class CachedObjectInitializerTests : CachedObjectTestBase
+    [Collection(TestCollections.CachedObject)]
+    public class CachedObjectInitializerTests
     {
+        private readonly CachedObjectSetupLock _setupLock;
+
+        public CachedObjectInitializerTests(CachedObjectSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task MultipleCanBeInitializedViaInitializeAll()
         {
             ICachedObject<long> ticks;
             ICachedObject<DateTime> date;
             ICachedObject<double> ticksDouble;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 ticks = CachedObjectFactory
                     .ConfigureFor(async () =>
@@ -59,7 +67,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task CanInitializeMultipleOfTheSameType()
         {
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 for (var i = 0; i < 10; i++)
                 {
@@ -79,7 +87,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task CallingInitializeMultipleTimesSucceeds()
         {
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 CachedObjectFactory
                     .ConfigureFor(() => new Dummy1())
@@ -100,7 +108,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task RemovedFromInitializerOnceDisposed()
         {
             ICachedObject<Dummy2> cachedObj;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedObj = CachedObjectFactory
                     .ConfigureFor(() => new Dummy2())
@@ -124,7 +132,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task InitializeDurationIsAccurate()
         {
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 CachedObjectFactory
                     .ConfigureFor(async () =>

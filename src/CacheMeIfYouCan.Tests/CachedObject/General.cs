@@ -6,15 +6,23 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
 {
-    public class General : CachedObjectTestBase
+    [Collection(TestCollections.CachedObject)]
+    public class General
     {
+        private readonly CachedObjectSetupLock _setupLock;
+
+        public General(CachedObjectSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task RefreshedValueIsImmediatelyExposed()
         {
             var results = new List<CachedObjectRefreshResult>();
 
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
@@ -46,7 +54,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var refreshResults = new List<CachedObjectRefreshResult>();
 
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() =>
@@ -84,7 +92,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task ThrowsIfAccessedAfterDisposed()
         {
             ICachedObject<DateTime> date;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)

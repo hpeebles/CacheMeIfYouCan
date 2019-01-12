@@ -7,18 +7,30 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
 {
+    [Collection(TestCollections.Cache)]
     public class SwallowingExceptions
     {
         private const string SwallowThis = "swallow this!";
         private const string AlsoSwallowThis = "and this!";
         private const string DontSwallowThis = "but not this!";
         
+        private readonly CacheSetupLock _setupLock;
+
+        public SwallowingExceptions(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+        
         [Fact]
         public async Task AllExceptionsForDistributedCache()
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions()
-                .Build<string, string>(Guid.NewGuid().ToString());
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions()
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var result = await cache.Get(new Key<string>("abc", "abc"));
             
@@ -28,9 +40,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public void AllExceptionsForLocalCache()
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions()
-                .Build<string, string>(Guid.NewGuid().ToString());
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions()
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var result = cache.Get(new Key<string>("abc", "abc"));
             
@@ -42,10 +58,14 @@ namespace CacheMeIfYouCan.Tests.Cache
         [InlineData(DontSwallowThis, false)]
         public async Task FilteredByPredicateForDistributedCache(string keyString, bool shouldBeSwallowed)
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
-            
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
+
             if (shouldBeSwallowed)
             {
                 var result = await cache.Get(new Key<string>(keyString, keyString));
@@ -63,10 +83,14 @@ namespace CacheMeIfYouCan.Tests.Cache
         [InlineData(DontSwallowThis, false)]
         public void FilteredByPredicateForLocalCache(string keyString, bool shouldBeSwallowed)
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
-            
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
+
             if (shouldBeSwallowed)
             {
                 var result = cache.Get(new Key<string>(keyString, keyString));
@@ -82,9 +106,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task FilteredByTypeForDistributedCache()
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheGetException<string>>()
-                .Build<string, string>(Guid.NewGuid().ToString());
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheGetException<string>>()
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var key = new Key<string>("abc", "abc");
             
@@ -98,9 +126,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public void FilteredByTypeForLocalCache()
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheGetException<string>>()
-                .Build<string, string>(Guid.NewGuid().ToString());
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheGetException<string>>()
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var key = new Key<string>("abc", "abc");
             
@@ -114,9 +146,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task FilteredByTypeAndPredicateForDistributedCache()
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheGetException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheGetException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var result = await cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
@@ -132,9 +168,13 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public void FilteredByTypeAndPredicateForLocalCache()
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheGetException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheGetException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             var result = cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
@@ -150,11 +190,15 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task CombinedRulesForDistributedCache()
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == AlsoSwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
-            
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == AlsoSwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
+
             var result1 = await cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
             Assert.False(result1.Success);
@@ -169,11 +213,15 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public void CombinedRulesForLocalCache()
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
-                .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == AlsoSwallowThis))
-                .Build<string, string>(Guid.NewGuid().ToString());
-            
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == SwallowThis))
+                    .SwallowExceptions<CacheException<string>>(ex => ex.Keys.Any(k => k.AsString == AlsoSwallowThis))
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
+
             var result1 = cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
             Assert.False(result1.Success);
@@ -190,11 +238,15 @@ namespace CacheMeIfYouCan.Tests.Cache
         [InlineData(DontSwallowThis, false)]
         public async Task FilteredInnerExceptionsForDistributedCache(string keyString, bool shouldBeSwallowed)
         {
-            var cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .WithWrapper(new DistributedCacheExceptionChangingWrapperFactory())
-                .SwallowExceptionsInner(ex => ex.Message == SwallowThis)
-                .Build<string, string>(Guid.NewGuid().ToString());
-            
+            IDistributedCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .WithWrapper(new DistributedCacheExceptionChangingWrapperFactory())
+                    .SwallowExceptionsInner(ex => ex.Message == SwallowThis)
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
+
             if (shouldBeSwallowed)
             {
                 var result = await cache.Get(new Key<string>(keyString, keyString));
@@ -212,10 +264,14 @@ namespace CacheMeIfYouCan.Tests.Cache
         [InlineData(DontSwallowThis, false)]
         public void FilteredInnerExceptionsForLocalCache(string keyString, bool shouldBeSwallowed)
         {
-            var cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
-                .WithWrapper(new LocalCacheExceptionChangingWrapperFactory())
-                .SwallowExceptionsInner(ex => ex.Message == SwallowThis)
-                .Build<string, string>(Guid.NewGuid().ToString());
+            ILocalCache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => true)
+                    .WithWrapper(new LocalCacheExceptionChangingWrapperFactory())
+                    .SwallowExceptionsInner(ex => ex.Message == SwallowThis)
+                    .Build<string, string>(Guid.NewGuid().ToString());
+            }
 
             if (shouldBeSwallowed)
             {

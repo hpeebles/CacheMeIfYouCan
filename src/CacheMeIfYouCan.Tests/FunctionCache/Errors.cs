@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class Errors : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class Errors
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public Errors(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task OnExceptionIsTriggered()
         {
@@ -19,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -55,7 +62,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -84,7 +91,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -114,7 +121,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => x.Equals("error!"));
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -164,7 +171,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromMilliseconds(10), x => count++ % 4 == 2);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
@@ -190,7 +197,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()

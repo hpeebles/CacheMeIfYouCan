@@ -7,8 +7,16 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
-    public class CacheFactoryPresets : CacheTestBase
+    [Collection(TestCollections.FunctionCache)]
+    public class CacheFactoryPresets
     {
+        private readonly CacheSetupLock _setupLock;
+
+        public CacheFactoryPresets(CacheSetupLock setupLock)
+        {
+            _setupLock = setupLock;
+        }
+
         [Fact]
         public async Task ValidIdSucceeds()
         {
@@ -18,7 +26,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 var cacheFactory = new TestCacheFactory()
                     .OnGetResult(results.Add);
@@ -47,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 var cacheFactory = new TestCacheFactory()
                     .OnGetResult(results.Add);
@@ -71,7 +79,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         public void InvalidIdFails()
         {
             Func<string, Task<string>> echo = new Echo();
-            using (EnterSetup(false))
+            using (_setupLock.Enter())
             {
                 Assert.Throws<Exception>(() => echo
                     .Cached()
@@ -92,7 +100,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 var cacheFactoryInt = new TestCacheFactory().OnGetResult(resultsInt.Add);
                 var cacheFactoryEnum = new TestCacheFactory().OnGetResult(resultsEnum.Add);
@@ -135,7 +143,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 var shouldRemain = new TestCacheFactory().OnGetResult(shouldBePopulated.Add);
                 var shouldBeRemoved = new TestLocalCacheFactory().OnGetResult(shouldBeEmpty.Add);
@@ -169,7 +177,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             Func<string, Task<string>> echo = new Echo();
             Func<string, Task<string>> cachedEcho;
-            using (EnterSetup(true))
+            using (_setupLock.Enter(true))
             {
                 var shouldRemain = new TestLocalCacheFactory().OnGetResult(shouldBePopulated.Add);
                 var shouldBeRemoved = new TestCacheFactory().OnGetResult(shouldBeEmpty.Add);
