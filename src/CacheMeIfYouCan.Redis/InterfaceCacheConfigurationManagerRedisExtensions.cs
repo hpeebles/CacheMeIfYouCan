@@ -7,15 +7,19 @@ namespace CacheMeIfYouCan.Redis
     {
         public static CachedProxyConfigurationManager<T> WithRedis<T>(
             this CachedProxyConfigurationManager<T> configManager,
-            Action<RedisCacheFactoryConfig> configAction)
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null)
         {
             var config = new RedisCacheFactoryConfig();
 
-            configAction(config);
+            redisConfigAction(config);
             
-            configManager.WithDistributedCacheFactory(new RedisCacheFactory(config), config.KeySpacePrefixFunc);
+            IDistributedCacheFactory cacheFactory = new RedisCacheFactory(config);
+
+            if (cacheConfigAction != null)
+                cacheFactory = cacheConfigAction(cacheFactory);
             
-            return configManager;
+            return configManager.WithDistributedCacheFactory(cacheFactory, config.KeySpacePrefixFunc);
         }
     }
 }
