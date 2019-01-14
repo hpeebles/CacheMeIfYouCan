@@ -32,15 +32,12 @@ namespace CacheMeIfYouCan.Cron.Tests
 
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            var expectedInterval = TimeSpan.FromSeconds(intervalSeconds) - funcDuration;
+            var expectedCount = 10 / intervalSeconds;
             
-            foreach (var result in refreshResults.Skip(2))
-            {
-                Assert.InRange(
-                    result.Start - result.LastRefreshAttempt,
-                    expectedInterval - TimeSpan.FromMilliseconds(500),
-                    expectedInterval + TimeSpan.FromMilliseconds(500));
-            }
+            Assert.InRange(refreshResults.Count, expectedCount - 1, expectedCount + 1);
+            
+            foreach (var result in refreshResults.Skip(1))
+                Assert.NotInRange(result.Start.Millisecond, 200, 950);
         }
     }
 }
