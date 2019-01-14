@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 Assert.InRange(
                     result.Start - result.LastRefreshAttempt,
                     TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1),
-                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount));
+                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 0.9));
             }
         }
     }

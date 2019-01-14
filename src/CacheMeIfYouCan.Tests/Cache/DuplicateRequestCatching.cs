@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             IDistributedCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(5))
                     .WithDuplicateRequestCatching()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             IDistributedCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(5))
                     .WithDuplicateRequestCatching()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
