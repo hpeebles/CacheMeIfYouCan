@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,12 +23,12 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task DuplicatesAreCaught_Single()
         {
-            var results = new List<CacheGetResult>();
+            var results = new ConcurrentBag<CacheGetResult>();
 
             IDistributedCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestCacheFactory(TimeSpan.FromSeconds(5))
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
                     .WithDuplicateRequestCatching()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
@@ -58,12 +59,12 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task DuplicatesAreCaught_Multi()
         {
-            var results = new List<CacheGetResult>();
+            var results = new ConcurrentBag<CacheGetResult>();
 
             IDistributedCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestCacheFactory(TimeSpan.FromSeconds(5))
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
                     .WithDuplicateRequestCatching()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
