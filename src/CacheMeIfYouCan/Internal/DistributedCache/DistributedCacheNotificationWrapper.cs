@@ -116,7 +116,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
             finally
             {
-                _onCacheGetResult(new CacheGetResult<TK, TV>(
+                _onCacheGetResult?.Invoke(new CacheGetResult<TK, TV>(
                     CacheName,
                     CacheType,
                     results,

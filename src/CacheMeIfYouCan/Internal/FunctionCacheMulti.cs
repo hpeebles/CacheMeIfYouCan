@@ -302,7 +302,7 @@ namespace CacheMeIfYouCan.Internal
             return results;
         }
 
-        private IEnumerable<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
+        private IList<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
         {
             var message = _continueOnException
                 ? "Unable to get value(s). Default being returned"
@@ -324,8 +324,9 @@ namespace CacheMeIfYouCan.Internal
                 ? default
                 : _defaultValueFactory();
             
-            foreach (var key in keys)
-                yield return new FunctionCacheGetResultInner<TK, TV>(key, defaultValue, Outcome.Error, null);
+            return keys
+                .Select(k => new FunctionCacheGetResultInner<TK, TV>(k, defaultValue, Outcome.Error, null))
+                .ToArray();
         }
 
         private bool ShouldFetchEarly(TimeSpan timeToLive)

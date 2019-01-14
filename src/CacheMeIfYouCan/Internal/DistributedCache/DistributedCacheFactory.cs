@@ -296,7 +296,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
         {
-            var cacheConfig = new DistributedCacheConfig<TK, TV>
+            var cacheConfig = new DistributedCacheConfig<TK, TV>(config.CacheName)
             {
                 KeyspacePrefix = config.KeyspacePrefix,
                 KeyDeserializer = _keyDeserializer ?? config.KeyDeserializer,
