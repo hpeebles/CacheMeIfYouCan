@@ -232,9 +232,9 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 
                 await cachedEcho(keys);
                 
-                Assert.Equal(keys.Length, mostRecentResult.Results.Count());
+                Assert.Equal(keys.Length, mostRecentResult.Results.Count);
                 Assert.Equal(Outcome.Fetch, mostRecentResult.Results.Last().Outcome);
-                Assert.All(mostRecentResult.Results.SkipLast(1), x => Assert.Equal(Outcome.FromCache, x.Outcome));
+                Assert.All(mostRecentResult.Results.Take(mostRecentResult.Results.Count - 1), x => Assert.Equal(Outcome.FromCache, x.Outcome));
 
                 Assert.Single(mostRecentFetch.Results);
                 Assert.Equal(i.ToString(), mostRecentFetch.Results.Single().KeyString);

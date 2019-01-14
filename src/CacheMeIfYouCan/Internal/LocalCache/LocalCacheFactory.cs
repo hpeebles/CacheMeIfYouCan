@@ -244,6 +244,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
     {
         private readonly ILocalCache<TK, TV> _cache;
         private readonly Func<TK, string> _keySerializer;
+        private readonly Task _completedTask = Task.FromResult<object>(null);
 
         public LocalCacheToCacheAdapter(ILocalCache<TK, TV> cache, Func<TK, string> keySerializer)
         {
@@ -272,7 +273,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         {
             _cache.Set(BuildKey(key), value, timeToLive);
             
-            return Task.CompletedTask;
+            return _completedTask;
         }
 
         public Task<IDictionary<TK, TV>> Get(ICollection<TK> keys)
@@ -292,7 +293,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             
             _cache.Set(forCache, timeToLive);
 
-            return Task.CompletedTask;
+            return _completedTask;
         }
 
         private Key<TK> BuildKey(TK key)

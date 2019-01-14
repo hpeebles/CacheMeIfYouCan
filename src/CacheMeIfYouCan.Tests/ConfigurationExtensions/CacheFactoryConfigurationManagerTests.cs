@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
 

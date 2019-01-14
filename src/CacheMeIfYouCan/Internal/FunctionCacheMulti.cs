@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -194,7 +193,11 @@ namespace CacheMeIfYouCan.Internal
                 
                 _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
                     Name,
+#if NET45
+                    results.Values.ToArray(),
+#else
                     results.Values,
+#endif
                     !error,
                     timestamp,
                     StopwatchHelper.GetDuration(stopwatchStart)));
