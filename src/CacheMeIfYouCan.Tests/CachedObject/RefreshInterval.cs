@@ -91,7 +91,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             await date.Initialize();
 
-            await Task.Delay(TimeSpan.FromSeconds(12));
+            await Task.Delay(TimeSpan.FromSeconds(14));
             
             date.Dispose();
             
