@@ -10,8 +10,8 @@ namespace CacheMeIfYouCan.Tests
         public IDisposable Enter(bool willWriteToDefaultSettings = false)
         {
             return willWriteToDefaultSettings
-                ? DefaultSettingsLock.CreateReadLock()
-                : DefaultSettingsLock.CreateWriteLock();
+                ? DefaultSettingsLock.CreateWriteLock()
+                : DefaultSettingsLock.CreateReadLock();
         }
     }
 }

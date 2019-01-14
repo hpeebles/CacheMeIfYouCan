@@ -4,9 +4,9 @@ namespace CacheMeIfYouCan.Internal
 {
     internal readonly struct CacheFactoryPresetKey : IEquatable<CacheFactoryPresetKey>
     {
-        public CacheFactoryPresetKey(Type enumType, int intValue)
+        public CacheFactoryPresetKey(Type type, int intValue)
         {
-            Type = enumType;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
             Value = intValue;
         }
 

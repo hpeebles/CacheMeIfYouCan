@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -127,7 +128,13 @@ namespace CacheMeIfYouCan.Configuration
         private CachedProxyConfigurationManager<T> WithCacheFactoryPresetImpl(CacheFactoryPresetKey key)
         {
             if (!DefaultSettings.Cache.CacheFactoryPresets.TryGetValue(key, out var cacheFactories))
-                throw new Exception("No cache factory preset found. " + key);
+            {
+                var existingKeys = String.Join(
+                    ", ",
+                    DefaultSettings.Cache.CacheFactoryPresets.Keys.Select(k => k.ToString()));
+                
+                throw new Exception($"Cache factory preset not found. Requested Key: {key}. Existing Keys: {existingKeys}");
+            }
 
             if (cacheFactories.local == null)
                 SkipLocalCache();
