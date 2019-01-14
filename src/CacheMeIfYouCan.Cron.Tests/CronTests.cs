@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Cron.Tests
 
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            var expectedCount = 10 / intervalSeconds;
+            var expectedCount = (10 / intervalSeconds) + 1;
             
             Assert.InRange(refreshResults.Count, expectedCount - 1, expectedCount + 1);
             
