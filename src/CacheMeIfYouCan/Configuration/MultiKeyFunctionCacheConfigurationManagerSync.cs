@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
             
             PendingRequestsCounterContainer.Add(functionCache);
             
-            return k => (TRes)functionCache.GetMulti(k).GetAwaiter().GetResult();
+            return k => (TRes)Task.Run(() => functionCache.GetMulti(k)).GetAwaiter().GetResult();
         }
     }
 }

@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
             
-            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(800));
+            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(900));
             Assert.True(max > TimeSpan.FromMilliseconds(1200));
         }
 

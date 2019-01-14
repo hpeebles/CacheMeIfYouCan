@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Internal
                     return _value;
                 
                 if (_state == State.PendingInitialization)
-                    Initialize().GetAwaiter().GetResult();
+                    Task.Run(Initialize).GetAwaiter().GetResult();
                 
                 if (_state == State.Disposed)
                     throw new ObjectDisposedException(nameof(CachedObject<T>));

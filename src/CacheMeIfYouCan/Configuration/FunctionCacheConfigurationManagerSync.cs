@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Configuration
         {
             var functionCache = BuildFunctionCacheSingle();
 
-            _cachedFunc = k => functionCache.Get(k).GetAwaiter().GetResult();
+            _cachedFunc = k => Task.Run(() => functionCache.Get(k)).GetAwaiter().GetResult();
             
             PendingRequestsCounterContainer.Add(functionCache);
             
