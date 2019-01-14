@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
             
             Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(800));
-            Assert.InRange(max, TimeSpan.FromMilliseconds(1200), TimeSpan.FromMilliseconds(2000));
+            Assert.InRange(max, TimeSpan.FromMilliseconds(1200), TimeSpan.FromMilliseconds(2500));
         }
 
         [Fact]
