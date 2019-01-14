@@ -19,7 +19,9 @@ namespace CacheMeIfYouCan.Cron
 
             TimeSpan GetNextInterval()
             {
-                return schedule.GetNextOccurrence(DateTime.UtcNow) - DateTime.UtcNow;
+                var now = DateTime.UtcNow;
+                
+                return schedule.GetNextOccurrence(now) - now;
             }
 
             return config
