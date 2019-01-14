@@ -100,11 +100,12 @@ namespace CacheMeIfYouCan.Configuration
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
-                    var key = new MethodInfoKey(functionName, typeof(TK).FullName);
+                    var key = new MethodInfoKey(interfaceConfig.InterfaceType, proxyFunctionInfo.MethodInfo);
 
-                    if (interfaceConfig.FunctionCacheConfigActions.TryGetValue(key, out var actionObj) &&
-                        actionObj is Action<TConfig> action)
+                    if (interfaceConfig.FunctionCacheConfigActions.TryGetValue(key, out var actionObj))
                     {
+                        var action = (Action<TConfig>)actionObj;
+                        
                         action((TConfig)this);
                     }
                 }

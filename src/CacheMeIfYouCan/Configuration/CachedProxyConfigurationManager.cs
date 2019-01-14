@@ -203,6 +203,49 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
+        public CachedProxyConfigurationManager<T> ConfigureFor<TK, TV>(
+            Expression<Func<T, Func<TK, TV>>> expression,
+            Action<FunctionCacheConfigurationManagerSync<TK, TV>> configAction)
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TReq, TRes, TK, TV>(
+            Expression<Func<T, Func<TReq, Task<TRes>>>> expression,
+            Action<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>> configAction)
+            where TReq : IEnumerable<TK>
+            where TRes : IDictionary<TK, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+
+        public CachedProxyConfigurationManager<T> ConfigureFor<TReq, TRes, TK, TV>(
+            Expression<Func<T, Func<TReq, TRes, TK, TV>>> expression,
+            Action<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>> configAction)
+            where TReq : IEnumerable<TK>
+            where TRes : IDictionary<TK, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
         public T Build()
         {
             var config = new CachedProxyConfig(
