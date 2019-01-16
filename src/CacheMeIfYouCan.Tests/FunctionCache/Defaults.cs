@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnResultAction(x =>
+                DefaultSettings.Cache.OnResult(x =>
                 {
                     if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
                         results.Add(x);
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultSettings.Cache.WithOnResultAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnResult(null, AdditionBehaviour.Overwrite);
             }
 
             for (var i = 1; i < 10; i++)
@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnFetchAction(x =>
+                DefaultSettings.Cache.OnFetch(x =>
                 {
                     if (x.Results.FirstOrDefault()?.KeyString.StartsWith(KeyPrefix) ?? false)
                         results.Add(x);
@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultSettings.Cache.WithOnFetchAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnFetch(null, AdditionBehaviour.Overwrite);
             }
 
             for (var i = 1; i < 10; i++)
@@ -92,7 +92,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnExceptionAction(x =>
+                DefaultSettings.Cache.OnException(x =>
                 {
                     if (x.Keys.FirstOrDefault()?.StartsWith(KeyPrefix) ?? false)
                         errors.Add(x);
@@ -102,7 +102,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultSettings.Cache.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnException(null, AdditionBehaviour.Overwrite);
             }
 
             var previousErrorCount = 0;
@@ -135,7 +135,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnCacheGetAction(x =>
+                DefaultSettings.Cache.OnCacheGet(x =>
                 {
                     if (x.Hits.Contains(key) || x.Misses.Contains(key))
                         results.Add(x);
@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultSettings.Cache.WithOnCacheGetAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnCacheGet(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -181,7 +181,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnCacheSetAction(x =>
+                DefaultSettings.Cache.OnCacheSet(x =>
                 {
                     if (x.Keys.Contains(key))
                         results.Add(x);
@@ -191,7 +191,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .Build();
 
-                DefaultSettings.Cache.WithOnCacheSetAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnCacheSet(null, AdditionBehaviour.Overwrite);
             }
 
             await cachedEcho(key);
@@ -218,7 +218,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithOnCacheExceptionAction(x =>
+                DefaultSettings.Cache.OnCacheException(x =>
                 {
                     if (x.Keys.Contains(key))
                         errors.Add(x);
@@ -229,7 +229,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .WithDistributedCache(new TestCache<string, string>(x => x, x => x, error: () => true))
                     .Build();
 
-                DefaultSettings.Cache.WithOnExceptionAction(null, AdditionBehaviour.Overwrite);
+                DefaultSettings.Cache.OnException(null, AdditionBehaviour.Overwrite);
             }
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));

@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                    .OnRefreshResult(r =>
+                    .OnRefresh(r =>
                     {
                         results.Add(r);
                         Assert.InRange(
@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                         return DateTime.UtcNow;
                     })
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                    .OnRefreshResult(refreshResults.Add)
+                    .OnRefresh(refreshResults.Add)
                     .Build();
             }
 

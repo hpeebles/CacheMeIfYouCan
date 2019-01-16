@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Notifications
         private protected CachedObjectRefreshResult(
             DateTime start,
             TimeSpan duration,
-            Exception exception,
+            CachedObjectRefreshException exception,
             int refreshAttemptCount,
             int successfulRefreshCount,
             DateTime lastRefreshAttempt,
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Notifications
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public bool Success { get; }
-        public Exception Exception { get; }
+        public CachedObjectRefreshException Exception { get; }
         public int RefreshAttemptCount { get; }
         public int SuccessfulRefreshCount { get; }
         public DateTime LastRefreshAttempt { get; }
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Notifications
         internal CachedObjectRefreshResult(
             DateTime start,
             TimeSpan duration,
-            Exception exception,
+            CachedObjectRefreshException<T> exception,
             T newValue,
             int refreshAttemptCount,
             int successfulRefreshCount,

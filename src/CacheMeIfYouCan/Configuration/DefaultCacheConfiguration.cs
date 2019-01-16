@@ -13,12 +13,12 @@ namespace CacheMeIfYouCan.Configuration
         internal bool DisableCache { get; private set; }
         internal ILocalCacheFactory LocalCacheFactory { get; private set; }
         internal IDistributedCacheFactory DistributedCacheFactory { get; private set; }
-        internal Action<FunctionCacheGetResult> OnResult { get; private set; }
-        internal Action<FunctionCacheFetchResult> OnFetch { get; private set; }
-        internal Action<FunctionCacheException> OnException { get; private set; }
-        internal Action<CacheGetResult> OnCacheGet { get; private set; }
-        internal Action<CacheSetResult> OnCacheSet { get; private set; }
-        internal Action<CacheException> OnCacheException { get; private set; }
+        internal Action<FunctionCacheGetResult> OnResultAction { get; private set; }
+        internal Action<FunctionCacheFetchResult> OnFetchAction { get; private set; }
+        internal Action<FunctionCacheException> OnExceptionAction { get; private set; }
+        internal Action<CacheGetResult> OnCacheGetAction { get; private set; }
+        internal Action<CacheSetResult> OnCacheSetAction { get; private set; }
+        internal Action<CacheException> OnCacheExceptionAction { get; private set; }
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         
@@ -55,51 +55,51 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnResultAction(
+        public DefaultCacheConfiguration OnResult(
             Action<FunctionCacheGetResult> onResult,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnResult = ActionsHelper.Combine(OnResult, onResult, behaviour);
+            OnResultAction = ActionsHelper.Combine(OnResultAction, onResult, behaviour);
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnFetchAction(
+        public DefaultCacheConfiguration OnFetch(
             Action<FunctionCacheFetchResult> onFetch,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnFetch = ActionsHelper.Combine(OnFetch, onFetch, behaviour);
+            OnFetchAction = ActionsHelper.Combine(OnFetchAction, onFetch, behaviour);
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnExceptionAction(
+        public DefaultCacheConfiguration OnException(
             Action<FunctionCacheException> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnException = ActionsHelper.Combine(OnException, onException, behaviour);
+            OnExceptionAction = ActionsHelper.Combine(OnExceptionAction, onException, behaviour);
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheGetAction(
+        public DefaultCacheConfiguration OnCacheGet(
             Action<CacheGetResult> onCacheGet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheGet = ActionsHelper.Combine(OnCacheGet, onCacheGet, behaviour);
+            OnCacheGetAction = ActionsHelper.Combine(OnCacheGetAction, onCacheGet, behaviour);
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheSetAction(
+        public DefaultCacheConfiguration OnCacheSet(
             Action<CacheSetResult> onCacheSet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheSet = ActionsHelper.Combine(OnCacheSet, onCacheSet, behaviour);
+            OnCacheSetAction = ActionsHelper.Combine(OnCacheSetAction, onCacheSet, behaviour);
             return this;
         }
 
-        public DefaultCacheConfiguration WithOnCacheExceptionAction(
+        public DefaultCacheConfiguration OnCacheException(
             Action<CacheException> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnCacheException = ActionsHelper.Combine(OnCacheException, onCacheException, behaviour);
+            OnCacheExceptionAction = ActionsHelper.Combine(OnCacheExceptionAction, onCacheException, behaviour);
             return this;
         }
 

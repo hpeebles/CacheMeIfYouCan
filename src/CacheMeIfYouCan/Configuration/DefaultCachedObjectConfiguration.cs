@@ -7,8 +7,8 @@ namespace CacheMeIfYouCan.Configuration
     {
         internal Func<CachedObjectRefreshResult, TimeSpan> RefreshIntervalFunc { get; private set; }
         internal double? JitterPercentage { get; private set; }
-        internal Action<CachedObjectRefreshResult> OnRefreshResult { get; private set; }
-        internal Action<Exception> OnException { get; private set; }
+        internal Action<CachedObjectRefreshResult> OnRefreshAction { get; private set; }
+        internal Action<CachedObjectRefreshException> OnExceptionAction { get; private set; }
 
         public DefaultCachedObjectConfiguration WithRefreshInterval(TimeSpan refreshInterval)
         {
@@ -34,15 +34,15 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCachedObjectConfiguration WithOnRefreshResultAction(Action<CachedObjectRefreshResult> onRefreshResult)
+        public DefaultCachedObjectConfiguration OnRefresh(Action<CachedObjectRefreshResult> onRefresh)
         {
-            OnRefreshResult = onRefreshResult;
+            OnRefreshAction = onRefresh;
             return this;
         }
 
-        public DefaultCachedObjectConfiguration WithOnExceptionAction(Action<Exception> onException)
+        public DefaultCachedObjectConfiguration OnException(Action<CachedObjectRefreshException> onException)
         {
-            OnException = onException;
+            OnExceptionAction = onException;
             return this;
         }
     }

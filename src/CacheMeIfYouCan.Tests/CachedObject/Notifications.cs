@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                    .OnRefreshResult(refreshResults.Add)
+                    .OnRefresh(refreshResults.Add)
                     .Build();
             }
 

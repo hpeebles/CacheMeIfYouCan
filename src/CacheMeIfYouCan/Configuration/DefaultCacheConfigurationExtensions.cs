@@ -40,52 +40,52 @@ namespace CacheMeIfYouCan.Configuration
             return config.CreateCacheFactoryPreset(id, null, cacheFactory);
         }
         
-        public static DefaultCacheConfiguration WithOnResultObservable(
+        public static DefaultCacheConfiguration OnResultObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<FunctionCacheGetResult>> onResult,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onResult, config.WithOnResultAction, behaviour);
+            return ObservablesHelper.SetupObservable(onResult, config.OnResult, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnFetchObservable(
+        public static DefaultCacheConfiguration OnFetchObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<FunctionCacheFetchResult>> onFetch,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onFetch, config.WithOnFetchAction, behaviour);
+            return ObservablesHelper.SetupObservable(onFetch, config.OnFetch, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnExceptionObservable(
+        public static DefaultCacheConfiguration OnExceptionObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<FunctionCacheException>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onException, config.WithOnExceptionAction, behaviour);
+            return ObservablesHelper.SetupObservable(onException, config.OnException, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnCacheGetObservable(
+        public static DefaultCacheConfiguration OnCacheGetObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<CacheGetResult>> onCacheGet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheGet, config.WithOnCacheGetAction, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheGet, config.OnCacheGet, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnCacheSetObservable(
+        public static DefaultCacheConfiguration OnCacheSetObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<CacheSetResult>> onCacheSet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheSet, config.WithOnCacheSetAction, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheSet, config.OnCacheSet, behaviour);
         }
         
-        public static DefaultCacheConfiguration WithOnCacheExceptionObservable(
+        public static DefaultCacheConfiguration OnCacheExceptionObservable(
             this DefaultCacheConfiguration config,
             Action<IObservable<CacheException>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            return ObservablesHelper.SetupObservable(onCacheException, config.WithOnCacheExceptionAction, behaviour);
+            return ObservablesHelper.SetupObservable(onCacheException, config.OnCacheException, behaviour);
         }
     }
 }

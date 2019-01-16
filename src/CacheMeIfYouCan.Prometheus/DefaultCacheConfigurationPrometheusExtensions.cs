@@ -20,19 +20,19 @@ namespace CacheMeIfYouCan.Prometheus
                 RuntimeHelpers.RunClassConstructor(typeof(PendingRequests).TypeHandle);
             
             if (functionCacheMetrics.HasFlag(FunctionCacheMetrics.GetResult))
-                config.WithOnResultAction(FunctionCache_GetResult.OnResult);
+                config.OnResult(FunctionCache_GetResult.OnResult);
 
             if (functionCacheMetrics.HasFlag(FunctionCacheMetrics.Fetch))
-                config.WithOnFetchAction(FunctionCache_Fetch.OnFetch);
+                config.OnFetch(FunctionCache_Fetch.OnFetch);
             
             if (cacheMetrics.HasFlag(CacheMetrics.Get))
-                config.WithOnCacheGetAction(Cache_Get.OnCacheGet);
+                config.OnCacheGet(Cache_Get.OnCacheGet);
             
             if (cacheMetrics.HasFlag(CacheMetrics.Set))
-                config.WithOnCacheSetAction(Cache_Set.OnCacheSet);
+                config.OnCacheSet(Cache_Set.OnCacheSet);
 
             if (cacheMetrics.HasFlag(CacheMetrics.Exception))
-                config.WithOnCacheExceptionAction(Cache_Exception.OnCacheException);
+                config.OnCacheException(Cache_Exception.OnCacheException);
 
             return config;
         }

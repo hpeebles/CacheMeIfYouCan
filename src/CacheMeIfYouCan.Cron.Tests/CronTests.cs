@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Cron.Tests
                     return DateTime.UtcNow;
                 })
                 .WithRefreshSchedule(cronExpression, true)
-                .OnRefreshResult(refreshResults.Add)
+                .OnRefresh(refreshResults.Add)
                 .Build();
 
             await date.Initialize();

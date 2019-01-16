@@ -115,12 +115,12 @@ namespace CacheMeIfYouCan.Configuration
             }
             else
             {
-                _onResult = DefaultSettings.Cache.OnResult;
-                _onFetch = DefaultSettings.Cache.OnFetch;
-                _onException = DefaultSettings.Cache.OnException;
-                _onCacheGet = DefaultSettings.Cache.OnCacheGet;
-                _onCacheSet = DefaultSettings.Cache.OnCacheSet;
-                _onCacheException = DefaultSettings.Cache.OnCacheException;
+                _onResult = DefaultSettings.Cache.OnResultAction;
+                _onFetch = DefaultSettings.Cache.OnFetchAction;
+                _onException = DefaultSettings.Cache.OnExceptionAction;
+                _onCacheGet = DefaultSettings.Cache.OnCacheGetAction;
+                _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
+                _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
             }
         }
 

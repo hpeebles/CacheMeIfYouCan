@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<Task<T>> _getValueFunc;
         private readonly Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
         private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
-        private readonly Action<Exception> _onException;
+        private readonly Action<CachedObjectRefreshException<T>> _onException;
         private readonly SemaphoreSlim _semaphore;
         private int _refreshAttemptCount;
         private int _successfulRefreshCount;
@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Internal
             Func<Task<T>> getValueFunc,
             Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc,
             Action<CachedObjectRefreshResult<T>> onRefresh,
-            Action<Exception> onException)
+            Action<CachedObjectRefreshException<T>> onException)
         {
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
             _refreshIntervalFunc = refreshIntervalFunc ?? throw new ArgumentNullException(nameof(refreshIntervalFunc));
@@ -115,7 +115,7 @@ namespace CacheMeIfYouCan.Internal
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            Exception exception = null;
+            CachedObjectRefreshException<T> exception = null;
             T newValue;
 
             try
@@ -126,10 +126,10 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                exception = ex;
+                exception = new CachedObjectRefreshException<T>(ex);
                 newValue = default;
-
-                _onException?.Invoke(ex);
+                
+                _onException?.Invoke(exception);
             }
             finally
             {

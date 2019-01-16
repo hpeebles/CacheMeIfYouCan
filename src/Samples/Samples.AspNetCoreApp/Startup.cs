@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using CacheMeIfYouCan;
 using CacheMeIfYouCan.Caches;
@@ -27,7 +26,7 @@ namespace Samples.AspNetCoreApp
             DefaultSettings
                 .CachedObject
                 .WithRefreshInterval(TimeSpan.FromMinutes(5))
-                .WithOnExceptionAction(ex => logger.LogError(ex, "CachedObject exception"))
+                .OnException(ex => logger.LogError(ex, "CachedObject exception"))
                 .WithJitterPercentage(10);
             
             // Set up the default cache settings
