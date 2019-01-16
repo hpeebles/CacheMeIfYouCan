@@ -43,5 +43,10 @@ namespace CacheMeIfYouCan.Polly
         {
             return _policy.ExecuteAsync(() => _cache.Set(values, timeToLive));
         }
+
+        public Task Remove(Key<TK> key)
+        {
+            return _policy.ExecuteAsync(() => _cache.Remove(key));
+        }
     }
 }

@@ -56,6 +56,11 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return _cache.Set(values, timeToLive);
         }
 
+        public Task Remove(Key<TK> key)
+        {
+            return _cache.Remove(key);
+        }
+
         private async Task<IDictionary<Key<TK>, GetFromCacheResult<TK, TV>>> GetMultiImpl(ICollection<Key<TK>> keys)
         {
             var results = await _cache.Get(keys);

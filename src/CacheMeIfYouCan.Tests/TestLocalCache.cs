@@ -80,6 +80,12 @@ namespace CacheMeIfYouCan.Tests
 
         public void Remove(Key<TK> key)
         {
+            if (_delay.HasValue)
+                Task.Delay(_delay.Value).Wait();
+
+            if (_error?.Invoke() ?? false)
+                throw new Exception();
+            
             Values.TryRemove(key, out _);
         }
     }

@@ -12,5 +12,6 @@ namespace CacheMeIfYouCan.Internal
         ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive);
         ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys);
         ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);
+        ValueTask Remove(Key<TK> key);
     }
 }

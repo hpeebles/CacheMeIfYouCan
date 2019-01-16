@@ -159,5 +159,10 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }
+
+        public Task Remove(Key<TK> key)
+        {
+            return _cache.Remove(key);
+        }
     }
 }

@@ -83,5 +83,12 @@ namespace CacheMeIfYouCan.Internal
 
             await _distributedCache.Set(values, timeToLive);
         }
+
+        public async ValueTask Remove(Key<TK> key)
+        {
+            _localCache.Remove(key);
+
+            await _distributedCache.Remove(key);
+        }
     }
 }

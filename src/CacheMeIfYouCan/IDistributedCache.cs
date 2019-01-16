@@ -50,5 +50,11 @@ namespace CacheMeIfYouCan
         /// <param name="values">The collection of key/value pairs to store in the cache</param>
         /// <param name="timeToLive">The time to live for each newly stored key</param>
         Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Removes a single key from the cache
+        /// </summary>
+        /// <param name="key">The key to remove from the cache</param>
+        Task Remove(Key<TK> key);
     }
 }

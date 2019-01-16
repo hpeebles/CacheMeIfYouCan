@@ -42,6 +42,11 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return _cache.Set(values, timeToLive);
         }
 
+        public Task Remove(Key<TK> key)
+        {
+            return _cache.Remove(key);
+        }
+
         public IObservable<Key<TK>> KeyChanges => _notifyKeyChanges.KeyChanges;
     }
 }

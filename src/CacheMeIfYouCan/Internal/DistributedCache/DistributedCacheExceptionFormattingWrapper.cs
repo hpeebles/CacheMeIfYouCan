@@ -97,5 +97,10 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     ex);
             }
         }
+
+        public Task Remove(Key<TK> key)
+        {
+            return _cache.Remove(key);
+        }
     }
 }

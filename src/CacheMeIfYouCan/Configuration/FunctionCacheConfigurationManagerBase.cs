@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
@@ -33,6 +34,7 @@ namespace CacheMeIfYouCan.Configuration
         private IDistributedCacheFactory<TK, TV> _distributedCacheFactory;
         private string _keyspacePrefix;
         private Func<TV> _defaultValueFactory;
+        private IObservable<TK> _keysToRemoveObservable;
 
         internal FunctionCacheConfigurationManagerBase(
             Func<TK, Task<TV>> inputFuncSingle,
@@ -124,12 +126,14 @@ namespace CacheMeIfYouCan.Configuration
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
-            _timeToLiveFactory = (k, v) => timeToLive;
+            _timeToLive = timeToLive;
+            _timeToLiveFactory = null;
             return (TConfig)this;
         }
         
         protected TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
         {
+            _timeToLive = null;
             _timeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
         }
@@ -342,6 +346,12 @@ namespace CacheMeIfYouCan.Configuration
             _onCacheException = ActionsHelper.Combine(_onCacheException, onCacheException, behaviour);
             return (TConfig)this;
         }
+
+        public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable)
+        {
+            _keysToRemoveObservable = keysToRemoveObservable;
+            return (TConfig)this;
+        }
         
         internal FunctionCacheSingle<TK, TV> BuildFunctionCacheSingle()
         {
@@ -361,12 +371,22 @@ namespace CacheMeIfYouCan.Configuration
                 timeToLiveFactory = (k, v) => timeToLive;
             }
 
+            var keySerializer = _keySerializer ?? GetKeySerializer();
+
+            if (_keysToRemoveObservable != null)
+            {
+                _keysToRemoveObservable
+                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
+                    .Retry()
+                    .Subscribe();
+            }
+            
             return new FunctionCacheSingle<TK, TV>(
                 _inputFuncSingle,
                 _functionName,
                 cache,
                 timeToLiveFactory,
-                _keySerializer ?? GetKeySerializer(),
+                keySerializer,
                 _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
@@ -382,12 +402,22 @@ namespace CacheMeIfYouCan.Configuration
 
             var cache = BuildCache(out var keyComparer);
             
+            var keySerializer = _keySerializer ?? GetKeySerializer();
+
+            if (_keysToRemoveObservable != null)
+            {
+                _keysToRemoveObservable
+                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
+                    .Retry()
+                    .Subscribe();
+            }
+            
             return new FunctionCacheMulti<TK, TV>(
                 _inputFuncMulti,
                 _functionName,
                 cache,
                 _timeToLive ?? DefaultSettings.Cache.TimeToLive,
-                _keySerializer ?? GetKeySerializer(),
+                keySerializer,
                 _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,

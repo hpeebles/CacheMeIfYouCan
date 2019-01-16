@@ -42,5 +42,12 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             
             return new ValueTask();
         }
+
+        public ValueTask Remove(Key<TK> key)
+        {
+            _cache.Remove(key);
+            
+            return new ValueTask();
+        }
     }
 }

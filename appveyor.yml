@@ -29,7 +29,7 @@ after_deploy:
 - ps: >-
     git config --global credential.helper store
 
-    ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+    Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
 
     git config --global user.email "hamishpeebles@gmail.com"
 

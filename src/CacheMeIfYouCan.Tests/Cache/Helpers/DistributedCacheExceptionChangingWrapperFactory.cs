@@ -76,6 +76,18 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                     throw new TestException(String.Join(",", values.Select(kv => kv.Key.AsStringSafe)), ex);
                 }
             }
+            
+            public async Task Remove(Key<TK> key)
+            {
+                try
+                {
+                    await _cache.Remove(key);
+                }
+                catch (Exception ex)
+                {
+                    throw new TestException(key.AsStringSafe, ex);
+                }
+            }
         }
     }
 }
