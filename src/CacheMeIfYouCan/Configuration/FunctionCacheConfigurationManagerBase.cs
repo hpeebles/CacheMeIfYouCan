@@ -12,10 +12,10 @@ namespace CacheMeIfYouCan.Configuration
     public abstract class FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private readonly Func<TK, Task<TV>> _inputFuncSingle;
-        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFuncMulti;
+        private readonly Func<TK, Task<TV>> _singleKeyInputFunc;
+        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _enumerableKeyInputFunc;
         private readonly string _functionName;
-        private readonly bool _multiKey;
+        private readonly bool _enumerableKey;
         private TimeSpan? _timeToLive;
         private Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private bool? _earlyFetchEnabled;
@@ -37,25 +37,25 @@ namespace CacheMeIfYouCan.Configuration
         private IObservable<TK> _keysToRemoveObservable;
 
         internal FunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFuncSingle,
+            Func<TK, Task<TV>> inputFunc,
             string functionName,
             CachedProxyConfig interfaceConfig = null,
             CachedProxyFunctionInfo proxyFunctionInfo = null)
             : this(functionName, interfaceConfig, proxyFunctionInfo)
         {
-            _inputFuncSingle = inputFuncSingle;
-            _multiKey = false;
+            _singleKeyInputFunc = inputFunc;
+            _enumerableKey = false;
         }
         
         internal FunctionCacheConfigurationManagerBase(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFuncMulti,
+            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
             string functionName,
             CachedProxyConfig interfaceConfig = null,
             CachedProxyFunctionInfo proxyFunctionInfo = null)
             : this(functionName, interfaceConfig, proxyFunctionInfo)
         {
-            _inputFuncMulti = inputFuncMulti;
-            _multiKey = true;
+            _enumerableKeyInputFunc = inputFunc;
+            _enumerableKey = true;
         }
         
         private FunctionCacheConfigurationManagerBase(
@@ -353,10 +353,10 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        internal FunctionCacheSingle<TK, TV> BuildFunctionCacheSingle()
+        internal SingleKeyFunctionCache<TK, TV> BuildFunctionCacheSingle()
         {
-            if (_multiKey)
-                throw new Exception("You can't build a FunctionCacheSingle since your function is multi key");
+            if (_enumerableKey)
+                throw new Exception($"You can't build a {nameof(SingleKeyFunctionCache<TK, TV>)} since your function has an enumerable key");
 
             var cache = BuildCache(out var keyComparer);
 
@@ -381,8 +381,8 @@ namespace CacheMeIfYouCan.Configuration
                     .Subscribe();
             }
             
-            return new FunctionCacheSingle<TK, TV>(
-                _inputFuncSingle,
+            return new SingleKeyFunctionCache<TK, TV>(
+                _singleKeyInputFunc,
                 _functionName,
                 cache,
                 timeToLiveFactory,
@@ -395,10 +395,10 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer);
         }
         
-        internal FunctionCacheMulti<TK, TV> BuildFunctionCacheMulti(Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
+        internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction(Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
         {
-            if (!_multiKey)
-                throw new Exception("You can't build a FunctionCacheMulti since your function is single key");
+            if (!_enumerableKey)
+                throw new Exception($"You can't build a {nameof(EnumerableKeyFunctionCache<TK, TV>)} since your function is single key");
 
             var cache = BuildCache(out var keyComparer);
             
@@ -412,8 +412,8 @@ namespace CacheMeIfYouCan.Configuration
                     .Subscribe();
             }
             
-            return new FunctionCacheMulti<TK, TV>(
-                _inputFuncMulti,
+            return new EnumerableKeyFunctionCache<TK, TV>(
+                _enumerableKeyInputFunc,
                 _functionName,
                 cache,
                 _timeToLive ?? DefaultSettings.Cache.TimeToLive,

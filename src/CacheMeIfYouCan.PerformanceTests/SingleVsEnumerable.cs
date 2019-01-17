@@ -7,24 +7,24 @@ using CacheMeIfYouCan.Caches;
 
 namespace CacheMeIfYouCan.PerformanceTests
 {
-    public class SingleVsMulti<T>
+    public class SingleVsEnumerable<T>
     {
         private readonly IList<T> _keys;
         private readonly Func<T, Task<T>> _single;
-        private readonly Func<IList<T>, Task<Dictionary<T, T>>> _multi;
+        private readonly Func<IList<T>, Task<Dictionary<T, T>>> _enumerable;
         
-        public SingleVsMulti()
+        public SingleVsEnumerable()
         {
             _keys = KeyGenerator.Generate<T>(1000);
             _single = BuildSingle();
-            _multi = BuildMulti();
+            _enumerable = BuildEnumerable();
         }
 
         [Benchmark]
         public Task Single() => RunSingleTest(_single);
 
         [Benchmark]
-        public Task Multi() => RunMultiTest(_multi);
+        public Task Enumerable() => RunEnumerableTest(_enumerable);
 
         [Benchmark(Baseline = true)]
         public Task Baseline() => RunSingleTest(Task.FromResult);
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.PerformanceTests
                 await func(key);
         }
 
-        private async Task RunMultiTest(Func<IList<T>, Task<Dictionary<T, T>>> func)
+        private async Task RunEnumerableTest(Func<IList<T>, Task<Dictionary<T, T>>> func)
         {
             await func(_keys);
         }
@@ -51,9 +51,9 @@ namespace CacheMeIfYouCan.PerformanceTests
                 .Build();
         }
 
-        private static Func<IList<T>, Task<Dictionary<T, T>>> BuildMulti()
+        private static Func<IList<T>, Task<Dictionary<T, T>>> BuildEnumerable()
         {
-            Func<IList<T>, Task<Dictionary<T, T>>> func = DummyMultiFunc;
+            Func<IList<T>, Task<Dictionary<T, T>>> func = DummyEnumerableFunc;
             
             return func
                 .Cached<IList<T>, Dictionary<T, T>, T, T>()
@@ -67,7 +67,7 @@ namespace CacheMeIfYouCan.PerformanceTests
             return Task.FromResult(key);
         }
         
-        private static Task<Dictionary<T, T>> DummyMultiFunc(IList<T> keys)
+        private static Task<Dictionary<T, T>> DummyEnumerableFunc(IList<T> keys)
         {
             return Task.FromResult(keys.ToDictionary(k => k));
         }

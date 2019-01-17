@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal;
@@ -11,7 +9,6 @@ namespace CacheMeIfYouCan
 {
     public static class FunctionExtensions
     {
-        // SingleKey
         public static FunctionCacheConfigurationManager<TK, TV> Cached<TK, TV>(
             this Func<TK, Task<TV>> func)
         {
@@ -40,31 +37,30 @@ namespace CacheMeIfYouCan
             return new FunctionCacheConfigurationManagerSync<TK, TV>(func, cacheName);
         }
         
-        // MultiKey
-        public static MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
+        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
             this Func<TReq, Task<TRes>> func)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return new MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(
+            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(
                 func, BuildCacheName<TK, TV>());
         }
         
-        public static MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
+        public static EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
             this Func<TReq, TRes> func)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return new MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>(
+            return new EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>(
                 func, BuildCacheName<TK, TV>());
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> CachedAsync<TReq, TRes, TK, TV>(
+        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> CachedAsync<TReq, TRes, TK, TV>(
             this Func<TReq, TRes> func)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return new MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(
+            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(
                 func.ConvertToAsync(), BuildCacheName<TK, TV>());
         }
         

@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnResult(bool multiKey)
+        public async Task OnResult(bool isEnumerableKey)
         {
             var results = new List<FunctionCacheGetResult>();
             
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await proxy.MultiEcho(new[] { "123" });
             else
                 await proxy.StringToString("123");
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnFetch(bool multiKey)
+        public async Task OnFetch(bool isEnumerableKey)
         {
             var fetches = new List<FunctionCacheFetchResult>();
             
@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await proxy.MultiEcho(new[] { "123" });
             else
                 await proxy.StringToString("123");
@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnException(bool multiKey)
+        public async Task OnException(bool isEnumerableKey)
         {
             var errors = new List<FunctionCacheException>();
             
@@ -86,7 +86,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.MultiEcho(new[] { "123" }));
             else
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.StringToString("123"));
@@ -97,7 +97,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnCacheGet(bool multiKey)
+        public async Task OnCacheGet(bool isEnumerableKey)
         {
             var results = new List<CacheGetResult>();
             
@@ -111,7 +111,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await proxy.MultiEcho(new[] { "123" });
             else
                 await proxy.StringToString("123");
@@ -122,7 +122,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnCacheSet(bool multiKey)
+        public async Task OnCacheSet(bool isEnumerableKey)
         {
             var results = new List<CacheSetResult>();
             
@@ -136,7 +136,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await proxy.MultiEcho(new[] { "123" });
             else
                 await proxy.StringToString("123");
@@ -147,7 +147,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task OnCacheException(bool multiKey)
+        public async Task OnCacheException(bool isEnumerableKey)
         {
             var errors = new List<CacheException>();
             
@@ -162,7 +162,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
                     .Build();
             }
 
-            if (multiKey)
+            if (isEnumerableKey)
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.MultiEcho(new[] { "123" }));
             else
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.StringToString("123"));

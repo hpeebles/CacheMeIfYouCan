@@ -9,7 +9,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class FunctionCacheSingle<TK, TV> : IPendingRequestsCounter, IDisposable
+    internal sealed class SingleKeyFunctionCache<TK, TV> : IPendingRequestsCounter, IDisposable
     {
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Internal
         private long _averageFetchDuration;
         private bool _disposed;
         
-        public FunctionCacheSingle(
+        public SingleKeyFunctionCache(
             Func<TK, Task<TV>> func,
             string functionName,
             ICacheInternal<TK, TV> cache,

@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.PerformanceTests
         static void Main(string[] args)
         {
             BenchmarkRunner
-                .Run<SingleVsMulti<Guid>>(ManualConfig
+                .Run<SingleVsEnumerable<Guid>>(ManualConfig
                 .Create(DefaultConfig.Instance)
 #if NETCOREAPP2_1
                 .With(MemoryDiagnoser.Default)

@@ -143,7 +143,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
-        public async Task MultiKey()
+        public async Task EnumerableKey()
         {
             var getResults = new List<CacheGetResult>();
             var setResults = new List<CacheSetResult>();

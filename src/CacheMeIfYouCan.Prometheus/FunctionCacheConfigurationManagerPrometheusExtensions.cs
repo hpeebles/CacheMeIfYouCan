@@ -28,27 +28,27 @@ namespace CacheMeIfYouCan.Prometheus
                 cacheMetrics);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
-            this MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> configManager,
+        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
+            this EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> configManager,
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithMetrics<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
+            return WithMetrics<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
-            this MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> configManager,
+        public static EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> WithMetrics<TReq, TRes, TK, TV>(
+            this EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> configManager,
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithMetrics<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
+            return WithMetrics<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);

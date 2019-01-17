@@ -24,25 +24,25 @@ namespace CacheMeIfYouCan.Redis
                 configManager, redisConfigAction, cacheConfigAction);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> WithRedis<TReq, TRes, TK, TV>(
-            this MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> configManager,
+        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> WithRedis<TReq, TRes, TK, TV>(
+            this EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> configManager,
             Action<RedisCacheFactoryConfig> redisConfigAction,
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithRedis<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
+            return WithRedis<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction);
         }
         
-        public static MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> WithRedis<TReq, TRes, TK, TV>(
-            this MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> configManager,
+        public static EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> WithRedis<TReq, TRes, TK, TV>(
+            this EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> configManager,
             Action<RedisCacheFactoryConfig> redisConfigAction,
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithRedis<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
+            return WithRedis<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction);
         }
         

@@ -225,7 +225,7 @@ namespace CacheMeIfYouCan.Configuration
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TReq, TRes, TK, TV>(
             Expression<Func<T, Func<TReq, Task<TRes>>>> expression,
-            Action<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>> configAction)
+            Action<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>> configAction)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
@@ -240,7 +240,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedProxyConfigurationManager<T> ConfigureFor<TReq, TRes, TK, TV>(
             Expression<Func<T, Func<TReq, TRes, TK, TV>>> expression,
-            Action<MultiKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>> configAction)
+            Action<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>> configAction)
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {

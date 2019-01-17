@@ -90,17 +90,10 @@ namespace CacheMeIfYouCan.Redis
             await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
         }
 
-        // Must get keys separately since multikey operations will fail if running Redis in cluster mode
+        // Must get keys separately since multi key operations will fail if running Redis in cluster mode
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
             var redisDb = GetDatabase();
-
-            async Task<KeyValuePair<Key<TK>, RedisValueWithExpiry>> GetSingle(Key<TK> key)
-            {
-                var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key.AsString));
-                
-                return new KeyValuePair<Key<TK>, RedisValueWithExpiry>(key, valueWithExpiry);
-            }
 
             var tasks = keys
                 .Select(GetSingle)
@@ -117,9 +110,16 @@ namespace CacheMeIfYouCan.Redis
                     kv.Value.Expiry.GetValueOrDefault(),
                     CacheType))
                 .ToArray();
+            
+            async Task<KeyValuePair<Key<TK>, RedisValueWithExpiry>> GetSingle(Key<TK> key)
+            {
+                var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key.AsString));
+                
+                return new KeyValuePair<Key<TK>, RedisValueWithExpiry>(key, valueWithExpiry);
+            }
         }
 
-        // Must set keys separately since multikey operations will fail if running Redis in cluster mode
+        // Must set keys separately since multi key operations will fail if running Redis in cluster mode
         public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var redisDb = GetDatabase();

@@ -16,9 +16,9 @@ namespace CacheMeIfYouCan
         /// <see cref="ICachedObject{T}"/>. This function will be periodically called in the background to update
         /// the cached value</param>
         /// <typeparam name="T">The type of the value to be exposed via the <see cref="ICachedObject{T}"/></typeparam>
-        /// <returns>A <see cref="CachedObjectConfigManager{T}"/> instance which should be used to configure and build
+        /// <returns>A <see cref="CachedObjectConfigurationManager{T}"/> instance which should be used to configure and build
         /// the <see cref="ICachedObject{T}"/></returns>
-        public static CachedObjectConfigManager<T> ConfigureFor<T>(Func<T> getValueFunc)
+        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<T> getValueFunc)
         {
             return ConfigureFor(() => Task.FromResult(getValueFunc()));
         }
@@ -30,11 +30,11 @@ namespace CacheMeIfYouCan
         /// <see cref="ICachedObject{T}"/>. This function will be periodically called in the background to update
         /// the cached value</param>
         /// <typeparam name="T">The type of the value to be exposed via the <see cref="ICachedObject{T}"/></typeparam>
-        /// <returns>A <see cref="CachedObjectConfigManager{T}"/> instance which should be used to configure and build
+        /// <returns>A <see cref="CachedObjectConfigurationManager{T}"/> instance which should be used to configure and build
         /// the <see cref="ICachedObject{T}"/></returns>
-        public static CachedObjectConfigManager<T> ConfigureFor<T>(Func<Task<T>> getValueFunc)
+        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<Task<T>> getValueFunc)
         {
-            return new CachedObjectConfigManager<T>(getValueFunc);
+            return new CachedObjectConfigurationManager<T>(getValueFunc);
         }
     }
 }

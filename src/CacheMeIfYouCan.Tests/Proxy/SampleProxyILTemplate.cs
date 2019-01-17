@@ -33,22 +33,22 @@ namespace CacheMeIfYouCan.Tests.Proxy
             _longToInt_2 = new FunctionCacheConfigurationManager<long, int>(
                 impl.LongToInt, config, methods[2]).Build();
             
-            _multiEcho_3 = new MultiKeyFunctionCacheConfigurationManager<IEnumerable<string>, IDictionary<string, string>, string, string>(
+            _multiEcho_3 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEcho, config, methods[3]).Build();
             
-            _multiEchoList_4 = new MultiKeyFunctionCacheConfigurationManager<IList<string>, IDictionary<string, string>, string, string>(
+            _multiEchoList_4 = new EnumerableKeyFunctionCacheConfigurationManager<IList<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEchoList, config, methods[4]).Build();
             
-            _multiEchoSet_5 = new MultiKeyFunctionCacheConfigurationManager<ISet<string>, IDictionary<string, string>, string, string>(
+            _multiEchoSet_5 = new EnumerableKeyFunctionCacheConfigurationManager<ISet<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEchoSet, config, methods[4]).Build();
             
             _stringToStringSync_6 = new FunctionCacheConfigurationManagerSync<string, string>(
                 impl.StringToStringSync, config, methods[5]).Build();
             
-            _multiStringToStringSync_7 = new MultiKeyFunctionCacheConfigurationManagerSync<ICollection<string>, IDictionary<string, string>, string, string>(
+            _multiStringToStringSync_7 = new EnumerableKeyFunctionCacheConfigurationManagerSync<ICollection<string>, IDictionary<string, string>, string, string>(
                 impl.MultiStringToStringSync, config, methods[6]).Build();
             
-            _multiStringToConcurrent_8 = new MultiKeyFunctionCacheConfigurationManager<IEnumerable<string>, ConcurrentDictionary<string, string>, string, string>(
+            _multiStringToConcurrent_8 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, ConcurrentDictionary<string, string>, string, string>(
                 impl.MultiEchoToConcurrent, config, methods[4]).Build();
         }
         

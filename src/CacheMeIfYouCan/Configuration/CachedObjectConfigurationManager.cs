@@ -5,7 +5,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class CachedObjectConfigManager<T>
+    public class CachedObjectConfigurationManager<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
         private Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<CachedObjectRefreshResult<T>> _onRefresh;
         private Action<CachedObjectRefreshException<T>> _onException;
 
-        internal CachedObjectConfigManager(Func<Task<T>> getValueFunc)
+        internal CachedObjectConfigurationManager(Func<Task<T>> getValueFunc)
         {
             _getValueFunc = getValueFunc;
 
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Configuration
                 OnException(DefaultSettings.CachedObject.OnExceptionAction);
         }
         
-        public CachedObjectConfigManager<T> WithRefreshInterval(TimeSpan refreshInterval)
+        public CachedObjectConfigurationManager<T> WithRefreshInterval(TimeSpan refreshInterval)
         {
             if (refreshInterval == TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(refreshInterval));
@@ -38,19 +38,19 @@ namespace CacheMeIfYouCan.Configuration
             return WithRefreshInterval(r => refreshInterval);
         }
 
-        public CachedObjectConfigManager<T> WithRefreshInterval(Func<TimeSpan> refreshIntervalFunc)
+        public CachedObjectConfigurationManager<T> WithRefreshInterval(Func<TimeSpan> refreshIntervalFunc)
         {
             return WithRefreshInterval(r => refreshIntervalFunc());
         }
 
-        public CachedObjectConfigManager<T> WithRefreshInterval(
+        public CachedObjectConfigurationManager<T> WithRefreshInterval(
             Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc)
         {
             _refreshIntervalFunc = refreshIntervalFunc;
             return this;
         }
         
-        public CachedObjectConfigManager<T> WithJitterPercentage(double percentage)
+        public CachedObjectConfigurationManager<T> WithJitterPercentage(double percentage)
         {
             if (percentage < 0 || percentage > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentage));
@@ -59,13 +59,13 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedObjectConfigManager<T> OnRefresh(Action<CachedObjectRefreshResult<T>> onRefresh)
+        public CachedObjectConfigurationManager<T> OnRefresh(Action<CachedObjectRefreshResult<T>> onRefresh)
         {
             _onRefresh = onRefresh;
             return this;
         }
 
-        public CachedObjectConfigManager<T> OnException(Action<CachedObjectRefreshException<T>> onException)
+        public CachedObjectConfigurationManager<T> OnException(Action<CachedObjectRefreshException<T>> onException)
         {
             _onException = onException;
             return this;

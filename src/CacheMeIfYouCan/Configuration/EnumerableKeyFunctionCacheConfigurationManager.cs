@@ -6,18 +6,18 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>
-        : FunctionCacheConfigurationManagerBase<MultiKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>
+    public class EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>
+        : FunctionCacheConfigurationManagerBase<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>
         where TReq : IEnumerable<TK>
         where TRes : IDictionary<TK, TV>
     {
-        internal MultiKeyFunctionCacheConfigurationManager(
+        internal EnumerableKeyFunctionCacheConfigurationManager(
             Func<TReq, Task<TRes>> inputFunc,
             string functionName)
             : base(inputFunc.ConvertInput<TReq, TRes, TK, TV>().ConvertOutput<IEnumerable<TK>, TRes, TK, TV>(), functionName)
         { }
 
-        internal MultiKeyFunctionCacheConfigurationManager(
+        internal EnumerableKeyFunctionCacheConfigurationManager(
             Func<TReq, Task<TRes>> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Configuration
         
         public Func<TReq, Task<TRes>> Build()
         {
-            var functionCache = BuildFunctionCacheMulti(DictionaryFactoryFuncResolver.Get<TRes, TK, TV>());
+            var functionCache = BuildEnumerableKeyFunction(DictionaryFactoryFuncResolver.Get<TRes, TK, TV>());
             
             PendingRequestsCounterContainer.Add(functionCache);
             

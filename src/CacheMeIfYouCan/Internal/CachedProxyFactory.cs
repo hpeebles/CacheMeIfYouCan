@@ -71,8 +71,8 @@ namespace CacheMeIfYouCan.Internal
                 var field = typeBuilder.DefineField(fieldName, definition.FieldType, FieldAttributes.Private);
                 var fieldCtor = definition.FieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
                 
-                // Either FunctionCacheConfigurationManager<TK, TV> or MultiKeyFunctionCacheConfigurationManager
-                // depending on if the key is Enumerable or not
+                // Get the relevant configuration manager type based on whether the func is single key or enumerable key
+                // and sync or async
                 var configManagerType = GetConfigManagerType(definition);
                 var configManagerTypeCtor = configManagerType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic,
@@ -148,11 +148,11 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
             
             var parameterType = methodInfo.GetParameters().First().ParameterType;
 
-            var isMultiKey = parameterType != typeof(String) && typeof(IEnumerable).IsAssignableFrom(parameterType);
+            var isEnumerableKey = parameterType != typeof(String) && typeof(IEnumerable).IsAssignableFrom(parameterType);
             var isAsync = typeof(Task).IsAssignableFrom(methodInfo.ReturnType);
             
             Type keyType;
-            if (isMultiKey)
+            if (isEnumerableKey)
             {
                 if (parameterType.GenericTypeArguments.Length != 1)
                     throw new Exception(String.Format(messageFormat, "Enumerable parameters must have a single generic type argument"));
@@ -171,7 +171,7 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
 
             Type valueType;
             Type fieldType;
-            if (isMultiKey)
+            if (isEnumerableKey)
             {
                 if (returnTypeInner.GenericTypeArguments.Length != 2)
                     throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
@@ -186,10 +186,10 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
                 if (!dictionaryType.IsAssignableFrom(returnTypeInner))
                     throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
 
-                var multiParamType = typeof(IEnumerable<>).MakeGenericType(keyType);
-                var multiReturnType = typeof(Task<>).MakeGenericType(dictionaryType);
+                var enumerableParamType = typeof(IEnumerable<>).MakeGenericType(keyType);
+                var enumerableReturnType = typeof(Task<>).MakeGenericType(dictionaryType);
                 
-                fieldType = typeof(Func<,>).MakeGenericType(multiParamType, multiReturnType);
+                fieldType = typeof(Func<,>).MakeGenericType(enumerableParamType, enumerableReturnType);
             }
             else
             {
@@ -207,7 +207,7 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
                 KeyType = keyType,
                 ValueType = valueType,
                 FieldType = fieldType,
-                IsMultiKey = isMultiKey,
+                IsEnumerableKey = isEnumerableKey,
                 IsAsync = isAsync
             };
         }
@@ -215,11 +215,11 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
         private static Type GetConfigManagerType(MethodDefinition definition)
         {
             Type type;
-            if (definition.IsMultiKey)
+            if (definition.IsEnumerableKey)
             {
                 type = definition.IsAsync
-                    ? typeof(MultiKeyFunctionCacheConfigurationManager<,,,>)
-                    : typeof(MultiKeyFunctionCacheConfigurationManagerSync<,,,>);
+                    ? typeof(EnumerableKeyFunctionCacheConfigurationManager<,,,>)
+                    : typeof(EnumerableKeyFunctionCacheConfigurationManagerSync<,,,>);
 
                 return type.MakeGenericType(definition.ParameterType, definition.ReturnTypeInner, definition.KeyType, definition.ValueType);
             }
@@ -247,7 +247,7 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
             public Type KeyType;
             public Type ValueType;
             public Type FieldType;
-            public bool IsMultiKey;
+            public bool IsEnumerableKey;
             public bool IsAsync;
         }
     }

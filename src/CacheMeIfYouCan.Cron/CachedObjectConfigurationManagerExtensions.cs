@@ -4,10 +4,10 @@ using NCrontab;
 
 namespace CacheMeIfYouCan.Cron
 {
-    public static class CachedObjectConfigExtensions
+    public static class CachedObjectConfigurationManagerExtensions
     {
-        public static CachedObjectConfigManager<T> WithRefreshSchedule<T>(
-            this CachedObjectConfigManager<T> config,
+        public static CachedObjectConfigurationManager<T> WithRefreshSchedule<T>(
+            this CachedObjectConfigurationManager<T> config,
             string cronExpression,
             bool includingSeconds = false)
         {
@@ -17,16 +17,16 @@ namespace CacheMeIfYouCan.Cron
             
             var schedule = CrontabSchedule.Parse(cronExpression, options);
 
+            return config
+                .WithJitterPercentage(0)
+                .WithRefreshInterval(GetNextInterval);
+            
             TimeSpan GetNextInterval()
             {
                 var now = DateTime.UtcNow;
                 
                 return schedule.GetNextOccurrence(now) - now;
             }
-
-            return config
-                .WithJitterPercentage(0)
-                .WithRefreshInterval(GetNextInterval);
         }
     }
 }
