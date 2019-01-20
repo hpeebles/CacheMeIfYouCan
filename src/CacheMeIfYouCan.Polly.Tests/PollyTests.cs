@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Polly.Tests
             Func<Task<GetFromCacheResult<string, string>>> func = () => cache.Get(key);
             await func.Should().ThrowAsync<CacheException>();
             
-            (await cache.Get(key)).Should().Be("abc");
+            (await cache.Get(key)).Value.Should().Be("abc");
 
             await func.Should().ThrowAsync<CacheException>();
             await func.Should().ThrowAsync<CacheException>();
@@ -43,7 +43,7 @@ namespace CacheMeIfYouCan.Polly.Tests
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            (await cache.Get(key)).Should().Be("abc");
+            (await cache.Get(key)).Value.Should().Be("abc");
         }
         
         [Fact]
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Polly.Tests
             Func<GetFromCacheResult<string, string>> func = () => cache.Get(key);
             func.Should().Throw<CacheException>();
             
-            cache.Get(key).Should().Be("abc");
+            cache.Get(key).Value.Should().Be("abc");
 
             func.Should().Throw<CacheException>();
             func.Should().Throw<CacheException>();
@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Polly.Tests
 
             Task.Delay(TimeSpan.FromSeconds(1)).Wait();
             
-            cache.Get(key).Should().Be("abc");
+            cache.Get(key).Value.Should().Be("abc");
         }
     }
 }
