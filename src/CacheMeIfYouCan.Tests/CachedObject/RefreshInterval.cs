@@ -22,6 +22,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
+            var waitHandle = new MultiWaitHandle(4);
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -29,13 +30,17 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(4))
-                    .OnRefresh(refreshResults.Add)
+                    .OnRefresh(r =>
+                    {
+                        refreshResults.Add(r);
+                        waitHandle.Mark();
+                    })
                     .Build();
             }
 
             await date.Initialize();
 
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            waitHandle.Wait();
 
             date.Dispose();
             
@@ -50,6 +55,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task JitterCausesRefreshIntervalsToFluctuate()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
+            var waitHandle = new MultiWaitHandle(15);
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -58,13 +64,17 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
                     .WithJitterPercentage(50)
-                    .OnRefresh(refreshResults.Add)
+                    .OnRefresh(r =>
+                    {
+                        refreshResults.Add(r);
+                        waitHandle.Mark();
+                    })
                     .Build();
             }
 
             await date.Initialize();
 
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            waitHandle.Wait();
             
             date.Dispose();
             
@@ -79,6 +89,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task VariableRefreshInterval()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
+            var waitHandle = new MultiWaitHandle(5);
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -86,17 +97,22 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
-                    .OnRefresh(refreshResults.Add)
+                    .OnRefresh(r =>
+                    {
+                        refreshResults.Add(r);
+                        waitHandle.Mark();
+                    })
                     .Build();
             }
 
             await date.Initialize();
 
-            await Task.Delay(TimeSpan.FromSeconds(14));
+            waitHandle.Wait();
             
             date.Dispose();
             
             refreshResults.Count.Should().Be(5);
+            
             foreach (var result in refreshResults.Skip(1))
             {
                 var interval = result.Start - result.LastRefreshAttempt;
@@ -105,7 +121,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Should()
                     .BeGreaterThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1))
                     .And
-                    .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 0.9));
+                    .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 2));
             }
         }
     }
