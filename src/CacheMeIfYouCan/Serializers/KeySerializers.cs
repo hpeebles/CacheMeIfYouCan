@@ -1,14 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CacheMeIfYouCan.Serializers
 {
     public class KeySerializers
     {
-        private readonly Dictionary<Type, object> _serializers = new Dictionary<Type, object>();
-        private readonly Dictionary<Type, object> _deserializers = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _serializers;
+        private readonly Dictionary<Type, object> _deserializers;
         private ISerializer _default;
 
+        public KeySerializers()
+        {
+            _serializers = new Dictionary<Type, object>();
+            _deserializers = new Dictionary<Type, object>();
+        }
+
+        private KeySerializers(
+            Dictionary<Type, object> serializers,
+            Dictionary<Type, object> deserializers,
+            ISerializer defaultSerializer)
+        {
+            _serializers = serializers;
+            _deserializers = deserializers;
+            _default = defaultSerializer;
+        }
+        
         internal bool TryGetSerializer<T>(out Func<T, string> serializer)
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj))
@@ -64,6 +81,14 @@ namespace CacheMeIfYouCan.Serializers
         {
             _default = new Wrapper(serializer, deserializer);
             return this;
+        }
+
+        internal KeySerializers Clone()
+        {
+            var serializersClone = _serializers.ToDictionary(kv => kv.Key, kv => kv.Value);
+            var deserializersClone = _deserializers.ToDictionary(kv => kv.Key, kv => kv.Value);
+            
+            return new KeySerializers(serializersClone, deserializersClone, _default);
         }
         
         private class Wrapper : ISerializer

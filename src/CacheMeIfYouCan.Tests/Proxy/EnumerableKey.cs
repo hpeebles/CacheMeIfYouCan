@@ -7,17 +7,17 @@ using Xunit;
 namespace CacheMeIfYouCan.Tests.Proxy
 {
     [Collection(TestCollections.Proxy)]
-    public class MultiKey
+    public class EnumerableKey
     {
         private readonly CacheSetupLock _setupLock;
 
-        public MultiKey(CacheSetupLock setupLock)
+        public EnumerableKey(CacheSetupLock setupLock)
         {
             _setupLock = setupLock;
         }
         
         [Fact]
-        public async Task MultiKeyCachedIsProduced()
+        public async Task EnumerableKeyCacheIsProduced()
         {
             var results = new List<FunctionCacheGetResult>();
             

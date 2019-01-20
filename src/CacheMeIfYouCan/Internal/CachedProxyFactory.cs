@@ -68,8 +68,8 @@ namespace CacheMeIfYouCan.Internal
                 
                 // Create a field called _methodName of type Func<TK, Task<TV>> in which to store the cached function
                 var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}_{index}";
-                var field = typeBuilder.DefineField(fieldName, definition.FieldType, FieldAttributes.Private);
-                var fieldCtor = definition.FieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
+                var field = typeBuilder.DefineField(fieldName, definition.FuncType, FieldAttributes.Private);
+                var fieldCtor = definition.FuncType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
                 
                 // Get the relevant configuration manager type based on whether the func is single key or enumerable key
                 // and sync or async
@@ -99,14 +99,17 @@ namespace CacheMeIfYouCan.Internal
                     methodInfo.Name,
                     MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual,
                     methodInfo.ReturnType,
-                    new[] { definition.ParameterType });
+                    definition.ParameterTypes);
                 
                 var methodGen = methodBuilder.GetILGenerator();
                 
                 methodGen.Emit(OpCodes.Ldarg_0); // this
                 methodGen.Emit(OpCodes.Ldfld, field); // _methodName
-                methodGen.Emit(OpCodes.Ldarg_1); // TK key
-                methodGen.Emit(OpCodes.Callvirt, definition.FieldType.GetMethod("Invoke", new[] { definition.ParameterType })); // _methodName.Invoke(key)
+                
+                for (var i = 1; i <= definition.ParameterTypes.Length; i++)
+                    methodGen.Emit(OpCodes.Ldarg, i); // Load each of the keys
+                
+                methodGen.Emit(OpCodes.Callvirt, definition.FuncType.GetMethod("Invoke", definition.ParameterTypes)); // _methodName.Invoke(key)
                 methodGen.Emit(OpCodes.Ret); // Return result
             }
             
@@ -122,113 +125,137 @@ namespace CacheMeIfYouCan.Internal
 
             foreach (var methodInfo in type.GetMethods())
             {
-                var parameters = methodInfo.GetParameters();
-                if (parameters.Length != 1)
-                    throw new Exception("Method must have exactly 1 input");
-
                 var returnType = methodInfo.ReturnType;
                 if (returnType == typeof(void) || returnType == typeof(Task))
                 {
                     throw new Exception($@"
-Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{returnType.Name}'");
+Method must return a value. '{type.FullName}.{methodInfo.Name}'");
                 }
             }
         }
 
         private static MethodDefinition GetMethodDefinition(MethodInfo methodInfo)
         {
-            var messageFormat = $"Invalid method signature. {{0}}. Method: '{methodInfo.Name}'";
-            
-            if (methodInfo.GetParameters().Length != 1)
-                throw new Exception(String.Format(messageFormat, "Method must have a single input parameter"));
+            var parameterTypes = methodInfo
+                .GetParameters()
+                .Select(p => p.ParameterType)
+                .ToArray();
 
-            var funcType = typeof(Func<,>).MakeGenericType(
-                methodInfo.GetParameters().Single().ParameterType,
-                methodInfo.ReturnType);
-            
-            var parameterType = methodInfo.GetParameters().First().ParameterType;
-
-            var isEnumerableKey = parameterType != typeof(String) && typeof(IEnumerable).IsAssignableFrom(parameterType);
             var isAsync = typeof(Task).IsAssignableFrom(methodInfo.ReturnType);
-            
-            Type keyType;
-            if (isEnumerableKey)
-            {
-                if (parameterType.GenericTypeArguments.Length != 1)
-                    throw new Exception(String.Format(messageFormat, "Enumerable parameters must have a single generic type argument"));
 
-                keyType = parameterType.GenericTypeArguments.Single();
-            }
-            else
-            {
-                keyType = parameterType;
-            }
-            
             var returnType = methodInfo.ReturnType;
             var returnTypeInner = isAsync
                 ? returnType.GenericTypeArguments.Single()
                 : returnType;
 
-            Type valueType;
-            Type fieldType;
-            if (isEnumerableKey)
+            var isEnumerableKey = IsEnumerableKeyFunc(out var keyType, out var valueType);
+
+            var funcTypes = parameterTypes
+                .Concat(new[] { returnType })
+                .ToArray();
+
+            Type funcTypeGeneric;
+            switch (funcTypes.Length)
             {
-                if (returnTypeInner.GenericTypeArguments.Length != 2)
-                    throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
+                case 2:
+                    funcTypeGeneric = typeof(Func<,>);
+                    break;
 
-                if (returnTypeInner.GenericTypeArguments.First() != keyType)
-                    throw new Exception(String.Format(messageFormat, "The key type in the returned dictionary must match the type of the items in the input parameter"));
+                case 3:
+                    funcTypeGeneric = typeof(Func<,,>);
+                    break;
 
-                valueType = returnTypeInner.GenericTypeArguments.Last();
+                case 4:
+                    funcTypeGeneric = typeof(Func<,,,>);
+                    break;
 
-                var dictionaryType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
-                
-                if (!dictionaryType.IsAssignableFrom(returnTypeInner))
-                    throw new Exception(String.Format(messageFormat, "Return type must derive from IDictionary<TK, TV>"));
+                case 5:
+                    funcTypeGeneric = typeof(Func<,,,,>);
+                    break;
 
-                var enumerableParamType = typeof(IEnumerable<>).MakeGenericType(keyType);
-                var enumerableReturnType = typeof(Task<>).MakeGenericType(dictionaryType);
-                
-                fieldType = typeof(Func<,>).MakeGenericType(enumerableParamType, enumerableReturnType);
-            }
-            else
-            {
-                valueType = returnTypeInner;
-
-                fieldType = typeof(Func<,>).MakeGenericType(parameterType, returnType);
+                default:
+                    throw new Exception("Only functions with up to 4 input parameters are supported");
             }
 
+            var funcType = funcTypeGeneric.MakeGenericType(funcTypes);
+            
             return new MethodDefinition
             {
                 FuncType = funcType,
-                ParameterType = parameterType,
+                ParameterTypes = parameterTypes,
                 ReturnType = returnType,
                 ReturnTypeInner = returnTypeInner,
                 KeyType = keyType,
                 ValueType = valueType,
-                FieldType = fieldType,
                 IsEnumerableKey = isEnumerableKey,
                 IsAsync = isAsync
             };
+
+            bool IsEnumerableKeyFunc(out Type _keyType, out Type _valueType)
+            {
+                if (parameterTypes.Length == 1 &&
+                    parameterTypes[0] != typeof(String) &&
+                    IsEnumerable(parameterTypes[0], out _keyType) &&
+                    IsDictionary(returnTypeInner, out var returnKeyType, out _valueType))
+                {
+                    if (_keyType != returnKeyType)
+                        throw new Exception(@"
+The key type in the returned dictionary must match the type of the items in the input parameter");
+
+                    return true;
+                }
+
+                _keyType = null;
+                _valueType = null;
+                return false;
+            }
         }
 
         private static Type GetConfigManagerType(MethodDefinition definition)
         {
-            Type type;
+            Type configManagerGenericType;
             if (definition.IsEnumerableKey)
             {
-                type = definition.IsAsync
+                configManagerGenericType = definition.IsAsync
                     ? typeof(EnumerableKeyFunctionCacheConfigurationManager<,,,>)
                     : typeof(EnumerableKeyFunctionCacheConfigurationManagerSync<,,,>);
 
-                return type.MakeGenericType(definition.ParameterType, definition.ReturnTypeInner, definition.KeyType, definition.ValueType);
+                return configManagerGenericType.MakeGenericType(definition.ParameterTypes.Single(), definition.ReturnTypeInner, definition.KeyType, definition.ValueType);
             }
-            
-            type = definition.IsAsync
-                ? typeof(FunctionCacheConfigurationManager<,>)
-                : typeof(FunctionCacheConfigurationManagerSync<,>);
-            
-            return type.MakeGenericType(definition.KeyType, definition.ValueType);
+
+            var types = definition
+                .ParameterTypes
+                .Concat(new[] { definition.ReturnTypeInner })
+                .ToArray();
+
+            switch (types.Length)
+            {
+                case 3:
+                    configManagerGenericType = definition.IsAsync
+                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,>)
+                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,>);
+                    break;
+
+                case 4:
+                    configManagerGenericType = definition.IsAsync
+                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,,>)
+                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,>);
+                    break;
+
+                case 5:
+                    configManagerGenericType = definition.IsAsync
+                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,,,>)
+                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,,>);
+                    break;
+                
+                default:
+                    configManagerGenericType = definition.IsAsync
+                        ? typeof(SingleKeyFunctionCacheConfigurationManager<,>)
+                        : typeof(SingleKeyFunctionCacheConfigurationManagerSync<,>);
+                    break;
+            }
+
+            return configManagerGenericType.MakeGenericType(types);
         }
 
         private static string GetProxyName(Type type)
@@ -237,16 +264,47 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}' returns '{return
 
             return name;
         }
+        
+        private static bool IsEnumerable(Type type, out Type innerType)
+        {
+            foreach (var i in new[] { type }.Concat(type.GetInterfaces()))
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    innerType = i.GenericTypeArguments.Single();
+                    return true;
+                }
+            }
+
+            innerType = null;
+            return false;
+        }
+
+        private static bool IsDictionary(Type type, out Type keyType, out Type valueType)
+        {
+            foreach (var i in new[] { type }.Concat(type.GetInterfaces()))
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                {
+                    keyType = i.GenericTypeArguments[0];
+                    valueType = i.GenericTypeArguments[1];
+                    return true;
+                }
+            }
+
+            keyType = null;
+            valueType = null;
+            return false;
+        }
 
         private class MethodDefinition
         {
             public Type FuncType;
-            public Type ParameterType;
+            public Type[] ParameterTypes;
             public Type ReturnType;
             public Type ReturnTypeInner;
-            public Type KeyType;
-            public Type ValueType;
-            public Type FieldType;
+            public Type KeyType; // Only populated for enumerable key functions
+            public Type ValueType; // Only populated for enumerable key functions
             public bool IsEnumerableKey;
             public bool IsAsync;
         }

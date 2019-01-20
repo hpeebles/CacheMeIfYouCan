@@ -7,23 +7,6 @@ namespace CacheMeIfYouCan.Internal
 {
     internal class CachedProxyConfig
     {
-        public readonly Type InterfaceType;
-        public readonly KeySerializers KeySerializers;
-        public readonly ValueSerializers ValueSerializers;
-        public readonly TimeSpan? TimeToLive;
-        public readonly bool? EarlyFetchEnabled;
-        public readonly bool? DisableCache;
-        public readonly ILocalCacheFactory LocalCacheFactory;
-        public readonly IDistributedCacheFactory DistributedCacheFactory;
-        public readonly Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc;
-        public readonly Action<FunctionCacheGetResult> OnResult;
-        public readonly Action<FunctionCacheFetchResult> OnFetch;
-        public readonly Action<FunctionCacheException> OnException;
-        public readonly Action<CacheGetResult> OnCacheGet;
-        public readonly Action<CacheSetResult> OnCacheSet;
-        public readonly Action<CacheException> OnCacheException;
-        public readonly IDictionary<MethodInfoKey, object> FunctionCacheConfigActions;
-        
         public CachedProxyConfig(
             Type interfaceType,
             KeySerializers keySerializers,
@@ -40,6 +23,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheGetResult> onCacheGet,
             Action<CacheSetResult> onCacheSet,
             Action<CacheException> onCacheException,
+            string keyParamSeparator,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -57,7 +41,26 @@ namespace CacheMeIfYouCan.Internal
             OnCacheGet = onCacheGet;
             OnCacheSet = onCacheSet;
             OnCacheException = onCacheException;
+            KeyParamSeparator = keyParamSeparator;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
+        
+        public Type InterfaceType { get; }
+        public KeySerializers KeySerializers { get; }
+        public ValueSerializers ValueSerializers { get; }
+        public TimeSpan? TimeToLive { get; }
+        public bool? EarlyFetchEnabled { get; }
+        public bool? DisableCache { get; }
+        public ILocalCacheFactory LocalCacheFactory { get; }
+        public IDistributedCacheFactory DistributedCacheFactory { get; }
+        public Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc { get; }
+        public Action<FunctionCacheGetResult> OnResult { get; }
+        public Action<FunctionCacheFetchResult> OnFetch { get; }
+        public Action<FunctionCacheException> OnException { get; }
+        public Action<CacheGetResult> OnCacheGet { get; }
+        public Action<CacheSetResult> OnCacheSet { get; }
+        public Action<CacheException> OnCacheException { get; }
+        public string KeyParamSeparator { get; }
+        public IDictionary<MethodInfoKey, object> FunctionCacheConfigActions { get; }
     }
 }

@@ -6,7 +6,7 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>
+    public sealed class EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>
         : FunctionCacheConfigurationManagerBase<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>
         where TReq : IEnumerable<TK>
         where TRes : IDictionary<TK, TV>
@@ -14,7 +14,9 @@ namespace CacheMeIfYouCan.Configuration
         internal EnumerableKeyFunctionCacheConfigurationManagerSync(
             Func<TReq, TRes> inputFunc,
             string functionName)
-            : base(inputFunc.ConvertInput<TReq, TRes, TK, TV>().ConvertToAsync().ConvertOutput<IEnumerable<TK>, TRes, TK, TV>(), functionName)
+            : base(
+                inputFunc.ConvertToAsync().ConvertInputToEnumerable<TReq, TRes, TK, TV>().ConvertOutputToDictionary<IEnumerable<TK>, TRes, TK, TV>(),
+                functionName)
         { }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerSync(
@@ -22,19 +24,22 @@ namespace CacheMeIfYouCan.Configuration
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(
-                inputFunc.ConvertInput<TReq, TRes, TK, TV>().ConvertToAsync().ConvertOutput<IEnumerable<TK>, TRes, TK, TV>(),
+                inputFunc.ConvertToAsync().ConvertInputToEnumerable<TReq, TRes, TK, TV>().ConvertOutputToDictionary<IEnumerable<TK>, TRes, TK, TV>(),
                 $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
                 interfaceConfig,
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         { }
         
-        public Func<IEnumerable<TK>, TRes> Build()
+        public Func<TReq, TRes> Build()
         {
             var functionCache = BuildEnumerableKeyFunction(DictionaryFactoryFuncResolver.Get<TRes, TK, TV>());
             
-            PendingRequestsCounterContainer.Add(functionCache);
+            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func = functionCache.GetMulti;
             
-            return k => (TRes)Task.Run(() => functionCache.GetMulti(k)).GetAwaiter().GetResult();
+            return func
+                .ConvertInputFromEnumerable<TReq, IDictionary<TK, TV>, TK, TV>()
+                .ConvertOutputFromDictionary<TReq, TRes, TK, TV>()
+                .ConvertToSync();
         }
     }
 }

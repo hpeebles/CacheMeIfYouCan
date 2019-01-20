@@ -51,5 +51,15 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             return Task.FromResult(new ConcurrentDictionary<string, string>(keys.ToDictionary(k => k)));
         }
+
+        public Task<string> MultiParamEcho(string key1, int key2)
+        {
+            return Task.FromResult($"{key1}_{key2}");
+        }
+        
+        public string MultiParamEchoSync(string key1, int key2)
+        {
+            return $"{key1}_{key2}";
+        }
     }
 }

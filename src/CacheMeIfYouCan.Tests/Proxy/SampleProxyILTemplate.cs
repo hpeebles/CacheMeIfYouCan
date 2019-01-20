@@ -19,18 +19,20 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<string, string> _stringToStringSync_6;
         private readonly Func<ICollection<string>, IDictionary<string, string>> _multiStringToStringSync_7;
         private readonly Func<IEnumerable<string>, Task<ConcurrentDictionary<string, string>>> _multiStringToConcurrent_8;
+        private readonly Func<string, int, Task<string>> _multiParamEcho_9;
+        private readonly Func<string, int, string> _multiParamEchoSync_10;
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
             var methods = typeof(ITest).GetMethods();
             
-            _stringToString_0 = new FunctionCacheConfigurationManager<string, string>(
+            _stringToString_0 = new SingleKeyFunctionCacheConfigurationManager<string, string>(
                 impl.StringToString, config, methods[0]).Build();
             
-            _intToString_1 = new FunctionCacheConfigurationManager<int, string>(
+            _intToString_1 = new SingleKeyFunctionCacheConfigurationManager<int, string>(
                 impl.IntToString, config, methods[1]).Build();
             
-            _longToInt_2 = new FunctionCacheConfigurationManager<long, int>(
+            _longToInt_2 = new SingleKeyFunctionCacheConfigurationManager<long, int>(
                 impl.LongToInt, config, methods[2]).Build();
             
             _multiEcho_3 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, IDictionary<string, string>, string, string>(
@@ -40,16 +42,22 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 impl.MultiEchoList, config, methods[4]).Build();
             
             _multiEchoSet_5 = new EnumerableKeyFunctionCacheConfigurationManager<ISet<string>, IDictionary<string, string>, string, string>(
-                impl.MultiEchoSet, config, methods[4]).Build();
+                impl.MultiEchoSet, config, methods[5]).Build();
             
-            _stringToStringSync_6 = new FunctionCacheConfigurationManagerSync<string, string>(
-                impl.StringToStringSync, config, methods[5]).Build();
+            _stringToStringSync_6 = new SingleKeyFunctionCacheConfigurationManagerSync<string, string>(
+                impl.StringToStringSync, config, methods[6]).Build();
             
             _multiStringToStringSync_7 = new EnumerableKeyFunctionCacheConfigurationManagerSync<ICollection<string>, IDictionary<string, string>, string, string>(
-                impl.MultiStringToStringSync, config, methods[6]).Build();
+                impl.MultiStringToStringSync, config, methods[7]).Build();
             
             _multiStringToConcurrent_8 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, ConcurrentDictionary<string, string>, string, string>(
-                impl.MultiEchoToConcurrent, config, methods[4]).Build();
+                impl.MultiEchoToConcurrent, config, methods[8]).Build();
+            
+            _multiParamEcho_9 = new MultiParamFunctionCacheConfigurationManager<string, int, string>(
+                impl.MultiParamEcho, config, methods[9]).Build();
+            
+            _multiParamEchoSync_10 = new MultiParamFunctionCacheConfigurationManagerSync<string, int, string>(
+                impl.MultiParamEchoSync, config, methods[10]).Build();
         }
         
         public Task<string> StringToString(string key)
@@ -95,6 +103,16 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public Task<ConcurrentDictionary<string, string>> MultiEchoToConcurrent(IEnumerable<string> keys)
         {
             return _multiStringToConcurrent_8(keys);
+        }
+
+        public Task<string> MultiParamEcho(string key1, int key2)
+        {
+            return _multiParamEcho_9(key1, key2);
+        }
+
+        public string MultiParamEchoSync(string key1, int key2)
+        {
+            return _multiParamEchoSync_10(key1, key2);
         }
     }
 }

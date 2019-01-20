@@ -6,23 +6,23 @@ namespace CacheMeIfYouCan.Prometheus
 {
     public static class FunctionCacheConfigurationManagerPrometheusExtensions
     {
-        public static FunctionCacheConfigurationManager<TK, TV> WithMetrics<TK, TV>(
-            this FunctionCacheConfigurationManager<TK, TV> configManager,
+        public static SingleKeyFunctionCacheConfigurationManager<TK, TV> WithMetrics<TK, TV>(
+            this SingleKeyFunctionCacheConfigurationManager<TK, TV> configManager,
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<FunctionCacheConfigurationManager<TK, TV>, TK, TV>(
+            return WithMetrics<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
         }
         
-        public static FunctionCacheConfigurationManagerSync<TK, TV> WithMetrics<TK, TV>(
-            this FunctionCacheConfigurationManagerSync<TK, TV> configManager,
+        public static SingleKeyFunctionCacheConfigurationManagerSync<TK, TV> WithMetrics<TK, TV>(
+            this SingleKeyFunctionCacheConfigurationManagerSync<TK, TV> configManager,
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<FunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
+            return WithMetrics<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -49,6 +49,72 @@ namespace CacheMeIfYouCan.Prometheus
             where TRes : IDictionary<TK, TV>
         {
             return WithMetrics<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> WithMetrics<TK1, TK2, TV>(
+            this MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>, (TK1, TK2), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> WithMetrics<TK1, TK2, TV>(
+            this MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> WithMetrics<TK1, TK2, TK3, TV>(
+            this MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithMetrics<TK1, TK2, TK3, TV>(
+            this MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithMetrics<TK1, TK2, TK3, TK4, TV>(
+            this MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithMetrics<TK1, TK2, TK3, TK4, TV>(
+            this MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+        {
+            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);

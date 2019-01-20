@@ -6,11 +6,10 @@ namespace CacheMeIfYouCan.Internal
 {
     internal readonly struct MethodInfoKey
     {
-        public string MethodName { get; }
-        public string ParameterTypeName { get; }
-        
         public MethodInfoKey(Type interfaceType, MethodInfo methodInfo)
-            :this($"{interfaceType.Name}.{methodInfo.Name}", methodInfo.GetParameters().Single().ParameterType.FullName)
+            :this(
+                $"{interfaceType.Name}.{methodInfo.Name}",
+                String.Join("+", methodInfo.GetParameters().Select(p => p.ParameterType.FullName)))
         { }
         
         public MethodInfoKey(string methodName, string parameterTypeName)
@@ -19,6 +18,9 @@ namespace CacheMeIfYouCan.Internal
             ParameterTypeName = parameterTypeName;
         }
         
+        public string MethodName { get; }
+        public string ParameterTypeName { get; }
+
         public bool Equals(MethodInfoKey other)
         {
             return

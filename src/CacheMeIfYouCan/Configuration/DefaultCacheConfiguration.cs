@@ -19,6 +19,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<CacheGetResult> OnCacheGetAction { get; private set; }
         internal Action<CacheSetResult> OnCacheSetAction { get; private set; }
         internal Action<CacheException> OnCacheExceptionAction { get; private set; }
+        internal string KeyParamSeparator { get; private set; } = "_";
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         
@@ -100,6 +101,12 @@ namespace CacheMeIfYouCan.Configuration
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             OnCacheExceptionAction = ActionsHelper.Combine(OnCacheExceptionAction, onCacheException, behaviour);
+            return this;
+        }
+
+        public DefaultCacheConfiguration WithKeyParamSeparator(string separator)
+        {
+            KeyParamSeparator = separator;
             return this;
         }
 
