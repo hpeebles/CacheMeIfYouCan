@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests.Proxy;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
@@ -40,7 +41,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await proxy.StringToString("123");
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Theory]
@@ -65,7 +66,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await proxy.StringToString("123");
 
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
         }
         
         [Theory]
@@ -91,7 +92,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.StringToString("123"));
 
-            Assert.Single(errors);
+            errors.Should().ContainSingle();
         }
         
         [Theory]
@@ -116,7 +117,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await proxy.StringToString("123");
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Theory]
@@ -141,7 +142,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await proxy.StringToString("123");
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Theory]
@@ -167,7 +168,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
             else
                 await Assert.ThrowsAnyAsync<FunctionCacheException>(() => proxy.StringToString("123"));
             
-            Assert.Single(errors);
+            errors.Should().ContainSingle();
         }
     }
 }

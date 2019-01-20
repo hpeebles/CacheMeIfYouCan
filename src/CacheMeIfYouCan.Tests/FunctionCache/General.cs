@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -55,7 +56,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
         }
 
         [Theory]
@@ -94,7 +95,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
         }
         
         [Theory]

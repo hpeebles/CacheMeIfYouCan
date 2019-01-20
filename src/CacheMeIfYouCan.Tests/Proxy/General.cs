@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -87,7 +88,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             Assert.Equal(key, await proxy.StringToString(key));
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             await proxy.StringToString(key);
@@ -115,7 +116,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             Assert.Equal(key, proxy.StringToStringSync(key));
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             proxy.StringToStringSync(key);

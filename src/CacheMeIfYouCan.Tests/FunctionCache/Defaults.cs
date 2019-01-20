@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -150,10 +151,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho(key);
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.True(results.Single().Success);
             Assert.Empty(results.Single().Hits);
-            Assert.Single(results.Single().Misses);
+            results.Single().Misses.Should().ContainSingle();
             Assert.Equal(key, results.Single().Misses.Single());
             Assert.Equal("memory", results.Single().CacheType);
             
@@ -163,7 +164,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 
                 Assert.Equal(i, results.Count);
                 Assert.True(results.Last().Success);
-                Assert.Single(results.Last().Hits);
+                results.Last().Hits.Should().ContainSingle();
                 Assert.Empty(results.Last().Misses);
                 Assert.Equal(key, results.Last().Hits.Single());
                 Assert.Equal("memory", results.Last().CacheType);
@@ -196,15 +197,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho(key);
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.True(results.Single().Success);
-            Assert.Single(results.Single().Keys);
+            results.Single().Keys.Should().ContainSingle();
             Assert.Equal(key, results.Single().Keys.Single());
             Assert.Equal("memory", results.Single().CacheType);
             
             await cachedEcho(key);
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
 
         [Fact]
@@ -234,8 +235,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho(key));
 
-            Assert.Single(errors);
-            Assert.Single(errors.Single().Keys);
+            errors.Should().ContainSingle();
+            errors.Single().Keys.Should().ContainSingle();
             Assert.Equal(key, errors.Single().Keys.Single());
             Assert.Equal("test", errors.Single().CacheType);
         }

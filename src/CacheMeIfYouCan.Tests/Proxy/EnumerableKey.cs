@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -33,7 +34,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.MultiEcho(new[] { "123", "abc" });
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(2, results.Single().Results.Count);
         }
 
@@ -54,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.MultiEchoList(new[] { "123", "abc" });
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(2, results.Single().Results.Count);
         }
 
@@ -75,7 +76,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.MultiEchoSet(new HashSet<string> { "123", "abc" });
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(2, results.Single().Results.Count);
         }
 
@@ -96,7 +97,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.MultiEchoToConcurrent(new[] { "123", "abc" });
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(2, results.Single().Results.Count);
         }
     }

@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -37,13 +38,13 @@ namespace CacheMeIfYouCan.Tests.Cache
             await cache.Set(key, 123, TimeSpan.FromSeconds(1));
             await cache.Get(key);
             
-            Assert.Equal(2, results.Count);
-            Assert.True(results[0].Success);
-            Assert.Single(results[0].Misses);
-            Assert.Equal(key, results[0].Misses[0]);
-            Assert.True(results[1].Success);
-            Assert.Single(results[1].Hits);
-            Assert.Equal(key, results[1].Hits[0]);
+            results.Count.Should().Be(2);
+            results[0].Success.Should().BeTrue();
+            results[0].Misses.Should().ContainSingle();
+            results[0].Misses[0].Should().Be(key);
+            results[1].Success.Should().BeTrue();
+            results[1].Hits.Should().ContainSingle();
+            results[1].Hits[0].Should().Be(key);
         }
         
         [Fact]
@@ -63,10 +64,10 @@ namespace CacheMeIfYouCan.Tests.Cache
             
             await cache.Set(key, 123, TimeSpan.FromSeconds(1));
             
-            Assert.Single(results);
-            Assert.True(results[0].Success);
-            Assert.Single(results[0].Keys);
-            Assert.Equal(key, results[0].Keys[0]);
+            results.Should().ContainSingle();
+            results[0].Success.Should().BeTrue();
+            results[0].Keys.Should().ContainSingle();
+            results[0].Keys[0].Should().Be(key);
         }
         
         [Fact]
@@ -84,11 +85,12 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             const string key = "abc";
             
-            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
+            Func<Task<int>> func = () => cache.Get(key);
+            func.Should().Throw<CacheException>();
             
-            Assert.Single(errors);
-            Assert.Single(errors[0].Keys);
-            Assert.Equal(key, errors[0].Keys.Single());
+            errors.Should().ContainSingle();
+            errors[0].Keys.Should().ContainSingle();
+            errors[0].Keys.Single().Should().Be(key);
         }
         
         [Fact]
@@ -101,13 +103,13 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .BuildAsCache<string, int>("abc");
             }
 
-            await cache.Set("abc", 123, TimeSpan.FromSeconds(1));
+            await cache.Set("abc", 123, TimeSpan.FromMilliseconds(100));
             
-            Assert.Equal(123, await cache.Get("abc"));
+            (await cache.Get("abc")).Should().Be(123);
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
             
-            Assert.Equal(default, await cache.Get("abc"));
+            (await cache.Get("abc")).Should().Be(0);
         }
         
         [Theory]
@@ -133,8 +135,8 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await cache1.Set(123, 123, TimeSpan.FromSeconds(1));
             
-            Assert.Equal(123, await cache1.Get(123));
-            Assert.Equal(default, await cache2.Get(123));
+            (await cache1.Get(123)).Should().Be(123);
+            (await cache2.Get(123)).Should().Be(0);
         }
         
         [Fact]
@@ -161,23 +163,24 @@ namespace CacheMeIfYouCan.Tests.Cache
             }
 
             await cacheInt.Set(123, 123, TimeSpan.FromSeconds(1));
-            
-            Assert.Equal(1, serializer1.SerializeCount);
-            Assert.Equal(0, serializer2.SerializeCount);
-            Assert.Equal(0, serializer3.SerializeCount);
+
+            serializer1.SerializeCount.Should().Be(1);
+            serializer2.SerializeCount.Should().Be(0);
+            serializer3.SerializeCount.Should().Be(0);
 
             await cacheLong.Set(123, 123, TimeSpan.FromSeconds(1));
             
-            Assert.Equal(1, serializer1.SerializeCount);
-            Assert.Equal(1, serializer2.SerializeCount);
-            Assert.Equal(0, serializer3.SerializeCount);
+            serializer1.SerializeCount.Should().Be(1);
+            serializer2.SerializeCount.Should().Be(1);
+            serializer3.SerializeCount.Should().Be(0);
+            
             await Task.Delay(TimeSpan.FromSeconds(2));
             
             await cacheString.Set("123", "123", TimeSpan.FromSeconds(1));
             
-            Assert.Equal(1, serializer1.SerializeCount);
-            Assert.Equal(1, serializer2.SerializeCount);
-            Assert.Equal(1, serializer3.SerializeCount);
+            serializer1.SerializeCount.Should().Be(1);
+            serializer2.SerializeCount.Should().Be(1);
+            serializer3.SerializeCount.Should().Be(1);
         }
     }
 }

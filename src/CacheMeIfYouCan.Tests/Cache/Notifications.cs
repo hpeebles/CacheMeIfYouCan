@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests.Cache.Helpers;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -33,16 +35,17 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>("test");
             }
 
-            await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));
+            Func<Task<GetFromCacheResult<string, string>>> func = () => cache.Get(new Key<string>("abc", "abc"));
+            await func.Should().ThrowAsync<CacheException<string>>();
 
             if (filterSucceeds)
             {
-                Assert.Single(errors);
-                Assert.Equal("abc", errors[0].Keys.Single());
+                errors.Should().ContainSingle();
+                errors[0].Keys.Single().Should().Be("abc");
             }
             else
             {
-                Assert.Empty(errors);
+                errors.Should().BeEmpty();
             }
         }
         
@@ -62,16 +65,17 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>("test");
             }
 
-            Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>("abc", "abc")));
+            Func<GetFromCacheResult<string, string>> func = () => cache.Get(new Key<string>("abc", "abc"));
+            func.Should().Throw<CacheGetException<string>>();
 
             if (filterSucceeds)
             {
-                Assert.Single(errors);
-                Assert.Equal("abc", errors[0].Keys.Single());
+                errors.Should().ContainSingle();
+                errors[0].Keys.Single().Should().Be("abc");
             }
             else
             {
-                Assert.Empty(errors);
+                errors.Should().BeEmpty();
             }
         }
     }

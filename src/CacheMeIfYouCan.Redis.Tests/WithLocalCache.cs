@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests;
+using FluentAssertions;
 using StackExchange.Redis;
 using Xunit;
 
@@ -39,8 +40,8 @@ namespace CacheMeIfYouCan.Redis.Tests
             
             await cachedEcho(key);
             
-            Assert.True(redisClient.GetDatabase().KeyExists(redisKey));
-            Assert.True(localCache.Values.ContainsKey(key));
+            redisClient.GetDatabase().KeyExists(redisKey).Should().BeTrue();
+            localCache.Values.ContainsKey(key).Should().BeTrue();
 
             if (action == "set")
                 redisClient.GetDatabase().StringSet(redisKey, "123");
@@ -49,7 +50,7 @@ namespace CacheMeIfYouCan.Redis.Tests
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            Assert.False(localCache.Values.ContainsKey(key));
+            localCache.Values.ContainsKey(key).Should().BeFalse();
         }
     }
 }

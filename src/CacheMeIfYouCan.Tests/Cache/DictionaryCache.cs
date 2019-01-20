@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Caches;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -33,12 +34,12 @@ namespace CacheMeIfYouCan.Tests.Cache
             }
 
             await cachedEcho("123");
-            
-            Assert.Equal(1, cache.Count);
+
+            cache.Count.Should().Be(1);
 
             await Task.Delay(TimeSpan.FromSeconds(11));
             
-            Assert.Equal(0, cache.Count);
+            cache.Count.Should().Be(0);
         }
         
         [Fact]
@@ -60,11 +61,11 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await cachedEcho("123");
             
-            Assert.Equal(1, cache.Count);
+            cache.Count.Should().Be(1);
 
             await Task.Delay(TimeSpan.FromSeconds(11));
             
-            Assert.Equal(1, cache.Count);
+            cache.Count.Should().Be(1);
         }
         
         [Fact]
@@ -75,7 +76,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             for (var i = 0; i < 1000; i++)
                 cache.Set(new Key<int>(i, i.ToString()), Guid.NewGuid(), TimeSpan.FromMinutes(1));
 
-            Assert.Equal(1000, cache.Count);
+            cache.Count.Should().Be(1000);
         }
 
         [Fact]
@@ -88,7 +89,7 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await Task.Delay(TimeSpan.FromSeconds(15));
             
-            Assert.Equal(1000, cache.Count);
+            cache.Count.Should().Be(1000);
         }
     }
 }

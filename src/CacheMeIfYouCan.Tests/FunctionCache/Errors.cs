@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -155,7 +156,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             Assert.Equal(loopCount * 2, errors.Count);
-            Assert.True(errors.All(k => k.Keys.Single() == "error!"));
+            errors.All(k => k.Keys.Single() == "error!").Should().BeTrue();
             Assert.Equal(loopCount, thrownErrorsCount);
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "one"));
             Assert.Equal(loopCount, results.Count(kv => kv.Key == "two"));

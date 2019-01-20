@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -38,15 +39,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var result = await cachedFunc(key1, key2);
             
             Assert.Equal($"{key1}_{key2}", result);
-            Assert.Single(results);
-            Assert.Single(results.Single().Results);
+            results.Should().ContainSingle();
+            results.Single().Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             result = await cachedFunc(key1, key2);
             
             Assert.Equal($"{key1}_{key2}", result);
             Assert.Equal(2, results.Count);
-            Assert.Single(results.Last().Results);
+            results.Last().Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
         
@@ -72,15 +73,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var result = await cachedFunc(key1, key2, key3);
             
             Assert.Equal($"{key1}_{key2}_{key3}", result);
-            Assert.Single(results);
-            Assert.Single(results.Single().Results);
+            results.Should().ContainSingle();
+            results.Single().Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             result = await cachedFunc(key1, key2, key3);
             
             Assert.Equal($"{key1}_{key2}_{key3}", result);
             Assert.Equal(2, results.Count);
-            Assert.Single(results.Last().Results);
+            results.Last().Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
         
@@ -107,15 +108,15 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             var result = await cachedFunc(key1, key2, key3, key4);
             
             Assert.Equal($"{key1}_{key2}_{key3}_{key4}", result);
-            Assert.Single(results);
-            Assert.Single(results.Single().Results);
+            results.Should().ContainSingle();
+            results.Single().Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results.Single().Results.Single().Outcome);
 
             result = await cachedFunc(key1, key2, key3, key4);
             
             Assert.Equal($"{key1}_{key2}_{key3}_{key4}", result);
             Assert.Equal(2, results.Count);
-            Assert.Single(results.Last().Results);
+            results.Last().Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
     }

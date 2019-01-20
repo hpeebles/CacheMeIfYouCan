@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -43,18 +44,18 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await cache.Get(key);
 
-            Assert.Single(distributedResults);
-            Assert.Single(distributedResults.Single().Hits);
+            distributedResults.Should().ContainSingle();
+            distributedResults.Single().Hits.Should().ContainSingle();
             Assert.Empty(distributedResults.Single().Misses);
-            Assert.Single(localResults);
-            Assert.Single(localResults.Single().Misses);
+            localResults.Should().ContainSingle();
+            localResults.Single().Misses.Should().ContainSingle();
             Assert.Empty(localResults.Single().Hits);
 
             await cache.Get(key);
 
-            Assert.Single(distributedResults);
+            distributedResults.Should().ContainSingle();
             Assert.Equal(2, localResults.Count);
-            Assert.Single(localResults.Last().Hits);
+            localResults.Last().Hits.Should().ContainSingle();
             Assert.Empty(localResults.Last().Misses);
         }
     }

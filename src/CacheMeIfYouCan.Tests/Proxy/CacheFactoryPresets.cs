@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -40,8 +41,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.StringToString(key);
 
-            Assert.Single(results);
-            Assert.Single(results[0].Misses);
+            results.Should().ContainSingle();
+            results[0].Misses.Should().ContainSingle();
             Assert.Equal(key, results[0].Misses[0]);
         }
         
@@ -68,8 +69,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.StringToString(key);
 
-            Assert.Single(results);
-            Assert.Single(results[0].Misses);
+            results.Should().ContainSingle();
+            results[0].Misses.Should().ContainSingle();
             Assert.Equal(key, results[0].Misses[0]);
         }
 
@@ -127,8 +128,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             var expectedWithResults = useInt ? resultsInt : resultsEnum;
             var expectedWithoutResults = useInt ? resultsEnum : resultsInt;
             
-            Assert.Single(expectedWithResults);
-            Assert.Single(expectedWithResults[0].Misses);
+            expectedWithResults.Should().ContainSingle();
+            expectedWithResults[0].Misses.Should().ContainSingle();
             Assert.Equal(key, expectedWithResults[0].Misses[0]);
             Assert.Empty(expectedWithoutResults);
         }
@@ -161,8 +162,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             await proxy.StringToString(key);
             
-            Assert.Single(shouldBePopulated);
-            Assert.Single(shouldBePopulated[0].Misses);
+            shouldBePopulated.Should().ContainSingle();
+            shouldBePopulated[0].Misses.Should().ContainSingle();
             Assert.Equal(key, shouldBePopulated[0].Misses[0]);
             Assert.Empty(shouldBeEmpty);
         }
@@ -195,8 +196,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             await proxy.StringToString(key);
             
-            Assert.Single(shouldBePopulated);
-            Assert.Single(shouldBePopulated[0].Misses);
+            shouldBePopulated.Should().ContainSingle();
+            shouldBePopulated[0].Misses.Should().ContainSingle();
             Assert.Equal(key, shouldBePopulated[0].Misses[0]);
             Assert.Empty(shouldBeEmpty);
         }

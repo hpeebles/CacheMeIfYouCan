@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -35,9 +36,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var timer = Stopwatch.StartNew();
 
-            Assert.NotEqual(0, ticks.Value);
+            ticks.Value.Should().BeGreaterThan(0);
 
-            Assert.True(timer.Elapsed >= TimeSpan.FromSeconds(1));
+            timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(1));
         }
         
         [Fact]
@@ -60,9 +61,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var timer = Stopwatch.StartNew();
 
-            Assert.NotEqual(0, ticks.Value);
+            ticks.Value.Should().BeGreaterThan(0);
 
-            Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(20));
+            timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(20));
         }
 
         [Fact]
@@ -89,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .Select(i => ticks.Value)
                 .ToArray();
 
-            Assert.Equal(1, count);
+            count.Should().Be(1);
         }
     }
 }

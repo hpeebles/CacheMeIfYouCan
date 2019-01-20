@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -48,7 +49,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             await cachedEcho1("123");
-            Assert.Single(results1);
+            results1.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results1[0].Results.Single().Outcome);
 
             await cachedEcho1("123");
@@ -57,7 +58,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Equal(localCache1.CacheType, results1[1].Results.Single().CacheType);
 
             await cachedEcho2("123");
-            Assert.Single(results2);
+            results2.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results2[0].Results.Single().Outcome);
             Assert.Equal(distributedCache.CacheType, results2[0].Results.Single().CacheType);
             
@@ -88,7 +89,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             await cachedEcho("123");
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results[0].Results.Single().Outcome);
 
             await cachedEcho("123");

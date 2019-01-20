@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests.Cache.Helpers;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -34,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result = await cache.Get(new Key<string>("abc", "abc"));
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
         }
         
         [Fact]
@@ -50,7 +51,7 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result = cache.Get(new Key<string>("abc", "abc"));
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
         }
         
         [Theory]
@@ -70,11 +71,14 @@ namespace CacheMeIfYouCan.Tests.Cache
             {
                 var result = await cache.Get(new Key<string>(keyString, keyString));
             
-                Assert.False(result.Success);
+                result.Success.Should().BeFalse();
             }
             else
             {
-                await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>(keyString, keyString)));
+                Func<Task<GetFromCacheResult<string, string>>> func = () =>
+                    cache.Get(new Key<string>(keyString, keyString));
+                
+                await func.Should().ThrowAsync<CacheGetException<string>>();
             }
         }
         
@@ -95,11 +99,12 @@ namespace CacheMeIfYouCan.Tests.Cache
             {
                 var result = cache.Get(new Key<string>(keyString, keyString));
             
-                Assert.False(result.Success);
+                result.Success.Should().BeFalse();
             }
             else
             {
-                Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>(keyString, keyString)));
+                Func<GetFromCacheResult<string, string>> func = () => cache.Get(new Key<string>(keyString, keyString));
+                func.Should().Throw<CacheGetException<string>>();
             }
         }
 
@@ -118,9 +123,11 @@ namespace CacheMeIfYouCan.Tests.Cache
             
             var result = await cache.Get(key);
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
+
+            Func<Task> func = () => cache.Set(key, "abc", TimeSpan.FromMinutes(1));
             
-            await Assert.ThrowsAsync<CacheSetException<string, string>>(() => cache.Set(key, "abc", TimeSpan.FromMinutes(1)));
+            await func.Should().ThrowAsync<CacheSetException<string, string>>();
         }
         
         [Fact]
@@ -138,9 +145,11 @@ namespace CacheMeIfYouCan.Tests.Cache
             
             var result = cache.Get(key);
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
+
+            Action action = () => cache.Set(key, "abc", TimeSpan.FromMinutes(1));
             
-            Assert.Throws<CacheSetException<string, string>>(() => cache.Set(key, "abc", TimeSpan.FromMinutes(1)));
+            action.Should().Throw<CacheSetException<string, string>>();
         }
 
         [Fact]
@@ -156,13 +165,17 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result = await cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
+
+            Func<Task<GetFromCacheResult<string, string>>> getFunc = () =>
+                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis));
+
+            await getFunc.Should().ThrowAsync<CacheGetException<string>>();
+
+            Func<Task> setFunc = () =>
+                cache.Set(new Key<string>(SwallowThis, SwallowThis), "abc", TimeSpan.FromMinutes(1));
             
-            await Assert.ThrowsAsync<CacheGetException<string>>(() =>
-                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis)));
-            
-            await Assert.ThrowsAsync<CacheSetException<string, string>>(() =>
-                cache.Set(new Key<string>(SwallowThis, SwallowThis), "abc", TimeSpan.FromMinutes(1)));
+            await setFunc.Should().ThrowAsync<CacheSetException<string, string>>();
         }
         
         [Fact]
@@ -178,13 +191,17 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result = cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
-            Assert.False(result.Success);
+            result.Success.Should().BeFalse();
+
+            Func<GetFromCacheResult<string, string>> getFunc = () =>
+                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis));
             
-            Assert.Throws<CacheGetException<string>>(() =>
-                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis)));
+            getFunc.Should().Throw<CacheGetException<string>>();
+
+            Action setAction = () =>
+                cache.Set(new Key<string>(SwallowThis, SwallowThis), "abc", TimeSpan.FromMinutes(1));
             
-            Assert.Throws<CacheSetException<string, string>>(() =>
-                cache.Set(new Key<string>(SwallowThis, SwallowThis), "abc", TimeSpan.FromMinutes(1)));
+            setAction.Should().Throw<CacheSetException<string, string>>();
         }
         
         [Fact]
@@ -201,13 +218,16 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result1 = await cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
-            Assert.False(result1.Success);
+            result1.Success.Should().BeFalse();
             
             var result2 = await cache.Get(new Key<string>(AlsoSwallowThis, AlsoSwallowThis));
             
-            Assert.False(result2.Success);
+            result2.Success.Should().BeFalse();
+
+            Func<Task<GetFromCacheResult<string, string>>> func = () =>
+                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis));
             
-            await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis)));
+            await func.Should().ThrowAsync<CacheGetException<string>>();
         }
         
         [Fact]
@@ -224,13 +244,16 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             var result1 = cache.Get(new Key<string>(SwallowThis, SwallowThis));
             
-            Assert.False(result1.Success);
+            result1.Success.Should().BeFalse();
             
             var result2 = cache.Get(new Key<string>(AlsoSwallowThis, AlsoSwallowThis));
             
-            Assert.False(result2.Success);
+            result2.Success.Should().BeFalse();
+
+            Func<GetFromCacheResult<string, string>> func = () =>
+                cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis));
             
-            Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>(DontSwallowThis, DontSwallowThis)));
+            func.Should().Throw<CacheGetException<string>>();
         }
         
         [Theory]
@@ -251,11 +274,14 @@ namespace CacheMeIfYouCan.Tests.Cache
             {
                 var result = await cache.Get(new Key<string>(keyString, keyString));
             
-                Assert.False(result.Success);
+                result.Success.Should().BeFalse();
             }
             else
             {
-                await Assert.ThrowsAsync<CacheGetException<string>>(() => cache.Get(new Key<string>(keyString, keyString)));
+                Func<Task<GetFromCacheResult<string, string>>> func = () =>
+                    cache.Get(new Key<string>(keyString, keyString));
+                
+                await func.Should().ThrowAsync<CacheGetException<string>>();
             }
         }
 
@@ -277,11 +303,13 @@ namespace CacheMeIfYouCan.Tests.Cache
             {
                 var result = cache.Get(new Key<string>(keyString, keyString));
 
-                Assert.False(result.Success);
+                result.Success.Should().BeFalse();
             }
             else
             {
-                Assert.Throws<CacheGetException<string>>(() => cache.Get(new Key<string>(keyString, keyString)));
+                Func<GetFromCacheResult<string, string>> func = () => cache.Get(new Key<string>(keyString, keyString));
+                
+                func.Should().Throw<CacheGetException<string>>();
             }
         }
     }

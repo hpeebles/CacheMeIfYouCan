@@ -1,4 +1,5 @@
 using System;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Keys
@@ -10,9 +11,10 @@ namespace CacheMeIfYouCan.Tests.Keys
         {
             var key = new Key<int>(123, default(Func<int, string>));
 
-            Assert.ThrowsAny<Exception>(() => key.AsString);
+            Func<string> func = () => key.AsString;
+            func.Should().Throw<Exception>();
             
-            Assert.Equal("123", key.AsStringSafe);
+            key.AsStringSafe.Should().Be("123");
         }
     }
 }

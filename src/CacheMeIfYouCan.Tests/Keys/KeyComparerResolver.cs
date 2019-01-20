@@ -1,5 +1,6 @@
 using System;
 using CacheMeIfYouCan.Internal;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Keys
@@ -44,7 +45,7 @@ namespace CacheMeIfYouCan.Tests.Keys
                 ? typeof(GenericKeyComparer<T>)
                 : typeof(StringKeyComparer<T>);
 
-            Assert.IsType(expectedType, comparer);
+            comparer.Should().BeOfType(expectedType);
         }
 
         private class WithOverrides

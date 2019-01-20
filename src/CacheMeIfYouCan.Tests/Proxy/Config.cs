@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -34,18 +35,18 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             await proxy.StringToString("123");
             
-            Assert.Empty(results1);
-            Assert.Empty(results2);
+            results1.Should().BeEmpty();
+            results2.Should().BeEmpty();
             
             await proxy.IntToString(0);
 
-            Assert.Single(results1);
-            Assert.Empty(results2);
+            results1.Should().ContainSingle();
+            results2.Should().BeEmpty();
             
             await proxy.LongToInt(0);
 
-            Assert.Single(results1);
-            Assert.Single(results2);
+            results1.Should().ContainSingle();
+            results2.Should().ContainSingle();
         }
     }
 }

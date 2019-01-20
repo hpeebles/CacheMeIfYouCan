@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
@@ -31,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cache.Get(new Key<string>("123", "123"));
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Fact]
@@ -49,7 +50,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cache.Set(new Key<string>("123", "123"), "123", TimeSpan.FromMinutes(1));
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Fact]
@@ -67,7 +68,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(new Key<string>("123", "123")));
 
-            Assert.Single(errors);
+            errors.Should().ContainSingle();
         }
     }
 }

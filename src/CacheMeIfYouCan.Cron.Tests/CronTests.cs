@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Cron.Tests
@@ -34,10 +35,10 @@ namespace CacheMeIfYouCan.Cron.Tests
 
             var expectedCount = (10 / intervalSeconds) + 1;
             
-            Assert.InRange(refreshResults.Count, expectedCount - 1, expectedCount + 1);
+            refreshResults.Count.Should().BeInRange(expectedCount - 1, expectedCount + 1);
             
             foreach (var result in refreshResults.Skip(1))
-                Assert.NotInRange(result.Start.Millisecond, 200, 950);
+                result.Start.Millisecond.Should().NotBeInRange(200, 950);
         }
     }
 }

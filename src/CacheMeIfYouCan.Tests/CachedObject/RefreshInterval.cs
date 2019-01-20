@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -41,8 +42,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
 
-            Assert.True(TimeSpan.FromMilliseconds(3800) <= min);
-            Assert.True(max <= TimeSpan.FromMilliseconds(6000));
+            min.Should().BeGreaterThan(TimeSpan.FromMilliseconds(3800));
+            max.Should().BeLessThan(TimeSpan.FromMilliseconds(6000));
         }
         
         [Fact]
@@ -70,8 +71,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
             var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
             
-            Assert.InRange(min, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(900));
-            Assert.True(max > TimeSpan.FromMilliseconds(1200));
+            min.Should().BeGreaterThan(TimeSpan.FromMilliseconds(500)).And.BeLessThan(TimeSpan.FromMilliseconds(900));
+            max.Should().BeGreaterThan(TimeSpan.FromMilliseconds(1200));
         }
 
         [Fact]
@@ -95,13 +96,16 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            Assert.Equal(5, refreshResults.Count);
+            refreshResults.Count.Should().Be(5);
             foreach (var result in refreshResults.Skip(1))
             {
-                Assert.InRange(
-                    result.Start - result.LastRefreshAttempt,
-                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1),
-                    TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 0.9));
+                var interval = result.Start - result.LastRefreshAttempt;
+                    
+                interval
+                    .Should()
+                    .BeGreaterThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1))
+                    .And
+                    .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 0.9));
             }
         }
     }

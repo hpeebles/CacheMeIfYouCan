@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -30,7 +31,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -38,11 +39,11 @@ namespace CacheMeIfYouCan.Tests.Cache
                 .Select(k => cache.Get(new Key<string>(k, k)))
                 .ToArray();
 
-            Assert.Equal(5, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(5);
 
             await Task.WhenAll(tasks);
             
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
         }
         
         [Fact]
@@ -58,7 +59,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
 
             var expectedPendingRequestsCount = 0;
             
@@ -85,13 +86,13 @@ namespace CacheMeIfYouCan.Tests.Cache
                 {
                     // This can fail if the check is done during the tiny gap between the expectedPendingRequestsCount
                     // being incremented and the actual pending requests count being incremented
-                    Assert.Equal(expectedPendingRequestsCount, pendingRequestsCount);
+                    pendingRequestsCount.Should().Be(expectedPendingRequestsCount);
                 }
                 catch
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(1));
                     pendingRequestsCount = GetPendingRequestsCount(name);
-                    Assert.Equal(expectedPendingRequestsCount, pendingRequestsCount);
+                    pendingRequestsCount.Should().Be(expectedPendingRequestsCount);
                 }
                 
                 if (pendingRequestsCount > maxPendingRequestsCount)
@@ -105,8 +106,8 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             Task.WaitAll(tasks);
             
-            Assert.Equal(0, GetPendingRequestsCount(name));
-            Assert.True(maxPendingRequestsCount > 1);
+            GetPendingRequestsCount(name).Should().Be(0);
+            maxPendingRequestsCount.Should().BeGreaterThan(1);
         }
         
         [Fact]
@@ -123,7 +124,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -131,11 +132,12 @@ namespace CacheMeIfYouCan.Tests.Cache
                 .Select(k => cache.Get(new Key<string>(k, k)))
                 .ToArray();
 
-            Assert.Equal(5, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(5);
 
-            await Assert.ThrowsAnyAsync<Exception>(() => Task.WhenAll(tasks));
+            Func<Task> func = () => Task.WhenAll(tasks);
+            await func.Should().ThrowAsync<Exception>();
 
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
         }
         
         [Fact]
@@ -152,7 +154,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Equal(0, GetPendingRequestsCount(name));
+            GetPendingRequestsCount(name).Should().Be(0);
 
             var expectedPendingRequestsCount = 0;
             
@@ -185,13 +187,13 @@ namespace CacheMeIfYouCan.Tests.Cache
                 {
                     // This can fail if the check is done during the tiny gap between the expectedPendingRequestsCount
                     // being incremented and the actual pending requests count being incremented
-                    Assert.Equal(expectedPendingRequestsCount, pendingRequestsCount);
+                    expectedPendingRequestsCount.Should().Be(pendingRequestsCount);
                 }
                 catch
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(1));
                     pendingRequestsCount = GetPendingRequestsCount(name);
-                    Assert.Equal(expectedPendingRequestsCount, pendingRequestsCount);
+                    expectedPendingRequestsCount.Should().Be(pendingRequestsCount);
                 }
                 
                 if (pendingRequestsCount > maxPendingRequestsCount)
@@ -203,10 +205,11 @@ namespace CacheMeIfYouCan.Tests.Cache
                 await Task.Delay(TimeSpan.FromMilliseconds(50));
             }
 
-            await Assert.ThrowsAnyAsync<Exception>(() => Task.WhenAll(tasks));
+            Func<Task> func = () => Task.WhenAll(tasks);
+            await func.Should().ThrowAsync<Exception>();
             
-            Assert.Equal(0, GetPendingRequestsCount(name));
-            Assert.True(maxPendingRequestsCount > 1);
+            GetPendingRequestsCount(name).Should().Be(0);
+            maxPendingRequestsCount.Should().BeGreaterThan(1);
         }
 
         [Fact]
@@ -222,11 +225,19 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Single(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
+            PendingRequestsCounterContainer
+                .GetCounts()
+                .Where(c => c.Name == name)
+                .Should()
+                .ContainSingle();
             
             cache.Dispose();
             
-            Assert.Empty(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
+            PendingRequestsCounterContainer
+                .GetCounts()
+                .Where(c => c.Name == name)
+                .Should()
+                .BeEmpty();
         }
         
         [Fact]
@@ -242,11 +253,19 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .Build<string, string>(name);
             }
 
-            Assert.Single(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
+            PendingRequestsCounterContainer
+                .GetCounts()
+                .Where(c => c.Name == name)
+                .Should()
+                .ContainSingle();
             
             cache.Dispose();
             
-            Assert.Empty(PendingRequestsCounterContainer.GetCounts().Where(c => c.Name == name));
+            PendingRequestsCounterContainer
+                .GetCounts()
+                .Where(c => c.Name == name)
+                .Should()
+                .BeEmpty();
         }
 
         private static int GetPendingRequestsCount(string name)

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -33,7 +34,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             }
 
             await proxy.LongToInt(123);
-            Assert.Equal(1, serializerA.SerializeCount);
+            serializerA.SerializeCount.Should().Be(1);
             
             serializerA.ResetCounts();
             
@@ -41,15 +42,15 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 await proxy.LongToInt(123);
 
-                Assert.Equal(i, serializerA.SerializeCount);
+                serializerA.SerializeCount.Should().Be(i);
             }
             
             serializerA.ResetCounts();
             
-            Assert.Equal(0, serializerB.SerializeCount);
+            serializerB.SerializeCount.Should().Be(0);
             
             await proxy.StringToString("abc");
-            Assert.Equal(1, serializerB.SerializeCount);
+            serializerB.SerializeCount.Should().Be(1);
             
             serializerB.ResetCounts();
             
@@ -57,10 +58,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 await proxy.StringToString("abc");
 
-                Assert.Equal(i, serializerB.SerializeCount);
+                serializerB.SerializeCount.Should().Be(i);
             }
             
-            Assert.Equal(0, serializerA.SerializeCount);
+            serializerA.SerializeCount.Should().Be(0);
         }
         
         [Fact]
@@ -83,7 +84,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             }
 
             await proxy.LongToInt(123);
-            Assert.Equal(1, serializerA.SerializeCount);
+            serializerA.SerializeCount.Should().Be(1);
             
             serializerA.ResetCounts();
             
@@ -91,17 +92,17 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 await proxy.LongToInt(123);
 
-                Assert.Equal(0, serializerA.SerializeCount);
-                Assert.Equal(i, serializerA.DeserializeCount);
+                serializerA.SerializeCount.Should().Be(0);
+                serializerA.DeserializeCount.Should().Be(i);
             }
             
             serializerA.ResetCounts();
             
-            Assert.Equal(0, serializerB.SerializeCount);
-            Assert.Equal(0, serializerB.DeserializeCount);
+            serializerB.SerializeCount.Should().Be(0);
+            serializerB.DeserializeCount.Should().Be(0);
             
             await proxy.StringToString("abc");
-            Assert.Equal(1, serializerB.SerializeCount);
+            serializerB.SerializeCount.Should().Be(1);
             
             serializerB.ResetCounts();
             
@@ -109,12 +110,12 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 await proxy.StringToString("abc");
 
-                Assert.Equal(0, serializerB.SerializeCount);
-                Assert.Equal(i, serializerB.DeserializeCount);
+                serializerB.SerializeCount.Should().Be(0);
+                serializerB.DeserializeCount.Should().Be(i);
             }
             
-            Assert.Equal(0, serializerA.SerializeCount);
-            Assert.Equal(0, serializerA.DeserializeCount);
+            serializerA.SerializeCount.Should().Be(0);
+            serializerA.DeserializeCount.Should().Be(0);
         }
     }
 }

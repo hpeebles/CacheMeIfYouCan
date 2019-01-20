@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -38,7 +39,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 await cachedEcho("abc");
 
-                Assert.Equal(disableCache ? i : 1, fetches.Count);
+                fetches.Count.Should().Be(disableCache ? i : 1);
             }
         }
     }

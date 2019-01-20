@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -236,7 +237,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(Outcome.Fetch, mostRecentResult.Results.Last().Outcome);
                 Assert.All(mostRecentResult.Results.Take(mostRecentResult.Results.Count - 1), x => Assert.Equal(Outcome.FromCache, x.Outcome));
 
-                Assert.Single(mostRecentFetch.Results);
+                mostRecentFetch.Results.Should().ContainSingle();
                 Assert.Equal(i.ToString(), mostRecentFetch.Results.Single().KeyString);
             }
         }

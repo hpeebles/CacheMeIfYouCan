@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -31,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(0, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(0);
 
             var tasks = Enumerable
                 .Range(0, 10)
@@ -40,13 +41,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(10);
 
             await Task.WhenAll(tasks);
             
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(0, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(0);
         }
 
         [Fact]
@@ -65,7 +66,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(0, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(0);
 
             var tasks = Enumerable
                 .Range(0, 10)
@@ -74,13 +75,14 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(10, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(10);
 
-            await Assert.ThrowsAnyAsync<Exception>(() => Task.WhenAll(tasks));
+            Func<Task> func = () => Task.WhenAll(tasks);
+            await func.Should().ThrowAsync<Exception>();
             
             pendingRequests = PendingRequestsCounterContainer.GetCounts().Single(c => c.Name == name);
             
-            Assert.Equal(0, pendingRequests.Count);
+            pendingRequests.Count.Should().Be(0);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -51,12 +52,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedFuncWithSerializer(key2);
             await cachedFuncWithSerializer(key3);
             
-            Assert.Equal(results1[0].Results.Single().Value, results1[1].Results.Single().Value);
-            Assert.Equal(Outcome.FromCache, results1[1].Results.Single().Outcome);
+            results1[0].Results.Single().Value.Should().Be(results1[1].Results.Single().Value);
+            results1[1].Results.Single().Outcome.Should().Be(Outcome.FromCache);
             
-            Assert.Equal(Outcome.Fetch, results2[1].Results.Single().Outcome);
-            Assert.Equal(Outcome.FromCache, results2[2].Results.Single().Outcome);
-            Assert.Equal(results2[1].Results.Single().Value, results2[2].Results.Single().Value);
+            results2[1].Results.Single().Outcome.Should().Be(Outcome.Fetch);
+            results2[2].Results.Single().Outcome.Should().Be(Outcome.FromCache);
+            results2[1].Results.Single().Value.Should().Be(results2[2].Results.Single().Value);
         }
     }
 }

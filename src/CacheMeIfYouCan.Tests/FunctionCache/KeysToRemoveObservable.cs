@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -40,14 +41,14 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho(key);
 
-            Assert.Single(results);
-            Assert.Single(results[0].Results);
+            results.Should().ContainSingle();
+            results[0].Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results[0].Results.First().Outcome);
 
             await cachedEcho(key);
             
             Assert.Equal(2, results.Count);
-            Assert.Single(results[1].Results);
+            results[1].Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results[1].Results.First().Outcome);
             
             keysToRemoveObservable.OnNext(key);
@@ -55,7 +56,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho(key);
 
             Assert.Equal(3, results.Count);
-            Assert.Single(results[2].Results);
+            results[2].Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results[2].Results.First().Outcome);
         }
 
@@ -84,14 +85,14 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho(key);
 
-            Assert.Single(results);
-            Assert.Single(results[0].Results);
+            results.Should().ContainSingle();
+            results[0].Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results[0].Results.First().Outcome);
 
             await cachedEcho(key);
             
             Assert.Equal(2, results.Count);
-            Assert.Single(results[1].Results);
+            results[1].Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results[1].Results.First().Outcome);
 
             error = true;
@@ -105,7 +106,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho(key);
 
             Assert.Equal(3, results.Count);
-            Assert.Single(results[2].Results);
+            results[2].Results.Should().ContainSingle();
             Assert.Equal(Outcome.Fetch, results[2].Results.First().Outcome);
         }
     }

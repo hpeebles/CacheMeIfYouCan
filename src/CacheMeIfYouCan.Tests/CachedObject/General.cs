@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -75,16 +76,16 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            Assert.True(refreshResults.Count > 2);
+            refreshResults.Count.Should().BeGreaterThan(2);
 
             for (var i = 0; i < refreshResults.Count; i++)
             {
                 var result = refreshResults[i];
                 
                 if (i == 1)
-                    Assert.False(result.Success);
+                    result.Success.Should().BeFalse();
                 else
-                    Assert.True(result.Success);
+                    result.Success.Should().BeTrue();
             }
         }
 
@@ -102,11 +103,12 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             await date.Initialize();
 
-            Assert.True(date.Value > DateTime.MinValue);
+            date.Value.Should().BeAfter(DateTime.MinValue);
             
             date.Dispose();
 
-            Assert.Throws<ObjectDisposedException>(() => date.Value);
+            Func<DateTime> act = () => date.Value;
+            act.Should().Throw<ObjectDisposedException>();
         }
     }
 }

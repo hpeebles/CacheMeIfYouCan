@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests;
+using FluentAssertions;
 using Polly;
 using Polly.CircuitBreaker;
 using Xunit;
@@ -28,21 +29,21 @@ namespace CacheMeIfYouCan.Polly.Tests
             var key = new Key<string>("123", "123");
 
             await cache.Set(key, "abc", TimeSpan.FromMinutes(1));
-            
-            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
-            
-            Assert.Equal("abc", await cache.Get(key));
 
-            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
-            await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
+            Func<Task<GetFromCacheResult<string, string>>> func = () => cache.Get(key);
+            await func.Should().ThrowAsync<CacheException>();
             
-            var exception = await Assert.ThrowsAnyAsync<CacheException>(() => cache.Get(key));
+            (await cache.Get(key)).Should().Be("abc");
 
-            Assert.IsType<BrokenCircuitException>(exception.InnerException);
+            await func.Should().ThrowAsync<CacheException>();
+            await func.Should().ThrowAsync<CacheException>();
+
+            (await func.Should().ThrowAsync<CacheException>())
+                .Which.InnerException.Should().BeOfType<BrokenCircuitException>();
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            Assert.Equal("abc", await cache.Get(key));
+            (await cache.Get(key)).Should().Be("abc");
         }
         
         [Fact]
@@ -61,21 +62,25 @@ namespace CacheMeIfYouCan.Polly.Tests
             var key = new Key<string>("123", "123");
 
             cache.Set(key, "abc", TimeSpan.FromMinutes(1));
-            
-            Assert.ThrowsAny<CacheException>(() => cache.Get(key));
-            
-            Assert.Equal("abc", cache.Get(key));
 
-            Assert.ThrowsAny<CacheException>(() => cache.Get(key));
-            Assert.ThrowsAny<CacheException>(() => cache.Get(key));
+            Func<GetFromCacheResult<string, string>> func = () => cache.Get(key);
+            func.Should().Throw<CacheException>();
             
-            var exception = Assert.ThrowsAny<CacheException>(() => cache.Get(key));
+            cache.Get(key).Should().Be("abc");
 
-            Assert.IsType<BrokenCircuitException>(exception.InnerException);
+            func.Should().Throw<CacheException>();
+            func.Should().Throw<CacheException>();
+            
+            func.Should()
+                .Throw<CacheException>()
+                .Which
+                .InnerException
+                .Should()
+                .BeOfType<BrokenCircuitException>();
 
             Task.Delay(TimeSpan.FromSeconds(1)).Wait();
             
-            Assert.Equal("abc", cache.Get(key));
+            cache.Get(key).Should().Be("abc");
         }
     }
 }

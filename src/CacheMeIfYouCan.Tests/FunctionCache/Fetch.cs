@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -121,7 +122,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             await cachedEcho("abc");
             
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
             Assert.InRange(fetches[0].Duration.Ticks, duration.Ticks * 0.99, duration.Ticks * 1.1);
         }
         
@@ -144,7 +145,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             await cachedEcho("abc");
             
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
             Assert.True(now <= fetches[0].Start && fetches[0].Start < now + TimeSpan.FromMilliseconds(100).Ticks);
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.FunctionCache
@@ -62,7 +63,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             await cachedEcho("abc");
             
-            Assert.Single(results);
+            results.Should().ContainSingle();
             Assert.True(now <= results[0].Start && results[0].Start < now + TimeSpan.FromMilliseconds(10).Ticks);
         }
     }

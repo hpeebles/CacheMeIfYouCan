@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
@@ -34,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cachedEcho("123");
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Fact]
@@ -54,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cachedEcho("123");
 
-            Assert.Single(fetches);
+            fetches.Should().ContainSingle();
         }
         
         [Fact]
@@ -95,7 +96,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cachedEcho("123");
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Fact]
@@ -115,7 +116,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await cachedEcho("123");
 
-            Assert.Single(results);
+            results.Should().ContainSingle();
         }
         
         [Fact]
@@ -139,7 +140,7 @@ namespace CacheMeIfYouCan.Tests.ConfigurationExtensions
 
             await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("123"));
 
-            Assert.Single(errors);
+            errors.Should().ContainSingle();
         }
     }
 }

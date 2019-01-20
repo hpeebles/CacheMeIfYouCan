@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.CachedObject
@@ -53,7 +54,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var initializeResults = await CachedObjectInitializer.InitializeAll();
             
-            Assert.True(initializeResults.Success);
+            initializeResults.Success.Should().BeTrue();
 
             var timer = Stopwatch.StartNew();
             
@@ -61,7 +62,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var dateValue = date.Value;
             var ticksDoubleValue = ticksDouble.Value;
 
-            Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
+            timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(100));
         }
         
         [Fact]
@@ -80,8 +81,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var initializeResults = await CachedObjectInitializer.Initialize<Guid>();
             
-            Assert.True(initializeResults.Success);
-            Assert.Equal(10, initializeResults.Results.Count);
+            initializeResults.Success.Should().BeTrue();
+            initializeResults.Results.Count.Should().Be(10);
         }
         
         [Fact]
@@ -99,8 +100,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             {
                 var initializeResults = await CachedObjectInitializer.Initialize<Dummy1>();
 
-                Assert.True(initializeResults.Success);
-                Assert.Single(initializeResults.Results);
+                initializeResults.Success.Should().BeTrue();
+                initializeResults.Results.Should().ContainSingle();
             }
         }
 
@@ -118,15 +119,15 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
 
-            Assert.True(initializeResults.Success);
-            Assert.Single(initializeResults.Results);
+            initializeResults.Success.Should().BeTrue();
+            initializeResults.Results.Should().ContainSingle();
 
             cachedObj.Dispose();
 
             initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
 
-            Assert.False(initializeResults.Success);
-            Assert.Empty(initializeResults.Results);
+            initializeResults.Success.Should().BeFalse();
+            initializeResults.Results.Should().BeEmpty();
         }
 
         [Fact]
@@ -150,9 +151,11 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             timer.Stop();
             
-            Assert.True(initializeResult.Success);
-            Assert.Single(initializeResult.Results);
-            Assert.InRange(initializeResult.Results[0].Duration, TimeSpan.FromSeconds(0.9), timer.Elapsed);
+            initializeResult.Success.Should().BeTrue();
+            initializeResult.Results.Should().ContainSingle();
+            initializeResult.Results[0].Duration
+                .Should().BeGreaterThan(TimeSpan.FromSeconds(0.9))
+                .And.BeLessThan(timer.Elapsed);
         }
 
         private class Dummy1

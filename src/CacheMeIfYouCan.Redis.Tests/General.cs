@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Redis.Tests
@@ -28,9 +29,9 @@ namespace CacheMeIfYouCan.Redis.Tests
             await cachedEcho(key);
             await cachedEcho(key);
             
-            Assert.Equal(key, results[1].Results.Single().KeyString);
-            Assert.Equal(Outcome.FromCache, results[1].Results.Single().Outcome);
-            Assert.Equal("redis", results[1].Results.Single().CacheType);
+            results[1].Results.Single().KeyString.Should().Be(key);
+            results[1].Results.Single().Outcome.Should().Be(Outcome.FromCache);
+            results[1].Results.Single().CacheType.Should().Be("redis");
         }
     }
 }

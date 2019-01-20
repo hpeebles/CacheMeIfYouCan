@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using FluentAssertions;
 using Xunit;
 
 namespace CacheMeIfYouCan.Tests.Cache
@@ -46,13 +46,16 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await Task.WhenAll(tasks);
 
-            Assert.Single(results.Where(r => !r.StatusCodeCounts.Any()));
+            results
+                .Where(r => !r.StatusCodeCounts.Any())
+                .Should()
+                .ContainSingle();
 
             foreach (var result in results.Where(r => r.StatusCodeCounts.Any()))
             {
-                Assert.Single(result.StatusCodeCounts);
-                Assert.Equal(DuplicateStatusCode, result.StatusCodeCounts.Single().StatusCode);
-                Assert.Equal(1, result.StatusCodeCounts.Single().Count);
+                result.StatusCodeCounts.Should().ContainSingle();
+                result.StatusCodeCounts.Single().StatusCode.Should().Be(DuplicateStatusCode);
+                result.StatusCodeCounts.Single().Count.Should().Be(1);
             }
         }
         
@@ -83,13 +86,16 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             await Task.WhenAll(tasks);
 
-            Assert.Single(results.Where(r => !r.StatusCodeCounts.Any()));
+            results
+                .Where(r => !r.StatusCodeCounts.Any())
+                .Should()
+                .ContainSingle();
 
             foreach (var result in results.Where(r => r.StatusCodeCounts.Any()))
             {
-                Assert.Single(result.StatusCodeCounts);
-                Assert.Equal(DuplicateStatusCode, result.StatusCodeCounts.Single().StatusCode);
-                Assert.Equal(1, result.StatusCodeCounts.Single().Count);
+                result.StatusCodeCounts.Should().ContainSingle();
+                result.StatusCodeCounts.Single().StatusCode.Should().Be(DuplicateStatusCode);
+                result.StatusCodeCounts.Single().Count.Should().Be(1);
             }
         }
     } 
