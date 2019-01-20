@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using Xunit;
@@ -20,7 +18,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public async Task ConfigureForTests()
         {
-            FunctionCacheGetResult lastResult = null;
+            var results1 = new List<FunctionCacheGetResult>();
+            var results2 = new List<FunctionCacheGetResult>();
 
             ITest impl = new TestImpl();
             ITest proxy;
@@ -28,76 +27,25 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 proxy = impl
                     .Cached()
-                    .WithTimeToLive(TimeSpan.FromMilliseconds(500))
-                    .OnResult(x => lastResult = x)
-                    .ConfigureFor<int, string>(x => x.IntToString, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)))
-                    .ConfigureFor<long, int>(x => x.LongToInt, c => c.WithTimeToLive(TimeSpan.FromSeconds(2)))
+                    .ConfigureFor<int, string>(x => x.IntToString, c => c.OnResult(results1.Add))
+                    .ConfigureFor<long, int>(x => x.LongToInt, c => c.OnResult(results2.Add))
                     .Build();
             }
 
-            // Run the functions with dummy data otherwise the first test usages will be slow
-            await proxy.StringToString(String.Empty);
+            await proxy.StringToString("123");
+            
+            Assert.Empty(results1);
+            Assert.Empty(results2);
+            
             await proxy.IntToString(0);
+
+            Assert.Single(results1);
+            Assert.Empty(results2);
+            
             await proxy.LongToInt(0);
 
-            await proxy.StringToString("123");
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
-            
-            await proxy.IntToString(123);
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
-            
-            await proxy.LongToInt(123);
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
-
-            var timer = Stopwatch.StartNew();
-
-            while (timer.Elapsed < TimeSpan.FromMilliseconds(400))
-            {
-                await proxy.StringToString("123");
-                Assert.Equal(Outcome.FromCache, lastResult.Results.Single().Outcome);
-
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
-            }
-
-            var untilStringToStringExpires = TimeSpan.FromMilliseconds(500) - timer.Elapsed;
-
-            if (untilStringToStringExpires.Ticks > 0)
-                await Task.Delay(untilStringToStringExpires);
-            
-            await proxy.StringToString("123");
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
-
-            while (timer.Elapsed < TimeSpan.FromMilliseconds(900))
-            {
-                await proxy.IntToString(123);
-                Assert.Equal(Outcome.FromCache, lastResult.Results.Single().Outcome);
-
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
-            }
-
-            var untilIntToStringExpires = TimeSpan.FromSeconds(1) - timer.Elapsed;
-
-            if (untilIntToStringExpires.Ticks > 0)
-                await Task.Delay(untilIntToStringExpires);
-            
-            await proxy.IntToString(123);
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
-            
-            while (timer.Elapsed < TimeSpan.FromMilliseconds(1900))
-            {
-                await proxy.LongToInt(123);
-                Assert.Equal(Outcome.FromCache, lastResult.Results.Single().Outcome);
-
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
-            }
-
-            var untilLongToIntExpires = TimeSpan.FromSeconds(2) - timer.Elapsed;
-
-            if (untilLongToIntExpires.Ticks > 0)
-                await Task.Delay(untilLongToIntExpires);
-            
-            await proxy.LongToInt(123);
-            Assert.Equal(Outcome.Fetch, lastResult.Results.Single().Outcome);
+            Assert.Single(results1);
+            Assert.Single(results2);
         }
     }
 }
