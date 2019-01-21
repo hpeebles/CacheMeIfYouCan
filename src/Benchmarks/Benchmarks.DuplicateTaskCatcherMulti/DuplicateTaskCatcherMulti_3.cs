@@ -9,17 +9,15 @@ using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
 namespace Benchmarks.DuplicateTaskCatcherMulti
 {
-    // Allocates new array if size under ArrayPoolCutOffSize otherwise takes from pool.
-    // This is exactly the same the version now in use
-    internal class DuplicateTaskCatcherMulti_1<TK, TV>
+    // Always takes array from pool
+    internal class DuplicateTaskCatcherMulti_3<TK, TV>
     {
         private readonly Func<ICollection<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
         private readonly ArrayPool<TK> _arrayPool;
-        private const int ArrayPoolCutOffSize = 100;
 
-        public DuplicateTaskCatcherMulti_1(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherMulti_3(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _comparer = comparer;
@@ -31,14 +29,10 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();
             var alreadyPending = new List<KeyValuePair<TK, Task<ResultsMulti>>>();
-
-            var usePooledArray = keys.Count >= ArrayPoolCutOffSize;
             
             // In most cases the vast majority of requests will not be duplicates
             // so initialize this array with enough capacity to fit all keys
-            var toFetch = usePooledArray
-                ? _arrayPool.Rent(keys.Count)
-                : new TK[keys.Count];
+            var toFetch = _arrayPool.Rent(keys.Count);
 
             var toFetchCount = 0;
             foreach (var key in keys)
@@ -110,8 +104,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
             }
             finally
             {
-                if (usePooledArray)
-                    _arrayPool.Return(toFetch);
+                _arrayPool.Return(toFetch);
                 
                 foreach (var key in keys)
                     _tasks.TryRemove(key, out _);

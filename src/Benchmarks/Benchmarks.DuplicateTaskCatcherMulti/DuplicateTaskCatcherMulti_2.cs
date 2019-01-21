@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,44 +8,35 @@ using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
 namespace Benchmarks.DuplicateTaskCatcherMulti
 {
-    // Allocates new array if size under ArrayPoolCutOffSize otherwise takes from pool.
-    // This is exactly the same the version now in use
-    internal class DuplicateTaskCatcherMulti_1<TK, TV>
+    // Always allocates new array
+    internal class DuplicateTaskCatcherMulti_2<TK, TV>
     {
         private readonly Func<ICollection<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
-        private readonly ArrayPool<TK> _arrayPool;
-        private const int ArrayPoolCutOffSize = 100;
 
-        public DuplicateTaskCatcherMulti_1(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherMulti_2(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _comparer = comparer;
             _tasks = new ConcurrentDictionary<TK, Task<ResultsMulti>>(comparer);
-            _arrayPool = ArrayPool<TK>.Shared;
         }
 
         public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(ICollection<TK> keys)
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();
             var alreadyPending = new List<KeyValuePair<TK, Task<ResultsMulti>>>();
-
-            var usePooledArray = keys.Count >= ArrayPoolCutOffSize;
             
             // In most cases the vast majority of requests will not be duplicates
-            // so initialize this array with enough capacity to fit all keys
-            var toFetch = usePooledArray
-                ? _arrayPool.Rent(keys.Count)
-                : new TK[keys.Count];
-
-            var toFetchCount = 0;
+            // so initialize this list with enough capacity to fit all keys
+            var toFetch = new List<TK>(keys.Count);
+            
             foreach (var key in keys)
             {
                 var task = _tasks.GetOrAdd(key, k => tcs.Task);
 
                 if (task == tcs.Task)
-                    toFetch[toFetchCount++] = key;
+                    toFetch.Add(key);
                 else
                     alreadyPending.Add(new KeyValuePair<TK, Task<ResultsMulti>>(key, task));
             }
@@ -60,7 +50,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
             {
                 if (toFetch.Any())
                 {
-                    var values = await _func(new ArraySegment<TK>(toFetch, 0, toFetchCount));
+                    var values = await _func(toFetch);
 
                     var resultsMulti = new ResultsMulti(values);
 
@@ -110,9 +100,6 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
             }
             finally
             {
-                if (usePooledArray)
-                    _arrayPool.Return(toFetch);
-                
                 foreach (var key in keys)
                     _tasks.TryRemove(key, out _);
             }
