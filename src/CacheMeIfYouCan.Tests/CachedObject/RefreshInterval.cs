@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using FluentAssertions;
@@ -22,7 +23,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
-            var waitHandle = new MultiWaitHandle(4);
+            var countdown = new CountdownEvent(4);
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -33,14 +34,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .OnRefresh(r =>
                     {
                         refreshResults.Add(r);
-                        waitHandle.Mark();
+                        countdown.Signal();
                     })
                     .Build();
             }
 
             await date.Initialize();
 
-            waitHandle.Wait();
+            countdown.Wait(TimeSpan.FromMinutes(1));
 
             date.Dispose();
             
@@ -55,7 +56,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task JitterCausesRefreshIntervalsToFluctuate()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
-            var waitHandle = new MultiWaitHandle(15);
+            var countdown = new CountdownEvent(15);
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -67,14 +68,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .OnRefresh(r =>
                     {
                         refreshResults.Add(r);
-                        waitHandle.Mark();
+                        countdown.Signal();
                     })
                     .Build();
             }
 
             await date.Initialize();
 
-            waitHandle.Wait();
+            countdown.Wait(TimeSpan.FromMinutes(1));
             
             date.Dispose();
             
@@ -89,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         public async Task VariableRefreshInterval()
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
-            var waitHandle = new MultiWaitHandle(5);
+            var countdown = new CountdownEvent(5);
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -100,14 +101,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .OnRefresh(r =>
                     {
                         refreshResults.Add(r);
-                        waitHandle.Mark();
+                        countdown.Signal();
                     })
                     .Build();
             }
 
             await date.Initialize();
 
-            waitHandle.Wait();
+            countdown.Wait(TimeSpan.FromMinutes(1));
             
             date.Dispose();
             
