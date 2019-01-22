@@ -8,9 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 
-[assembly: InternalsVisibleTo("ProxyFactoryAsm")]
-[assembly: InternalsVisibleTo("CacheMeIfYouCan.Tests")]
-[assembly: InternalsVisibleTo("CacheMeIfYouCan.PerformanceTests")]
+// Each type built by this class gets put into a dynamically built assembly called CachedProxyFactoryAsm
+[assembly: InternalsVisibleTo("CachedProxyFactoryAsm")]
 namespace CacheMeIfYouCan.Internal
 {
     internal class CachedProxyFactory
@@ -19,7 +18,10 @@ namespace CacheMeIfYouCan.Internal
         
         static CachedProxyFactory()
         {
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("ProxyFactoryAsm"), AssemblyBuilderAccess.Run);
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(
+                new AssemblyName("CachedProxyFactoryAsm"),
+                AssemblyBuilderAccess.Run);
+            
             ModuleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
         }
 
