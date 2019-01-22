@@ -1,25 +1,27 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
-[assembly: InternalsVisibleTo("Benchmarks.DuplicateTaskCatcherMulti")]
-namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
+namespace Benchmarks.DuplicateTaskCatcherMulti
 {
-    internal class DuplicateTaskCatcherMulti<TK, TV>
+    internal class DuplicateTaskCatcherMulti_1<TK, TV>
     {
         private readonly Func<ICollection<TK>, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
+        private readonly ArrayPool<TK> _arrayPool;
 
-        public DuplicateTaskCatcherMulti(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherMulti_1(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _comparer = comparer;
             _tasks = new ConcurrentDictionary<TK, Task<ResultsMulti>>(comparer);
+            _arrayPool = ArrayPool<TK>.Shared;
         }
 
         public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(ICollection<TK> keys)
@@ -29,14 +31,15 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             
             // In most cases the vast majority of requests will not be duplicates
             // so initialize this list with enough capacity to fit all keys
-            var toFetch = new List<TK>(keys.Count);
-            
+            var toFetch = _arrayPool.Rent(keys.Count);
+
+            var toFetchCount = 0;
             foreach (var key in keys)
             {
                 var task = _tasks.GetOrAdd(key, k => tcs.Task);
 
                 if (task == tcs.Task)
-                    toFetch.Add(key);
+                    toFetch[toFetchCount++] = key;
                 else
                     alreadyPending.Add(new KeyValuePair<TK, Task<ResultsMulti>>(key, task));
             }
@@ -50,7 +53,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             {
                 if (toFetch.Any())
                 {
-                    var values = await _func(toFetch);
+                    var values = await _func(new ArraySegment<TK>(toFetch, 0, toFetchCount));
 
                     var resultsMulti = new ResultsMulti(values);
 
@@ -102,6 +105,9 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             {
                 foreach (var key in keys)
                     _tasks.TryRemove(key, out _);
+                
+                if (toFetch.Any())
+                    _arrayPool.Return(toFetch);
             }
         }
 
