@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Cron.Tests
             refreshResults.Count.Should().BeInRange(expectedCount - 1, expectedCount + 1);
             
             foreach (var result in refreshResults.Skip(1))
-                result.Start.Millisecond.Should().NotBeInRange(200, 950);
+                result.Start.Millisecond.Should().NotBeInRange(250, 950);
         }
     }
 }

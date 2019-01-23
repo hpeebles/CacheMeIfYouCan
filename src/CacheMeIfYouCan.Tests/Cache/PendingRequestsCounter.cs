@@ -1,7 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
@@ -33,15 +31,21 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             GetPendingRequestsCount(name).Should().Be(0);
 
-            var tasks = Enumerable
-                .Range(0, 5)
-                .Select(i => i.ToString())
-                .Select(k => cache.Get(new Key<string>(k, k)))
-                .ToArray();
+            Func<string, Task> func = str => cache.Get(new Key<string>(str, str));
 
-            GetPendingRequestsCount(name).Should().Be(5);
+            var task1 = func("1");
 
-            await Task.WhenAll(tasks);
+            await Task.Delay(100);
+            
+            GetPendingRequestsCount(name).Should().Be(1);
+
+            var task2 = func("2");
+
+            await Task.Delay(100);
+            
+            GetPendingRequestsCount(name).Should().Be(2);
+
+            await Task.WhenAll(task1, task2);
             
             GetPendingRequestsCount(name).Should().Be(0);
         }
@@ -54,60 +58,30 @@ namespace CacheMeIfYouCan.Tests.Cache
             ILocalCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2))
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1))
                     .WithPendingRequestsCounter()
                     .Build<string, string>(name);
             }
 
             GetPendingRequestsCount(name).Should().Be(0);
 
-            var expectedPendingRequestsCount = 0;
+            Func<string, Task> func = str => Task.Run(() => cache.Get(new Key<string>(str, str)));
+
+            var task1 = func("1");
+
+            await Task.Delay(100);
             
-            var tasks = Enumerable
-                .Range(0, 5)
-                .Select(i => i.ToString())
-                .Select(k => Task.Run(() =>
-                {
-                    Interlocked.Increment(ref expectedPendingRequestsCount);
-                    cache.Get(new Key<string>(k, k));
-                    Interlocked.Decrement(ref expectedPendingRequestsCount);
-                }))
-                .ToArray();
+            GetPendingRequestsCount(name).Should().Be(1);
 
-            var timer = Stopwatch.StartNew();
+            var task2 = func("2");
+
+            await Task.Delay(100);
             
-            var maxPendingRequestsCount = 0;
+            GetPendingRequestsCount(name).Should().Be(2);
 
-            while (timer.Elapsed < TimeSpan.FromSeconds(10))
-            {
-                var pendingRequestsCount = GetPendingRequestsCount(name);
-
-                try
-                {
-                    // This can fail if the check is done during the tiny gap between the expectedPendingRequestsCount
-                    // being incremented and the actual pending requests count being incremented
-                    pendingRequestsCount.Should().Be(expectedPendingRequestsCount);
-                }
-                catch
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(1));
-                    pendingRequestsCount = GetPendingRequestsCount(name);
-                    pendingRequestsCount.Should().Be(expectedPendingRequestsCount);
-                }
-                
-                if (pendingRequestsCount > maxPendingRequestsCount)
-                    maxPendingRequestsCount = pendingRequestsCount;
-
-                if (maxPendingRequestsCount > 0 && expectedPendingRequestsCount == 0)
-                    break;
-                
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
-            }
-
-            Task.WaitAll(tasks);
+            await Task.WhenAll(task1, task2);
             
             GetPendingRequestsCount(name).Should().Be(0);
-            maxPendingRequestsCount.Should().BeGreaterThan(1);
         }
         
         [Fact]
@@ -119,25 +93,31 @@ namespace CacheMeIfYouCan.Tests.Cache
             IDistributedCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => index++ % 2 == 0)
+                cache = new TestCacheFactory(TimeSpan.FromSeconds(1), () => index++ % 2 == 1)
                     .WithPendingRequestsCounter()
                     .Build<string, string>(name);
             }
 
             GetPendingRequestsCount(name).Should().Be(0);
 
-            var tasks = Enumerable
-                .Range(0, 5)
-                .Select(i => i.ToString())
-                .Select(k => cache.Get(new Key<string>(k, k)))
-                .ToArray();
+            var key = new Key<string>("123", "123");
 
-            GetPendingRequestsCount(name).Should().Be(5);
+            Func<Task> func = () => cache.Get(key);
 
-            Func<Task> func = () => Task.WhenAll(tasks);
-            await func.Should().ThrowAsync<Exception>();
+            for (var i = 0; i < 5; i++)
+            {
+                var task = i % 2 == 1
+                    ? func.Should().ThrowAsync<Exception>()
+                    : func();
 
-            GetPendingRequestsCount(name).Should().Be(0);
+                await Task.Delay(100);
+                
+                GetPendingRequestsCount(name).Should().Be(1);
+
+                await task;
+
+                GetPendingRequestsCount(name).Should().Be(0);
+            }
         }
         
         [Fact]
@@ -149,67 +129,31 @@ namespace CacheMeIfYouCan.Tests.Cache
             ILocalCache<string, string> cache;
             using (_setupLock.Enter())
             {
-                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(2), () => index++ % 2 == 0)
+                cache = new TestLocalCacheFactory(TimeSpan.FromSeconds(1), () => index++ % 2 == 1)
                     .WithPendingRequestsCounter()
                     .Build<string, string>(name);
             }
 
             GetPendingRequestsCount(name).Should().Be(0);
 
-            var expectedPendingRequestsCount = 0;
+            var key = new Key<string>("123", "123");
             
-            var tasks = Enumerable
-                .Range(0, 5)
-                .Select(i => i.ToString())
-                .Select(k => Task.Run(() =>
-                {
-                    Interlocked.Increment(ref expectedPendingRequestsCount);
-                    try
-                    {
-                        cache.Get(new Key<string>(k, k));
-                    }
-                    finally
-                    {
-                        Interlocked.Decrement(ref expectedPendingRequestsCount);
-                    }
-                }))
-                .ToArray();
+            Func<Task> func = () => Task.Run(() => cache.Get(key));
 
-            var timer = Stopwatch.StartNew();
-            
-            var maxPendingRequestsCount = 0;
-
-            while (timer.Elapsed < TimeSpan.FromSeconds(10))
+            for (var i = 0; i < 5; i++)
             {
-                var pendingRequestsCount = GetPendingRequestsCount(name);
-                
-                try
-                {
-                    // This can fail if the check is done during the tiny gap between the expectedPendingRequestsCount
-                    // being incremented and the actual pending requests count being incremented
-                    expectedPendingRequestsCount.Should().Be(pendingRequestsCount);
-                }
-                catch
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(1));
-                    pendingRequestsCount = GetPendingRequestsCount(name);
-                    expectedPendingRequestsCount.Should().Be(pendingRequestsCount);
-                }
-                
-                if (pendingRequestsCount > maxPendingRequestsCount)
-                    maxPendingRequestsCount = pendingRequestsCount;
+                var task = i % 2 == 1
+                    ? func.Should().ThrowAsync<Exception>()
+                    : func();
 
-                if (maxPendingRequestsCount > 0 && expectedPendingRequestsCount == 0)
-                    break;
+                await Task.Delay(100);
                 
-                await Task.Delay(TimeSpan.FromMilliseconds(50));
+                GetPendingRequestsCount(name).Should().Be(1);
+
+                await task;
+
+                GetPendingRequestsCount(name).Should().Be(0);
             }
-
-            Func<Task> func = () => Task.WhenAll(tasks);
-            await func.Should().ThrowAsync<Exception>();
-            
-            GetPendingRequestsCount(name).Should().Be(0);
-            maxPendingRequestsCount.Should().BeGreaterThan(1);
         }
 
         [Fact]
