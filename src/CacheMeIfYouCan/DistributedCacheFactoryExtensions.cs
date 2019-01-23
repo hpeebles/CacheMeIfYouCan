@@ -177,7 +177,7 @@ namespace CacheMeIfYouCan
         {
             return cacheFactory
                 .AsFactory()
-                .WithKeyspacePrefix(keyspacePrefixFunc);
+                .WithKeyspacePrefixFunc(keyspacePrefixFunc);
         }
 
         /// <summary>

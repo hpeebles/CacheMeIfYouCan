@@ -199,7 +199,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> OnCacheException(string separator)
+        public CachedProxyConfigurationManager<T> WithKeyParamSeparator(string separator)
         {
             _keyParamSeparator = separator;
             return this;

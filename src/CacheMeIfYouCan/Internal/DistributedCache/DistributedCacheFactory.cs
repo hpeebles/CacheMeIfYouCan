@@ -66,10 +66,10 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         
         public DistributedCacheFactory WithKeyspacePrefix(string keyspacePrefix)
         {
-            return WithKeyspacePrefix(c => keyspacePrefix);
+            return WithKeyspacePrefixFunc(c => keyspacePrefix);
         }
         
-        public DistributedCacheFactory WithKeyspacePrefix(Func<string, string> keyspacePrefixFunc)
+        public DistributedCacheFactory WithKeyspacePrefixFunc(Func<string, string> keyspacePrefixFunc)
         {
             _keyspacePrefixFunc = keyspacePrefixFunc;
             return this;

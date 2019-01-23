@@ -229,11 +229,9 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        public TConfig WithDistributedCache(
-            IDistributedCache<TK, TV> cache,
-            string keyspacePrefix = null)
+        public TConfig WithDistributedCache(IDistributedCache<TK, TV> cache)
         {
-            return WithDistributedCacheFactory(c => cache, keyspacePrefix);
+            return WithDistributedCacheFactory(c => cache);
         }
         
         public TConfig WithDistributedCacheFactory(

@@ -1,26 +1,17 @@
-﻿using System;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
     public class RedisCacheFactoryConfig
     {
-        private ConfigurationOptions _configurationOptions;
-
-        public string ConnectionString
-        {
-            get => _configurationOptions.ToString();
-            set => _configurationOptions = ConfigurationOptions.Parse(value);
-        }
-
+        public string ConnectionString { get; set; }
+        
         public ConfigurationOptions Configuration
         {
-            get => _configurationOptions;
+            get => ConfigurationOptions.Parse(ConnectionString);
             set => ConnectionString = value.ToString();
         }
 
-        public int Database;
-        public Func<CachedProxyFunctionInfo, string> KeySpacePrefixFunc;
-        public string KeySpacePrefix { set => KeySpacePrefixFunc = f => value; }
+        public int Database { get; set; }
     }
 }

@@ -27,7 +27,6 @@ namespace CacheMeIfYouCan.Redis.Tests
                 .WithRedis(c =>
                 {
                     c.ConnectionString = TestConnectionString.Value;
-                    c.KeySpacePrefix = "CacheMeIfYouCanTest";
                 })
                 .WithLocalCache(localCache)
                 .OnResult(results.Add)
