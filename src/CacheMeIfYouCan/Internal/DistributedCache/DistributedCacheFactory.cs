@@ -133,8 +133,9 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             if (_swallowExceptionsPredicate != null)
                 cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
 
-            // If the original cache implemented INotifyKeyChanges, add a wrapper to maintain the INotifyKeyChanges implementation
-            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges)
+            // If the original cache implemented INotifyKeyChanges and NotifyKeyChangesEnabled is set to true,
+            // add a wrapper to maintain the INotifyKeyChanges implementation
+            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges && notifyKeyChanges.NotifyKeyChangesEnabled)
                 cache = new DistributedCacheNotifyKeyChangesWrapper<TK, TV>(cache, notifyKeyChanges);
             
             return cache;

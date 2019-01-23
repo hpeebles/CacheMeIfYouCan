@@ -13,5 +13,7 @@ namespace CacheMeIfYouCan.Redis
         }
 
         public int Database { get; set; }
+        
+        public bool SubscribeToKeyChanges { get; set; }
     }
 }

@@ -28,7 +28,8 @@ namespace CacheMeIfYouCan.Redis
                 config.KeyspacePrefix,
                 config.KeyDeserializer,
                 config.ValueSerializer,
-                config.ValueDeserializer);
+                config.ValueDeserializer,
+                _redisConfig.SubscribeToKeyChanges);
         }
     }
 }

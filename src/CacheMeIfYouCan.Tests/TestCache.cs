@@ -111,6 +111,7 @@ namespace CacheMeIfYouCan.Tests
             _keyChanges.OnNext(key);
         }
 
+        public bool NotifyKeyChangesEnabled { get; } = true;
         public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();
     }
 }

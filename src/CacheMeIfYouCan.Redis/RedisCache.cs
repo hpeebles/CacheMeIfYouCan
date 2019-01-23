@@ -28,7 +28,8 @@ namespace CacheMeIfYouCan.Redis
             string keySpacePrefix,
             Func<string, TK> keyDeserializer,
             Func<TV, string> serializer,
-            Func<string, TV> deserializer)
+            Func<string, TV> deserializer,
+            bool subscribeToKeyChanges)
         {
             _connection = connection;
             _database = database;
@@ -52,12 +53,18 @@ namespace CacheMeIfYouCan.Redis
             _keyChanges = new Subject<Key<TK>>();
 
             CacheName = cacheName;
-            
-            connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
+
+            if (subscribeToKeyChanges)
+            {
+                NotifyKeyChangesEnabled = true;
+
+                connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
+            }
         }
 
         public string CacheName { get; }
         public string CacheType { get; } = "redis";
+        public bool NotifyKeyChangesEnabled { get; }
         
         public void Dispose() { }
         

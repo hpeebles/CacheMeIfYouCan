@@ -16,10 +16,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
             CacheName = cache.CacheName;
             CacheType = cache.CacheType;
+            NotifyKeyChangesEnabled = notifyKeyChanges.NotifyKeyChangesEnabled;
         }
 
         public string CacheName { get; }
         public string CacheType { get; }
+        public bool NotifyKeyChangesEnabled { get; }
+        
         public void Dispose() => _cache.Dispose();
 
         public Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)

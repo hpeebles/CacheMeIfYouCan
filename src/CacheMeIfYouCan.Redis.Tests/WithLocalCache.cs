@@ -12,9 +12,11 @@ namespace CacheMeIfYouCan.Redis.Tests
     public class WithLocalCache
     {
         [Theory]
-        [InlineData("set")]
-        [InlineData("delete")]
-        public async Task OnKeyChangedExternallyRemovesFromLocalCache(string action)
+        [InlineData("set", true)]
+        [InlineData("delete", true)]
+        [InlineData("set", false)]
+        [InlineData("delete", false)]
+        public async Task OnKeyChangedExternallyRemovesFromLocalCache(string action, bool subscribeToKeyChangesEnabled)
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
@@ -27,6 +29,7 @@ namespace CacheMeIfYouCan.Redis.Tests
                 .WithRedis(c =>
                 {
                     c.ConnectionString = TestConnectionString.Value;
+                    c.SubscribeToKeyChanges = subscribeToKeyChangesEnabled;
                 })
                 .WithLocalCache(localCache)
                 .OnResult(results.Add)
@@ -49,7 +52,7 @@ namespace CacheMeIfYouCan.Redis.Tests
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            localCache.Values.ContainsKey(key).Should().BeFalse();
+            localCache.Values.ContainsKey(key).Should().Be(!subscribeToKeyChangesEnabled);
         }
     }
 }
