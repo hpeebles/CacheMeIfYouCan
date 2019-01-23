@@ -69,10 +69,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
-        public async Task DistributedCacheIsAbleToRemoveKeysFromLocalCache()
+        public async Task KeyRemovedFromLocalIfDistributedNotifiesItAsChanged()
         {
             var localCache = new TestLocalCache<string, string>();
-            var distributedCache = new TestCache<string, string>(x => x, x => x, localCache.Remove);
+            var distributedCache = new TestCache<string, string>(x => x, x => x);
 
             var results = new List<FunctionCacheGetResult>();
 
@@ -97,7 +97,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Equal(Outcome.FromCache, results[1].Results.Single().Outcome);
             Assert.Equal(localCache.CacheType, results[1].Results.Single().CacheType);
 
-            distributedCache.OnKeyChangedRemotely("123");
+            distributedCache.NotifyChanged(new Key<string>("123", "123"));
 
             await cachedEcho("123");
             Assert.Equal(3, results.Count);

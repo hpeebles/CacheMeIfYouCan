@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Redis.Tests
             var redisClient = ConnectionMultiplexer.Connect(TestConnectionString.Value);
 
             var key = Guid.NewGuid().ToString();
-            var redisKey = "CacheMeIfYouCanTest" + key;
+            var redisKey = key;
             
             await cachedEcho(key);
             

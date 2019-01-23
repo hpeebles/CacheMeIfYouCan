@@ -2,32 +2,33 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class TestCache<TK, TV> : IDistributedCache<TK, TV>
+    public class TestCache<TK, TV> : IDistributedCache<TK, TV>, INotifyKeyChanges<TK>
     {
         private readonly Func<TV, string> _serializer;
         private readonly Func<string, TV> _deserializer;
-        private readonly Action<Key<string>> _removeKeyFromLocalCacheAction;
         private readonly TimeSpan? _delay;
         private readonly Func<bool> _error;
+        private readonly Subject<Key<TK>> _keyChanges;
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
         
         public TestCache(
             Func<TV, string> serializer,
             Func<string, TV> deserializer,
-            Action<Key<string>> removeKeyFromLocalCacheAction = null,
             TimeSpan? delay = null,
             Func<bool> error = null,
             string cacheName = "test-name")
         {
             _serializer = serializer;
             _deserializer = deserializer;
-            _removeKeyFromLocalCacheAction = removeKeyFromLocalCacheAction;
             _delay = delay;
             _error = error;
+            _keyChanges = new Subject<Key<TK>>();
 
             CacheName = cacheName;
         }
@@ -103,10 +104,13 @@ namespace CacheMeIfYouCan.Tests
             Values.TryRemove(key.AsString, out _);
         }
 
-        public void OnKeyChangedRemotely(string key)
+        public void NotifyChanged(Key<TK> key)
         {
-            Values.TryRemove(key, out _);
-            _removeKeyFromLocalCacheAction?.Invoke(new Key<string>(key, key));
+            Remove(key).Wait();
+            
+            _keyChanges.OnNext(key);
         }
+
+        public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();
     }
 }
