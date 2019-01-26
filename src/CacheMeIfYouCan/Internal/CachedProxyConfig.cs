@@ -11,6 +11,7 @@ namespace CacheMeIfYouCan.Internal
             Type interfaceType,
             KeySerializers keySerializers,
             ValueSerializers valueSerializers,
+            EqualityComparers keyComparers,
             TimeSpan? timeToLive,
             bool? earlyFetchEnabled,
             bool? disableCache,
@@ -29,6 +30,7 @@ namespace CacheMeIfYouCan.Internal
             InterfaceType = interfaceType;
             KeySerializers = keySerializers;
             ValueSerializers = valueSerializers;
+            KeyComparers = keyComparers;
             TimeToLive = timeToLive;
             EarlyFetchEnabled = earlyFetchEnabled;
             DisableCache = disableCache;
@@ -48,6 +50,7 @@ namespace CacheMeIfYouCan.Internal
         public Type InterfaceType { get; }
         public KeySerializers KeySerializers { get; }
         public ValueSerializers ValueSerializers { get; }
+        public EqualityComparers KeyComparers { get; }
         public TimeSpan? TimeToLive { get; }
         public bool? EarlyFetchEnabled { get; }
         public bool? DisableCache { get; }

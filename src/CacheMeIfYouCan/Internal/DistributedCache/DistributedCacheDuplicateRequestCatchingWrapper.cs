@@ -9,12 +9,14 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
     internal class DistributedCacheDuplicateRequestCatchingWrapper<TK, TV> : IDistributedCache<TK, TV>
     {
         private readonly IDistributedCache<TK, TV> _cache;
-        private readonly IEqualityComparer<Key<TK>> _keyComparer;
+        private readonly KeyComparer<TK> _keyComparer;
         private readonly DuplicateTaskCatcherSingle<Key<TK>, GetFromCacheResult<TK, TV>> _getHandlerSingle;
         private readonly DuplicateTaskCatcherMulti<Key<TK>, GetFromCacheResult<TK, TV>> _getHandlerMulti;
         private const int DuplicateStatusCode = 11;
 
-        public DistributedCacheDuplicateRequestCatchingWrapper(IDistributedCache<TK, TV> cache, IEqualityComparer<Key<TK>> keyComparer)
+        public DistributedCacheDuplicateRequestCatchingWrapper(
+            IDistributedCache<TK, TV> cache,
+            KeyComparer<TK> keyComparer)
         {
             _cache = cache;
             _keyComparer = keyComparer;

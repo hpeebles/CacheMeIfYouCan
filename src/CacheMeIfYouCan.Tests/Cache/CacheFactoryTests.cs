@@ -86,7 +86,8 @@ namespace CacheMeIfYouCan.Tests.Cache
             const string key = "abc";
             
             Func<Task<int>> func = () => cache.Get(key);
-            func.Should().Throw<CacheException>();
+            
+            await func.Should().ThrowAsync<CacheException>();
             
             errors.Should().ContainSingle();
             errors[0].Keys.Should().ContainSingle();

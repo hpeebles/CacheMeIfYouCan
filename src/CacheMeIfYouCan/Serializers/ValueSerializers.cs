@@ -5,10 +5,16 @@ namespace CacheMeIfYouCan.Serializers
 {
     public class ValueSerializers
     {
-        private readonly Dictionary<Type, object> _serializers = new Dictionary<Type, object>();
-        private readonly Dictionary<Type, object> _deserializers = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _serializers;
+        private readonly Dictionary<Type, object> _deserializers;
         private ISerializer _default;
 
+        internal ValueSerializers()
+        {
+            _serializers = new Dictionary<Type, object>();
+            _deserializers = new Dictionary<Type, object>();
+        }
+        
         internal bool TryGetSerializer<T>(out Func<T, string> serializer)
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj))

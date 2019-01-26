@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Tests.Helpers;
 using FluentAssertions;
 using Xunit;
 
@@ -19,7 +20,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public void AddedAsConstantSucceeds()
         {
-            var cacheFactory = new KeyPrefixCheckingCacheFactory();
+            var cacheFactory = new KeyspacePrefixCheckingCacheFactory();
             
             Func<string, Task<string>> echo = new Echo();
             using (_setupLock.Enter())
@@ -31,20 +32,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
 
             cacheFactory.BuildCount.Should().Be(1);
-        }
-        
-        private class KeyPrefixCheckingCacheFactory : IDistributedCacheFactory
-        {
-            public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
-            {
-                config.KeyspacePrefix.Should().Be("prefix");
-
-                BuildCount++;
-                
-                return new TestCache<TK, TV>(null, null);
-            }
-            
-            public int BuildCount { get; private set; }
         }
     }
 }

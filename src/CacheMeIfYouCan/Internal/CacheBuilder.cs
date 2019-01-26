@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal.DistributedCache;
@@ -18,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheException<TK>> onCacheException,
-            IEqualityComparer<Key<TK>> keyComparer)
+            KeyComparer<TK> keyComparer)
         {
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();

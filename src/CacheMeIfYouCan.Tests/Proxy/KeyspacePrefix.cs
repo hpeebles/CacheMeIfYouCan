@@ -1,4 +1,5 @@
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Tests.Helpers;
 using FluentAssertions;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public void AddedAsConstantSucceeds()
         {
-            var cacheFactory = new KeyPrefixCheckingCacheFactory();
+            var cacheFactory = new KeyspacePrefixCheckingCacheFactory();
             
             ITest impl = new TestImpl();
             using (_setupLock.Enter())
@@ -34,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public void AddedViaFuncSucceeds()
         {
-            var cacheFactory = new KeyPrefixCheckingCacheFactory();
+            var cacheFactory = new KeyspacePrefixCheckingCacheFactory();
             
             ITest impl = new TestImpl();
             using (_setupLock.Enter())
@@ -46,20 +47,6 @@ namespace CacheMeIfYouCan.Tests.Proxy
             }
 
             cacheFactory.BuildCount.Should().BeGreaterThan(0);
-        }
-        
-        private class KeyPrefixCheckingCacheFactory : IDistributedCacheFactory
-        {
-            public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
-            {
-                config.KeyspacePrefix.Should().Be("prefix");
-                
-                BuildCount++;
-                
-                return new TestCache<TK, TV>(null, null);
-            }
-            
-            public int BuildCount { get; private set; }
         }
     }
 }

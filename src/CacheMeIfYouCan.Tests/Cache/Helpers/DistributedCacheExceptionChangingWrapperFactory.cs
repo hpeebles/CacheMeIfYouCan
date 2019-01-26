@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Tests.Cache.Helpers
 {
     public class DistributedCacheExceptionChangingWrapperFactory : IDistributedCacheWrapperFactory
     {
-        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap<TK, TV>(
+            IDistributedCache<TK, TV> cache,
+            DistributedCacheConfig<TK, TV> config)
         {
             return new Wrapper<TK, TV>(cache);
         }

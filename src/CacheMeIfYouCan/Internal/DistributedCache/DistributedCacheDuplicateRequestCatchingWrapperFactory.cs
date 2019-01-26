@@ -1,12 +1,14 @@
+using CacheMeIfYouCan.Configuration;
+
 namespace CacheMeIfYouCan.Internal.DistributedCache
 {
     internal class DistributedCacheDuplicateRequestCatchingWrapperFactory : IDistributedCacheWrapperFactory
     {
-        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap<TK, TV>(
+            IDistributedCache<TK, TV> cache,
+            DistributedCacheConfig<TK, TV> config)
         {
-            var keyComparer = KeyComparerResolver.Get<TK>();
-            
-            return new DistributedCacheDuplicateRequestCatchingWrapper<TK, TV>(cache, keyComparer);
+            return new DistributedCacheDuplicateRequestCatchingWrapper<TK, TV>(cache, config.KeyComparer);
         }
     }
 }

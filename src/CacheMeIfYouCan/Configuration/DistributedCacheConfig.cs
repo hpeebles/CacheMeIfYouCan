@@ -10,6 +10,7 @@ namespace CacheMeIfYouCan.Configuration
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;
         public Func<string, TV> ValueDeserializer;
+        public KeyComparer<TK> KeyComparer;
 
         public DistributedCacheConfig(string cacheName = null)
         {
@@ -32,6 +33,8 @@ namespace CacheMeIfYouCan.Configuration
             {
                 ValueDeserializer = valueDeserializer;
             }
+
+            KeyComparer = KeyComparerResolver.Get<TK>(allowNull: true);
         }
     }
 }

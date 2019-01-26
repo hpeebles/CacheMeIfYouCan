@@ -3,19 +3,36 @@ using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Internal
 {
-    public static class KeyComparerResolver
+    internal static class KeyComparerResolver
     {
-        public static IEqualityComparer<Key<TK>> Get<TK>()
+        public static KeyComparer<T> Get<T>(EqualityComparers comparers = null, bool allowNull = false)
         {
-            var type = typeof(TK);
+            var inner = GetInner<T>(comparers);
 
-            var useGenericComparer = type.IsPrimitive || OverridesGetHashCodeAndEquals(type);
-                
-            return useGenericComparer
-                ? (IEqualityComparer<Key<TK>>)new GenericKeyComparer<TK>()
-                : new StringKeyComparer<TK>();
+            return inner == null
+                ? null
+                : new KeyComparer<T>(inner);
         }
 
+        public static IEqualityComparer<T> GetInner<T>(EqualityComparers comparers = null, bool allowNull = false)
+        {
+            if (comparers != null && comparers.TryGet<T>(out var comparer))
+                return comparer;
+
+            if (DefaultSettings.Cache.KeyComparers.TryGet(out comparer))
+                return comparer;
+
+            var type = typeof(T);
+            
+            if (OverridesGetHashCodeAndEquals(type))
+                return EqualityComparer<T>.Default;
+
+            if (allowNull)
+                return null;
+            
+            throw new Exception($"No equality comparer defined for type: '{typeof(T).FullName}'");
+        }
+        
         private static bool OverridesGetHashCodeAndEquals(Type type)
         {
             var getHashCode = type.GetMethod("GetHashCode", new Type[0]);

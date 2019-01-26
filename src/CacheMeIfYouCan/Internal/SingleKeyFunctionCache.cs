@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +18,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
-        private readonly DuplicateTaskCatcherSingle<Key<TK>, TV> _fetchHandler;
+        private readonly DuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
         private long _averageFetchDuration;
@@ -37,7 +35,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
-            IEqualityComparer<Key<TK>> keyComparer)
+            KeyComparer<TK> keyComparer)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -50,7 +48,7 @@ namespace CacheMeIfYouCan.Internal
             _onResult = onResult;
             _onFetch = onFetch;
             _onException = onException;
-            _fetchHandler = new DuplicateTaskCatcherSingle<Key<TK>, TV>(k => func(k.AsObject), keyComparer);
+            _fetchHandler = new DuplicateTaskCatcherSingle<TK, TV>(func, keyComparer);
             _rng = new Random();
         }
 

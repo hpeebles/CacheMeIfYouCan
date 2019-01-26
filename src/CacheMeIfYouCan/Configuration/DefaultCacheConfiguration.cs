@@ -22,6 +22,7 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyParamSeparator { get; private set; } = "_";
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
+        internal EqualityComparers KeyComparers { get; } = new EqualityComparers();
         
         internal Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory local, IDistributedCacheFactory distributed)> CacheFactoryPresets { get; }
             = new Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory, IDistributedCacheFactory)>();
@@ -110,15 +111,21 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithKeySerializers(Action<KeySerializers> config)
+        public DefaultCacheConfiguration WithKeySerializers(Action<KeySerializers> configAction)
         {
-            config(KeySerializers);
+            configAction(KeySerializers);
             return this;
         }
 
-        public DefaultCacheConfiguration WithValueSerializers(Action<ValueSerializers> config)
+        public DefaultCacheConfiguration WithValueSerializers(Action<ValueSerializers> configAction)
         {
-            config(ValueSerializers);
+            configAction(ValueSerializers);
+            return this;
+        }
+        
+        public DefaultCacheConfiguration WithKeyComparer<T>(IEqualityComparer<T> comparer)
+        {
+            KeyComparers.Set(comparer);
             return this;
         }
         

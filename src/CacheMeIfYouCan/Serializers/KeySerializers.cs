@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Serializers
         private readonly Dictionary<Type, object> _deserializers;
         private ISerializer _default;
 
-        public KeySerializers()
+        internal KeySerializers()
         {
             _serializers = new Dictionary<Type, object>();
             _deserializers = new Dictionary<Type, object>();

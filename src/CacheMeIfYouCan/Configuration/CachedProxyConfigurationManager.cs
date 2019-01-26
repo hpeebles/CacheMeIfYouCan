@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly T _impl;
         private readonly KeySerializers _keySerializers;
         private readonly ValueSerializers _valueSerializers;
+        private readonly EqualityComparers _keyComparers;
         private TimeSpan? _timeToLive;
         private bool? _earlyFetchEnabled;
         private bool? _disableCache;
@@ -35,6 +36,7 @@ namespace CacheMeIfYouCan.Configuration
             _impl = impl;
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
+            _keyComparers = new EqualityComparers();
             _onResult = DefaultSettings.Cache.OnResultAction;
             _onFetch = DefaultSettings.Cache.OnFetchAction;
             _onException = DefaultSettings.Cache.OnExceptionAction;
@@ -60,6 +62,12 @@ namespace CacheMeIfYouCan.Configuration
         public CachedProxyConfigurationManager<T> WithValueSerializers(Action<ValueSerializers> configAction)
         {
             configAction(_valueSerializers);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithKeyComparer<TK>(IEqualityComparer<TK> comparer)
+        {
+            _keyComparers.Set(comparer);
             return this;
         }
 
@@ -345,6 +353,7 @@ namespace CacheMeIfYouCan.Configuration
                 typeof(T),
                 _keySerializers,
                 _valueSerializers,
+                _keyComparers,
                 _timeToLive,
                 _earlyFetchEnabled,
                 _disableCache,

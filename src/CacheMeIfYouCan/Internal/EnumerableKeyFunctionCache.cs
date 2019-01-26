@@ -20,9 +20,9 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
-        private readonly IEqualityComparer<Key<TK>> _keyComparer;
+        private readonly KeyComparer<TK> _keyComparer;
         private readonly Func<IDictionary<TK, TV>> _dictionaryFactoryFunc;
-        private readonly DuplicateTaskCatcherMulti<Key<TK>, TV> _fetchHandler;
+        private readonly DuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
         private long _averageFetchDuration;
@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
-            IEqualityComparer<Key<TK>> keyComparer,
+            KeyComparer<TK> keyComparer,
             Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
         {
             Name = functionName;
@@ -55,24 +55,8 @@ namespace CacheMeIfYouCan.Internal
             _onException = onException;
             _keyComparer = keyComparer;
             _dictionaryFactoryFunc = dictionaryFactoryFunc;
-            _fetchHandler = new DuplicateTaskCatcherMulti<Key<TK>, TV>(Fetch, keyComparer);
+            _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(func, keyComparer);
             _rng = new Random();
-            
-            async Task<IDictionary<Key<TK>, TV>> Fetch(ICollection<Key<TK>> keys)
-            {
-                var keysAsObj = new List<TK>(keys.Count);
-                var keysMap = new Dictionary<TK, Key<TK>>(keys.Count);
-
-                foreach (var k in keys)
-                {
-                    keysAsObj.Add(k);
-                    keysMap[k] = k;
-                }
-
-                var results = await func(keysAsObj);
-
-                return results?.ToDictionary(kv => keysMap[kv.Key], kv => kv.Value);
-            }
         }
 
         public string Name { get; }
@@ -232,22 +216,28 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                var fetched = await _fetchHandler.ExecuteAsync(keys.Select(k => k.Key).ToArray());
+                var fetched = await _fetchHandler.ExecuteAsync(keys.Select(k => k.Key.AsObject).ToArray());
                 
                 if (fetched != null && fetched.Any())
                 {
-                    results.AddRange(fetched
-                        .Select(kv => kv.Value)
+                    var keysAndFetchedValues = new Dictionary<Key<TK>, DuplicateTaskCatcherMultiResult<TK, TV>>();
+                    foreach (var key in keys.Select(k => k.Key))
+                    {
+                        if (fetched.TryGetValue(key, out var value))
+                            keysAndFetchedValues[key] = value;
+                    }
+
+                    results.AddRange(keysAndFetchedValues
                         .Select(f => new FunctionCacheFetchResultInner<TK, TV>(
                             f.Key,
-                            f.Value,
+                            f.Value.Value,
                             true,
-                            f.Duplicate,
-                            StopwatchHelper.GetDuration(stopwatchStart, f.StopwatchTimestampCompleted))));
+                            f.Value.Duplicate,
+                            StopwatchHelper.GetDuration(stopwatchStart, f.Value.StopwatchTimestampCompleted))));
 
                     if (_cache != null)
                     {
-                        var nonDuplicates = fetched
+                        var nonDuplicates = keysAndFetchedValues
                             .Where(kv => !kv.Value.Duplicate)
                             .ToDictionary(kv => kv.Key, kv => kv.Value.Value, _keyComparer);
 

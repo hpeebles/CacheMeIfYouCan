@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -79,11 +80,33 @@ namespace CacheMeIfYouCan.Configuration
                 return (key1Deserializer(k1), key2Deserializer(k2));
             }
         }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> WithKeyComparer(
+            IEqualityComparer<TK1> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> WithKeyComparer(
+            IEqualityComparer<TK2> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
 
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TV, TimeSpan> timeToLiveFactory)
         {
             return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, v));
+        }
+
+        private protected override KeyComparer<(TK1, TK2)> GetKeyComparer(EqualityComparers comparers)
+        {
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
+            
+            var comparer = new ValueTupleComparer<TK1, TK2>(comparer1, comparer2);
+            
+            return new KeyComparer<(TK1, TK2)>(comparer);
         }
 
         public Func<TK1, TK2, TV> Build()
@@ -190,11 +213,40 @@ namespace CacheMeIfYouCan.Configuration
                 return (key1Deserializer(parts[0]), key2Deserializer(parts[1]), key3Deserializer(parts[2]));
             }
         }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithKeyComparer(
+            IEqualityComparer<TK1> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithKeyComparer(
+            IEqualityComparer<TK2> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithKeyComparer(
+            IEqualityComparer<TK3> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
 
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TK3, TV, TimeSpan> timeToLiveFactory)
         {
             return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, v));
+        }
+        
+        private protected override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer(EqualityComparers comparers)
+        {
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
+            var comparer3 = KeyComparerResolver.GetInner<TK3>(comparers);
+            
+            var comparer = new ValueTupleComparer<TK1, TK2, TK3>(comparer1, comparer2, comparer3);
+            
+            return new KeyComparer<(TK1, TK2, TK3)>(comparer);
         }
 
         public Func<TK1, TK2, TK3, TV> Build()
@@ -323,11 +375,47 @@ namespace CacheMeIfYouCan.Configuration
                     key4Deserializer(parts[3]));
             }
         }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
+            IEqualityComparer<TK1> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
+            IEqualityComparer<TK2> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
+            IEqualityComparer<TK3> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
+        
+        public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
+            IEqualityComparer<TK4> comparer)
+        {
+            return base.WithKeyComparer(comparer);
+        }
 
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TK3, TK4, TV, TimeSpan> timeToLiveFactory)
         {
             return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, k.Item4, v));
+        }
+        
+        private protected override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer(EqualityComparers comparers)
+        {
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
+            var comparer3 = KeyComparerResolver.GetInner<TK3>(comparers);
+            var comparer4 = KeyComparerResolver.GetInner<TK4>(comparers);
+            
+            var comparer = new ValueTupleComparer<TK1, TK2, TK3, TK4>(comparer1, comparer2, comparer3, comparer4);
+            
+            return new KeyComparer<(TK1, TK2, TK3, TK4)>(comparer);
         }
 
         public Func<TK1, TK2, TK3, TK4, TV> Build()

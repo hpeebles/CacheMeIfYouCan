@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -29,6 +30,11 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
         {
             return base.WithTimeToLiveFactory(timeToLiveFactory);
+        }
+
+        public TConfig WithKeyComparer(IEqualityComparer<TK> comparer)
+        {
+            return base.WithKeyComparer(comparer);
         }
     }
 }

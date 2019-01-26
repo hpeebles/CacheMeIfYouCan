@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly string _functionName;
         private readonly bool _isEnumerableKey;
         private readonly KeySerializers _keySerializers;
+        private readonly EqualityComparers _keyComparers;
         private TimeSpan? _timeToLive;
         private Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private bool? _earlyFetchEnabled;
@@ -67,6 +68,7 @@ namespace CacheMeIfYouCan.Configuration
             if (interfaceConfig != null)
             {
                 _keySerializers = interfaceConfig.KeySerializers.Clone();
+                _keyComparers = interfaceConfig.KeyComparers.Clone();
 
                 if (interfaceConfig.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer))
                     _valueSerializer = valueSerializer;
@@ -111,6 +113,7 @@ namespace CacheMeIfYouCan.Configuration
             else
             {
                 _keySerializers = new KeySerializers();
+                _keyComparers = new EqualityComparers();
                 _onResult = DefaultSettings.Cache.OnResultAction;
                 _onFetch = DefaultSettings.Cache.OnFetchAction;
                 _onException = DefaultSettings.Cache.OnExceptionAction;
@@ -174,6 +177,12 @@ namespace CacheMeIfYouCan.Configuration
         {
             _valueSerializer = serializer;
             _valueDeserializer = deserializer;
+            return (TConfig)this;
+        }
+
+        private protected TConfig WithKeyComparer<T>(IEqualityComparer<T> comparer)
+        {
+            _keyComparers.Set(comparer);
             return (TConfig)this;
         }
 
@@ -361,7 +370,9 @@ namespace CacheMeIfYouCan.Configuration
             if (_isEnumerableKey)
                 throw new Exception($"You can't build a {nameof(SingleKeyFunctionCache<TK, TV>)} since your function has an enumerable key");
 
-            var cache = BuildCache(out var keyComparer);
+            var keyComparer = GetKeyComparer(_keyComparers);
+            
+            var cache = BuildCache(keyComparer);
 
             Func<TK, TV, TimeSpan> timeToLiveFactory;
             if (_timeToLiveFactory != null)
@@ -402,12 +413,15 @@ namespace CacheMeIfYouCan.Configuration
             return functionCache;
         }
         
-        private protected EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction(Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
+        private protected EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction(
+            Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
         {
             if (!_isEnumerableKey)
                 throw new Exception($"You can't build a {nameof(EnumerableKeyFunctionCache<TK, TV>)} since your function is single key");
 
-            var cache = BuildCache(out var keyComparer);
+            var keyComparer = GetKeyComparer(_keyComparers);
+            
+            var cache = BuildCache(keyComparer);
             
             var keySerializer = GetKeySerializer();
 
@@ -438,22 +452,19 @@ namespace CacheMeIfYouCan.Configuration
             return functionCache;
         }
 
-        private ICacheInternal<TK, TV> BuildCache(out IEqualityComparer<Key<TK>> keyComparer)
+        private ICacheInternal<TK, TV> BuildCache(KeyComparer<TK> keyComparer)
         {
             var cacheConfig = new DistributedCacheConfig<TK, TV>(_functionName)
             {
                 KeyspacePrefix = _keyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
                 ValueSerializer = GetValueSerializer(),
-                ValueDeserializer = GetValueDeserializer()
+                ValueDeserializer = GetValueDeserializer(),
+                KeyComparer = keyComparer
             };
 
             ICacheInternal<TK, TV> cache = null;
-            if (_disableCache ?? DefaultSettings.Cache.DisableCache)
-            {
-                keyComparer = new NoMatchesComparer<Key<TK>>();
-            }
-            else
+            if (!_disableCache ?? !DefaultSettings.Cache.DisableCache)
             {
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
                 if (_localCacheFactory != null)
@@ -466,8 +477,6 @@ namespace CacheMeIfYouCan.Configuration
                     distributedCacheFactory = _distributedCacheFactory;
                 else if (DefaultSettings.Cache.DistributedCacheFactory != null)
                     distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.DistributedCacheFactory);
-
-                keyComparer = KeyComparerResolver.Get<TK>();
 
                 cache = CacheBuilder.Build(
                     _functionName,
@@ -545,6 +554,11 @@ namespace CacheMeIfYouCan.Configuration
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
 
             return deserializer ?? (_ => throw new Exception($"No value deserializer defined for type '{typeof(TV).FullName}'"));
+        }
+
+        private protected virtual KeyComparer<TK> GetKeyComparer(EqualityComparers comparers)
+        {
+            return KeyComparerResolver.Get<TK>(comparers);
         }
     }
 }

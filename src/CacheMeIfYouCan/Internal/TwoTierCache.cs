@@ -10,12 +10,12 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ILocalCache<TK, TV> _localCache;
         private readonly IDistributedCache<TK, TV> _distributedCache;
-        private readonly IEqualityComparer<Key<TK>> _keyComparer;
+        private readonly KeyComparer<TK> _keyComparer;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
             IDistributedCache<TK, TV> distributedCache,
-            IEqualityComparer<Key<TK>> keyComparer)
+            KeyComparer<TK> keyComparer)
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));

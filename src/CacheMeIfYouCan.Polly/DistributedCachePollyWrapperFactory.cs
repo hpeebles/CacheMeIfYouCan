@@ -1,3 +1,4 @@
+using CacheMeIfYouCan.Configuration;
 using Polly;
 
 namespace CacheMeIfYouCan.Polly
@@ -11,7 +12,9 @@ namespace CacheMeIfYouCan.Polly
             _policy = policy;
         }
 
-        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap<TK, TV>(
+            IDistributedCache<TK, TV> cache,
+            DistributedCacheConfig<TK, TV> config)
         {
             return new DistributedCachePollyWrapper<TK, TV>(cache, _policy);
         }
@@ -26,7 +29,9 @@ namespace CacheMeIfYouCan.Polly
             _policy = policy;
         }
 
-        public IDistributedCache<TK, TV> Wrap(IDistributedCache<TK, TV> cache)
+        public IDistributedCache<TK, TV> Wrap(
+            IDistributedCache<TK, TV> cache,
+            DistributedCacheConfig<TK, TV> config)
         {
             return new DistributedCachePollyWrapper<TK, TV>(cache, _policy);
         }
