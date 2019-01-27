@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>Benchmarks.DuplicateTaskCatcherMulti</AssemblyName>
     <RootNamespace>Benchmarks.DuplicateTaskCatcherMulti</RootNamespace>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
