@@ -21,7 +21,6 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly KeyComparer<TK> _keyComparer;
-        private readonly Func<IDictionary<TK, TV>> _dictionaryFactoryFunc;
         private readonly DuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
         private readonly Random _rng;
         private int _pendingRequestsCount;
@@ -39,8 +38,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
-            KeyComparer<TK> keyComparer,
-            Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
+            KeyComparer<TK> keyComparer)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -54,7 +52,6 @@ namespace CacheMeIfYouCan.Internal
             _onFetch = onFetch;
             _onException = onException;
             _keyComparer = keyComparer;
-            _dictionaryFactoryFunc = dictionaryFactoryFunc;
             _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(func, keyComparer);
             _rng = new Random();
         }
@@ -69,123 +66,116 @@ namespace CacheMeIfYouCan.Internal
             PendingRequestsCounterContainer.Remove(this);
         }
         
-        public async Task<IDictionary<TK, TV>> GetMulti(IEnumerable<TK> keyObjs)
+        public async Task<IReadOnlyCollection<IKeyValuePair<TK, TV>>> GetMulti(IEnumerable<TK> keyObjs)
         {
             if (_disposed)
                 throw new ObjectDisposedException($"{Name} - {Type}");
             
-            using (SynchronizationContextRemover.StartNew())
-            {
-                var results = await GetImpl(keyObjs as ICollection<TK> ?? keyObjs.ToArray());
-
-                if (results == null)
-                    return null;
-                
-                var dictionary = _dictionaryFactoryFunc();
-
-                foreach (var result in results)
-                    dictionary[result.Key.AsObject] = result.Value;
-
-                return dictionary;
-            }
-        }
-
-        private async Task<IEnumerable<FunctionCacheGetResultInner<TK, TV>>> GetImpl(ICollection<TK> keyObjs)
-        {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
-            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keyObjs.Count, _keyComparer);
-            
+            Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>> results;
+            if (keyObjs is ICollection<TK> c)
+                results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(c.Count, _keyComparer);
+            else
+                results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(_keyComparer);
+
             var keys = keyObjs
                 .Select(k => new Key<TK>(k, _keySerializer))
                 .ToArray();
 
             var error = false;
-            
-            try
+
+            IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults;
+    
+            using (SynchronizationContextRemover.StartNew())
             {
-                Interlocked.Increment(ref _pendingRequestsCount);
-                
-                IList<Key<TK>> missingKeys = null;
-                if (_cache != null)
+                try
                 {
-                    var fromCacheTask = _cache.Get(keys);
+                    Interlocked.Increment(ref _pendingRequestsCount);
 
-                    var fromCache = fromCacheTask.IsCompleted
-                        ? fromCacheTask.Result
-                        : await fromCacheTask;
-                    
-                    if (fromCache != null && fromCache.Any())
+                    IList<Key<TK>> missingKeys = null;
+                    if (_cache != null)
                     {
-                        foreach (var result in fromCache)
-                        {
-                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
-                                result.Key,
-                                result.Value,
-                                Outcome.FromCache,
-                                result.CacheType);
-                        }
+                        var fromCacheTask = _cache.Get(keys);
 
-                        missingKeys = keys
-                            .Except(results.Keys, _keyComparer)
-                            .ToArray();
+                        var fromCache = fromCacheTask.IsCompleted
+                            ? fromCacheTask.Result
+                            : await fromCacheTask;
 
-                        if (_earlyFetchEnabled)
+                        if (fromCache != null && fromCache.Any())
                         {
-                            var keysToFetchEarly = fromCache
-                                .Where(r => ShouldFetchEarly(r.TimeToLive))
-                                .Select(r => new KeyToFetch(r.Key, r.TimeToLive))
+                            foreach (var result in fromCache)
+                            {
+                                results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                                    result.Key,
+                                    result.Value,
+                                    Outcome.FromCache,
+                                    result.CacheType);
+                            }
+
+                            missingKeys = keys
+                                .Except(results.Keys, _keyComparer)
                                 .ToArray();
 
-                            if (keysToFetchEarly.Any())
-                                FetchEarly(keysToFetchEarly);
+                            if (_earlyFetchEnabled)
+                            {
+                                var keysToFetchEarly = fromCache
+                                    .Where(r => ShouldFetchEarly(r.TimeToLive))
+                                    .Select(r => new KeyToFetch(r.Key, r.TimeToLive))
+                                    .ToArray();
+
+                                if (keysToFetchEarly.Any())
+                                    FetchEarly(keysToFetchEarly);
+                            }
                         }
                     }
-                }
 
-                if (missingKeys == null)
-                    missingKeys = keys;
-                
-                if (missingKeys.Any())
-                {
-                    var fetched = await FetchOnDemand(missingKeys);
+                    if (missingKeys == null)
+                        missingKeys = keys;
 
-                    if (fetched != null && fetched.Any())
+                    if (missingKeys.Any())
                     {
-                        foreach (var result in fetched)
+                        var fetched = await FetchOnDemand(missingKeys);
+
+                        if (fetched != null && fetched.Any())
                         {
-                            results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
-                                result.Key,
-                                result.Value,
-                                Outcome.Fetch,
-                                null);
+                            foreach (var result in fetched)
+                            {
+                                results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                                    result.Key,
+                                    result.Value,
+                                    Outcome.Fetch,
+                                    null);
+                            }
                         }
                     }
                 }
-
-                return results.Values;
-            }
-            catch (Exception ex)
-            {
-                error = true;
-                return HandleError(keys, ex);
-            }
-            finally
-            {
-                Interlocked.Decrement(ref _pendingRequestsCount);
-                
-                _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
-                    Name,
+                catch (Exception ex)
+                {
+                    error = true;
+                    return HandleError(keys, ex);
+                }
+                finally
+                {
 #if NET45
-                    results.Values.ToArray(),
+                    readonlyResults = results.Values.ToArray();
 #else
-                    results.Values,
+                    readonlyResults = results.Values;
 #endif
-                    !error,
-                    timestamp,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+
+                    Interlocked.Decrement(ref _pendingRequestsCount);
+
+                    _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
+                        Name,
+                        readonlyResults,
+                        !error,
+                        timestamp,
+                        StopwatchHelper.GetDuration(stopwatchStart)));
+                }
             }
+
+            return readonlyResults;
         }
 
         private Task<IList<FunctionCacheFetchResultInner<TK, TV>>> FetchOnDemand(IList<Key<TK>> keys)
@@ -295,7 +285,7 @@ namespace CacheMeIfYouCan.Internal
             return results;
         }
 
-        private IList<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
+        private IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
         {
             var message = _continueOnException
                 ? "Unable to get value(s). Default being returned"

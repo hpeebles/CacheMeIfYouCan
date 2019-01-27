@@ -241,5 +241,35 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(i.ToString(), mostRecentFetch.Results.Single().KeyString);
             }
         }
+
+        [Fact]
+        public async Task WithReturnDictionaryFactory()
+        {
+            var count = 0;
+            var dictionary = new Dictionary<string, string>();
+
+            Func<IEqualityComparer<string>, int, IDictionary<string, string>> dictionaryFactoryFunc = (k, c) =>
+            {
+                count++;
+                return dictionary;
+            };
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithReturnDictionaryFactory(dictionaryFactoryFunc)
+                    .Build();
+            }
+
+            var keys = new[] { "123", "234" };
+            
+            await cachedEcho(keys);
+
+            count.Should().Be(1);
+            dictionary.Should().ContainKeys(keys);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Notifications
 {
@@ -49,7 +50,7 @@ namespace CacheMeIfYouCan.Notifications
         string CacheType { get; }
     }
 
-    public sealed class FunctionCacheGetResultInner<TK, TV> : IFunctionCacheGetResultInner
+    public sealed class FunctionCacheGetResultInner<TK, TV> : IFunctionCacheGetResultInner, IKeyValuePair<TK, TV>
     {
         internal FunctionCacheGetResultInner(Key<TK> key, TV value, Outcome outcome, string cacheType)
         {
@@ -65,6 +66,8 @@ namespace CacheMeIfYouCan.Notifications
         public string KeyString => Key.AsStringSafe;
         public Outcome Outcome { get; }
         public string CacheType { get; }
+
+        TK IKeyValuePair<TK, TV>.Key => Key;
     }
     
     public enum Outcome

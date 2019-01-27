@@ -4,12 +4,12 @@ namespace CacheMeIfYouCan
 {
     public class KeyComparer<TK> : IEqualityComparer<Key<TK>>, IEqualityComparer<TK>
     {
-        private readonly IEqualityComparer<TK> _innerComparer;
-
         internal KeyComparer(IEqualityComparer<TK> innerComparer)
         {
-            _innerComparer = innerComparer;
+            Inner = innerComparer;
         }
+
+        public IEqualityComparer<TK> Inner { get; }
 
         public bool Equals(Key<TK> left, Key<TK> right)
         {
@@ -23,12 +23,12 @@ namespace CacheMeIfYouCan
 
         public bool Equals(TK left, TK right)
         {
-            return _innerComparer.Equals(left, right);
+            return Inner.Equals(left, right);
         }
 
         public int GetHashCode(TK key)
         {
-            return _innerComparer.GetHashCode(key);
+            return Inner.GetHashCode(key);
         }
     }
 }

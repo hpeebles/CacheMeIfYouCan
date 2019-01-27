@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
                 else
                 {
-                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(50));
+                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
                 }
             }
             
@@ -91,7 +91,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
                 else
                 {
-                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(50));
+                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
                 }
             }
             

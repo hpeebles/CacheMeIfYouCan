@@ -413,8 +413,7 @@ namespace CacheMeIfYouCan.Configuration
             return functionCache;
         }
         
-        private protected EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction(
-            Func<IDictionary<TK, TV>> dictionaryFactoryFunc)
+        private protected EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction()
         {
             if (!_isEnumerableKey)
                 throw new Exception($"You can't build a {nameof(EnumerableKeyFunctionCache<TK, TV>)} since your function is single key");
@@ -444,8 +443,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onResult,
                 _onFetch,
                 _onException,
-                keyComparer,
-                dictionaryFactoryFunc);
+                keyComparer);
             
             PendingRequestsCounterContainer.Add(functionCache);
 
@@ -555,6 +553,8 @@ namespace CacheMeIfYouCan.Configuration
 
             return deserializer ?? (_ => throw new Exception($"No value deserializer defined for type '{typeof(TV).FullName}'"));
         }
+
+        private protected KeyComparer<TK> GetKeyComparer() => GetKeyComparer(_keyComparers);
 
         private protected virtual KeyComparer<TK> GetKeyComparer(EqualityComparers comparers)
         {
