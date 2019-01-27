@@ -12,16 +12,13 @@ namespace CacheMeIfYouCan.Internal
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TK, TV, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
-        private readonly bool _earlyFetchEnabled;
         private readonly Func<TV> _defaultValueFactory;
         private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly DuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
-        private readonly Random _rng;
         private int _pendingRequestsCount;
-        private long _averageFetchDuration;
         private bool _disposed;
         
         public SingleKeyFunctionCache(
@@ -30,7 +27,6 @@ namespace CacheMeIfYouCan.Internal
             ICacheInternal<TK, TV> cache,
             Func<TK, TV, TimeSpan> timeToLiveFactory,
             Func<TK, string> keySerializer,
-            bool earlyFetchEnabled,
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
@@ -42,14 +38,12 @@ namespace CacheMeIfYouCan.Internal
             _cache = cache;
             _timeToLiveFactory = timeToLiveFactory;
             _keySerializer = keySerializer;
-            _earlyFetchEnabled = earlyFetchEnabled;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
             _onResult = onResult;
             _onFetch = onFetch;
             _onException = onException;
             _fetchHandler = new DuplicateTaskCatcherSingle<TK, TV>(func, keyComparer);
-            _rng = new Random();
         }
 
         public string Name { get; }
@@ -95,15 +89,12 @@ namespace CacheMeIfYouCan.Internal
                                 fromCache.Value,
                                 Outcome.FromCache,
                                 fromCache.CacheType);
-
-                            if (_earlyFetchEnabled && ShouldFetchEarly(fromCache.TimeToLive))
-                                FetchEarly(key, fromCache.TimeToLive);
                         }
                     }
 
                     if (result == null)
                     {
-                        var fetched = await FetchImpl(key, FetchReason.OnDemand);
+                        var fetched = await Fetch(key);
 
                         if (fetched != null)
                         {
@@ -140,20 +131,7 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private void FetchEarly(Key<TK> key, TimeSpan timeToLive)
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    await FetchImpl(key, FetchReason.EarlyFetch, timeToLive);
-                }
-                catch // Any exceptions that reach here will already have been handled
-                { }
-            });
-        }
-
-        private async Task<FunctionCacheFetchResultInner<TK, TV>> FetchImpl(Key<TK> key, FetchReason reason, TimeSpan? existingTimeToLive = null)
+        private async Task<FunctionCacheFetchResultInner<TK, TV>> Fetch(Key<TK> key)
         {
             var timestamp = Timestamp.Now;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -199,20 +177,12 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                if (_onFetch != null)
-                {
-                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
-
-                    _averageFetchDuration += (duration.Ticks - _averageFetchDuration) / 10;
-
-                    _onFetch(new FunctionCacheFetchResult<TK, TV>(
-                        Name,
-                        new[] { result },
-                        !error,
-                        timestamp,
-                        StopwatchHelper.GetDuration(stopwatchStart),
-                        reason));
-                }
+                _onFetch?.Invoke(new FunctionCacheFetchResult<TK, TV>(
+                    Name,
+                    new[] { result },
+                    !error,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
             return result;
@@ -241,13 +211,6 @@ namespace CacheMeIfYouCan.Internal
                 : _defaultValueFactory();
             
             return new FunctionCacheGetResultInner<TK, TV>(key, defaultValue, Outcome.Error, null);
-        }
-
-        private bool ShouldFetchEarly(TimeSpan timeToLive)
-        {
-            var random = _rng.NextDouble();
-
-            return -Math.Log(random) * _averageFetchDuration > timeToLive.Ticks;
         }
     }
 }

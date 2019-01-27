@@ -10,15 +10,13 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<IFunctionCacheFetchResultInner> results,
             bool success,
             long start,
-            TimeSpan duration,
-            FetchReason reason)
+            TimeSpan duration)
         {
             FunctionName = functionName;
             Results = results;
             Success = success;
             Start = start;
             Duration = duration;
-            Reason = reason;
         }
         
         public string FunctionName { get; }
@@ -26,7 +24,6 @@ namespace CacheMeIfYouCan.Notifications
         public bool Success { get; }
         public long Start { get; }
         public TimeSpan Duration { get; }
-        public FetchReason Reason { get; }
     }
     
     public sealed class FunctionCacheFetchResult<TK, TV> : FunctionCacheFetchResult
@@ -36,9 +33,8 @@ namespace CacheMeIfYouCan.Notifications
             IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> results,
             bool success,
             long start,
-            TimeSpan duration,
-            FetchReason reason)
-            : base(functionName, results, success, start, duration, reason)
+            TimeSpan duration)
+            : base(functionName, results, success, start, duration)
         {
             Results = results;
         }
@@ -72,12 +68,5 @@ namespace CacheMeIfYouCan.Notifications
         public bool Success { get; }
         public bool Duplicate { get; }
         public TimeSpan Duration { get; }
-    }
-    
-    public enum FetchReason
-    {
-        OnDemand, // Due to requested key not being in cache, will block client
-        EarlyFetch, // Due to requested key being in cache but about to expire, will not block client
-        KeysToKeepAliveFunc // Due to the KeysToKeepAlive process triggering a fetch
     }
 }

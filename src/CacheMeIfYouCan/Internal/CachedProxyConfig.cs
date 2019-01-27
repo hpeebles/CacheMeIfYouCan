@@ -13,7 +13,6 @@ namespace CacheMeIfYouCan.Internal
             ValueSerializers valueSerializers,
             EqualityComparers keyComparers,
             TimeSpan? timeToLive,
-            bool? earlyFetchEnabled,
             bool? disableCache,
             ILocalCacheFactory localCacheFactory,
             IDistributedCacheFactory distributedCacheFactory,
@@ -32,7 +31,6 @@ namespace CacheMeIfYouCan.Internal
             ValueSerializers = valueSerializers;
             KeyComparers = keyComparers;
             TimeToLive = timeToLive;
-            EarlyFetchEnabled = earlyFetchEnabled;
             DisableCache = disableCache;
             LocalCacheFactory = localCacheFactory;
             DistributedCacheFactory = distributedCacheFactory;
@@ -52,7 +50,6 @@ namespace CacheMeIfYouCan.Internal
         public ValueSerializers ValueSerializers { get; }
         public EqualityComparers KeyComparers { get; }
         public TimeSpan? TimeToLive { get; }
-        public bool? EarlyFetchEnabled { get; }
         public bool? DisableCache { get; }
         public ILocalCacheFactory LocalCacheFactory { get; }
         public IDistributedCacheFactory DistributedCacheFactory { get; }

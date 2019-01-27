@@ -20,7 +20,6 @@ namespace CacheMeIfYouCan.Configuration
         private readonly EqualityComparers _keyComparers;
         private TimeSpan? _timeToLive;
         private Func<TK, TV, TimeSpan> _timeToLiveFactory;
-        private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
@@ -77,7 +76,6 @@ namespace CacheMeIfYouCan.Configuration
                     _valueDeserializer = valueDeserializer;
 
                 _timeToLive = interfaceConfig.TimeToLive;
-                _earlyFetchEnabled = interfaceConfig.EarlyFetchEnabled;
                 _disableCache = interfaceConfig.DisableCache;
 
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
@@ -183,12 +181,6 @@ namespace CacheMeIfYouCan.Configuration
         private protected TConfig WithKeyComparer<T>(IEqualityComparer<T> comparer)
         {
             _keyComparers.Set(comparer);
-            return (TConfig)this;
-        }
-
-        public TConfig EarlyFetchEnabled(bool enabled = true)
-        {
-            _earlyFetchEnabled = enabled;
             return (TConfig)this;
         }
 
@@ -401,7 +393,6 @@ namespace CacheMeIfYouCan.Configuration
                 cache,
                 timeToLiveFactory,
                 keySerializer,
-                _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,
@@ -438,7 +429,6 @@ namespace CacheMeIfYouCan.Configuration
                 cache,
                 _timeToLive ?? DefaultSettings.Cache.TimeToLive,
                 keySerializer,
-                _earlyFetchEnabled ?? DefaultSettings.Cache.EarlyFetchEnabled,
                 _defaultValueFactory,
                 _onResult,
                 _onFetch,

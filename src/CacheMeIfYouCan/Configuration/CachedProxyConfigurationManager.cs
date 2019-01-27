@@ -17,7 +17,6 @@ namespace CacheMeIfYouCan.Configuration
         private readonly ValueSerializers _valueSerializers;
         private readonly EqualityComparers _keyComparers;
         private TimeSpan? _timeToLive;
-        private bool? _earlyFetchEnabled;
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
         private IDistributedCacheFactory _distributedCacheFactory;
@@ -68,12 +67,6 @@ namespace CacheMeIfYouCan.Configuration
         public CachedProxyConfigurationManager<T> WithKeyComparer<TK>(IEqualityComparer<TK> comparer)
         {
             _keyComparers.Set(comparer);
-            return this;
-        }
-
-        public CachedProxyConfigurationManager<T> WithEarlyFetch(bool enabled = true)
-        {
-            _earlyFetchEnabled = enabled;
             return this;
         }
 
@@ -355,7 +348,6 @@ namespace CacheMeIfYouCan.Configuration
                 _valueSerializers,
                 _keyComparers,
                 _timeToLive,
-                _earlyFetchEnabled,
                 _disableCache,
                 _localCacheFactory,
                 _distributedCacheFactory,
