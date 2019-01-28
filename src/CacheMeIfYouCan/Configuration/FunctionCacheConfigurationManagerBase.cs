@@ -12,89 +12,63 @@ namespace CacheMeIfYouCan.Configuration
     public abstract class FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private readonly Func<TK, Task<TV>> _singleKeyInputFunc;
-        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _enumerableKeyInputFunc;
-        private readonly string _functionName;
-        private readonly bool _isEnumerableKey;
-        private readonly KeySerializers _keySerializers;
-        private readonly EqualityComparers _keyComparers;
-        private TimeSpan? _timeToLive;
-        private Func<TK, TV, TimeSpan> _timeToLiveFactory;
-        private bool? _disableCache;
-        private Action<FunctionCacheGetResult<TK, TV>> _onResult;
-        private Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
-        private Action<FunctionCacheException<TK>> _onException;
-        private Action<CacheGetResult<TK, TV>> _onCacheGet;
-        private Action<CacheSetResult<TK, TV>> _onCacheSet;
-        private Action<CacheException<TK>> _onCacheException;
-        private Func<TV, string> _valueSerializer;
-        private Func<string, TV> _valueDeserializer;
-        private ILocalCacheFactory<TK, TV> _localCacheFactory;
-        private IDistributedCacheFactory<TK, TV> _distributedCacheFactory;
-        private string _keyspacePrefix;
-        private Func<TV> _defaultValueFactory;
-        private IObservable<TK> _keysToRemoveObservable;
-
-        internal FunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFunc,
-            string functionName,
-            CachedProxyConfig interfaceConfig = null,
-            CachedProxyFunctionInfo proxyFunctionInfo = null)
-            : this(functionName, interfaceConfig, proxyFunctionInfo)
-        {
-            _singleKeyInputFunc = inputFunc;
-            _isEnumerableKey = false;
-        }
+        internal string FunctionName { get; }
+        internal KeySerializers KeySerializers { get; }
+        internal EqualityComparers KeyComparers { get; }
+        internal TimeSpan? TimeToLive { get; set; }
+        internal bool? Disabled { get; private set; }
+        internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
+        internal Action<FunctionCacheFetchResult<TK, TV>> OnFetchAction { get; private set; }
+        internal Action<FunctionCacheException<TK>> OnExceptionAction { get; private set; }
+        internal Action<CacheGetResult<TK, TV>> OnCacheGetAction { get; private set; }
+        internal Action<CacheSetResult<TK, TV>> OnCacheSetAction { get; private set; }
+        internal Action<CacheException<TK>> OnCacheExceptionAction { get; private set; }
+        internal Func<TV, string> ValueSerializer { get; private set; }
+        internal Func<string, TV> ValueDeserializer { get; private set; }
+        internal ILocalCacheFactory<TK, TV> LocalCacheFactory { get; private set; }
+        internal IDistributedCacheFactory<TK, TV> DistributedCacheFactory { get; private set; }
+        internal string KeyspacePrefix { get; private set; }
+        internal Func<TV> DefaultValueFactory { get; private set; }
+        internal IObservable<TK> KeysToRemoveObservable { get; private set; }
         
         internal FunctionCacheConfigurationManagerBase(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
-            string functionName,
-            CachedProxyConfig interfaceConfig = null,
-            CachedProxyFunctionInfo proxyFunctionInfo = null)
-            : this(functionName, interfaceConfig, proxyFunctionInfo)
-        {
-            _enumerableKeyInputFunc = inputFunc;
-            _isEnumerableKey = true;
-        }
-        
-        private FunctionCacheConfigurationManagerBase(
             string functionName,
             CachedProxyConfig interfaceConfig = null,
             CachedProxyFunctionInfo proxyFunctionInfo = null)
         {
-            _functionName = functionName;
+            FunctionName = functionName;
 
             if (interfaceConfig != null)
             {
-                _keySerializers = interfaceConfig.KeySerializers.Clone();
-                _keyComparers = interfaceConfig.KeyComparers.Clone();
+                KeySerializers = interfaceConfig.KeySerializers.Clone();
+                KeyComparers = interfaceConfig.KeyComparers.Clone();
 
                 if (interfaceConfig.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer))
-                    _valueSerializer = valueSerializer;
+                    ValueSerializer = valueSerializer;
 
                 if (interfaceConfig.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
-                    _valueDeserializer = valueDeserializer;
+                    ValueDeserializer = valueDeserializer;
 
-                _timeToLive = interfaceConfig.TimeToLive;
-                _disableCache = interfaceConfig.DisableCache;
+                TimeToLive = interfaceConfig.TimeToLive;
+                Disabled = interfaceConfig.DisableCache;
 
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
-                    _localCacheFactory = new NullLocalCacheFactory<TK, TV>();
+                    LocalCacheFactory = new NullLocalCacheFactory<TK, TV>();
                 else if (interfaceConfig.LocalCacheFactory != null)
-                    _localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.LocalCacheFactory);
+                    LocalCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.LocalCacheFactory);
                 
                 if (interfaceConfig.DistributedCacheFactory is NullDistributedCacheFactory)
-                    _distributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
+                    DistributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
                 else if (interfaceConfig.DistributedCacheFactory != null)
-                    _distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.DistributedCacheFactory);
+                    DistributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.DistributedCacheFactory);
 
-                _keyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
-                _onResult = interfaceConfig.OnResult;
-                _onFetch = interfaceConfig.OnFetch;
-                _onException = interfaceConfig.OnException;
-                _onCacheGet = interfaceConfig.OnCacheGet;
-                _onCacheSet = interfaceConfig.OnCacheSet;
-                _onCacheException = interfaceConfig.OnCacheException;
+                KeyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
+                OnResultAction = interfaceConfig.OnResult;
+                OnFetchAction = interfaceConfig.OnFetch;
+                OnExceptionAction = interfaceConfig.OnException;
+                OnCacheGetAction = interfaceConfig.OnCacheGet;
+                OnCacheSetAction = interfaceConfig.OnCacheSet;
+                OnCacheExceptionAction = interfaceConfig.OnCacheException;
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
@@ -110,28 +84,20 @@ namespace CacheMeIfYouCan.Configuration
             }
             else
             {
-                _keySerializers = new KeySerializers();
-                _keyComparers = new EqualityComparers();
-                _onResult = DefaultSettings.Cache.OnResultAction;
-                _onFetch = DefaultSettings.Cache.OnFetchAction;
-                _onException = DefaultSettings.Cache.OnExceptionAction;
-                _onCacheGet = DefaultSettings.Cache.OnCacheGetAction;
-                _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
-                _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
+                KeySerializers = new KeySerializers();
+                KeyComparers = new EqualityComparers();
+                OnResultAction = DefaultSettings.Cache.OnResultAction;
+                OnFetchAction = DefaultSettings.Cache.OnFetchAction;
+                OnExceptionAction = DefaultSettings.Cache.OnExceptionAction;
+                OnCacheGetAction = DefaultSettings.Cache.OnCacheGetAction;
+                OnCacheSetAction = DefaultSettings.Cache.OnCacheSetAction;
+                OnCacheExceptionAction = DefaultSettings.Cache.OnCacheExceptionAction;
             }
         }
 
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        public virtual TConfig WithTimeToLive(TimeSpan timeToLive)
         {
-            _timeToLive = timeToLive;
-            _timeToLiveFactory = null;
-            return (TConfig)this;
-        }
-
-        private protected TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
-        {
-            _timeToLive = null;
-            _timeToLiveFactory = timeToLiveFactory;
+            TimeToLive = timeToLive;
             return (TConfig)this;
         }
         
@@ -147,17 +113,17 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithKeySerializer(Func<TK, string> serializer, Func<string, TK> deserializer = null)
         {
-            return WithKeySerializerInternal<TK>(serializer, deserializer);
+            return WithKeySerializerInternal(serializer, deserializer);
         }
 
-        private protected TConfig WithKeySerializerInternal<T>(ISerializer<T> serializer)
+        internal TConfig WithKeySerializerInternal<T>(ISerializer<T> serializer)
         {
             return WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize);
         }
 
-        private protected TConfig WithKeySerializerInternal<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
+        internal TConfig WithKeySerializerInternal<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
         {
-            _keySerializers.Set(serializer, deserializer);
+            KeySerializers.Set(serializer, deserializer);
             return (TConfig)this;
         }
         
@@ -173,20 +139,20 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithValueSerializer(Func<TV, string> serializer, Func<string, TV> deserializer)
         {
-            _valueSerializer = serializer;
-            _valueDeserializer = deserializer;
+            ValueSerializer = serializer;
+            ValueDeserializer = deserializer;
             return (TConfig)this;
         }
 
-        private protected TConfig WithKeyComparer<T>(IEqualityComparer<T> comparer)
+        internal TConfig WithKeyComparerInternal<T>(IEqualityComparer<T> comparer)
         {
-            _keyComparers.Set(comparer);
+            KeyComparers.Set(comparer);
             return (TConfig)this;
         }
 
         public TConfig DisableCache(bool disableCache = true)
         {
-            _disableCache = disableCache;
+            Disabled = disableCache;
             return (TConfig)this;
         }
         
@@ -197,7 +163,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public TConfig ContinueOnException(Func<TV> defaultValueFactory)
         {
-            _defaultValueFactory = defaultValueFactory;
+            DefaultValueFactory = defaultValueFactory;
             return (TConfig)this;
         }
         
@@ -218,14 +184,14 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithLocalCacheFactory(Func<string, ILocalCache<TK, TV>> cacheFactoryFunc)
         {
-            _localCacheFactory = new LocalCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
+            LocalCacheFactory = new LocalCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             return (TConfig)this;
         }
         
         public TConfig SkipLocalCache(bool skipLocalCache = true)
         {
             if (skipLocalCache)
-                _localCacheFactory = new NullLocalCacheFactory<TK, TV>();
+                LocalCacheFactory = new NullLocalCacheFactory<TK, TV>();
             
             return (TConfig)this;
         }
@@ -253,8 +219,8 @@ namespace CacheMeIfYouCan.Configuration
             Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
             string keyspacePrefix = null)
         {
-            _distributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
-            _keyspacePrefix = keyspacePrefix;
+            DistributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
+            KeyspacePrefix = keyspacePrefix;
             return (TConfig)this;
         }
         
@@ -262,8 +228,8 @@ namespace CacheMeIfYouCan.Configuration
         {
             if (skipDistributedCache)
             {
-                _distributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
-                _keyspacePrefix = null;
+                DistributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
+                KeyspacePrefix = null;
             }
 
             return (TConfig)this;
@@ -307,7 +273,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onResult = ActionsHelper.Combine(_onResult, onResult, behaviour);
+            OnResultAction = ActionsHelper.Combine(OnResultAction, onResult, behaviour);
             return (TConfig)this;
         }
         
@@ -315,7 +281,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onFetch = ActionsHelper.Combine(_onFetch, onFetch, behaviour);
+            OnFetchAction = ActionsHelper.Combine(OnFetchAction, onFetch, behaviour);
             return (TConfig)this;
         }
 
@@ -323,7 +289,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<FunctionCacheException<TK>> onException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
+            OnExceptionAction = ActionsHelper.Combine(OnExceptionAction, onException, behaviour);
             return (TConfig)this;
         }
         
@@ -331,7 +297,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheGetResult<TK, TV>> onCacheGet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheGet = ActionsHelper.Combine(_onCacheGet, onCacheGet, behaviour);
+            OnCacheGetAction = ActionsHelper.Combine(OnCacheGetAction, onCacheGet, behaviour);
             return (TConfig)this;
         }
         
@@ -339,7 +305,7 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheSetResult<TK, TV>> onCacheSet,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, behaviour);
+            OnCacheSetAction = ActionsHelper.Combine(OnCacheSetAction, onCacheSet, behaviour);
             return (TConfig)this;
         }
 
@@ -347,104 +313,21 @@ namespace CacheMeIfYouCan.Configuration
             Action<CacheException<TK>> onCacheException,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onCacheException = ActionsHelper.Combine(_onCacheException, onCacheException, behaviour);
+            OnCacheExceptionAction = ActionsHelper.Combine(OnCacheExceptionAction, onCacheException, behaviour);
             return (TConfig)this;
         }
 
         public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable)
         {
-            _keysToRemoveObservable = keysToRemoveObservable;
+            KeysToRemoveObservable = keysToRemoveObservable;
             return (TConfig)this;
         }
         
-        private protected SingleKeyFunctionCache<TK, TV> BuildFunctionCacheSingle()
+        internal ICacheInternal<TK, TV> BuildCache(KeyComparer<TK> keyComparer)
         {
-            if (_isEnumerableKey)
-                throw new Exception($"You can't build a {nameof(SingleKeyFunctionCache<TK, TV>)} since your function has an enumerable key");
-
-            var keyComparer = GetKeyComparer(_keyComparers);
-            
-            var cache = BuildCache(keyComparer);
-
-            Func<TK, TV, TimeSpan> timeToLiveFactory;
-            if (_timeToLiveFactory != null)
+            var cacheConfig = new DistributedCacheConfig<TK, TV>(FunctionName)
             {
-                timeToLiveFactory = _timeToLiveFactory;
-            }
-            else
-            {
-                var timeToLive = _timeToLive ?? DefaultSettings.Cache.TimeToLive;
-                timeToLiveFactory = (k, v) => timeToLive;
-            }
-
-            var keySerializer = GetKeySerializer();
-
-            if (_keysToRemoveObservable != null)
-            {
-                _keysToRemoveObservable
-                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
-                    .Retry()
-                    .Subscribe();
-            }
-            
-            var functionCache = new SingleKeyFunctionCache<TK, TV>(
-                _singleKeyInputFunc,
-                _functionName,
-                cache,
-                timeToLiveFactory,
-                keySerializer,
-                _defaultValueFactory,
-                _onResult,
-                _onFetch,
-                _onException,
-                keyComparer);
-            
-            PendingRequestsCounterContainer.Add(functionCache);
-
-            return functionCache;
-        }
-        
-        private protected EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunction()
-        {
-            if (!_isEnumerableKey)
-                throw new Exception($"You can't build a {nameof(EnumerableKeyFunctionCache<TK, TV>)} since your function is single key");
-
-            var keyComparer = GetKeyComparer(_keyComparers);
-            
-            var cache = BuildCache(keyComparer);
-            
-            var keySerializer = GetKeySerializer();
-
-            if (_keysToRemoveObservable != null)
-            {
-                _keysToRemoveObservable
-                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
-                    .Retry()
-                    .Subscribe();
-            }
-            
-            var functionCache = new EnumerableKeyFunctionCache<TK, TV>(
-                _enumerableKeyInputFunc,
-                _functionName,
-                cache,
-                _timeToLive ?? DefaultSettings.Cache.TimeToLive,
-                keySerializer,
-                _defaultValueFactory,
-                _onResult,
-                _onFetch,
-                _onException,
-                keyComparer);
-            
-            PendingRequestsCounterContainer.Add(functionCache);
-
-            return functionCache;
-        }
-
-        private ICacheInternal<TK, TV> BuildCache(KeyComparer<TK> keyComparer)
-        {
-            var cacheConfig = new DistributedCacheConfig<TK, TV>(_functionName)
-            {
-                KeyspacePrefix = _keyspacePrefix,
+                KeyspacePrefix = KeyspacePrefix,
                 KeyDeserializer = GetKeyDeserializer(),
                 ValueSerializer = GetValueSerializer(),
                 ValueDeserializer = GetValueDeserializer(),
@@ -452,42 +335,42 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICacheInternal<TK, TV> cache = null;
-            if (!_disableCache ?? !DefaultSettings.Cache.DisableCache)
+            if (!Disabled ?? !DefaultSettings.Cache.DisableCache)
             {
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
-                if (_localCacheFactory != null)
-                    localCacheFactory = _localCacheFactory;
+                if (LocalCacheFactory != null)
+                    localCacheFactory = LocalCacheFactory;
                 else if (DefaultSettings.Cache.LocalCacheFactory != null)
                     localCacheFactory = new LocalCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.LocalCacheFactory);
 
                 IDistributedCacheFactory<TK, TV> distributedCacheFactory = null;
-                if (_distributedCacheFactory != null)
-                    distributedCacheFactory = _distributedCacheFactory;
+                if (DistributedCacheFactory != null)
+                    distributedCacheFactory = DistributedCacheFactory;
                 else if (DefaultSettings.Cache.DistributedCacheFactory != null)
                     distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.DistributedCacheFactory);
 
                 cache = CacheBuilder.Build(
-                    _functionName,
+                    FunctionName,
                     localCacheFactory,
                     distributedCacheFactory,
                     cacheConfig,
-                    _onCacheGet,
-                    _onCacheSet,
-                    _onCacheException,
+                    OnCacheGetAction,
+                    OnCacheSetAction,
+                    OnCacheExceptionAction,
                     keyComparer);
             }
 
             return cache;
         }
 
-        protected virtual Func<TK, string> GetKeySerializer()
+        internal virtual Func<TK, string> GetKeySerializer()
         {
             return GetKeySerializerImpl<TK>();
         }
 
-        protected Func<T, string> GetKeySerializerImpl<T>()
+        internal Func<T, string> GetKeySerializerImpl<T>()
         {
-            if (_keySerializers.TryGetSerializer<T>(out var serializer))
+            if (KeySerializers.TryGetSerializer<T>(out var serializer))
                 return serializer;
             
             if (serializer == null)
@@ -499,14 +382,14 @@ namespace CacheMeIfYouCan.Configuration
             return serializer ?? (_ => throw new Exception($"No key serializer defined for type '{typeof(T).FullName}'"));
         }
 
-        protected virtual Func<string, TK> GetKeyDeserializer()
+        internal virtual Func<string, TK> GetKeyDeserializer()
         {
             return GetKeyDeserializerImpl<TK>();
         }
         
-        protected Func<string, T> GetKeyDeserializerImpl<T>()
+        internal Func<string, T> GetKeyDeserializerImpl<T>()
         {
-            if (_keySerializers.TryGetDeserializer<T>(out var deserializer))
+            if (KeySerializers.TryGetDeserializer<T>(out var deserializer))
                 return deserializer;
             
             if (deserializer == null)
@@ -520,7 +403,7 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<TV, string> GetValueSerializer()
         {
-            var serializer = _valueSerializer;
+            var serializer = ValueSerializer;
 
             if (serializer == null)
                 DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out serializer);
@@ -533,7 +416,7 @@ namespace CacheMeIfYouCan.Configuration
         
         private Func<string, TV> GetValueDeserializer()
         {
-            var deserializer = _valueDeserializer;
+            var deserializer = ValueDeserializer;
             
             if (deserializer == null)
                 DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out deserializer);
@@ -544,11 +427,9 @@ namespace CacheMeIfYouCan.Configuration
             return deserializer ?? (_ => throw new Exception($"No value deserializer defined for type '{typeof(TV).FullName}'"));
         }
 
-        private protected KeyComparer<TK> GetKeyComparer() => GetKeyComparer(_keyComparers);
-
-        private protected virtual KeyComparer<TK> GetKeyComparer(EqualityComparers comparers)
+        internal virtual KeyComparer<TK> GetKeyComparer()
         {
-            return KeyComparerResolver.Get<TK>(comparers);
+            return KeyComparerResolver.Get<TK>(KeyComparers);
         }
     }
 }

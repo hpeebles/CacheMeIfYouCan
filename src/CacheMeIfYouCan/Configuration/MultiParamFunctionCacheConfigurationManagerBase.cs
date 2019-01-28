@@ -6,17 +6,15 @@ using CacheMeIfYouCan.Internal;
 namespace CacheMeIfYouCan.Configuration
 {
     public abstract class MultiParamFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
-        : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
+        : SingleKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : MultiParamFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private protected string _keyParamSeparator;
-
         internal MultiParamFunctionCacheConfigurationManagerBase(
             Func<TK, Task<TV>> inputFunc,
             string functionName)
             : base(inputFunc, functionName)
         {
-            _keyParamSeparator = DefaultSettings.Cache.KeyParamSeparator;
+            KeyParamSeparator = DefaultSettings.Cache.KeyParamSeparator;
         }
 
         internal MultiParamFunctionCacheConfigurationManagerBase(
@@ -25,16 +23,17 @@ namespace CacheMeIfYouCan.Configuration
             MethodInfo methodInfo)
             : base(
                 inputFunc,
-                $"{interfaceConfig.InterfaceType.Name}.{methodInfo.Name}",
                 interfaceConfig,
-                new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
+                methodInfo)
         {
-            _keyParamSeparator = interfaceConfig.KeyParamSeparator;
+            KeyParamSeparator = interfaceConfig.KeyParamSeparator;
         }
+
+        protected string KeyParamSeparator { get; private set; }
 
         public TConfig WithKeyParamSeparator(string separator)
         {
-            _keyParamSeparator = separator;
+            KeyParamSeparator = separator;
             return (TConfig)this;
         }
     }

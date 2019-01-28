@@ -31,9 +31,9 @@ namespace CacheMeIfYouCan.Configuration
         
         public Func<TReq, Task<TRes>> Build()
         {
-            var functionCache = BuildEnumerableKeyFunction();
+            var functionCache = BuildEnumerableKeyFunctionCache();
 
-            var dictionaryFactoryFunc = _dictionaryFactoryFunc ?? DictionaryFactoryFuncResolver.Get<TRes, TK, TV>();
+            var dictionaryFactoryFunc = DictionaryFactoryFunc ?? DictionaryFactoryFuncResolver.Get<TRes, TK, TV>();
 
             var keyComparer = GetKeyComparer().Inner;
             

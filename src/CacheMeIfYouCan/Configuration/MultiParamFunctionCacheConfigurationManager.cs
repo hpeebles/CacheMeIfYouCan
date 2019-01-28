@@ -53,20 +53,20 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeySerializerInternal(serializer, deserializer);
         }
 
-        protected override Func<(TK1, TK2), string> GetKeySerializer()
+        internal override Func<(TK1, TK2), string> GetKeySerializer()
         {
             var key1Serializer = GetKeySerializerImpl<TK1>();
             var key2Serializer = GetKeySerializerImpl<TK2>();
 
-            return x => key1Serializer(x.Item1) + _keyParamSeparator + key2Serializer(x.Item2);
+            return x => key1Serializer(x.Item1) + KeyParamSeparator + key2Serializer(x.Item2);
         }
         
-        protected override Func<string, (TK1, TK2)> GetKeyDeserializer()
+        internal override Func<string, (TK1, TK2)> GetKeyDeserializer()
         {
             var key1Deserializer = GetKeyDeserializerImpl<TK1>();
             var key2Deserializer = GetKeyDeserializerImpl<TK2>();
 
-            var separator = _keyParamSeparator;
+            var separator = KeyParamSeparator;
             
             return Deserialize;
 
@@ -84,25 +84,25 @@ namespace CacheMeIfYouCan.Configuration
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> WithKeyComparer(
             IEqualityComparer<TK1> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> WithKeyComparer(
             IEqualityComparer<TK2> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TV, TimeSpan> timeToLiveFactory)
         {
-            return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, v));
+            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, v));
         }
         
-        private protected override KeyComparer<(TK1, TK2)> GetKeyComparer(EqualityComparers comparers)
+        internal override KeyComparer<(TK1, TK2)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
             
             var comparer = new ValueTupleComparer<TK1, TK2>(comparer1, comparer2);
             
@@ -182,7 +182,7 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeySerializerInternal(serializer, deserializer);
         }
         
-        protected override Func<(TK1, TK2, TK3), string> GetKeySerializer()
+        internal override Func<(TK1, TK2, TK3), string> GetKeySerializer()
         {
             var key1Serializer = GetKeySerializerImpl<TK1>();
             var key2Serializer = GetKeySerializerImpl<TK2>();
@@ -190,19 +190,19 @@ namespace CacheMeIfYouCan.Configuration
 
             return x =>
                 key1Serializer(x.Item1) +
-                _keyParamSeparator +
+                KeyParamSeparator +
                 key2Serializer(x.Item2) +
-                _keyParamSeparator +
+                KeyParamSeparator +
                 key3Serializer(x.Item3);
         }
         
-        protected override Func<string, (TK1, TK2, TK3)> GetKeyDeserializer()
+        internal override Func<string, (TK1, TK2, TK3)> GetKeyDeserializer()
         {
             var key1Deserializer = GetKeyDeserializerImpl<TK1>();
             var key2Deserializer = GetKeyDeserializerImpl<TK2>();
             var key3Deserializer = GetKeyDeserializerImpl<TK3>();
 
-            var separator = _keyParamSeparator;
+            var separator = KeyParamSeparator;
             
             return Deserialize;
 
@@ -217,32 +217,32 @@ namespace CacheMeIfYouCan.Configuration
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> WithKeyComparer(
             IEqualityComparer<TK1> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> WithKeyComparer(
             IEqualityComparer<TK2> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> WithKeyComparer(
             IEqualityComparer<TK3> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TK3, TV, TimeSpan> timeToLiveFactory)
         {
-            return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, v));
+            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, v));
         }
         
-        private protected override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer(EqualityComparers comparers)
+        internal override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
-            var comparer3 = KeyComparerResolver.GetInner<TK3>(comparers);
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
+            var comparer3 = KeyComparerResolver.GetInner<TK3>(KeyComparers);
             
             var comparer = new ValueTupleComparer<TK1, TK2, TK3>(comparer1, comparer2, comparer3);
             
@@ -336,7 +336,7 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeySerializerInternal(serializer, deserializer);
         }
         
-        protected override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()
+        internal override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()
         {
             var key1Serializer = GetKeySerializerImpl<TK1>();
             var key2Serializer = GetKeySerializerImpl<TK2>();
@@ -345,22 +345,22 @@ namespace CacheMeIfYouCan.Configuration
 
             return x =>
                 key1Serializer(x.Item1) +
-                _keyParamSeparator +
+                KeyParamSeparator +
                 key2Serializer(x.Item2) +
-                _keyParamSeparator +
+                KeyParamSeparator +
                 key3Serializer(x.Item3) +
-                _keyParamSeparator +
+                KeyParamSeparator +
                 key4Serializer(x.Item4);
         }
         
-        protected override Func<string, (TK1, TK2, TK3, TK4)> GetKeyDeserializer()
+        internal override Func<string, (TK1, TK2, TK3, TK4)> GetKeyDeserializer()
         {
             var key1Deserializer = GetKeyDeserializerImpl<TK1>();
             var key2Deserializer = GetKeyDeserializerImpl<TK2>();
             var key3Deserializer = GetKeyDeserializerImpl<TK3>();
             var key4Deserializer = GetKeyDeserializerImpl<TK4>();
 
-            var separator = _keyParamSeparator;
+            var separator = KeyParamSeparator;
             
             return Deserialize;
 
@@ -379,39 +379,39 @@ namespace CacheMeIfYouCan.Configuration
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
             IEqualityComparer<TK1> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
             IEqualityComparer<TK2> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
             IEqualityComparer<TK3> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
         
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
             IEqualityComparer<TK4> comparer)
         {
-            return base.WithKeyComparer(comparer);
+            return WithKeyComparerInternal(comparer);
         }
 
         public MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> WithTimeToLiveFactory(
             Func<TK1, TK2, TK3, TK4, TV, TimeSpan> timeToLiveFactory)
         {
-            return base.WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, k.Item4, v));
+            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, k.Item4, v));
         }
         
-        private protected override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer(EqualityComparers comparers)
+        internal override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(comparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(comparers);
-            var comparer3 = KeyComparerResolver.GetInner<TK3>(comparers);
-            var comparer4 = KeyComparerResolver.GetInner<TK4>(comparers);
+            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
+            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
+            var comparer3 = KeyComparerResolver.GetInner<TK3>(KeyComparers);
+            var comparer4 = KeyComparerResolver.GetInner<TK4>(KeyComparers);
             
             var comparer = new ValueTupleComparer<TK1, TK2, TK3, TK4>(comparer1, comparer2, comparer3, comparer4);
             

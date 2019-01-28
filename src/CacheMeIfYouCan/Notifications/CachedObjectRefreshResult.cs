@@ -4,7 +4,7 @@ namespace CacheMeIfYouCan.Notifications
 {
     public abstract class CachedObjectRefreshResult
     {
-        private protected CachedObjectRefreshResult(
+        internal CachedObjectRefreshResult(
             DateTime start,
             TimeSpan duration,
             CachedObjectRefreshException exception,

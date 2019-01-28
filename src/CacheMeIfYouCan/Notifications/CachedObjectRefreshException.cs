@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Notifications
 
     public abstract class CachedObjectRefreshException : Exception
     {
-        private protected CachedObjectRefreshException(string message, Exception ex)
+        internal CachedObjectRefreshException(string message, Exception ex)
             : base(message, ex)
         { }
 
