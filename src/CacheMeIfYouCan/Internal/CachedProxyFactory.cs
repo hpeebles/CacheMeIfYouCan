@@ -216,48 +216,85 @@ The key type in the returned dictionary must match the type of the items in the 
         private static Type GetConfigManagerType(MethodDefinition definition)
         {
             Type configManagerGenericType;
-            if (definition.IsEnumerableKey)
+            Type[] genericTypeInputs;
+
+            return definition.IsEnumerableKey
+                ? BuildForEnumerableKey()
+                : BuildForSingleKey();
+            
+            Type BuildForEnumerableKey()
             {
-                configManagerGenericType = definition.IsAsync
-                    ? typeof(EnumerableKeyFunctionCacheConfigurationManager<,,,>)
-                    : typeof(EnumerableKeyFunctionCacheConfigurationManagerSync<,,,>);
+                genericTypeInputs = definition
+                    .ParameterTypes
+                    .Concat(new[] { definition.ReturnTypeInner, definition.KeyType, definition.ValueType })
+                    .ToArray();
 
-                return configManagerGenericType.MakeGenericType(definition.ParameterTypes.Single(), definition.ReturnTypeInner, definition.KeyType, definition.ValueType);
-            }
+                switch (genericTypeInputs.Length)
+                {
+                    case 5:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,>)
+                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,>);
+                        break;
 
-            var types = definition
-                .ParameterTypes
-                .Concat(new[] { definition.ReturnTypeInner })
-                .ToArray();
+                    case 6:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,,>)
+                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,,>);
+                        break;
 
-            switch (types.Length)
-            {
-                case 3:
-                    configManagerGenericType = definition.IsAsync
-                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,>)
-                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,>);
-                    break;
-
-                case 4:
-                    configManagerGenericType = definition.IsAsync
-                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,,>)
-                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,>);
-                    break;
-
-                case 5:
-                    configManagerGenericType = definition.IsAsync
-                        ? typeof(MultiParamFunctionCacheConfigurationManager<,,,,>)
-                        : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,,>);
-                    break;
+                    case 7:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,,,>)
+                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,,,>);
+                        break;
                 
-                default:
-                    configManagerGenericType = definition.IsAsync
-                        ? typeof(SingleKeyFunctionCacheConfigurationManager<,>)
-                        : typeof(SingleKeyFunctionCacheConfigurationManagerSync<,>);
-                    break;
+                    default:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(EnumerableKeyFunctionCacheConfigurationManager<,,,>)
+                            : typeof(EnumerableKeyFunctionCacheConfigurationManagerSync<,,,>);
+                        break;
+                }
+
+                return configManagerGenericType.MakeGenericType(genericTypeInputs);
             }
 
-            return configManagerGenericType.MakeGenericType(types);
+            Type BuildForSingleKey()
+            {
+                genericTypeInputs = definition
+                    .ParameterTypes
+                    .Concat(new[] { definition.ReturnTypeInner })
+                    .ToArray();
+
+                switch (genericTypeInputs.Length)
+                {
+                    case 3:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,>)
+                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,>);
+                        break;
+
+                    case 4:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,,>)
+                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,>);
+                        break;
+
+                    case 5:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,,,>)
+                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,,>);
+                        break;
+                
+                    default:
+                        configManagerGenericType = definition.IsAsync
+                            ? typeof(SingleKeyFunctionCacheConfigurationManager<,>)
+                            : typeof(SingleKeyFunctionCacheConfigurationManagerSync<,>);
+                        break;
+                }
+                
+                return configManagerGenericType.MakeGenericType(genericTypeInputs);
+            }
         }
 
         private static string GetProxyName(Type type)

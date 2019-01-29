@@ -24,6 +24,24 @@ namespace CacheMeIfYouCan.Internal
             return x => func(x);
         }
         
+        public static Func<TK1, IEnumerable<TK2>, Task<TRes>> ConvertInputToEnumerable<TK1, TK2Enum, TRes, TK2, TV>(
+            this Func<TK1, TK2Enum, Task<TRes>> func)
+            where TK2Enum : IEnumerable<TK2>
+            where TRes : IDictionary<TK2, TV>
+        {
+            var keysConverterFunc = GetKeysConverterFunc<TK2Enum, TK2>();
+
+            return (k1, k2) => func(k1, keysConverterFunc(k2));
+        }
+        
+        public static Func<TK1, TK2Enum, Task<TRes>> ConvertInputFromEnumerable<TK1, TK2Enum, TRes, TK2, TV>(
+            this Func<TK1, IEnumerable<TK2>, Task<TRes>> func)
+            where TK2Enum : IEnumerable<TK2>
+            where TRes : IDictionary<TK2, TV>
+        {
+            return (k1, k2) => func(k1, k2);
+        }
+        
         public static Func<TReq, Task<IDictionary<TK, TV>>> ConvertOutputToDictionary<TReq, TRes, TK, TV>(
             this Func<TReq, Task<TRes>> func)
             where TReq : IEnumerable<TK>
@@ -38,6 +56,22 @@ namespace CacheMeIfYouCan.Internal
             where TRes : IDictionary<TK, TV>
         {
             return async k => (TRes)await func(k);
+        }
+        
+        public static Func<TK1, TK2Enum, Task<IDictionary<TK2, TV>>> ConvertOutputToDictionary<TK1, TK2Enum, TRes, TK2, TV>(
+            this Func<TK1, TK2Enum, Task<TRes>> func)
+            where TK2Enum : IEnumerable<TK2>
+            where TRes : IDictionary<TK2, TV>
+        {
+            return async (k1, k2) => await func(k1, k2);
+        }
+        
+        public static Func<TK1, TK2Enum, Task<TRes>> ConvertOutputFromDictionary<TK1, TK2Enum, TRes, TK2, TV>(
+            this Func<TK1, TK2Enum, Task<IDictionary<TK2, TV>>> func)
+            where TK2Enum : IEnumerable<TK2>
+            where TRes : IDictionary<TK2, TV>
+        {
+            return async (k1, k2) => (TRes)await func(k1, k2);
         }
         
         public static Func<TReq, Task<TRes>> ConvertToAsync<TReq, TRes>(
@@ -68,6 +102,12 @@ namespace CacheMeIfYouCan.Internal
             this Func<TReq, Task<TRes>> func)
         {
             return x => Task.Run(() => func(x)).GetAwaiter().GetResult();
+        }
+        
+        public static Func<TK1, TK2, TRes> ConvertToSync<TK1, TK2, TRes>(
+            this Func<TK1, TK2, Task<TRes>> func)
+        {
+            return (k1, k2) => Task.Run(() => func(k1, k2)).GetAwaiter().GetResult();
         }
 
         public static Func<(TK1, TK2), TV> ConvertToSingleParam<TK1, TK2, TV>(

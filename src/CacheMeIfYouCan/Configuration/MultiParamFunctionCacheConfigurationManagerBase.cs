@@ -9,6 +9,8 @@ namespace CacheMeIfYouCan.Configuration
         : SingleKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : MultiParamFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
+        protected string KeyParamSeparator { get; private set; }
+
         internal MultiParamFunctionCacheConfigurationManagerBase(
             Func<TK, Task<TV>> inputFunc,
             string functionName)
@@ -28,8 +30,6 @@ namespace CacheMeIfYouCan.Configuration
         {
             KeyParamSeparator = interfaceConfig.KeyParamSeparator;
         }
-
-        protected string KeyParamSeparator { get; private set; }
 
         public TConfig WithKeyParamSeparator(string separator)
         {

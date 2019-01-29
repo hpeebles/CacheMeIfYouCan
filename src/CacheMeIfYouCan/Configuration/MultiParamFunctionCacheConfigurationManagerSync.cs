@@ -55,30 +55,12 @@ namespace CacheMeIfYouCan.Configuration
 
         internal override Func<(TK1, TK2), string> GetKeySerializer()
         {
-            var key1Serializer = GetKeySerializerImpl<TK1>();
-            var key2Serializer = GetKeySerializerImpl<TK2>();
-
-            return x => key1Serializer(x.Item1) + KeyParamSeparator + key2Serializer(x.Item2);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2>(KeySerializers, KeyParamSeparator);
         }
         
         internal override Func<string, (TK1, TK2)> GetKeyDeserializer()
         {
-            var key1Deserializer = GetKeyDeserializerImpl<TK1>();
-            var key2Deserializer = GetKeyDeserializerImpl<TK2>();
-
-            var separator = KeyParamSeparator;
-            
-            return Deserialize;
-
-            (TK1, TK2) Deserialize(string str)
-            {
-                var index = str.IndexOf(separator, StringComparison.Ordinal);
-
-                var k1 = str.Substring(0, index - 1);
-                var k2 = str.Substring(index + separator.Length);
-
-                return (key1Deserializer(k1), key2Deserializer(k2));
-            }
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2>(KeySerializers, KeyParamSeparator);
         }
         
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> WithKeyComparer(
@@ -101,12 +83,7 @@ namespace CacheMeIfYouCan.Configuration
 
         internal override KeyComparer<(TK1, TK2)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
-            
-            var comparer = new ValueTupleComparer<TK1, TK2>(comparer1, comparer2);
-            
-            return new KeyComparer<(TK1, TK2)>(comparer);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2>(KeyComparers);
         }
 
         public Func<TK1, TK2, TV> Build()
@@ -184,34 +161,12 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3), string> GetKeySerializer()
         {
-            var key1Serializer = GetKeySerializerImpl<TK1>();
-            var key2Serializer = GetKeySerializerImpl<TK2>();
-            var key3Serializer = GetKeySerializerImpl<TK3>();
-
-            return x =>
-                key1Serializer(x.Item1) +
-                KeyParamSeparator +
-                key2Serializer(x.Item2) +
-                KeyParamSeparator +
-                key3Serializer(x.Item3);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator);
         }
         
         internal override Func<string, (TK1, TK2, TK3)> GetKeyDeserializer()
         {
-            var key1Deserializer = GetKeyDeserializerImpl<TK1>();
-            var key2Deserializer = GetKeyDeserializerImpl<TK2>();
-            var key3Deserializer = GetKeyDeserializerImpl<TK3>();
-
-            var separator = KeyParamSeparator;
-            
-            return Deserialize;
-
-            (TK1, TK2, TK3) Deserialize(string str)
-            {
-                var parts = str.Split(new[] {separator}, 2, StringSplitOptions.None);
-                
-                return (key1Deserializer(parts[0]), key2Deserializer(parts[1]), key3Deserializer(parts[2]));
-            }
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator);
         }
         
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> WithKeyComparer(
@@ -240,13 +195,7 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
-            var comparer3 = KeyComparerResolver.GetInner<TK3>(KeyComparers);
-            
-            var comparer = new ValueTupleComparer<TK1, TK2, TK3>(comparer1, comparer2, comparer3);
-            
-            return new KeyComparer<(TK1, TK2, TK3)>(comparer);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3>(KeyComparers);
         }
 
         public Func<TK1, TK2, TK3, TV> Build()
@@ -338,42 +287,12 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()
         {
-            var key1Serializer = GetKeySerializerImpl<TK1>();
-            var key2Serializer = GetKeySerializerImpl<TK2>();
-            var key3Serializer = GetKeySerializerImpl<TK3>();
-            var key4Serializer = GetKeySerializerImpl<TK4>();
-
-            return x =>
-                key1Serializer(x.Item1) +
-                KeyParamSeparator +
-                key2Serializer(x.Item2) +
-                KeyParamSeparator +
-                key3Serializer(x.Item3) +
-                KeyParamSeparator +
-                key4Serializer(x.Item4);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator);
         }
         
         internal override Func<string, (TK1, TK2, TK3, TK4)> GetKeyDeserializer()
         {
-            var key1Deserializer = GetKeyDeserializerImpl<TK1>();
-            var key2Deserializer = GetKeyDeserializerImpl<TK2>();
-            var key3Deserializer = GetKeyDeserializerImpl<TK3>();
-            var key4Deserializer = GetKeyDeserializerImpl<TK4>();
-
-            var separator = KeyParamSeparator;
-            
-            return Deserialize;
-
-            (TK1, TK2, TK3, TK4) Deserialize(string str)
-            {
-                var parts = str.Split(new[] { separator }, 4, StringSplitOptions.None);
-                
-                return (
-                    key1Deserializer(parts[0]),
-                    key2Deserializer(parts[1]),
-                    key3Deserializer(parts[2]),
-                    key4Deserializer(parts[3]));
-            }
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator);
         }
         
         public MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> WithKeyComparer(
@@ -408,14 +327,7 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer()
         {
-            var comparer1 = KeyComparerResolver.GetInner<TK1>(KeyComparers);
-            var comparer2 = KeyComparerResolver.GetInner<TK2>(KeyComparers);
-            var comparer3 = KeyComparerResolver.GetInner<TK3>(KeyComparers);
-            var comparer4 = KeyComparerResolver.GetInner<TK4>(KeyComparers);
-            
-            var comparer = new ValueTupleComparer<TK1, TK2, TK3, TK4>(comparer1, comparer2, comparer3, comparer4);
-            
-            return new KeyComparer<(TK1, TK2, TK3, TK4)>(comparer);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3, TK4>(KeyComparers);
         }
 
         public Func<TK1, TK2, TK3, TK4, TV> Build()

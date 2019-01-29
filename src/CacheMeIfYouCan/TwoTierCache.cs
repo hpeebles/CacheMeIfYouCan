@@ -15,15 +15,18 @@ namespace CacheMeIfYouCan
     {
         private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly ILocalCache<TK, TV> _localCache;
+        private readonly IEqualityComparer<TK> _keyComparer;
         private readonly Func<TK, string> _keySerializer;
 
         public TwoTierCache(
             IDistributedCache<TK, TV> distributedCache,
             ILocalCache<TK, TV> localCache,
+            IEqualityComparer<TK> keyComparer = null,
             Func<TK, string> keySerializer = null)
         {
             _distributedCache = distributedCache;
             _localCache = localCache;
+            _keyComparer = keyComparer ?? KeyComparerResolver.GetInner<TK>();
 
             if (keySerializer != null)
             {
@@ -66,7 +69,7 @@ namespace CacheMeIfYouCan
 
         public async Task<IDictionary<TK, TV>> Get(ICollection<TK> keys)
         {
-            var results = new Dictionary<TK, TV>(keys.Count);
+            var results = new Dictionary<TK, TV>(_keyComparer);
 
             var convertedKeys = keys
                 .Select(k => new Key<TK>(k, _keySerializer))
