@@ -21,6 +21,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<IEnumerable<string>, Task<ConcurrentDictionary<string, string>>> _multiStringToConcurrent_8;
         private readonly Func<string, int, Task<string>> _multiParamEcho_9;
         private readonly Func<string, int, string> _multiParamEchoSync_10;
+        private readonly Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> _multiParamEnumerableKey_11;
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
@@ -58,6 +59,9 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             _multiParamEchoSync_10 = new MultiParamFunctionCacheConfigurationManagerSync<string, int, string>(
                 impl.MultiParamEchoSync, config, methods[10]).Build();
+            
+            _multiParamEnumerableKey_11 = new MultiParamEnumerableKeyFunctionCacheConfigurationManager<string, IEnumerable<int>, IDictionary<int, string>, int, string>(
+                impl.MultiParamEnumerableKey, config, methods[11]).Build();
         }
         
         public Task<string> StringToString(string key)
@@ -113,6 +117,11 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public string MultiParamEchoSync(string key1, int key2)
         {
             return _multiParamEchoSync_10(key1, key2);
+        }
+
+        public Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys)
+        {
+            return _multiParamEnumerableKey_11(outerKey, innerKeys);
         }
     }
 }

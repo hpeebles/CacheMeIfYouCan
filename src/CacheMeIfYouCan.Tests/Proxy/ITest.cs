@@ -27,5 +27,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         Task<string> MultiParamEcho(string key1, int key2);
         
         string MultiParamEchoSync(string key1, int key2);
+
+        Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys);
     }
 }

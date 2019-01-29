@@ -61,5 +61,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             return $"{key1}_{key2}";
         }
+
+        public Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys)
+        {
+            return Task.FromResult<IDictionary<int, string>>(innerKeys.ToDictionary(k => k, k => outerKey + k));
+        }
     }
 }

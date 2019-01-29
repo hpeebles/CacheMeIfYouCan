@@ -195,9 +195,10 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}'");
 
             bool IsEnumerableKeyFunc(out Type _keyType, out Type _valueType)
             {
-                if (parameterTypes.Length == 1 &&
-                    parameterTypes[0] != typeof(String) &&
-                    IsEnumerable(parameterTypes[0], out _keyType) &&
+                var lastParam = parameterTypes.Last();
+            
+                if (lastParam != typeof(String) &&
+                    IsEnumerable(lastParam, out _keyType) &&
                     IsDictionary(returnTypeInner, out var returnKeyType, out _valueType))
                 {
                     if (_keyType != returnKeyType)
