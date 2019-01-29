@@ -12,6 +12,7 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : EnumerableKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
+        internal int MaxFetchBatchSize { get; private set; }
         internal Func<IEqualityComparer<TK>, int, IDictionary<TK, TV>> DictionaryFactoryFunc { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -32,6 +33,12 @@ namespace CacheMeIfYouCan.Configuration
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         {
             _inputFunc = inputFunc;
+        }
+        
+        public TConfig WithBatchedFetches(int batchSize)
+        {
+            MaxFetchBatchSize = batchSize;
+            return (TConfig)this;
         }
 
         public TConfig WithReturnDictionaryFactory(
@@ -67,7 +74,8 @@ namespace CacheMeIfYouCan.Configuration
                 OnResultAction,
                 OnFetchAction,
                 OnExceptionAction,
-                keyComparer);
+                keyComparer,
+                MaxFetchBatchSize);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

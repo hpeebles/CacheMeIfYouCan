@@ -23,6 +23,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly KeyComparer<TK2> _innerKeyComparer;
         private readonly IEqualityComparer<Key<(TK1, TK2)>> _tupleKeysOnlyDifferingBySecondItemComparer;
         private readonly string _keyParamSeparator;
+        private readonly int _maxFetchBatchSize;
         private readonly DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
         private int _pendingRequestsCount;
         private bool _disposed;
@@ -40,7 +41,8 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheException<(TK1, TK2)>> onException,
             KeyComparer<TK1> outerKeyComparer,
             KeyComparer<TK2> innerKeyComparer,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int maxFetchBatchSize)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -56,6 +58,7 @@ namespace CacheMeIfYouCan.Internal
             _innerKeyComparer = innerKeyComparer;
             _tupleKeysOnlyDifferingBySecondItemComparer = new TupleKeysOnlyDifferingBySecondItemComparer(innerKeyComparer);
             _keyParamSeparator = keyParamSeparator;
+            _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
             
             _fetchHandler = new DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>(
                 func,
@@ -108,7 +111,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     Interlocked.Increment(ref _pendingRequestsCount);
 
-                    IList<Key<(TK1, TK2)>> missingKeys = null;
+                    Key<(TK1, TK2)>[] missingKeys = null;
                     if (_cache != null)
                     {
                         var fromCacheTask = _cache.Get(keys);
@@ -180,87 +183,106 @@ namespace CacheMeIfYouCan.Internal
 
             return readonlyResults;
         }
-        
+
         private async Task<IList<FunctionCacheFetchResultInner<(TK1, TK2), TV>>> Fetch(
             TK1 outerKey,
-            IList<Key<(TK1, TK2)>> innerKeys)
+            Key<(TK1, TK2)>[] innerKeys)
         {
-            var timestamp = Timestamp.Now;
-            var stopwatchStart = Stopwatch.GetTimestamp();
-            var error = false;
+            if (innerKeys.Length < _maxFetchBatchSize)
+                return await FetchBatch(innerKeys);
 
-            var results = new List<FunctionCacheFetchResultInner<(TK1, TK2), TV>>();
+            var tasks = innerKeys
+                .Batch(_maxFetchBatchSize)
+                .Select(FetchBatch)
+                .ToArray();
 
-            try
+            await Task.WhenAll(tasks);
+
+            return tasks
+                .SelectMany(t => t.Result)
+                .ToArray();
+            
+            async Task<IList<FunctionCacheFetchResultInner<(TK1, TK2), TV>>> FetchBatch(
+                IList<Key<(TK1, TK2)>> batchInnerKeys)
             {
-                var fetched = await _fetchHandler.ExecuteAsync(outerKey, innerKeys.Select(k => k.AsObject.Item2).ToArray());
-                
-                if (fetched != null && fetched.Any())
+                var timestamp = Timestamp.Now;
+                var stopwatchStart = Stopwatch.GetTimestamp();
+                var error = false;
+
+                var results = new List<FunctionCacheFetchResultInner<(TK1, TK2), TV>>();
+
+                try
                 {
-                    var keysMap = innerKeys.ToDictionary(k => k.AsObject.Item2, _innerKeyComparer);
+                    var fetched = await _fetchHandler.ExecuteAsync(outerKey, batchInnerKeys.Select(k => k.AsObject.Item2).ToArray());
 
-                    var nonDuplicates = new List<KeyValuePair<Key<(TK1, TK2)>, TV>>(innerKeys.Count);
-
-                    foreach (var kv in fetched)
+                    if (fetched != null && fetched.Any())
                     {
-                        var key = keysMap[kv.Key];
-                        
-                        results.Add(new FunctionCacheFetchResultInner<(TK1, TK2), TV>(
-                            key,
-                            kv.Value.Value,
-                            true,
-                            kv.Value.Duplicate,
-                            StopwatchHelper.GetDuration(stopwatchStart, kv.Value.StopwatchTimestampCompleted)));
-                        
-                        if (!kv.Value.Duplicate)
-                            nonDuplicates.Add(new KeyValuePair<Key<(TK1, TK2)>, TV>(key, kv.Value.Value));
-                    }
+                        var keysMap = batchInnerKeys.ToDictionary(k => k.AsObject.Item2, _innerKeyComparer);
 
-                    if (_cache != null)
-                    {
-                        if (nonDuplicates.Any())
+                        var nonDuplicates = new List<KeyValuePair<Key<(TK1, TK2)>, TV>>(batchInnerKeys.Count);
+
+                        foreach (var kv in fetched)
                         {
-                            var setValueTask = _cache.Set(nonDuplicates, _timeToLive);
+                            var key = keysMap[kv.Key];
 
-                            if (!setValueTask.IsCompleted)
-                                await setValueTask;
+                            results.Add(new FunctionCacheFetchResultInner<(TK1, TK2), TV>(
+                                key,
+                                kv.Value.Value,
+                                true,
+                                kv.Value.Duplicate,
+                                StopwatchHelper.GetDuration(stopwatchStart, kv.Value.StopwatchTimestampCompleted)));
+
+                            if (!kv.Value.Duplicate)
+                                nonDuplicates.Add(new KeyValuePair<Key<(TK1, TK2)>, TV>(key, kv.Value.Value));
+                        }
+
+                        if (_cache != null)
+                        {
+                            if (nonDuplicates.Any())
+                            {
+                                var setValueTask = _cache.Set(nonDuplicates, _timeToLive);
+
+                                if (!setValueTask.IsCompleted)
+                                    await setValueTask;
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                var duration = StopwatchHelper.GetDuration(stopwatchStart);
+                catch (Exception ex)
+                {
+                    var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
-                var fetchedKeys = results.Select(r => r.Key);
-                
-                results.AddRange(innerKeys
-                    .Except(fetchedKeys, _tupleKeysOnlyDifferingBySecondItemComparer)
-                    .Select(k => new FunctionCacheFetchResultInner<(TK1, TK2), TV>(k, default, false, false, duration)));
-                
-                var exception = new FunctionCacheFetchException<(TK1, TK2)>(
-                    Name,
-                    innerKeys,
-                    Timestamp.Now,
-                    "Unable to fetch value(s)",
-                    ex);
-                
-                _onException?.Invoke(exception);
-                
-                error = true;
-                throw exception;
-            }
-            finally
-            {
-                _onFetch?.Invoke(new FunctionCacheFetchResult<(TK1, TK2), TV>(
-                    Name,
-                    results,
-                    !error,
-                    timestamp,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
-            }
+                    var fetchedKeys = results.Select(r => r.Key);
 
-            return results;
+                    results.AddRange(batchInnerKeys
+                        .Except(fetchedKeys, _tupleKeysOnlyDifferingBySecondItemComparer)
+                        .Select(k =>
+                            new FunctionCacheFetchResultInner<(TK1, TK2), TV>(k, default, false, false, duration)));
+
+                    var exception = new FunctionCacheFetchException<(TK1, TK2)>(
+                        Name,
+                        batchInnerKeys,
+                        Timestamp.Now,
+                        "Unable to fetch value(s)",
+                        ex);
+
+                    _onException?.Invoke(exception);
+
+                    error = true;
+                    throw exception;
+                }
+                finally
+                {
+                    _onFetch?.Invoke(new FunctionCacheFetchResult<(TK1, TK2), TV>(
+                        Name,
+                        results,
+                        !error,
+                        timestamp,
+                        StopwatchHelper.GetDuration(stopwatchStart)));
+                }
+
+                return results;
+            }
         }
 
         private IReadOnlyCollection<FunctionCacheGetResultInner<(TK1, TK2), TV>> HandleError(
@@ -292,7 +314,7 @@ namespace CacheMeIfYouCan.Internal
                 .ToArray();
         }
 
-        private IList<Key<(TK1, TK2)>> BuildCombinedKeys(TK1 outerKey, IEnumerable<TK2> innerKeys)
+        private Key<(TK1, TK2)>[] BuildCombinedKeys(TK1 outerKey, IEnumerable<TK2> innerKeys)
         {
             var outerKeySerializer = new Lazy<string>(() => _outerKeySerializer(outerKey));
             

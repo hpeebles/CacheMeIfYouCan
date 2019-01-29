@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         private readonly Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> _inputFunc;
         internal string KeyParamSeparator { get; private set; }
+        internal int MaxFetchBatchSize { get; private set; }
         internal Func<IEqualityComparer<TK2>, int, IDictionary<TK2, TV>> DictionaryFactoryFunc { get; private set; }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -38,6 +39,12 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithKeyParamSeparator(string separator)
         {
             KeyParamSeparator = separator;
+            return (TConfig)this;
+        }
+        
+        public TConfig WithBatchedFetches(int batchSize)
+        {
+            MaxFetchBatchSize = batchSize;
             return (TConfig)this;
         }
 
@@ -92,7 +99,8 @@ namespace CacheMeIfYouCan.Configuration
                 OnExceptionAction,
                 keyComparer1,
                 keyComparer2,
-                KeyParamSeparator);
+                KeyParamSeparator,
+                MaxFetchBatchSize);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

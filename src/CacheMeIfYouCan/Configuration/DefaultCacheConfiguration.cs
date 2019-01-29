@@ -19,6 +19,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<CacheSetResult> OnCacheSetAction { get; private set; }
         internal Action<CacheException> OnCacheExceptionAction { get; private set; }
         internal string KeyParamSeparator { get; private set; } = "_";
+        internal int MaxFetchBatchSize { get; private set; }
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         internal EqualityComparers KeyComparers { get; } = new EqualityComparers();
@@ -101,6 +102,12 @@ namespace CacheMeIfYouCan.Configuration
         public DefaultCacheConfiguration WithKeyParamSeparator(string separator)
         {
             KeyParamSeparator = separator;
+            return this;
+        }
+        
+        public DefaultCacheConfiguration WithBatchedFetches(int batchSize)
+        {
+            MaxFetchBatchSize = batchSize;
             return this;
         }
 

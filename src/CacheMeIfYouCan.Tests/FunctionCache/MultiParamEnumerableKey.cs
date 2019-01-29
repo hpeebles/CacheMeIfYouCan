@@ -129,5 +129,43 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             ordered[0].Outcome.Should().Be(Outcome.FromCache);
             ordered[1].Outcome.Should().Be(Outcome.Fetch);
         }
+        
+        [Fact]
+        public async Task WithBatchedFetches()
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> echo = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .OnFetch(fetches.Add)
+                    .WithBatchedFetches(2)
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            var innerKeys = Enumerable.Range(0, 9).ToArray();
+            
+            var result = await cachedEcho(outerKey, innerKeys);
+
+            result.Should().ContainKeys(innerKeys);
+            
+            fetches.Should().HaveCount(5);
+
+            var ordered = fetches.OrderBy(f => f.Results.First().KeyString).ToArray();
+
+            ordered[0].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "0", outerKey + "1");
+            ordered[1].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "2", outerKey + "3");
+            ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "4", outerKey + "5");
+            ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "6", outerKey + "7");
+            ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "8");
+        }
     }
 }

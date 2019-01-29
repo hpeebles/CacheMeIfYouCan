@@ -241,6 +241,39 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 Assert.Equal(i.ToString(), mostRecentFetch.Results.Single().KeyString);
             }
         }
+        
+        [Fact]
+        public async Task WithBatchedFetches()
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .OnFetch(fetches.Add)
+                    .WithBatchedFetches(2)
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 9).Select(i => i.ToString()).ToArray();
+            
+            var results = await cachedEcho(keys);
+
+            results.Should().ContainKeys(keys);
+            
+            fetches.Should().HaveCount(5);
+
+            var ordered = fetches.OrderBy(f => f.Results.First().KeyString).ToArray();
+
+            ordered[0].Results.Select(r => r.KeyString).Should().BeEquivalentTo("0", "1");
+            ordered[1].Results.Select(r => r.KeyString).Should().BeEquivalentTo("2", "3");
+            ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo("4", "5");
+            ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo("6", "7");
+            ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo("8");
+        }
 
         [Fact]
         public async Task WithReturnDictionaryFactory()
