@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
+            return WithMetricsImpl<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
+            return WithMetricsImpl<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Prometheus
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithMetrics<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
+            return WithMetricsImpl<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Prometheus
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithMetrics<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
+            return WithMetricsImpl<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>, (TK1, TK2), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>, (TK1, TK2), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -81,7 +81,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -92,7 +92,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -103,7 +103,7 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
@@ -114,13 +114,91 @@ namespace CacheMeIfYouCan.Prometheus
             FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
             CacheMetrics cacheMetrics = CacheMetrics.All)
         {
-            return WithMetrics<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
+            return WithMetricsImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
                 configManager,
                 functionCacheMetrics,
                 cacheMetrics);
         }
         
-        private static TConfig WithMetrics<TConfig, TK, TV>(
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>, (TKOuter, TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>, (TKOuter, TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2), TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2), TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2, TKOuter3), TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            FunctionCacheMetrics functionCacheMetrics = FunctionCacheMetrics.All,
+            CacheMetrics cacheMetrics = CacheMetrics.All)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithMetricsImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2, TKOuter3), TKInner), TV>(
+                configManager,
+                functionCacheMetrics,
+                cacheMetrics);
+        }
+        
+        private static TConfig WithMetricsImpl<TConfig, TK, TV>(
             TConfig configManager,
             FunctionCacheMetrics functionCacheMetrics,
             CacheMetrics cacheMetrics)

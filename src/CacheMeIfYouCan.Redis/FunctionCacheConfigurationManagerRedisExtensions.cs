@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
+            return WithRedisImpl<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
+            return WithRedisImpl<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Redis
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithRedis<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
+            return WithRedisImpl<EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Redis
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return WithRedis<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
+            return WithRedisImpl<EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>, TK, TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -56,7 +56,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>, (TK1, TK2), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>, (TK1, TK2), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -86,7 +86,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -96,7 +96,7 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
@@ -106,11 +106,83 @@ namespace CacheMeIfYouCan.Redis
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
             string keyspacePrefix = null)
         {
-            return WithRedis<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
+            return WithRedisImpl<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>(
                 configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
         }
         
-        private static TConfig WithRedis<TConfig, TK, TV>(
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>, (TKOuter, TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>, (TKOuter, TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2), TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2), TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManager<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2, TKOuter3), TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithMetrics<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            this MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> configManager,
+            Action<RedisCacheFactoryConfig> redisConfigAction,
+            Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction = null,
+            string keyspacePrefix = null)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            return WithRedisImpl<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>, ((TKOuter1, TKOuter2, TKOuter3), TKInner), TV>(
+                configManager, redisConfigAction, cacheConfigAction, keyspacePrefix);
+        }
+        
+        private static TConfig WithRedisImpl<TConfig, TK, TV>(
             TConfig configManager,
             Action<RedisCacheFactoryConfig> redisConfigAction,
             Func<IDistributedCacheFactory, IDistributedCacheFactory> cacheConfigAction,
