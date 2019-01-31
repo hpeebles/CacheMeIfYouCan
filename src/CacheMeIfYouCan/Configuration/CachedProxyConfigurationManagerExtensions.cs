@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 
@@ -6,6 +7,18 @@ namespace CacheMeIfYouCan.Configuration
 {
     public static class CachedProxyConfigurationManagerExtensions
     {
+        public static CachedProxyConfigurationManager<T> WithMemoryCache<T>(
+            this CachedProxyConfigurationManager<T> configManager)
+        {
+            return configManager.WithLocalCacheFactory(new MemoryCacheFactory());
+        }
+
+        public static CachedProxyConfigurationManager<T> WithDictionaryCache<T>(
+            this CachedProxyConfigurationManager<T> configManager)
+        {
+            return configManager.WithLocalCacheFactory(new DictionaryCacheFactory());
+        }
+
         public static CachedProxyConfigurationManager<T> WithCacheFactoryPreset<T>(
             this CachedProxyConfigurationManager<T> configManager,
             int id)

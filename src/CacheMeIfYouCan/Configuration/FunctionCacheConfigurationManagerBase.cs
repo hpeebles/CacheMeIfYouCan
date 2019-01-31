@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
@@ -196,6 +195,16 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
+        public TConfig WithMemoryCache()
+        {
+            return WithLocalCacheFactory(new MemoryCacheFactory());
+        }
+
+        public TConfig WithDictionaryCache()
+        {
+            return WithLocalCacheFactory(new DictionaryCacheFactory());
+        }
+
         public TConfig WithDistributedCache(IDistributedCache<TK, TV> cache)
         {
             return WithDistributedCacheFactory(c => cache);

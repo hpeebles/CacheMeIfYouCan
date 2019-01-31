@@ -1,4 +1,5 @@
 using System;
+using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
 
@@ -6,6 +7,18 @@ namespace CacheMeIfYouCan.Configuration
 {
     public static class DefaultCacheConfigurationExtensions
     {
+        public static DefaultCacheConfiguration WithMemoryCache(
+            this DefaultCacheConfiguration config)
+        {
+            return config.WithLocalCacheFactory(new MemoryCacheFactory());
+        }
+
+        public static DefaultCacheConfiguration WithDictionaryCache(
+            this DefaultCacheConfiguration config)
+        {
+            return config.WithLocalCacheFactory(new DictionaryCacheFactory());
+        }
+
         public static DefaultCacheConfiguration CreateCacheFactoryPreset(
             this DefaultCacheConfiguration config,
             int id,
