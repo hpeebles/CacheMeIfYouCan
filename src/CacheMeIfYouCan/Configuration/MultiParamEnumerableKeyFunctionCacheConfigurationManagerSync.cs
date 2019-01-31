@@ -68,6 +68,29 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeySerializerInternal(serializer, deserializer);
         }
 
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithKeySerializer<T>(
+            ISerializer serializer)
+        {
+            var type = typeof(T);
+            var match = false;
+            if (typeof(TKOuter) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter>);
+                match = true;
+            }
+
+            if (typeof(TKInner) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                match = true;
+            }
+
+            if (!match)
+                throw new InvalidOperationException($"Cannot use '{typeof(T).Name}' as the type argument in {this.GetType().Name}.{nameof(WithKeySerializer)} as no keys are of that type");
+
+            return this;
+        }
+
         public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithKeyComparer(
             IEqualityComparer<TKOuter> comparer)
         {
@@ -185,6 +208,35 @@ namespace CacheMeIfYouCan.Configuration
             Func<TKInner, string> serializer, Func<string, TKInner> deserializer = null)
         {
             return WithKeySerializerInternal(serializer, deserializer);
+        }
+
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithKeySerializer<T>(
+            ISerializer serializer)
+        {
+            var type = typeof(T);
+            var match = false;
+            if (typeof(TKOuter1) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>);
+                match = true;
+            }
+
+            if (typeof(TKOuter2) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>);
+                match = true;
+            }
+
+            if (typeof(TKInner) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                match = true;
+            }
+
+            if (!match)
+                throw new InvalidOperationException($"Cannot use '{typeof(T).Name}' as the type argument in {this.GetType().Name}.{nameof(WithKeySerializer)} as no keys are of that type");
+
+            return this;
         }
 
         public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithKeyComparer(
@@ -328,6 +380,41 @@ namespace CacheMeIfYouCan.Configuration
             Func<TKInner, string> serializer, Func<string, TKInner> deserializer = null)
         {
             return WithKeySerializerInternal(serializer, deserializer);
+        }
+
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithKeySerializer<T>(
+            ISerializer serializer)
+        {
+            var type = typeof(T);
+            var match = false;
+            if (typeof(TKOuter1) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>);
+                match = true;
+            }
+
+            if (typeof(TKOuter2) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>);
+                match = true;
+            }
+
+            if (typeof(TKOuter3) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter3>);
+                match = true;
+            }
+
+            if (typeof(TKInner) == type)
+            {
+                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                match = true;
+            }
+
+            if (!match)
+                throw new InvalidOperationException($"Cannot use '{typeof(T).Name}' as the type argument in {this.GetType().Name}.{nameof(WithKeySerializer)} as no keys are of that type");
+
+            return this;
         }
 
         public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithKeyComparer(

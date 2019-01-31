@@ -167,5 +167,72 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "6", outerKey + "7");
             ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "8");
         }
+
+        [Fact]
+        public async Task OuterKeySerializerOnlyRunsOncePerRequest()
+        {
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> echo = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+
+            var serializer = new TestSerializer();
+
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .WithKeySerializer<string>(serializer)
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+            serializer.SerializeCount.Should().Be(0);
+            serializer.DeserializeCount.Should().Be(0);
+
+            var result = await cachedEcho(outerKey, innerKeys);
+
+            result.Should().ContainKeys(innerKeys);
+
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task OuterKeySerializerOnlyRunsOncePerRequestEvenWhenBatched()
+        {
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> echo = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+
+            var serializer = new TestSerializer();
+
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .WithKeySerializer<string>(serializer)
+                    .WithBatchedFetches(2)
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+            serializer.SerializeCount.Should().Be(0);
+            serializer.DeserializeCount.Should().Be(0);
+
+            var result = await cachedEcho(outerKey, innerKeys);
+
+            result.Should().ContainKeys(innerKeys);
+
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(0);
+        }
     }
 }
