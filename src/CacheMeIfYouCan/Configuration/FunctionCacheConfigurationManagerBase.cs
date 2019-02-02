@@ -325,6 +325,48 @@ namespace CacheMeIfYouCan.Configuration
             OnCacheExceptionAction = ActionsHelper.Combine(OnCacheExceptionAction, onCacheException, behaviour);
             return (TConfig)this;
         }
+        
+        public TConfig OnResultObservable(
+            Action<IObservable<FunctionCacheGetResult<TK, TV>>> onResult,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onResult, OnResult, behaviour);
+        }
+        
+        public TConfig OnFetchObservable(
+            Action<IObservable<FunctionCacheFetchResult<TK, TV>>> onFetch,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onFetch, OnFetch, behaviour);
+        }
+        
+        public TConfig OnExceptionObservable(
+            Action<IObservable<FunctionCacheException<TK>>> onException,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onException, OnException, behaviour);
+        }
+        
+        public TConfig OnCacheGetObservable(
+            Action<IObservable<CacheGetResult<TK, TV>>> onCacheGet,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onCacheGet, OnCacheGet, behaviour);
+        }
+        
+        public TConfig OnCacheSetObservable(
+            Action<IObservable<CacheSetResult<TK, TV>>> onCacheSet,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onCacheSet, OnCacheSet, behaviour);
+        }
+        
+        public TConfig OnCacheExceptionObservable(
+            Action<IObservable<CacheException<TK>>> onCacheException,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return ObservablesHelper.SetupObservable(onCacheException, OnCacheException, behaviour);
+        }
 
         public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable)
         {
