@@ -55,9 +55,10 @@ namespace CacheMeIfYouCan.Configuration
         
         internal SingleKeyFunctionCache<TK, TV> BuildFunctionCacheSingle()
         {
+            var keySerializer = GetKeySerializer();
             var keyComparer = GetKeyComparer();
             
-            var cache = BuildCache(keyComparer);
+            var cache = BuildCache(keySerializer, keyComparer);
 
             Func<TK, TV, TimeSpan> timeToLiveFactory;
             if (_timeToLiveFactory != null)
@@ -70,16 +71,6 @@ namespace CacheMeIfYouCan.Configuration
                 timeToLiveFactory = (k, v) => timeToLive;
             }
 
-            var keySerializer = GetKeySerializer();
-
-            if (KeysToRemoveObservable != null)
-            {
-                KeysToRemoveObservable
-                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
-                    .Retry()
-                    .Subscribe();
-            }
-            
             var functionCache = new SingleKeyFunctionCache<TK, TV>(
                 _inputFunc,
                 FunctionName,

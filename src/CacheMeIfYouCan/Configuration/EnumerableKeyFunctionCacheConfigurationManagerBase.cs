@@ -50,19 +50,10 @@ namespace CacheMeIfYouCan.Configuration
         
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()
         {
+            var keySerializer = GetKeySerializer();
             var keyComparer = GetKeyComparer();
             
-            var cache = BuildCache(keyComparer);
-            
-            var keySerializer = GetKeySerializer();
-
-            if (KeysToRemoveObservable != null)
-            {
-                KeysToRemoveObservable
-                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<TK>(k, keySerializer)).AsTask()))
-                    .Retry()
-                    .Subscribe();
-            }
+            var cache = BuildCache(keySerializer, keyComparer);
             
             var functionCache = new EnumerableKeyFunctionCache<TK, TV>(
                 _inputFunc,

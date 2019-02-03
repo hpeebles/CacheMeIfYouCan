@@ -7,6 +7,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         public readonly string CacheName;
         public string KeyspacePrefix;
+        public Func<TK, string> KeySerializer;
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;
         public Func<string, TV> ValueDeserializer;
@@ -15,6 +16,12 @@ namespace CacheMeIfYouCan.Configuration
         public DistributedCacheConfig(string cacheName = null)
         {
             CacheName = cacheName;
+            
+            if (DefaultSettings.Cache.KeySerializers.TryGetSerializer<TK>(out var keySerializer) ||
+                ProvidedSerializers.TryGetSerializer(out keySerializer))
+            {
+                KeySerializer = keySerializer;
+            }
             
             if (DefaultSettings.Cache.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out keyDeserializer))

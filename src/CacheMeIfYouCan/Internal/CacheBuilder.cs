@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal.DistributedCache;
@@ -18,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheRemoveResult<TK>> onCacheRemove,
             Action<CacheException<TK>> onCacheException,
-            KeyComparer<TK> keyComparer)
+            IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables)
         {
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
@@ -60,10 +63,12 @@ namespace CacheMeIfYouCan.Internal
             if (distributedCache is ICachedItemCounter distributedItemCounter)
                 CachedItemCounterContainer.Register(distributedItemCounter);
 
+            SetupKeyRemovalObservables(localCache, distributedCache, keyRemovalObservables, config.KeySerializer);
+            
             if (localCache != null)
             {
                 if (distributedCache != null)
-                    return new TwoTierCache<TK, TV>(localCache, distributedCache, keyComparer);
+                    return new TwoTierCache<TK, TV>(localCache, distributedCache, config.KeyComparer);
 
                 return new LocalCacheToCacheInternalAdapter<TK, TV>(localCache);
             }
@@ -77,6 +82,43 @@ namespace CacheMeIfYouCan.Internal
         private static ILocalCacheFactory<TK, TV> GetDefaultLocalCacheFactory<TK, TV>()
         {
             return new LocalCacheFactoryToGenericAdapter<TK, TV>(new MemoryCacheFactory());
+        }
+
+        private static void SetupKeyRemovalObservables<TK, TV>(
+            ILocalCache<TK, TV> localCache,
+            IDistributedCache<TK, TV> distributedCache,
+            IList<(IObservable<TK>, bool)> keysToRemoveObservables,
+            Func<TK, string> keySerializer)
+        {
+            if (keysToRemoveObservables == null || !keysToRemoveObservables.Any())
+                return;
+
+            if (localCache != null)
+            {
+                keysToRemoveObservables
+                    .Select(o => o.Item1)
+                    .Merge()
+                    .Select(k => localCache.Remove(new Key<TK>(k, keySerializer)))
+                    .Retry()
+                    .Subscribe();
+            }
+
+            if (distributedCache == null)
+                return;
+
+            var removeFromDistributed = keysToRemoveObservables
+                .Where(o => !o.Item2)
+                .Select(o => o.Item1)
+                .ToArray();
+
+            if (removeFromDistributed.Any())
+            {
+                removeFromDistributed
+                    .Merge()
+                    .SelectMany(k => distributedCache.Remove(new Key<TK>(k, keySerializer)))
+                    .Retry()
+                    .Subscribe();
+            }
         }
     }
 }

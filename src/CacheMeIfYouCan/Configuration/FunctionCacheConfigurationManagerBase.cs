@@ -29,7 +29,8 @@ namespace CacheMeIfYouCan.Configuration
         internal IDistributedCacheFactory<TK, TV> DistributedCacheFactory { get; private set; }
         internal string KeyspacePrefix { get; private set; }
         internal Func<TV> DefaultValueFactory { get; private set; }
-        internal IObservable<TK> KeysToRemoveObservable { get; private set; }
+        internal IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
+            = new List<(IObservable<TK>, bool)>();
         
         internal FunctionCacheConfigurationManagerBase(
             string functionName,
@@ -378,17 +379,18 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheException, OnCacheException, behaviour);
         }
 
-        public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable)
+        public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
         {
-            KeysToRemoveObservable = keysToRemoveObservable;
+            KeyRemovalObservables.Add((keysToRemoveObservable, removeFromLocalOnly));
             return (TConfig)this;
         }
         
-        internal ICacheInternal<TK, TV> BuildCache(KeyComparer<TK> keyComparer)
+        internal ICacheInternal<TK, TV> BuildCache(Func<TK, string> keySerializer, KeyComparer<TK> keyComparer)
         {
             var cacheConfig = new DistributedCacheConfig<TK, TV>(FunctionName)
             {
                 KeyspacePrefix = KeyspacePrefix,
+                KeySerializer = keySerializer,
                 KeyDeserializer = GetKeyDeserializer(),
                 ValueSerializer = GetValueSerializer(),
                 ValueDeserializer = GetValueDeserializer(),
@@ -419,7 +421,7 @@ namespace CacheMeIfYouCan.Configuration
                     OnCacheSetAction,
                     OnCacheRemoveAction,
                     OnCacheExceptionAction,
-                    keyComparer);
+                    KeyRemovalObservables);
             }
 
             return cache;
@@ -468,7 +470,7 @@ namespace CacheMeIfYouCan.Configuration
             var serializer = ValueSerializer;
 
             if (serializer == null)
-                DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out serializer);
+                DefaultSettings.Cache.ValueSerializers.TryGetSerializer(out serializer);
 
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
@@ -481,7 +483,7 @@ namespace CacheMeIfYouCan.Configuration
             var deserializer = ValueDeserializer;
             
             if (deserializer == null)
-                DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out deserializer);
+                DefaultSettings.Cache.ValueSerializers.TryGetDeserializer(out deserializer);
             
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);

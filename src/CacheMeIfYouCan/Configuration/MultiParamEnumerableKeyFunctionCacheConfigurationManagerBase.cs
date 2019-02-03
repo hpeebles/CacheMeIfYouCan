@@ -70,19 +70,9 @@ namespace CacheMeIfYouCan.Configuration
             var combinedKeyComparer = new KeyComparer<(TK1, TK2)>(
                 new ValueTupleComparer<TK1, TK2>(keyComparer1.Inner, keyComparer2.Inner));
             
-            var cache = BuildCache(combinedKeyComparer);
+            var cache = BuildCache(GetKeySerializer(), combinedKeyComparer);
 
             var timeToLive = TimeToLive ?? DefaultSettings.Cache.TimeToLive;
-
-            if (KeysToRemoveObservable != null)
-            {
-                var combinedSerializer = GetKeySerializer();
-
-                KeysToRemoveObservable
-                    .SelectMany(k => Observable.FromAsync(() => cache.Remove(new Key<(TK1, TK2)>(k, combinedSerializer)).AsTask()))
-                    .Retry()
-                    .Subscribe();
-            }
 
             var keySerializer2 = GetKeySerializerImpl<TK2>();
             
