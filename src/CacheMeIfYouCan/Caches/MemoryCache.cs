@@ -78,9 +78,9 @@ namespace CacheMeIfYouCan.Caches
                 _cache.Set(kv.Key.AsString, new ValueWithExpiry<TV>(kv.Value, expiry), expiry);
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
-            _cache.Remove(key.AsString);
+            return _cache.Remove(key.AsString) != null;
         }
 
         public void Dispose()

@@ -76,11 +76,11 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
                 }
             }
 
-            public void Remove(Key<TK> key)
+            public bool Remove(Key<TK> key)
             {
                 try
                 {
-                    _cache.Remove(key);
+                    return _cache.Remove(key);
                 }
                 catch (Exception ex)
                 {

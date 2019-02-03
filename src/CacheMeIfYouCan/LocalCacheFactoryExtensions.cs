@@ -43,6 +43,23 @@ namespace CacheMeIfYouCan
         }
         
         /// <summary>
+        /// Adds an action to be executed each time a request to remove items from the cache completes
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory being configured</param>
+        /// <param name="onRemoveResult">The action to run each time a request to remove items from the cache completes</param>
+        /// <param name="behaviour">How to add the <paramref name="onRemoveResult"/> action to the existing list of actions</param>
+        /// <returns></returns>
+        public static ILocalCacheFactory OnRemoveResult(
+            this ILocalCacheFactory cacheFactory,
+            Action<CacheRemoveResult> onRemoveResult,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnRemoveResult(onRemoveResult, behaviour);
+        }
+        
+        /// <summary>
         /// Adds an action to be executed each time an exception occurs while handling a cache request
         /// </summary>
         /// <param name="cacheFactory">The cache factory being configured</param>
@@ -327,6 +344,23 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .OnSetResult(onSetResult, behaviour);
+        }
+        
+        /// <summary>
+        /// Adds an action to be executed each time a request to remove items from the cache completes
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory being configured</param>
+        /// <param name="onRemoveResult">The action to run each time a request to remove items from the cache completes</param>
+        /// <param name="behaviour">How to add the <paramref name="onRemoveResult"/> action to the existing list of actions</param>
+        /// <returns></returns>
+        public static ILocalCacheFactory<TK, TV> OnRemoveResult<TK, TV>(
+            this ILocalCacheFactory<TK, TV> cacheFactory,
+            Action<CacheRemoveResult<TK>> onRemoveResult,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            return cacheFactory
+                .AsFactory()
+                .OnRemoveResult(onRemoveResult, behaviour);
         }
         
         /// <summary>

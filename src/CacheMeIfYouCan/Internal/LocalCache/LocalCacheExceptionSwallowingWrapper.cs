@@ -68,14 +68,16 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             { }
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
             try
             {
-                _cache.Remove(key);
+                return _cache.Remove(key);
             }
             catch (Exception ex) when (_predicate(ex))
-            { }
+            {
+                return false;
+            }
         }
     }
 }

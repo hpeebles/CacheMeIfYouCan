@@ -54,9 +54,9 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             await Execute(() => _cache.Set(values, timeToLive));
         }
 
-        public async Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
-            await Execute(() => _cache.Remove(key));
+            return await Execute(() => _cache.Remove(key));
         }
 
         private async Task Execute(Func<Task> action)

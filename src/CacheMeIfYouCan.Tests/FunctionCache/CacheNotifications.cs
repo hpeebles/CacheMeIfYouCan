@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using FluentAssertions;
@@ -80,6 +81,42 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             await cachedEcho("123");
             results.Should().ContainSingle();
+        }
+        
+        [Fact]
+        public async Task OnCacheRemove()
+        {
+            var results = new List<CacheRemoveResult>();
+
+            var keysToRemove = new Subject<string>();
+            
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1))
+                    .OnCacheRemove(results.Add)
+                    .WithKeysToRemoveObservable(keysToRemove)
+                    .Build();
+            }
+
+            var start = Timestamp.Now;
+            
+            await cachedEcho("123");
+            
+            keysToRemove.OnNext("123");
+            
+            results.Should().ContainSingle();
+            results[0].Key.Should().Be("123");
+            results[0].KeyRemoved.Should().BeTrue();
+            results[0].Start.Should().BeInRange(start, Timestamp.Now);
+            
+            keysToRemove.OnNext("123");
+
+            results.Should().HaveCount(2);
+            results[1].KeyRemoved.Should().BeFalse();
         }
 
         [Fact]

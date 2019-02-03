@@ -54,6 +54,7 @@ namespace CacheMeIfYouCan
         /// Removes a single key from the cache
         /// </summary>
         /// <param name="key">The key to remove from the cache</param>
-        void Remove(Key<TK> key);
+        /// <returns>True if the key was removed, False otherwise</returns>
+        bool Remove(Key<TK> key);
     }
 }

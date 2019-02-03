@@ -124,9 +124,9 @@ namespace CacheMeIfYouCan.Caches
             }
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
-            _values.TryRemove(key, out _);
+            return _values.TryRemove(key, out _);
         }
 
         public long Count => _values.Count;

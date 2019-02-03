@@ -12,17 +12,20 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         private readonly IDistributedCache<TK, TV> _cache;
         private readonly Action<CacheGetResult<TK, TV>> _onCacheGetResult;
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
+        private readonly Action<CacheRemoveResult<TK>> _onCacheRemoveResult;
         private readonly Action<CacheException<TK>> _onException;
 
         public DistributedCacheNotificationWrapper(
             IDistributedCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
+            Action<CacheRemoveResult<TK>> onCacheRemoveResult,
             Action<CacheException<TK>> onException)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
+            _onCacheRemoveResult = onCacheRemoveResult;
             _onException = onException;
 
             CacheName = _cache.CacheName;
@@ -160,9 +163,37 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
         }
 
-        public Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
-            return _cache.Remove(key);
+            var timestamp = Timestamp.Now;
+            var stopwatchStart = Stopwatch.GetTimestamp();
+            var error = false;
+            var keyRemoved = false;
+
+            try
+            {
+                keyRemoved = await _cache.Remove(key);
+
+                return keyRemoved;
+            }
+            catch (CacheException<TK> ex)
+            {
+                error = true;
+                _onException?.Invoke(ex);
+
+                throw;
+            }
+            finally
+            {
+                _onCacheRemoveResult?.Invoke(new CacheRemoveResult<TK>(
+                    CacheName,
+                    CacheType,
+                    key,
+                    !error,
+                    keyRemoved,
+                    timestamp,
+                    StopwatchHelper.GetDuration(stopwatchStart)));
+            }
         }
     }
 }

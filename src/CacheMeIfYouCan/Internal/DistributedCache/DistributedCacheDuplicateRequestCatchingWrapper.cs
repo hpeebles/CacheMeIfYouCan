@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return _cache.Set(values, timeToLive);
         }
 
-        public Task Remove(Key<TK> key)
+        public Task<bool> Remove(Key<TK> key)
         {
             return _cache.Remove(key);
         }

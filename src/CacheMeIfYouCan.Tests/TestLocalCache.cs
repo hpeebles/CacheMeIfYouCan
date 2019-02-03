@@ -78,7 +78,7 @@ namespace CacheMeIfYouCan.Tests
                 Values[kv.Key] = Tuple.Create(kv.Value, expiry);
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
             if (_delay.HasValue)
                 Task.Delay(_delay.Value).Wait();
@@ -86,7 +86,7 @@ namespace CacheMeIfYouCan.Tests
             if (_error?.Invoke() ?? false)
                 throw new Exception();
             
-            Values.TryRemove(key, out _);
+            return Values.TryRemove(key, out _);
         }
     }
 }

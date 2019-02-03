@@ -16,6 +16,7 @@ namespace CacheMeIfYouCan.Internal
             DistributedCacheConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
+            Action<CacheRemoveResult<TK>> onCacheRemove,
             Action<CacheException<TK>> onCacheException,
             KeyComparer<TK> keyComparer)
         {
@@ -32,6 +33,7 @@ namespace CacheMeIfYouCan.Internal
                 localCache = localCacheFactory
                     ?.OnGetResult(onCacheGet)
                     .OnSetResult(onCacheSet)
+                    .OnRemoveResult(onCacheRemove)
                     .OnException(onCacheException)
                     .Build(cacheName);
             }
@@ -49,6 +51,7 @@ namespace CacheMeIfYouCan.Internal
                 distributedCache = distributedCacheFactory
                     ?.OnGetResult(onCacheGet)
                     .OnSetResult(onCacheSet)
+                    .OnRemoveResult(onCacheRemove)
                     .OnException(onCacheException)
                     .WithKeyspacePrefix(config.KeyspacePrefix)
                     .Build(config);

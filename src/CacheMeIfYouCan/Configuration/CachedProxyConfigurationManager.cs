@@ -26,6 +26,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<FunctionCacheException> _onException;
         private Action<CacheGetResult> _onCacheGet;
         private Action<CacheSetResult> _onCacheSet;
+        private Action<CacheRemoveResult> _onCacheRemove;
         private Action<CacheException> _onCacheException;
         private string _keyParamSeparator;
         private int _maxFetchBatchSize;
@@ -42,6 +43,7 @@ namespace CacheMeIfYouCan.Configuration
             _onException = DefaultSettings.Cache.OnExceptionAction;
             _onCacheGet = DefaultSettings.Cache.OnCacheGetAction;
             _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
+            _onCacheRemove = DefaultSettings.Cache.OnCacheRemoveAction;
             _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
             _keyParamSeparator = DefaultSettings.Cache.KeyParamSeparator;
             _maxFetchBatchSize = DefaultSettings.Cache.MaxFetchBatchSize;
@@ -191,6 +193,14 @@ namespace CacheMeIfYouCan.Configuration
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             _onCacheSet = ActionsHelper.Combine(_onCacheSet, onCacheSet, behaviour);
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> OnCacheRemove(
+            Action<CacheRemoveResult> onCacheRemove,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            _onCacheRemove = ActionsHelper.Combine(_onCacheRemove, onCacheRemove, behaviour);
             return this;
         }
         
@@ -365,6 +375,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onException,
                 _onCacheGet,
                 _onCacheSet,
+                _onCacheRemove,
                 _onCacheException,
                 _keyParamSeparator,
                 _functionCacheConfigActions);

@@ -93,7 +93,7 @@ namespace CacheMeIfYouCan.Tests
                 Values[kv.Key.AsString] = Tuple.Create(_serializer(kv.Value), expiry);
         }
 
-        public async Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
             if (_delay.HasValue)
                 await Task.Delay(_delay.Value);
@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Tests
             if (_error?.Invoke() ?? false)
                 throw new Exception();
 
-            Values.TryRemove(key.AsString, out _);
+            return Values.TryRemove(key.AsString, out _);
         }
 
         public void NotifyChanged(Key<TK> key)

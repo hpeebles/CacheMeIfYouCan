@@ -9,6 +9,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         private readonly ILocalCache<TK, TV> _cache;
         private const string CacheGetErrorMessage = "LocalCache.Get exception";
         private const string CacheSetErrorMessage = "LocalCache.Set exception";
+        private const string CacheRemoveErrorMessage = "LocalCache.Remove exception";
 
         public LocalCacheExceptionFormattingWrapper(ILocalCache<TK, TV> cache)
         {
@@ -97,9 +98,22 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             }
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
-            _cache.Remove(key);
+            try
+            {
+                return _cache.Remove(key);
+            }
+            catch (Exception ex)
+            {
+                throw new CacheRemoveException<TK>(
+                    CacheName,
+                    CacheType,
+                    key,
+                    Timestamp.Now,
+                    CacheRemoveErrorMessage,
+                    ex);
+            }
         }
     }
 }

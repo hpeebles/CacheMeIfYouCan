@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Polly;
 
 namespace CacheMeIfYouCan.Polly
@@ -44,9 +43,9 @@ namespace CacheMeIfYouCan.Polly
             _policy.Execute(() => _cache.Set(values, timeToLive));
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
-            _policy.Execute(() => _cache.Remove(key));
+            return _policy.Execute(() => _cache.Remove(key));
         }
     }
 }

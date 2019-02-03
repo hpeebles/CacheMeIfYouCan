@@ -21,6 +21,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<FunctionCacheException<TK>> OnExceptionAction { get; private set; }
         internal Action<CacheGetResult<TK, TV>> OnCacheGetAction { get; private set; }
         internal Action<CacheSetResult<TK, TV>> OnCacheSetAction { get; private set; }
+        internal Action<CacheRemoveResult<TK>> OnCacheRemoveAction { get; private set; }
         internal Action<CacheException<TK>> OnCacheExceptionAction { get; private set; }
         internal Func<TV, string> ValueSerializer { get; private set; }
         internal Func<string, TV> ValueDeserializer { get; private set; }
@@ -67,6 +68,7 @@ namespace CacheMeIfYouCan.Configuration
                 OnExceptionAction = interfaceConfig.OnException;
                 OnCacheGetAction = interfaceConfig.OnCacheGet;
                 OnCacheSetAction = interfaceConfig.OnCacheSet;
+                OnCacheRemoveAction = interfaceConfig.OnCacheRemove;
                 OnCacheExceptionAction = interfaceConfig.OnCacheException;
 
                 if (interfaceConfig.FunctionCacheConfigActions != null)
@@ -317,6 +319,14 @@ namespace CacheMeIfYouCan.Configuration
             OnCacheSetAction = ActionsHelper.Combine(OnCacheSetAction, onCacheSet, behaviour);
             return (TConfig)this;
         }
+        
+        public TConfig OnCacheRemove(
+            Action<CacheRemoveResult<TK>> onCacheRemove,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            OnCacheRemoveAction = ActionsHelper.Combine(OnCacheRemoveAction, onCacheRemove, behaviour);
+            return (TConfig)this;
+        }
 
         public TConfig OnCacheException(
             Action<CacheException<TK>> onCacheException,
@@ -407,6 +417,7 @@ namespace CacheMeIfYouCan.Configuration
                     cacheConfig,
                     OnCacheGetAction,
                     OnCacheSetAction,
+                    OnCacheRemoveAction,
                     OnCacheExceptionAction,
                     keyComparer);
             }

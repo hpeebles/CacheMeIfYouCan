@@ -22,6 +22,7 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheException> onException,
             Action<CacheGetResult> onCacheGet,
             Action<CacheSetResult> onCacheSet,
+            Action<CacheRemoveResult> onCacheRemove,
             Action<CacheException> onCacheException,
             string keyParamSeparator,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
@@ -40,6 +41,7 @@ namespace CacheMeIfYouCan.Internal
             OnException = onException;
             OnCacheGet = onCacheGet;
             OnCacheSet = onCacheSet;
+            OnCacheRemove = onCacheRemove;
             OnCacheException = onCacheException;
             KeyParamSeparator = keyParamSeparator;
             FunctionCacheConfigActions = functionCacheConfigActions;
@@ -59,6 +61,7 @@ namespace CacheMeIfYouCan.Internal
         public Action<FunctionCacheException> OnException { get; }
         public Action<CacheGetResult> OnCacheGet { get; }
         public Action<CacheSetResult> OnCacheSet { get; }
+        public Action<CacheRemoveResult> OnCacheRemove { get; }
         public Action<CacheException> OnCacheException { get; }
         public string KeyParamSeparator { get; }
         public IDictionary<MethodInfoKey, object> FunctionCacheConfigActions { get; }

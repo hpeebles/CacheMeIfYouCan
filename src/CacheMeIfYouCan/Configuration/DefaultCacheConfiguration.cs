@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<FunctionCacheException> OnExceptionAction { get; private set; }
         internal Action<CacheGetResult> OnCacheGetAction { get; private set; }
         internal Action<CacheSetResult> OnCacheSetAction { get; private set; }
+        internal Action<CacheRemoveResult> OnCacheRemoveAction { get; private set; }
         internal Action<CacheException> OnCacheExceptionAction { get; private set; }
         internal string KeyParamSeparator { get; private set; } = "_";
         internal int MaxFetchBatchSize { get; private set; }
@@ -88,6 +89,14 @@ namespace CacheMeIfYouCan.Configuration
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             OnCacheSetAction = ActionsHelper.Combine(OnCacheSetAction, onCacheSet, behaviour);
+            return this;
+        }
+        
+        public DefaultCacheConfiguration OnCacheRemove(
+            Action<CacheRemoveResult> onCacheRemove,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            OnCacheRemoveAction = ActionsHelper.Combine(OnCacheRemoveAction, onCacheRemove, behaviour);
             return this;
         }
 

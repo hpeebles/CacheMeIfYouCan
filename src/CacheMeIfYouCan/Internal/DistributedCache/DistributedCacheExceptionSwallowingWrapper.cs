@@ -69,14 +69,16 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             { }
         }
 
-        public async Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
             try
             {
-                await _cache.Remove(key);
+                return await _cache.Remove(key);
             }
             catch (Exception ex) when (_predicate(ex))
-            { }
+            {
+                return false;
+            }
         }
     }
 }

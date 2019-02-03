@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Internal
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
 
             if (_distributedCache is INotifyKeyChanges<TK> notifier)
-                notifier.KeyChanges.Do(_localCache.Remove).Retry().Subscribe();
+                notifier.KeyChanges.Do(k => _localCache.Remove(k)).Retry().Subscribe();
 
             CacheName = _localCache.CacheName;
             CacheType = $"{_localCache.CacheType}+{_distributedCache.CacheType}";

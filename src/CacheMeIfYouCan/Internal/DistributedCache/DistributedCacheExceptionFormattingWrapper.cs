@@ -10,6 +10,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         private readonly IDistributedCache<TK, TV> _cache;
         private const string CacheGetErrorMessage = "DistributedCache.Get exception";
         private const string CacheSetErrorMessage = "DistributedCache.Set exception";
+        private const string CacheRemoveErrorMessage = "DistributedCache.Remove exception";
 
         public DistributedCacheExceptionFormattingWrapper(IDistributedCache<TK, TV> cache)
         {
@@ -98,9 +99,22 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
         }
 
-        public Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
-            return _cache.Remove(key);
+            try
+            {
+                return await _cache.Remove(key);
+            }
+            catch (Exception ex)
+            {
+                throw new CacheRemoveException<TK>(
+                    CacheName,
+                    CacheType,
+                    key,
+                    Timestamp.Now,
+                    CacheRemoveErrorMessage,
+                    ex);
+            }
         }
     }
 }

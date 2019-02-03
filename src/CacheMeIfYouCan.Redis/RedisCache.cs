@@ -147,13 +147,13 @@ namespace CacheMeIfYouCan.Redis
             await Task.WhenAll(tasks);
         }
 
-        public async Task Remove(Key<TK> key)
+        public async Task<bool> Remove(Key<TK> key)
         {
             var redisDb = GetDatabase();
             
             var redisKey = _toRedisKey(key.AsString);
 
-            await redisDb.KeyDeleteAsync(redisKey);
+            return await redisDb.KeyDeleteAsync(redisKey);
         }
 
         public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();

@@ -53,9 +53,9 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             Execute(() => _cache.Set(values, timeToLive));
         }
 
-        public void Remove(Key<TK> key)
+        public bool Remove(Key<TK> key)
         {
-            Execute(() => _cache.Remove(key));
+            return Execute(() => _cache.Remove(key));
         }
 
         private void Execute(Action action)

@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         private readonly List<ILocalCacheWrapperFactory> _wrapperFactories;
         private Action<CacheGetResult> _onGetResult;
         private Action<CacheSetResult> _onSetResult;
+        private Action<CacheRemoveResult> _onRemoveResult;
         private Action<CacheException> _onException;
         private Func<Exception, bool> _swallowExceptionsPredicate;
 
@@ -36,6 +37,14 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
+            return this;
+        }
+        
+        public LocalCacheFactory OnRemoveResult(
+            Action<CacheRemoveResult> onRemoveResult,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            _onRemoveResult = ActionsHelper.Combine(_onRemoveResult, onRemoveResult, behaviour);
             return this;
         }
 
@@ -102,8 +111,8 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Then add a wrapper to handle notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onException != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
+            if (_onGetResult != null || _onSetResult != null || _onRemoveResult != null || _onException != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
@@ -128,6 +137,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         private readonly List<ILocalCacheWrapperFactory<TK, TV>> _wrapperFactories;
         private Action<CacheGetResult<TK, TV>> _onGetResult;
         private Action<CacheSetResult<TK, TV>> _onSetResult;
+        private Action<CacheRemoveResult<TK>> _onRemoveResult;
         private Action<CacheException<TK>> _onException;
         private Func<TK, string> _keySerializer;
         private Func<Exception, bool> _swallowExceptionsPredicate;
@@ -151,6 +161,14 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             _onSetResult = ActionsHelper.Combine(_onSetResult, onSetResult, behaviour);
+            return this;
+        }
+        
+        public LocalCacheFactory<TK, TV> OnRemoveResult(
+            Action<CacheRemoveResult<TK>> onRemoveResult,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
+        {
+            _onRemoveResult = ActionsHelper.Combine(_onRemoveResult, onRemoveResult, behaviour);
             return this;
         }
 
@@ -222,8 +240,8 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Then add a wrapper to handle notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onException != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onException);
+            if (_onGetResult != null || _onSetResult != null || _onRemoveResult != null || _onException != null)
+                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
