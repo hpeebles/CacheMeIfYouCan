@@ -13,6 +13,9 @@ namespace CacheMeIfYouCan.Prometheus
             
             if (metrics.HasFlag(CacheMetrics.Set))
                 configManager.OnSetResult(Cache_Set.OnCacheSet);
+
+            if (metrics.HasFlag(CacheMetrics.Remove))
+                configManager.OnRemoveResult(Cache_Remove.OnCacheRemove);
             
             if (metrics.HasFlag(CacheMetrics.Exception))
                 configManager.OnException(Cache_Exception.OnCacheException);
@@ -30,6 +33,9 @@ namespace CacheMeIfYouCan.Prometheus
             if (metrics.HasFlag(CacheMetrics.Set))
                 configManager.OnSetResult(Cache_Set.OnCacheSet);
             
+            if (metrics.HasFlag(CacheMetrics.Remove))
+                configManager.OnRemoveResult(Cache_Remove.OnCacheRemove);
+
             if (metrics.HasFlag(CacheMetrics.Exception))
                 configManager.OnException(Cache_Exception.OnCacheException);
 
@@ -46,6 +52,9 @@ namespace CacheMeIfYouCan.Prometheus
             if (metrics.HasFlag(CacheMetrics.Set))
                 configManager.OnSetResult(Cache_Set.OnCacheSet);
             
+            if (metrics.HasFlag(CacheMetrics.Remove))
+                configManager.OnRemoveResult(Cache_Remove.OnCacheRemove);
+
             if (metrics.HasFlag(CacheMetrics.Exception))
                 configManager.OnException(Cache_Exception.OnCacheException);
 
@@ -62,6 +71,9 @@ namespace CacheMeIfYouCan.Prometheus
             if (metrics.HasFlag(CacheMetrics.Set))
                 configManager.OnSetResult(Cache_Set.OnCacheSet);
             
+            if (metrics.HasFlag(CacheMetrics.Remove))
+                configManager.OnRemoveResult(Cache_Remove.OnCacheRemove);
+
             if (metrics.HasFlag(CacheMetrics.Exception))
                 configManager.OnException(Cache_Exception.OnCacheException);
 

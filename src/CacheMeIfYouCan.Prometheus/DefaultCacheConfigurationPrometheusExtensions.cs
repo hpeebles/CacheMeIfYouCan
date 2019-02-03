@@ -31,6 +31,9 @@ namespace CacheMeIfYouCan.Prometheus
             if (cacheMetrics.HasFlag(CacheMetrics.Set))
                 config.OnCacheSet(Cache_Set.OnCacheSet);
 
+            if (cacheMetrics.HasFlag(CacheMetrics.Remove))
+                config.OnCacheRemove(Cache_Remove.OnCacheRemove);
+
             if (cacheMetrics.HasFlag(CacheMetrics.Exception))
                 config.OnCacheException(Cache_Exception.OnCacheException);
 
