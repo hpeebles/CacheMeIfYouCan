@@ -10,6 +10,8 @@ dotnet_csproj:
   file: '**\*.csproj'
   version: '{version}'
 environment:
+  GitAccessToken:
+    secure: dKFXXbtrNHur90Fk0K0s0Z08TDSwAQ8eA0x/1GNp5bdIQly9N3J4o2s6K3io09ob
   RedisTestPassword:
     secure: wj5VI/BQkunSJ8RY5/LYrJFg2PfaOeCOLVR5VBi8T/na8iOYimNovMZYO3iL5GG1
   RedisTestPort: 14456
@@ -29,7 +31,7 @@ after_deploy:
 - ps: >-
     git config --global credential.helper store
 
-    Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+    Add-Content "$HOME\.git-credentials" "https://$($env:GitAccessToken):x-oauth-basic@github.com`n"
 
     git config --global user.email "hamishpeebles@gmail.com"
 
