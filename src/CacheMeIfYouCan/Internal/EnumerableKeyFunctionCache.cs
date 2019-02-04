@@ -194,7 +194,7 @@ namespace CacheMeIfYouCan.Internal
 
                     if (fetched != null && fetched.Any())
                     {
-                        var keysAndFetchedValues = new Dictionary<Key<TK>, DuplicateTaskCatcherMultiResult<TK, TV>>();
+                        var keysAndFetchedValues = new Dictionary<Key<TK>, DuplicateTaskCatcherMultiResult<TK, TV>>(_keyComparer);
                         foreach (var key in batchKeys)
                         {
                             if (fetched.TryGetValue(key, out var value))
