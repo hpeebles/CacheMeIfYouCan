@@ -378,6 +378,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onCacheRemove,
                 _onCacheException,
                 _keyParamSeparator,
+                _maxFetchBatchSize,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

@@ -25,6 +25,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheRemoveResult> onCacheRemove,
             Action<CacheException> onCacheException,
             string keyParamSeparator,
+            int maxFetchBatchSize,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -44,6 +45,7 @@ namespace CacheMeIfYouCan.Internal
             OnCacheRemove = onCacheRemove;
             OnCacheException = onCacheException;
             KeyParamSeparator = keyParamSeparator;
+            MaxFetchBatchSize = maxFetchBatchSize;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
         
@@ -64,6 +66,7 @@ namespace CacheMeIfYouCan.Internal
         public Action<CacheRemoveResult> OnCacheRemove { get; }
         public Action<CacheException> OnCacheException { get; }
         public string KeyParamSeparator { get; }
+        public int MaxFetchBatchSize { get; }
         public IDictionary<MethodInfoKey, object> FunctionCacheConfigActions { get; }
     }
 }

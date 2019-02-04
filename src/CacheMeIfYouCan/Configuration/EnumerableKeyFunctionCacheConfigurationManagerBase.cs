@@ -33,6 +33,7 @@ namespace CacheMeIfYouCan.Configuration
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         {
             _inputFunc = inputFunc;
+            MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
         }
         
         public TConfig WithBatchedFetches(int batchSize)
