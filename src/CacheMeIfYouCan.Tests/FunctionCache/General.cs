@@ -38,21 +38,23 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
+            var key = Guid.NewGuid().ToString();
+            
             var first = true;
             for (var i = 0; i < 10; i++)
             {
                 var timer = Stopwatch.StartNew();
-                var result = await cachedEcho("test!");
+                var result = await cachedEcho(key);
                 
-                Assert.Equal("test!", result);
+                result.Should().Be(key);
                 if (first)
                 {
-                    Assert.True(timer.Elapsed > TimeSpan.FromMilliseconds(900));
+                    timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(900));
                     first = false;
                 }
                 else
                 {
-                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
+                    timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(100));
                 }
             }
             
@@ -77,21 +79,23 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
+            var key = Guid.NewGuid().ToString();
+
             var first = true;
             for (var i = 0; i < 10; i++)
             {
                 var timer = Stopwatch.StartNew();
-                var result = cachedEcho("test!");
+                var result = cachedEcho(key);
                 
-                Assert.Equal("test!", result);
+                result.Should().Be(key);
                 if (first)
                 {
-                    Assert.True(timer.Elapsed > TimeSpan.FromMilliseconds(900));
+                    timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(900));
                     first = false;
                 }
                 else
                 {
-                    Assert.True(timer.Elapsed < TimeSpan.FromMilliseconds(100));
+                    timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(100));
                 }
             }
             
@@ -117,15 +121,17 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
+            var key = Guid.NewGuid().ToString();
+
             for (var i = 0; i < 10; i++)
             {
-                await cachedEcho("abc");
+                await cachedEcho(key);
 
                 await Task.Delay(5);
             }
             
-            Assert.Equal(10, results.Count);
-            Assert.True(results.All(r => r.Results.Single().Outcome == Outcome.Fetch));
+            results.Should().HaveCount(10);
+            results.ForEach(r => r.Results.Single().Outcome.Should().Be(Outcome.Fetch));
         }
 
         [Fact]
@@ -147,28 +153,28 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("100");
             await cachedEcho("100");
 
-            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+            results.Last().Results.Last().Outcome.Should().Be(Outcome.FromCache);
             
             await cachedEcho("200");
             await cachedEcho("200");
 
-            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+            results.Last().Results.Last().Outcome.Should().Be(Outcome.FromCache);
             
             await Task.Delay(150);
 
             await cachedEcho("100");
             
-            Assert.Equal(Outcome.Fetch, results.Last().Results.Last().Outcome);
+            results.Last().Results.Last().Outcome.Should().Be(Outcome.Fetch);
 
             await cachedEcho("200");
             
-            Assert.Equal(Outcome.FromCache, results.Last().Results.Last().Outcome);
+            results.Last().Results.Last().Outcome.Should().Be(Outcome.FromCache);
            
             await Task.Delay(100);
             
             await cachedEcho("200");
 
-            Assert.Equal(Outcome.Fetch, results.Last().Results.Last().Outcome);
+            results.Last().Results.Last().Outcome.Should().Be(Outcome.Fetch);
         }
 
         private static ILocalCacheFactory GetCacheFactory(string cacheType)
