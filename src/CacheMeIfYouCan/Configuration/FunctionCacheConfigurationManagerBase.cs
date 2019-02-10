@@ -29,6 +29,8 @@ namespace CacheMeIfYouCan.Configuration
         internal IDistributedCacheFactory<TK, TV> DistributedCacheFactory { get; private set; }
         internal string KeyspacePrefix { get; private set; }
         internal Func<TV> DefaultValueFactory { get; private set; }
+        internal Func<TK, bool> SkipCacheGetPredicate { get; private set; }
+        internal Func<TK, bool> SkipCacheSetPredicate { get; private set; }
         internal IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
             = new List<(IObservable<TK>, bool)>();
         
@@ -377,6 +379,29 @@ namespace CacheMeIfYouCan.Configuration
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
             return ObservablesHelper.SetupObservable(onCacheException, OnCacheException, behaviour);
+        }
+
+        public TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings)
+        {
+            if (settings.HasFlag(SkipCacheSettings.SkipGet))
+            {
+                var current = SkipCacheGetPredicate;
+                if (current == null)
+                    SkipCacheGetPredicate = predicate;
+                else
+                    SkipCacheGetPredicate = k => current(k) || predicate(k);
+            }
+            
+            if (settings.HasFlag(SkipCacheSettings.SkipSet))
+            {
+                var current = SkipCacheSetPredicate;
+                if (current == null)
+                    SkipCacheSetPredicate = predicate;
+                else
+                    SkipCacheSetPredicate = k => current(k) || predicate(k);
+            }
+
+            return (TConfig)this;
         }
 
         public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)

@@ -18,8 +18,8 @@ namespace CacheMeIfYouCan.Tests
         public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
         
         public TestCache(
-            Func<TV, string> serializer,
-            Func<string, TV> deserializer,
+            Func<TV, string> serializer = null,
+            Func<string, TV> deserializer = null,
             TimeSpan? delay = null,
             Func<bool> error = null,
             string cacheName = "test-name")

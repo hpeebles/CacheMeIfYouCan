@@ -91,7 +91,9 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer1,
                 keyComparer2,
                 KeyParamSeparator,
-                MaxFetchBatchSize);
+                MaxFetchBatchSize,
+                SkipCacheGetPredicate,
+                SkipCacheSetPredicate);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

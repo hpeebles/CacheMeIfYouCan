@@ -67,7 +67,9 @@ namespace CacheMeIfYouCan.Configuration
                 OnFetchAction,
                 OnExceptionAction,
                 keyComparer,
-                MaxFetchBatchSize);
+                MaxFetchBatchSize,
+                SkipCacheGetPredicate,
+                SkipCacheSetPredicate);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

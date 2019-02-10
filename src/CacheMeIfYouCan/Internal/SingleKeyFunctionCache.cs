@@ -18,6 +18,8 @@ namespace CacheMeIfYouCan.Internal
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly DuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
+        private readonly Func<TK, bool> _skipCacheGetPredicate;
+        private readonly Func<TK, bool> _skipCacheSetPredicate;
         private int _pendingRequestsCount;
         private bool _disposed;
         
@@ -31,7 +33,9 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheGetResult<TK, TV>> onResult,
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
-            KeyComparer<TK> keyComparer)
+            KeyComparer<TK> keyComparer,
+            Func<TK, bool> skipCacheGetPredicate,
+            Func<TK, bool> skipCacheSetPredicate)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -44,6 +48,8 @@ namespace CacheMeIfYouCan.Internal
             _onFetch = onFetch;
             _onException = onException;
             _fetchHandler = new DuplicateTaskCatcherSingle<TK, TV>(func, keyComparer);
+            _skipCacheGetPredicate = skipCacheGetPredicate;
+            _skipCacheSetPredicate = skipCacheSetPredicate;
         }
 
         public string Name { get; }
@@ -73,8 +79,8 @@ namespace CacheMeIfYouCan.Internal
                 try
                 {
                     Interlocked.Increment(ref _pendingRequestsCount);
-                    
-                    if (_cache != null)
+
+                    if (_cache != null && (_skipCacheGetPredicate == null || !_skipCacheGetPredicate(key)))
                     {
                         var fromCacheTask = _cache.Get(key);
 
@@ -149,7 +155,7 @@ namespace CacheMeIfYouCan.Internal
                     duplicate,
                     StopwatchHelper.GetDuration(stopwatchStart, fetched.StopwatchTimestampCompleted));
 
-                if (_cache != null && !duplicate)
+                if (_cache != null && !duplicate && (_skipCacheSetPredicate == null || !_skipCacheSetPredicate(key)))
                 {
                     var setValueTask = _cache.Set(key, fetched.Value, _timeToLiveFactory(key, fetched.Value));
 

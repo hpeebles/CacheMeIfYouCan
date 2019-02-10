@@ -22,6 +22,8 @@ namespace CacheMeIfYouCan.Internal
         private readonly KeyComparer<TK> _keyComparer;
         private readonly int _maxFetchBatchSize;
         private readonly DuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
+        private readonly Func<TK, bool> _skipCacheGetPredicate;
+        private readonly Func<DuplicateTaskCatcherMultiResult<TK, TV>, bool> _setInCachePredicate;
         private int _pendingRequestsCount;
         private bool _disposed;
         
@@ -36,7 +38,9 @@ namespace CacheMeIfYouCan.Internal
             Action<FunctionCacheFetchResult<TK, TV>> onFetch,
             Action<FunctionCacheException<TK>> onException,
             KeyComparer<TK> keyComparer,
-            int maxFetchBatchSize)
+            int maxFetchBatchSize,
+            Func<TK, bool> skipCacheGetPredicate,
+            Func<TK, bool> skipCacheSetPredicate)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -51,6 +55,12 @@ namespace CacheMeIfYouCan.Internal
             _keyComparer = keyComparer;
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
             _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(func, keyComparer);
+            _skipCacheGetPredicate = skipCacheGetPredicate;
+
+            if (skipCacheSetPredicate == null)
+                _setInCachePredicate = kv => !kv.Duplicate;
+            else
+                _setInCachePredicate = kv => !kv.Duplicate && !skipCacheSetPredicate(kv.Key);
         }
 
         public string Name { get; }
@@ -94,26 +104,33 @@ namespace CacheMeIfYouCan.Internal
                     Key<TK>[] missingKeys = null;
                     if (_cache != null)
                     {
-                        var fromCacheTask = _cache.Get(keys);
+                        var keysToGet = _skipCacheGetPredicate == null
+                            ? keys
+                            : keys.Where(k => !_skipCacheGetPredicate(k)).ToArray();
 
-                        var fromCache = fromCacheTask.IsCompleted
-                            ? fromCacheTask.Result
-                            : await fromCacheTask;
-
-                        if (fromCache != null && fromCache.Any())
+                        if (keysToGet.Any())
                         {
-                            foreach (var result in fromCache)
-                            {
-                                results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
-                                    result.Key,
-                                    result.Value,
-                                    Outcome.FromCache,
-                                    result.CacheType);
-                            }
+                            var fromCacheTask = _cache.Get(keysToGet);
 
-                            missingKeys = keys
-                                .Except(results.Keys, _keyComparer)
-                                .ToArray();
+                            var fromCache = fromCacheTask.IsCompleted
+                                ? fromCacheTask.Result
+                                : await fromCacheTask;
+
+                            if (fromCache != null && fromCache.Any())
+                            {
+                                foreach (var result in fromCache)
+                                {
+                                    results[result.Key] = new FunctionCacheGetResultInner<TK, TV>(
+                                        result.Key,
+                                        result.Value,
+                                        Outcome.FromCache,
+                                        result.CacheType);
+                                }
+
+                                missingKeys = keys
+                                    .Except(results.Keys, _keyComparer)
+                                    .ToArray();
+                            }
                         }
                     }
 
@@ -211,13 +228,13 @@ namespace CacheMeIfYouCan.Internal
 
                         if (_cache != null)
                         {
-                            var nonDuplicates = keysAndFetchedValues
-                                .Where(kv => !kv.Value.Duplicate)
+                            var valuesToSetInCache = keysAndFetchedValues
+                                .Where(kv => _setInCachePredicate(kv.Value))
                                 .ToDictionary(kv => kv.Key, kv => kv.Value.Value, _keyComparer);
 
-                            if (nonDuplicates.Any())
+                            if (valuesToSetInCache.Any())
                             {
-                                var setValueTask = _cache.Set(nonDuplicates, _timeToLive);
+                                var setValueTask = _cache.Set(valuesToSetInCache, _timeToLive);
 
                                 if (!setValueTask.IsCompleted)
                                     await setValueTask;

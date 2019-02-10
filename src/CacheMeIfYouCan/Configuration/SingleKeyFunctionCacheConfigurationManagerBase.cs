@@ -81,7 +81,9 @@ namespace CacheMeIfYouCan.Configuration
                 OnResultAction,
                 OnFetchAction,
                 OnExceptionAction,
-                keyComparer);
+                keyComparer,
+                SkipCacheGetPredicate,
+                SkipCacheSetPredicate);
             
             PendingRequestsCounterContainer.Add(functionCache);
 
