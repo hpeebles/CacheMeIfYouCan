@@ -93,7 +93,8 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 
                 if (waitForPendingTask != null)
                 {
-                    await waitForPendingTask;
+                    if (!waitForPendingTask.IsCompleted)
+                        await waitForPendingTask;
 
                     foreach (var kv in alreadyPending)
                     {

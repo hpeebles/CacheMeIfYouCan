@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Internal.FunctionCaches;
 
 namespace CacheMeIfYouCan.Configuration
 {

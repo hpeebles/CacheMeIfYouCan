@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 using CacheMeIfYouCan.Notifications;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.FunctionCaches
 {
     internal sealed class SingleKeyFunctionCache<TK, TV> : IPendingRequestsCounter, IDisposable
     {

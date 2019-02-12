@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Redis
 
         public bool IsRecentlySet(string key)
         {
-            // Remove keys as they are seen since if we recieve the same key a second time it must have
+            // Remove keys as they are seen since if we receive the same key a second time it must have
             // been changed externally and so its value was no longer recently set by this local service
             return _dictionary.TryRemove(key, out var timestamp) && IsRecent(timestamp);
         }
