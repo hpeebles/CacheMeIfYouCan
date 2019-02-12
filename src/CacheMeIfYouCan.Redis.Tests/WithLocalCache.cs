@@ -12,11 +12,11 @@ namespace CacheMeIfYouCan.Redis.Tests
     public class WithLocalCache
     {
         [Theory]
-        [InlineData("set", true)]
-        [InlineData("delete", true)]
-        [InlineData("set", false)]
-        [InlineData("delete", false)]
-        public async Task OnKeyChangedExternallyRemovesFromLocalCache(string action, bool subscribeToKeyChangesEnabled)
+        [InlineData(KeyEvents.None)]
+        [InlineData(KeyEvents.Set)]
+        [InlineData(KeyEvents.Del)]
+        [InlineData(KeyEvents.All)]
+        public async Task OnKeyChangedExternallyRemovesFromLocalCache(KeyEvents keyEvents)
         {
             Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
 
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Redis.Tests
                 .WithRedis(c =>
                 {
                     c.ConnectionString = TestConnectionString.Value;
-                    c.SubscribeToKeyChanges = subscribeToKeyChangesEnabled;
+                    c.KeyEventsToSubscribeTo = keyEvents;
                 })
                 .WithLocalCache(localCache)
                 .OnResult(results.Add)
@@ -37,22 +37,25 @@ namespace CacheMeIfYouCan.Redis.Tests
 
             var redisClient = ConnectionMultiplexer.Connect(TestConnectionString.Value);
 
-            var key = Guid.NewGuid().ToString();
-            var redisKey = key;
+            var key1 = Guid.NewGuid().ToString();
+            var key2 = Guid.NewGuid().ToString();
             
-            await cachedEcho(key);
+            await cachedEcho(key1);
+            await cachedEcho(key2);
             
-            redisClient.GetDatabase().KeyExists(redisKey).Should().BeTrue();
-            localCache.Values.ContainsKey(key).Should().BeTrue();
+            redisClient.GetDatabase().KeyExists(key1).Should().BeTrue();
+            redisClient.GetDatabase().KeyExists(key2).Should().BeTrue();
+            
+            localCache.Values.ContainsKey(key1).Should().BeTrue();
+            localCache.Values.ContainsKey(key2).Should().BeTrue();
 
-            if (action == "set")
-                redisClient.GetDatabase().StringSet(redisKey, "123");
-            else
-                redisClient.GetDatabase().KeyDelete(redisKey);
+            redisClient.GetDatabase().StringSet(key1, "123", TimeSpan.FromMinutes(1));
+            redisClient.GetDatabase().KeyDelete(key2);
 
             await Task.Delay(TimeSpan.FromSeconds(1));
             
-            localCache.Values.ContainsKey(key).Should().Be(!subscribeToKeyChangesEnabled);
+            localCache.Values.ContainsKey(key1).Should().Be(!keyEvents.HasFlag(KeyEvents.Set));
+            localCache.Values.ContainsKey(key2).Should().Be(!keyEvents.HasFlag(KeyEvents.Del));
         }
     }
 }

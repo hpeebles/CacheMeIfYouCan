@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Redis
             Func<string, TK> keyDeserializer,
             Func<TV, string> serializer,
             Func<string, TV> deserializer,
-            bool subscribeToKeyChanges)
+            KeyEvents keyEventsToSubscribeTo)
         {
             _connection = connection;
             _database = database;
@@ -49,16 +49,16 @@ namespace CacheMeIfYouCan.Redis
                 _fromRedisKey = k => k.Substring(keySpacePrefix.Length);
             }
 
-            _recentlySetKeysManager = new RecentlySetKeysManager();
-            _keyChanges = new Subject<Key<TK>>();
-
             CacheName = cacheName;
 
-            if (subscribeToKeyChanges)
+            if (keyEventsToSubscribeTo != KeyEvents.None)
             {
                 NotifyKeyChangesEnabled = true;
 
-                connection.SubscribeToKeyChanges(_database, NotifyKeyChanged);
+                _recentlySetKeysManager = new RecentlySetKeysManager();
+                _keyChanges = new Subject<Key<TK>>();
+
+                connection.SubscribeToKeyChanges(_database, keyEventsToSubscribeTo, NotifyKeyChanged);
             }
         }
 
@@ -158,7 +158,7 @@ namespace CacheMeIfYouCan.Redis
 
         public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();
 
-        private void NotifyKeyChanged(string redisKey)
+        private void NotifyKeyChanged(string redisKey, KeyEvents keyEvent)
         {
             // Ignore keys that are not from the same keyspace
             if (!String.IsNullOrWhiteSpace(_keySpacePrefix) && !redisKey.StartsWith(_keySpacePrefix))
@@ -166,7 +166,7 @@ namespace CacheMeIfYouCan.Redis
 
             var stringKey = _fromRedisKey(redisKey);
             
-            if (_recentlySetKeysManager.IsRecentlySet(stringKey))
+            if (keyEvent == KeyEvents.Set && _recentlySetKeysManager.IsRecentlySet(stringKey))
                 return;
 
             var key = new Key<TK>(_keyDeserializer(stringKey), stringKey);

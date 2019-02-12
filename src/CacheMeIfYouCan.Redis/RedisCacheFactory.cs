@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Redis
                 config.KeyDeserializer,
                 config.ValueSerializer,
                 config.ValueDeserializer,
-                _redisConfig.SubscribeToKeyChanges);
+                _redisConfig.KeyEventsToSubscribeTo);
         }
     }
 }

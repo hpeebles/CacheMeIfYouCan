@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
 
-            if (_distributedCache is INotifyKeyChanges<TK> notifier)
+            if (_distributedCache is INotifyKeyChanges<TK> notifier && notifier.NotifyKeyChangesEnabled)
                 notifier.KeyChanges.Do(k => _localCache.Remove(k)).Retry().Subscribe();
 
             CacheName = _localCache.CacheName;

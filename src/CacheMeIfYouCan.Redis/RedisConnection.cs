@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly string _connectionString;
         private readonly object _lock = new object();
         private IConnectionMultiplexer _multiplexer;
-        private ILookup<int, Action<string>> _onKeyChangedActions;
+        private ILookup<(int, KeyEvents), Action<string, KeyEvents>> _onKeyChangedActions;
         private const string MessagePrefix = "__keyevent@";
 
         public RedisConnection(string connectionString)
@@ -29,64 +29,72 @@ namespace CacheMeIfYouCan.Redis
             return _multiplexer;
         }
 
-        public void SubscribeToKeyChanges(int dbIndex, Action<string> onKeyChangedAction)
+        public void SubscribeToKeyChanges(int dbIndex, KeyEvents keyEvents, Action<string, KeyEvents> onKeyChangedAction)
         {
             lock (_lock)
             {
-                var startSubscriber = _onKeyChangedActions == null || !_onKeyChangedActions.Contains(dbIndex);
-            
-                var updated = new List<KeyValuePair<int, Action<string>>>
+                foreach (var keyEvent in Enum
+                    .GetValues(typeof(KeyEvents))
+                    .Cast<KeyEvents>()
+                    .Where(k => k != KeyEvents.None && k != KeyEvents.All)
+                    .Where(k => keyEvents.HasFlag(k)))
                 {
-                    new KeyValuePair<int, Action<string>>(dbIndex, onKeyChangedAction)
-                };
+                    var startSubscriber =
+                        _onKeyChangedActions == null ||
+                        !_onKeyChangedActions.Contains((dbIndex, keyEvent));
 
-                if (_onKeyChangedActions != null)
-                    updated.AddRange(_onKeyChangedActions.SelectMany(x => x, (g, x) => new KeyValuePair<int, Action<string>>(g.Key, x)));
-                
-                Interlocked.Exchange(ref _onKeyChangedActions, updated.ToLookup(kv => kv.Key, kv => kv.Value));
+                    var updated = new List<KeyValuePair<(int, KeyEvents), Action<string, KeyEvents>>>
+                    {
+                        new KeyValuePair<(int, KeyEvents), Action<string, KeyEvents>>((dbIndex, keyEvent), onKeyChangedAction)
+                    };
 
-                if (startSubscriber)
-                    StartSubscriber(dbIndex);
+                    if (_onKeyChangedActions != null)
+                    {
+                        updated.AddRange(_onKeyChangedActions.SelectMany(
+                            x => x,
+                            (g, x) => new KeyValuePair<(int, KeyEvents), Action<string, KeyEvents>>(g.Key, x)));
+                    }
+
+                    Interlocked.Exchange(ref _onKeyChangedActions, updated.ToLookup(kv => kv.Key, kv => kv.Value));
+
+                    if (startSubscriber)
+                        StartSubscriber(dbIndex, keyEvent);
+                }
             }
         }
 
-        private void StartSubscriber(int dbIndex)
+        private void StartSubscriber(int dbIndex, KeyEvents keyEvent)
         {
             // All Redis instances must have keyevent notifications enabled (eg. 'notify-keyspace-events AE')
             var subscriber = _multiplexer.GetSubscriber();
 
-            var keyEvents = new[]
-            {
-                "set",
-                "del",
-                "expired",
-                "evicted"
-            };
-
-            foreach (var keyEvent in keyEvents)
-                subscriber.Subscribe($"{MessagePrefix}{dbIndex}__:{keyEvent}", OnKeyChanged);
+            subscriber.Subscribe($"{MessagePrefix}{dbIndex}__:{keyEvent.ToString().ToLower()}", OnKeyChanged);
         }
 
         private void OnKeyChanged(RedisChannel channel, RedisValue key)
         {
-            if (!TryGetDbIndexFromChannel(channel, out var dbIndex))
+            if (!TryParseChannel(channel, out var dbIndex, out var keyEvent))
                 return;
 
-            foreach (var action in _onKeyChangedActions[dbIndex])
-                action(key);
+            foreach (var action in _onKeyChangedActions[(dbIndex, keyEvent)])
+                action(key, keyEvent);
         }
 
-        private static bool TryGetDbIndexFromChannel(string channel, out int dbIndex)
+        private static bool TryParseChannel(string channel, out int dbIndex, out KeyEvents keyEvent)
         {
+            dbIndex = 0;
+            keyEvent = KeyEvents.None;
+            
             if (!channel.StartsWith(MessagePrefix))
-            {
-                dbIndex = 0;
                 return false;
-            }
 
-            var trimmed = channel.Substring(MessagePrefix.Length);
+            var parts = channel
+                .Substring(MessagePrefix.Length)
+                .Split(new[] { '_', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
-            return Int32.TryParse(trimmed.Substring(0, trimmed.IndexOf('_')), out dbIndex);
+            return
+                Int32.TryParse(parts[0], out dbIndex) &&
+                Enum.TryParse(parts[1], true, out keyEvent);
         }
     }
 }
