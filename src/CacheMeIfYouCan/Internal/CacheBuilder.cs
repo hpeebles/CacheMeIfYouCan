@@ -21,7 +21,8 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheRemoveResult<TK>> onCacheRemove,
             Action<CacheException<TK>> onCacheException,
-            IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables)
+            IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables,
+            TimeSpan? localCacheTimeToLiveOverride)
         {
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();
@@ -68,7 +69,7 @@ namespace CacheMeIfYouCan.Internal
             if (localCache != null)
             {
                 if (distributedCache != null)
-                    return new TwoTierCache<TK, TV>(localCache, distributedCache, config.KeyComparer);
+                    return new TwoTierCache<TK, TV>(localCache, distributedCache, config.KeyComparer, localCacheTimeToLiveOverride);
 
                 return new LocalCacheToCacheInternalAdapter<TK, TV>(localCache);
             }

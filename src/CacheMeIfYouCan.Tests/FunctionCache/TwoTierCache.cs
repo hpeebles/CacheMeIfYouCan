@@ -103,5 +103,40 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Equal(3, results.Count);
             Assert.Equal(Outcome.Fetch, results[2].Results.Single().Outcome);
         }
+
+        [Fact]
+        public async Task LocalCacheTimeToLiveOverride()
+        {
+            var localCache = new TestLocalCache<string, string>();
+            var distributedCache = new TestCache<string, string>(x => x, x => x);
+
+            var results = new List<FunctionCacheGetResult>();
+
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithLocalCache(localCache)
+                    .WithDistributedCache(distributedCache)
+                    .WithLocalCacheTimeToLiveOverride(TimeSpan.FromMilliseconds(500))
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var key = Guid.NewGuid().ToString();
+
+            await cachedEcho(key);
+            await cachedEcho(key);
+
+            results.Last().Results.Single().CacheType.Should().Be("test-local");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+
+            await cachedEcho(key);
+
+            results.Last().Results.Single().CacheType.Should().Be("test");
+        }
     }
 }

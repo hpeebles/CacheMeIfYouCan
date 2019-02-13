@@ -11,15 +11,27 @@ namespace CacheMeIfYouCan.Internal
         private readonly ILocalCache<TK, TV> _localCache;
         private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly KeyComparer<TK> _keyComparer;
+        private readonly Func<TimeSpan, TimeSpan> _getLocalCacheTimeToLive;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
             IDistributedCache<TK, TV> distributedCache,
-            KeyComparer<TK> keyComparer)
+            KeyComparer<TK> keyComparer,
+            TimeSpan? localCacheTimeToLiveOverride)
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
+
+            if (localCacheTimeToLiveOverride.HasValue)
+            {
+                var timeToLiveOverride = localCacheTimeToLiveOverride.Value;
+                _getLocalCacheTimeToLive = t => t < timeToLiveOverride ? t : timeToLiveOverride;
+            }
+            else
+            {
+                _getLocalCacheTimeToLive = t => t;
+            }
 
             if (_distributedCache is INotifyKeyChanges<TK> notifier && notifier.NotifyKeyChangesEnabled)
                 notifier.KeyChanges.Do(k => _localCache.Remove(k)).Retry().Subscribe();
@@ -48,7 +60,7 @@ namespace CacheMeIfYouCan.Internal
 
         public async ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            _localCache.Set(key, value, timeToLive);
+            _localCache.Set(key, value, _getLocalCacheTimeToLive(timeToLive));
 
             await _distributedCache.Set(key, value, timeToLive);
         }
@@ -70,7 +82,7 @@ namespace CacheMeIfYouCan.Internal
             var fromDistributedCache = await _distributedCache.Get(remaining);
             
             foreach (var result in fromDistributedCache)
-                _localCache.Set(result.Key, result.Value, result.TimeToLive);
+                _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
 
             return fromLocalCache
                 .Concat(fromDistributedCache)
@@ -79,7 +91,7 @@ namespace CacheMeIfYouCan.Internal
 
         public async ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            _localCache.Set(values, timeToLive);
+            _localCache.Set(values, _getLocalCacheTimeToLive(timeToLive));
 
             await _distributedCache.Set(values, timeToLive);
         }

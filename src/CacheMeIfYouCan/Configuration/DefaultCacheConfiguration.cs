@@ -9,6 +9,7 @@ namespace CacheMeIfYouCan.Configuration
     public class DefaultCacheConfiguration
     {
         internal TimeSpan TimeToLive { get; private set; } = TimeSpan.FromHours(1);
+        internal TimeSpan? LocalCacheTimeToLiveOverride { get; private set; }
         internal bool DisableCache { get; private set; }
         internal ILocalCacheFactory LocalCacheFactory { get; private set; }
         internal IDistributedCacheFactory DistributedCacheFactory { get; private set; }
@@ -31,6 +32,12 @@ namespace CacheMeIfYouCan.Configuration
         public DefaultCacheConfiguration WithTimeToLive(TimeSpan timeToLive)
         {
             TimeToLive = timeToLive;
+            return this;
+        }
+
+        public DefaultCacheConfiguration WithLocalCacheTimeToLiveOverride(TimeSpan timeToLive)
+        {
+            LocalCacheTimeToLiveOverride = timeToLive;
             return this;
         }
 

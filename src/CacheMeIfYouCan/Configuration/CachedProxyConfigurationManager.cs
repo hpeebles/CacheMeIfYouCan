@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly ValueSerializers _valueSerializers;
         private readonly EqualityComparers _keyComparers;
         private TimeSpan? _timeToLive;
+        private TimeSpan? _localCacheTimeToLiveOverride;
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
         private IDistributedCacheFactory _distributedCacheFactory;
@@ -53,6 +54,12 @@ namespace CacheMeIfYouCan.Configuration
         public CachedProxyConfigurationManager<T> WithTimeToLive(TimeSpan timeToLive)
         {
             _timeToLive = timeToLive;
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
+        {
+            _localCacheTimeToLiveOverride = timeToLive;
             return this;
         }
         
@@ -366,6 +373,7 @@ namespace CacheMeIfYouCan.Configuration
                 _valueSerializers,
                 _keyComparers,
                 _timeToLive,
+                _localCacheTimeToLiveOverride,
                 _disableCache,
                 _localCacheFactory,
                 _distributedCacheFactory,

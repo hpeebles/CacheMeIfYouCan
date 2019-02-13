@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Configuration
         internal KeySerializers KeySerializers { get; }
         internal EqualityComparers KeyComparers { get; }
         internal TimeSpan? TimeToLive { get; set; }
+        internal TimeSpan? LocalCacheTimeToLiveOverride { get; set; }
         internal bool? Disabled { get; private set; }
         internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
         internal Action<FunctionCacheFetchResult<TK, TV>> OnFetchAction { get; private set; }
@@ -53,6 +54,7 @@ namespace CacheMeIfYouCan.Configuration
                     ValueDeserializer = valueDeserializer;
 
                 TimeToLive = interfaceConfig.TimeToLive;
+                LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
                 Disabled = interfaceConfig.DisableCache;
 
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
@@ -102,6 +104,12 @@ namespace CacheMeIfYouCan.Configuration
         public virtual TConfig WithTimeToLive(TimeSpan timeToLive)
         {
             TimeToLive = timeToLive;
+            return (TConfig)this;
+        }
+
+        public TConfig WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
+        {
+            LocalCacheTimeToLiveOverride = timeToLive;
             return (TConfig)this;
         }
         
@@ -446,7 +454,8 @@ namespace CacheMeIfYouCan.Configuration
                     OnCacheSetAction,
                     OnCacheRemoveAction,
                     OnCacheExceptionAction,
-                    KeyRemovalObservables);
+                    KeyRemovalObservables,
+                    LocalCacheTimeToLiveOverride);
             }
 
             return cache;
