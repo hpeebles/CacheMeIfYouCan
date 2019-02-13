@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal
@@ -32,9 +31,6 @@ namespace CacheMeIfYouCan.Internal
             {
                 _getLocalCacheTimeToLive = t => t;
             }
-
-            if (_distributedCache is INotifyKeyChanges<TK> notifier && notifier.NotifyKeyChangesEnabled)
-                notifier.KeyChanges.Do(k => _localCache.Remove(k)).Retry().Subscribe();
 
             CacheName = _localCache.CacheName;
             CacheType = $"{_localCache.CacheType}+{_distributedCache.CacheType}";

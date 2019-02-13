@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using CacheMeIfYouCan.Caches;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Notifications;
@@ -32,7 +33,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Func<TV> DefaultValueFactory { get; private set; }
         internal Func<TK, bool> SkipCacheGetPredicate { get; private set; }
         internal Func<TK, bool> SkipCacheSetPredicate { get; private set; }
-        internal IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
+        internal List<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
             = new List<(IObservable<TK>, bool)>();
         
         internal FunctionCacheConfigurationManagerBase(
@@ -445,6 +446,10 @@ namespace CacheMeIfYouCan.Configuration
                 else if (DefaultSettings.Cache.DistributedCacheFactory != null)
                     distributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(DefaultSettings.Cache.DistributedCacheFactory);
 
+                var keyRemovalObservables = KeyRemovalObservables
+                    .Select(t => (t.keysToRemove.Select(k => new Key<TK>(k, keySerializer)), t.removeFromLocalOnly))
+                    .ToList();
+
                 cache = CacheBuilder.Build(
                     FunctionName,
                     localCacheFactory,
@@ -454,7 +459,7 @@ namespace CacheMeIfYouCan.Configuration
                     OnCacheSetAction,
                     OnCacheRemoveAction,
                     OnCacheExceptionAction,
-                    KeyRemovalObservables,
+                    keyRemovalObservables,
                     LocalCacheTimeToLiveOverride);
             }
 

@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheRemoveResult<TK>> onCacheRemove,
             Action<CacheException<TK>> onCacheException,
-            IList<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables,
+            List<(IObservable<Key<TK>> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables,
             TimeSpan? localCacheTimeToLiveOverride)
         {
             if (localCacheFactory == null && distributedCacheFactory == null)
@@ -42,8 +42,14 @@ namespace CacheMeIfYouCan.Internal
                     .Build(cacheName);
             }
 
-            if (localCache is ICachedItemCounter localItemCounter)
-                CachedItemCounterContainer.Register(localItemCounter);
+            if (localCache is WrappedLocalCacheWithOriginal<TK, TV> l)
+            {
+                localCache = l.Wrapped;
+                var originalLocalCache = l.Original;
+
+                if (originalLocalCache is ICachedItemCounter localItemCounter)
+                    CachedItemCounterContainer.Register(localItemCounter);
+            }
             
             IDistributedCache<TK, TV> distributedCache;
             if (distributedCacheFactory is NullDistributedCacheFactory<TK, TV>)
@@ -61,10 +67,19 @@ namespace CacheMeIfYouCan.Internal
                     .Build(config);
             }
 
-            if (distributedCache is ICachedItemCounter distributedItemCounter)
-                CachedItemCounterContainer.Register(distributedItemCounter);
+            if (distributedCache is WrappedDistributedCacheWithOriginal<TK, TV> d)
+            {
+                distributedCache = d.Wrapped;
+                var originalDistributedCache = d.Original;
 
-            SetupKeyRemovalObservables(localCache, distributedCache, keyRemovalObservables, config.KeySerializer);
+                if (originalDistributedCache is ICachedItemCounter distributedItemCounter)
+                    CachedItemCounterContainer.Register(distributedItemCounter);
+
+                if (originalDistributedCache is INotifyKeyChanges<TK> notifier && notifier.NotifyKeyChangesEnabled && localCache != null)
+                    keyRemovalObservables.Add((notifier.KeyChanges, true));
+            }
+
+            SetupKeyRemovalObservables(localCache, distributedCache, keyRemovalObservables);
             
             if (localCache != null)
             {
@@ -88,8 +103,7 @@ namespace CacheMeIfYouCan.Internal
         private static void SetupKeyRemovalObservables<TK, TV>(
             ILocalCache<TK, TV> localCache,
             IDistributedCache<TK, TV> distributedCache,
-            IList<(IObservable<TK>, bool)> keysToRemoveObservables,
-            Func<TK, string> keySerializer)
+            IList<(IObservable<Key<TK>>, bool)> keysToRemoveObservables)
         {
             if (keysToRemoveObservables == null || !keysToRemoveObservables.Any())
                 return;
@@ -99,7 +113,7 @@ namespace CacheMeIfYouCan.Internal
                 keysToRemoveObservables
                     .Select(o => o.Item1)
                     .Merge()
-                    .Select(k => localCache.Remove(new Key<TK>(k, keySerializer)))
+                    .Select(localCache.Remove)
                     .Retry()
                     .Subscribe();
             }
@@ -116,7 +130,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 removeFromDistributed
                     .Merge()
-                    .SelectMany(k => distributedCache.Remove(new Key<TK>(k, keySerializer)))
+                    .SelectMany(distributedCache.Remove)
                     .Retry()
                     .Subscribe();
             }

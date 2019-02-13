@@ -165,12 +165,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             if (_swallowExceptionsPredicate != null)
                 cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
 
-            // If the original cache implemented INotifyKeyChanges and NotifyKeyChangesEnabled is set to true,
-            // add a wrapper to maintain the INotifyKeyChanges implementation
-            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges && notifyKeyChanges.NotifyKeyChangesEnabled)
-                cache = new DistributedCacheNotifyKeyChangesWrapper<TK, TV>(cache, notifyKeyChanges);
-            
-            return cache;
+            return new WrappedDistributedCacheWithOriginal<TK, TV>(cache, originalCache);
         }
 
         public IDistributedCache<TK, TV> Build<TK, TV>(string cacheName)
@@ -190,7 +185,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         }
     }
     
-    public class DistributedCacheFactory<TK, TV> : IDistributedCacheFactory<TK, TV>
+    internal class DistributedCacheFactory<TK, TV> : IDistributedCacheFactory<TK, TV>
     {
         private readonly IDistributedCacheFactory<TK, TV> _cacheFactory;
         private readonly List<IDistributedCacheWrapperFactory<TK, TV>> _wrapperFactories;
@@ -361,11 +356,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             if (_swallowExceptionsPredicate != null)
                 cache = new DistributedCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
 
-            // If the original cache implemented INotifyKeyChanges, add a wrapper to maintain the INotifyKeyChanges implementation
-            if (originalCache is INotifyKeyChanges<TK> notifyKeyChanges)
-                cache = new DistributedCacheNotifyKeyChangesWrapper<TK, TV>(cache, notifyKeyChanges);
-
-            return cache;
+            return new WrappedDistributedCacheWithOriginal<TK, TV>(cache, originalCache);
         }
 
         internal IDistributedCache<TK, TV> Build(string cacheName)
