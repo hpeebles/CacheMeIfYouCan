@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net45;net461</TargetFrameworks>
     <Version>0.0.1</Version>
     <PackageId>CacheMeIfYouCan.Prometheus</PackageId>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
@@ -14,7 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'">
     <PackageReference Include="prometheus-net" Version="2.1.3" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
