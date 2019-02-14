@@ -19,6 +19,12 @@ namespace CacheMeIfYouCan.Configuration
             return config.WithLocalCacheFactory(new DictionaryCacheFactory());
         }
 
+        public static DefaultCacheConfiguration WithRollingTimeToLiveDictionaryCache(
+            this DefaultCacheConfiguration config, TimeSpan rollingTimeToLive)
+        {
+            return config.WithLocalCacheFactory(new RollingTimeToLiveDictionaryCacheFactory(rollingTimeToLive));
+        }
+
         public static DefaultCacheConfiguration CreateCacheFactoryPreset(
             this DefaultCacheConfiguration config,
             int id,

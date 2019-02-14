@@ -19,6 +19,12 @@ namespace CacheMeIfYouCan.Configuration
             return configManager.WithLocalCacheFactory(new DictionaryCacheFactory());
         }
 
+        public static CachedProxyConfigurationManager<T> WithRollingTimeToLiveDictionaryCache<T>(
+            this CachedProxyConfigurationManager<T> configManager, TimeSpan rollingTimeToLive)
+        {
+            return configManager.WithLocalCacheFactory(new RollingTimeToLiveDictionaryCacheFactory(rollingTimeToLive));
+        }
+
         public static CachedProxyConfigurationManager<T> WithCacheFactoryPreset<T>(
             this CachedProxyConfigurationManager<T> configManager,
             int id)

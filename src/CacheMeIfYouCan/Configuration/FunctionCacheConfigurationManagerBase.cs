@@ -219,6 +219,11 @@ namespace CacheMeIfYouCan.Configuration
             return WithLocalCacheFactory(new DictionaryCacheFactory());
         }
 
+        public TConfig WithRollingTimeToLiveDictionaryCache(TimeSpan rollingTimeToLive)
+        {
+            return WithLocalCacheFactory(new RollingTimeToLiveDictionaryCacheFactory(rollingTimeToLive));
+        }
+
         public TConfig WithDistributedCache(IDistributedCache<TK, TV> cache)
         {
             return WithDistributedCacheFactory(c => cache);
