@@ -11,46 +11,19 @@ namespace CacheMeIfYouCan
         public static SingleKeyFunctionCacheConfigurationManager<TK, TV> Cached<TK, TV>(
             this Func<TK, Task<TV>> func)
         {
-            return Cached(func, BuildCacheName<TK, TV>(FunctionCacheType.SingleKey));
-        }
-        
-        public static SingleKeyFunctionCacheConfigurationManager<TK, TV> Cached<TK, TV>(
-            this Func<TK, Task<TV>> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new SingleKeyFunctionCacheConfigurationManager<TK, TV>(func, cacheName);
+            return new SingleKeyFunctionCacheConfigurationManager<TK, TV>(func);
         }
         
         public static SingleKeyFunctionCacheConfigurationManagerSync<TK, TV> Cached<TK, TV>(
             this Func<TK, TV> func)
         {
-            return Cached(func, BuildCacheName<TK, TV>(FunctionCacheType.SingleKey));
-        }
-
-        public static SingleKeyFunctionCacheConfigurationManagerSync<TK, TV> Cached<TK, TV>(
-            this Func<TK, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>(func, cacheName);
+            return new SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>(func);
         }
         
         public static SingleKeyFunctionCacheConfigurationManager<TK, TV> CachedAsync<TK, TV>(
             this Func<TK, TV> func)
         {
-            return CachedAsync(func, BuildCacheName<TK, TV>(FunctionCacheType.SingleKey));
-        }
-
-        public static SingleKeyFunctionCacheConfigurationManager<TK, TV> CachedAsync<TK, TV>(
-            this Func<TK, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new SingleKeyFunctionCacheConfigurationManager<TK, TV>(func.ConvertToAsync(), cacheName);
+            return new SingleKeyFunctionCacheConfigurationManager<TK, TV>(func.ConvertToAsync());
         }
         
         public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
@@ -58,18 +31,7 @@ namespace CacheMeIfYouCan
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return Cached<TReq, TRes, TK, TV>(func, BuildCacheName<TK, TV>(FunctionCacheType.EnumerableKey));
-        }
-        
-        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
-            this Func<TReq, Task<TRes>> func, string cacheName)
-            where TReq : IEnumerable<TK>
-            where TRes : IDictionary<TK, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(func, cacheName);
+            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(func);
         }
         
         public static EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
@@ -77,18 +39,7 @@ namespace CacheMeIfYouCan
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return Cached<TReq, TRes, TK, TV>(func, BuildCacheName<TK, TV>(FunctionCacheType.EnumerableKey));
-        }
-        
-        public static EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV> Cached<TReq, TRes, TK, TV>(
-            this Func<TReq, TRes> func, string cacheName)
-            where TReq : IEnumerable<TK>
-            where TRes : IDictionary<TK, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>(func, cacheName);
+            return new EnumerableKeyFunctionCacheConfigurationManagerSync<TReq, TRes, TK, TV>(func);
         }
         
         public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> CachedAsync<TReq, TRes, TK, TV>(
@@ -96,153 +47,61 @@ namespace CacheMeIfYouCan
             where TReq : IEnumerable<TK>
             where TRes : IDictionary<TK, TV>
         {
-            return CachedAsync<TReq, TRes, TK, TV>(func, BuildCacheName<TK, TV>(FunctionCacheType.EnumerableKey));
-        }
-        
-        public static EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV> CachedAsync<TReq, TRes, TK, TV>(
-            this Func<TReq, TRes> func, string cacheName)
-            where TReq : IEnumerable<TK>
-            where TRes : IDictionary<TK, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(func.ConvertToAsync(), cacheName);
+            return new EnumerableKeyFunctionCacheConfigurationManager<TReq, TRes, TK, TV>(func.ConvertToAsync());
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> Cached<TK1, TK2, TV>(
             this Func<TK1, TK2, Task<TV>> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> Cached<TK1, TK2, TV>(
-            this Func<TK1, TK2, Task<TV>> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> Cached<TK1, TK2, TV>(
             this Func<TK1, TK2, TV> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV> Cached<TK1, TK2, TV>(
-            this Func<TK1, TK2, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> CachedAsync<TK1, TK2, TV>(
             this Func<TK1, TK2, TV> func)
         {
-            return CachedAsync(func, BuildCacheName<TK1, TK2, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV> CachedAsync<TK1, TK2, TV>(
-            this Func<TK1, TK2, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>(func.ConvertToAsync(), cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TV>(func.ConvertToAsync());
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> Cached<TK1, TK2, TK3, TV>(
             this Func<TK1, TK2, TK3, Task<TV>> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TK3, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> Cached<TK1, TK2, TK3, TV>(
-            this Func<TK1, TK2, TK3, Task<TV>> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> Cached<TK1, TK2, TK3, TV>(
             this Func<TK1, TK2, TK3, TV> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TK3, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV> Cached<TK1, TK2, TK3, TV>(
-            this Func<TK1, TK2, TK3, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> CachedAsync<TK1, TK2, TK3, TV>(
             this Func<TK1, TK2, TK3, TV> func)
         {
-            return CachedAsync(func, BuildCacheName<TK1, TK2, TK3, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV> CachedAsync<TK1, TK2, TK3, TV>(
-            this Func<TK1, TK2, TK3, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>(func.ConvertToAsync(), cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TV>(func.ConvertToAsync());
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> Cached<TK1, TK2, TK3, TK4, TV>(
             this Func<TK1, TK2, TK3, TK4, Task<TV>> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TK3, TK4, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> Cached<TK1, TK2, TK3, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4, Task<TV>> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> Cached<TK1, TK2, TK3, TK4, TV>(
             this Func<TK1, TK2, TK3, TK4, TV> func)
         {
-            return Cached(func, BuildCacheName<TK1, TK2, TK3, TK4, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV> Cached<TK1, TK2, TK3, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>(func, cacheName);
+            return new MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>(func);
         }
         
         public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> CachedAsync<TK1, TK2, TK3, TK4, TV>(
             this Func<TK1, TK2, TK3, TK4, TV> func)
         {
-            return CachedAsync(func, BuildCacheName<TK1, TK2, TK3, TK4, TV>(FunctionCacheType.MultiParam));
-        }
-        
-        public static MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV> CachedAsync<TK1, TK2, TK3, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4, TV> func, string cacheName)
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-
-            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>(func.ConvertToAsync(), cacheName);
+            return new MultiParamFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4, TV>(func.ConvertToAsync());
         }
 
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV> Cached<TK1, TK2Enum, TRes, TK2, TV>(
@@ -250,20 +109,7 @@ namespace CacheMeIfYouCan
             where TK2Enum : IEnumerable<TK2>
             where TRes : IDictionary<TK2, TV>
         {
-            return Cached<TK1, TK2Enum, TRes, TK2, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV> Cached<TK1, TK2Enum, TRes, TK2, TV>(
-            this Func<TK1, TK2Enum, Task<TRes>> func, string cacheName)
-            where TK2Enum : IEnumerable<TK2>
-            where TRes : IDictionary<TK2, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2Enum, TRes, TK2, TV> Cached<TK1, TK2Enum, TRes, TK2, TV>(
@@ -271,20 +117,7 @@ namespace CacheMeIfYouCan
             where TK2Enum : IEnumerable<TK2>
             where TRes : IDictionary<TK2, TV>
         {
-            return Cached<TK1, TK2Enum, TRes, TK2, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2Enum, TRes, TK2, TV> Cached<TK1, TK2Enum, TRes, TK2, TV>(
-            this Func<TK1, TK2Enum, TRes> func, string cacheName)
-            where TK2Enum : IEnumerable<TK2>
-            where TRes : IDictionary<TK2, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2Enum, TRes, TK2, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2Enum, TRes, TK2, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV> CachedAsync<TK1, TK2Enum, TRes, TK2, TV>(
@@ -292,22 +125,8 @@ namespace CacheMeIfYouCan
             where TK2Enum : IEnumerable<TK2>
             where TRes : IDictionary<TK2, TV>
         {
-            return CachedAsync<TK1, TK2Enum, TRes, TK2, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV> CachedAsync<TK1, TK2Enum, TRes, TK2, TV>(
-            this Func<TK1, TK2Enum, TRes> func, string cacheName)
-            where TK2Enum : IEnumerable<TK2>
-            where TRes : IDictionary<TK2, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
             return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2Enum, TRes, TK2, TV>(
-                func.ConvertToAsync(),
-                cacheName);
+                func.ConvertToAsync());
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV> Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
@@ -315,20 +134,7 @@ namespace CacheMeIfYouCan
             where TK3Enum : IEnumerable<TK3>
             where TRes : IDictionary<TK3, TV>
         {
-            return Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV> Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-            this Func<TK1, TK2, TK3Enum, Task<TRes>> func, string cacheName)
-            where TK3Enum : IEnumerable<TK3>
-            where TRes : IDictionary<TK3, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3Enum, TRes, TK3, TV> Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
@@ -336,20 +142,7 @@ namespace CacheMeIfYouCan
             where TK3Enum : IEnumerable<TK3>
             where TRes : IDictionary<TK3, TV>
         {
-            return Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3Enum, TRes, TK3, TV> Cached<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-            this Func<TK1, TK2, TK3Enum, TRes> func, string cacheName)
-            where TK3Enum : IEnumerable<TK3>
-            where TRes : IDictionary<TK3, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3Enum, TRes, TK3, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3Enum, TRes, TK3, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV> CachedAsync<TK1, TK2, TK3Enum, TRes, TK3, TV>(
@@ -357,22 +150,8 @@ namespace CacheMeIfYouCan
             where TK3Enum : IEnumerable<TK3>
             where TRes : IDictionary<TK3, TV>
         {
-            return CachedAsync<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV> CachedAsync<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-            this Func<TK1, TK2, TK3Enum, TRes> func, string cacheName)
-            where TK3Enum : IEnumerable<TK3>
-            where TRes : IDictionary<TK3, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
             return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3Enum, TRes, TK3, TV>(
-                func.ConvertToAsync(),
-                cacheName);
+                func.ConvertToAsync());
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
@@ -380,20 +159,7 @@ namespace CacheMeIfYouCan
             where TK4Enum : IEnumerable<TK4>
             where TRes : IDictionary<TK4, TV>
         {
-            return Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TK4, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4Enum, Task<TRes>> func, string cacheName)
-            where TK4Enum : IEnumerable<TK4>
-            where TRes : IDictionary<TK4, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
@@ -401,20 +167,7 @@ namespace CacheMeIfYouCan
             where TK4Enum : IEnumerable<TK4>
             where TRes : IDictionary<TK4, TV>
         {
-            return Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TK4, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> Cached<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4Enum, TRes> func, string cacheName)
-            where TK4Enum : IEnumerable<TK4>
-            where TRes : IDictionary<TK4, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
-            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(func, cacheName);
+            return new MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(func);
         }
         
         public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> CachedAsync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
@@ -422,22 +175,8 @@ namespace CacheMeIfYouCan
             where TK4Enum : IEnumerable<TK4>
             where TRes : IDictionary<TK4, TV>
         {
-            return CachedAsync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-                func,
-                BuildCacheName<TK1, TK2, TK3, TK4, TRes>(FunctionCacheType.MultiParamEnumerableKey));
-        }
-        
-        public static MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV> CachedAsync<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-            this Func<TK1, TK2, TK3, TK4Enum, TRes> func, string cacheName)
-            where TK4Enum : IEnumerable<TK4>
-            where TRes : IDictionary<TK4, TV>
-        {
-            if (cacheName == null)
-                throw new ArgumentNullException(nameof(cacheName));
-            
             return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
-                func.ConvertToAsync(),
-                cacheName);
+                func.ConvertToAsync());
         }
         
         private static string BuildCacheName<TK, TV>(FunctionCacheType type)

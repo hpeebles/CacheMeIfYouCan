@@ -177,6 +177,29 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Last().Results.Last().Outcome.Should().Be(Outcome.Fetch);
         }
 
+        [Fact]
+        public async Task Named()
+        {
+            var results = new List<FunctionCacheGetResult>();
+
+            var name = Guid.NewGuid().ToString();
+            
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .Named(name)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            await cachedEcho("123");
+
+            results.Single().FunctionName.Should().Be(name);
+        }
+
         private static ILocalCacheFactory GetCacheFactory(string cacheType)
         {
             switch (cacheType)

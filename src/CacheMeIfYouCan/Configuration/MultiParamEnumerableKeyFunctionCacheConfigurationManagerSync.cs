@@ -13,14 +13,13 @@ namespace CacheMeIfYouCan.Configuration
         where TRes : IDictionary<TKInner, TV>
     {
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
-            Func<TKOuter, TKInnerEnumerable, TRes> inputFunc,
-            string functionName)
+            Func<TKOuter, TKInnerEnumerable, TRes> inputFunc)
             : base(
                 inputFunc
                     .ConvertToAsync()
                     .ConvertInputToEnumerable<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>()
-                    .ConvertOutputToDictionary<TKOuter, IEnumerable<TKInner>, TRes, TKInner, TV>(),
-                functionName)
+                    .ConvertOutputToDictionary<TKOuter, IEnumerable<TKInner>, TRes, TKInner, TV>(),    
+                $"FunctionCache_{typeof(TKOuter).Name}+{typeof(TKInnerEnumerable).Name}->{typeof(TRes).Name}")
         { }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
@@ -138,15 +137,14 @@ namespace CacheMeIfYouCan.Configuration
         where TRes : IDictionary<TKInner, TV>
     {
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
-            Func<TKOuter1, TKOuter2, TKInnerEnumerable, TRes> inputFunc,
-            string functionName)
+            Func<TKOuter1, TKOuter2, TKInnerEnumerable, TRes> inputFunc)
             : base(
                 inputFunc
                     .ConvertFunc()
                     .ConvertToAsync()
                     .ConvertInputToEnumerable<(TKOuter1, TKOuter2), TKInnerEnumerable, TRes, TKInner, TV>()
                     .ConvertOutputToDictionary<(TKOuter1, TKOuter2), IEnumerable<TKInner>, TRes, TKInner, TV>(),
-                functionName)
+                $"FunctionCache_{typeof(TKOuter1).Name}+{typeof(TKOuter2).Name}+{typeof(TKInnerEnumerable).Name}->{typeof(TRes).Name}")
         {
         }
 
@@ -297,15 +295,14 @@ namespace CacheMeIfYouCan.Configuration
         where TRes : IDictionary<TKInner, TV>
     {
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
-            Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes> inputFunc,
-            string functionName)
+            Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes> inputFunc)
             : base(
                 inputFunc
                     .ConvertFunc()
                     .ConvertToAsync()
                     .ConvertInputToEnumerable<(TKOuter1, TKOuter2, TKOuter3), TKInnerEnumerable, TRes, TKInner, TV>()
                     .ConvertOutputToDictionary<(TKOuter1, TKOuter2, TKOuter3), IEnumerable<TKInner>, TRes, TKInner, TV>(),
-                functionName)
+                $"FunctionCache_{typeof(TKOuter1).Name}+{typeof(TKOuter2).Name}+{typeof(TKOuter3).Name}+{typeof(TKInnerEnumerable).Name}->{typeof(TRes).Name}")
         {
         }
 

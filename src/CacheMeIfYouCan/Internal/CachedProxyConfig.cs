@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Serializers;
 
@@ -12,6 +13,7 @@ namespace CacheMeIfYouCan.Internal
             KeySerializers keySerializers,
             ValueSerializers valueSerializers,
             EqualityComparers keyComparers,
+            Func<MethodInfo, string> nameGenerator,
             TimeSpan? timeToLive,
             TimeSpan? localCacheTimeToLiveOverride,
             bool? disableCache,
@@ -33,6 +35,7 @@ namespace CacheMeIfYouCan.Internal
             KeySerializers = keySerializers;
             ValueSerializers = valueSerializers;
             KeyComparers = keyComparers;
+            NameGenerator = nameGenerator;
             TimeToLive = timeToLive;
             LocalCacheTimeToLiveOverride = localCacheTimeToLiveOverride;
             DisableCache = disableCache;
@@ -55,6 +58,7 @@ namespace CacheMeIfYouCan.Internal
         public KeySerializers KeySerializers { get; }
         public ValueSerializers ValueSerializers { get; }
         public EqualityComparers KeyComparers { get; }
+        public Func<MethodInfo, string> NameGenerator { get; }
         public TimeSpan? TimeToLive { get; }
         public TimeSpan? LocalCacheTimeToLiveOverride { get; }
         public bool? DisableCache { get; }

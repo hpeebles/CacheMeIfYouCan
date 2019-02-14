@@ -124,5 +124,26 @@ namespace CacheMeIfYouCan.Tests.Proxy
             Assert.Equal(2, results.Count);
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
+
+        [Fact]
+        public async Task WithNameGenerator()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .WithNameGenerator(m => m.Name)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            await proxy.IntToString(123);
+
+            results.Single().FunctionName.Should().Be("IntToString");
+        }
     }
 }

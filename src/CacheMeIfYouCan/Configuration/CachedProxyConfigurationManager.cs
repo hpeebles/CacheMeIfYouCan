@@ -16,6 +16,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly KeySerializers _keySerializers;
         private readonly ValueSerializers _valueSerializers;
         private readonly EqualityComparers _keyComparers;
+        private Func<MethodInfo, string> _nameGenerator;
         private TimeSpan? _timeToLive;
         private TimeSpan? _localCacheTimeToLiveOverride;
         private bool? _disableCache;
@@ -49,6 +50,12 @@ namespace CacheMeIfYouCan.Configuration
             _keyParamSeparator = DefaultSettings.Cache.KeyParamSeparator;
             _maxFetchBatchSize = DefaultSettings.Cache.MaxFetchBatchSize;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
+        }
+
+        public CachedProxyConfigurationManager<T> WithNameGenerator(Func<MethodInfo, string> nameGenerator)
+        {
+            _nameGenerator = nameGenerator;
+            return this;
         }
                 
         public CachedProxyConfigurationManager<T> WithTimeToLive(TimeSpan timeToLive)
@@ -372,6 +379,7 @@ namespace CacheMeIfYouCan.Configuration
                 _keySerializers,
                 _valueSerializers,
                 _keyComparers,
+                _nameGenerator,
                 _timeToLive,
                 _localCacheTimeToLiveOverride,
                 _disableCache,

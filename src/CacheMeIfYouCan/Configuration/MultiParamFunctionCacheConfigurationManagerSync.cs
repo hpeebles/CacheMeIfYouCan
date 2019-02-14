@@ -10,10 +10,10 @@ namespace CacheMeIfYouCan.Configuration
     public sealed class MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>
         : MultiParamFunctionCacheConfigurationManagerBase<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TV>, (TK1, TK2), TV>
     {
-        internal MultiParamFunctionCacheConfigurationManagerSync(
-            Func<TK1, TK2, TV> inputFunc,
-            string functionName)
-            : base(inputFunc.ConvertToSingleParam().ConvertToAsync(), functionName)
+        internal MultiParamFunctionCacheConfigurationManagerSync(Func<TK1, TK2, TV> inputFunc)
+            : base(
+                inputFunc.ConvertToSingleParam().ConvertToAsync(),
+                $"FunctionCache_{typeof(TK1).Name}+{typeof(TK2).Name}->{typeof(TV).Name}")
         { }
         
         internal MultiParamFunctionCacheConfigurationManagerSync(
@@ -99,10 +99,10 @@ namespace CacheMeIfYouCan.Configuration
     public sealed class MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>
         : MultiParamFunctionCacheConfigurationManagerBase<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TV>, (TK1, TK2, TK3), TV>
     {
-        internal MultiParamFunctionCacheConfigurationManagerSync(
-            Func<TK1, TK2, TK3, TV> inputFunc,
-            string functionName)
-            : base(inputFunc.ConvertToSingleParam().ConvertToAsync(), functionName)
+        internal MultiParamFunctionCacheConfigurationManagerSync(Func<TK1, TK2, TK3, TV> inputFunc)
+            : base(
+                inputFunc.ConvertToSingleParam().ConvertToAsync(),
+                $"FunctionCache_{typeof(TK1).Name}+{typeof(TK2).Name}+{typeof(TK3).Name}->{typeof(TV).Name}")
         { }
         
         internal MultiParamFunctionCacheConfigurationManagerSync(
@@ -211,10 +211,10 @@ namespace CacheMeIfYouCan.Configuration
     public sealed class MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>
         : MultiParamFunctionCacheConfigurationManagerBase<MultiParamFunctionCacheConfigurationManagerSync<TK1, TK2, TK3, TK4, TV>, (TK1, TK2, TK3, TK4), TV>
     {
-        internal MultiParamFunctionCacheConfigurationManagerSync(
-            Func<TK1, TK2, TK3, TK4, TV> inputFunc,
-            string functionName)
-            : base(inputFunc.ConvertToSingleParam().ConvertToAsync(), functionName)
+        internal MultiParamFunctionCacheConfigurationManagerSync(Func<TK1, TK2, TK3, TK4, TV> inputFunc)
+            : base(
+                inputFunc.ConvertToSingleParam().ConvertToAsync(),
+                $"FunctionCache_{typeof(TK1).Name}+{typeof(TK2).Name}+{typeof(TK3).Name}+{typeof(TK4).Name}->{typeof(TV).Name}")
         { }
         
         internal MultiParamFunctionCacheConfigurationManagerSync(

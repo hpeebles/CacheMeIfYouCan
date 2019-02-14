@@ -26,7 +26,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             using (_setupLock.Enter())
             {
                 cachedEcho = echo
-                    .Cached(name)
+                    .Cached()
+                    .Named(name)
                     .Build();
             }
 
@@ -60,7 +61,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             using (_setupLock.Enter())
             {
                 cachedEcho = echo
-                    .Cached(name)
+                    .Cached()
+                    .Named(name)
                     .Build();
             }
 

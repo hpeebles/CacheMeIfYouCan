@@ -8,10 +8,8 @@ namespace CacheMeIfYouCan.Configuration
     public sealed class SingleKeyFunctionCacheConfigurationManager<TK, TV>
         : SingleKeyFunctionCacheConfigurationManagerBase<SingleKeyFunctionCacheConfigurationManager<TK, TV>, TK, TV>
     {
-        internal SingleKeyFunctionCacheConfigurationManager(
-            Func<TK, Task<TV>> inputFunc,
-            string functionName)
-            : base(inputFunc, functionName)
+        internal SingleKeyFunctionCacheConfigurationManager(Func<TK, Task<TV>> inputFunc)
+            : base(inputFunc, $"FunctionCache_{typeof(TK).Name}->{typeof(TV).Name}")
         { }
 
         internal SingleKeyFunctionCacheConfigurationManager(

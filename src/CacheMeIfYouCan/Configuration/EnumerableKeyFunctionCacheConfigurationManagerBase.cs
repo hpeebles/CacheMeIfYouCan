@@ -59,7 +59,7 @@ namespace CacheMeIfYouCan.Configuration
             
             var functionCache = new EnumerableKeyFunctionCache<TK, TV>(
                 _inputFunc,
-                FunctionName,
+                Name,
                 cache,
                 TimeToLive ?? DefaultSettings.Cache.TimeToLive,
                 keySerializer,

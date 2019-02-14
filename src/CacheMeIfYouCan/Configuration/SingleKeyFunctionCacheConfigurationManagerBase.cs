@@ -15,10 +15,8 @@ namespace CacheMeIfYouCan.Configuration
         private readonly Func<TK, Task<TV>> _inputFunc;
         private Func<TK, TV, TimeSpan> _timeToLiveFactory;
 
-        internal SingleKeyFunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFunc,
-            string functionName)
-            : base(functionName)
+        internal SingleKeyFunctionCacheConfigurationManagerBase(Func<TK, Task<TV>> inputFunc, string name)
+            : base(name)
         {
             _inputFunc = inputFunc;
         }
@@ -74,7 +72,7 @@ namespace CacheMeIfYouCan.Configuration
 
             var functionCache = new SingleKeyFunctionCache<TK, TV>(
                 _inputFunc,
-                FunctionName,
+                Name,
                 cache,
                 timeToLiveFactory,
                 keySerializer,

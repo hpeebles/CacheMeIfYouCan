@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Configuration
             
             var functionCache = new MultiParamEnumerableKeyFunctionCache<TK1, TK2, TV>(
                 _inputFunc,
-                FunctionName,
+                Name,
                 cache,
                 timeToLive,
                 keySerializer1,

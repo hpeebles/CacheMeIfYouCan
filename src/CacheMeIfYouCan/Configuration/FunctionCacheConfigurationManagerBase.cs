@@ -12,9 +12,9 @@ namespace CacheMeIfYouCan.Configuration
     public abstract class FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        internal string FunctionName { get; }
         internal KeySerializers KeySerializers { get; }
         internal EqualityComparers KeyComparers { get; }
+        internal string Name { get; private set; }
         internal TimeSpan? TimeToLive { get; set; }
         internal TimeSpan? LocalCacheTimeToLiveOverride { get; set; }
         internal bool? Disabled { get; private set; }
@@ -37,13 +37,13 @@ namespace CacheMeIfYouCan.Configuration
             = new List<(IObservable<TK>, bool)>();
         
         internal FunctionCacheConfigurationManagerBase(
-            string functionName,
+            string name,
             CachedProxyConfig interfaceConfig = null,
             CachedProxyFunctionInfo proxyFunctionInfo = null)
         {
-            FunctionName = functionName;
-
-            if (interfaceConfig != null)
+            Name = name;
+            
+            if (interfaceConfig != null && proxyFunctionInfo != null)
             {
                 KeySerializers = interfaceConfig.KeySerializers.Clone();
                 KeyComparers = interfaceConfig.KeyComparers.Clone();
@@ -54,6 +54,9 @@ namespace CacheMeIfYouCan.Configuration
                 if (interfaceConfig.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
                     ValueDeserializer = valueDeserializer;
 
+                if (interfaceConfig.NameGenerator != null)
+                    Name = interfaceConfig.NameGenerator(proxyFunctionInfo.MethodInfo);
+                
                 TimeToLive = interfaceConfig.TimeToLive;
                 LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
                 Disabled = interfaceConfig.DisableCache;
@@ -100,6 +103,12 @@ namespace CacheMeIfYouCan.Configuration
                 OnCacheSetAction = DefaultSettings.Cache.OnCacheSetAction;
                 OnCacheExceptionAction = DefaultSettings.Cache.OnCacheExceptionAction;
             }
+        }
+
+        public TConfig Named(string name)
+        {
+            Name = name;
+            return (TConfig)this;
         }
 
         public virtual TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -426,7 +435,7 @@ namespace CacheMeIfYouCan.Configuration
         
         internal ICacheInternal<TK, TV> BuildCache(Func<TK, string> keySerializer, KeyComparer<TK> keyComparer)
         {
-            var cacheConfig = new DistributedCacheConfig<TK, TV>(FunctionName)
+            var cacheConfig = new DistributedCacheConfig<TK, TV>(Name)
             {
                 KeyspacePrefix = KeyspacePrefix,
                 KeySerializer = keySerializer,
@@ -456,7 +465,7 @@ namespace CacheMeIfYouCan.Configuration
                     .ToList();
 
                 cache = CacheBuilder.Build(
-                    FunctionName,
+                    Name,
                     localCacheFactory,
                     distributedCacheFactory,
                     cacheConfig,

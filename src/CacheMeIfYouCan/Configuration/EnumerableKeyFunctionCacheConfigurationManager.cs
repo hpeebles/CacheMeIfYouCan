@@ -11,12 +11,10 @@ namespace CacheMeIfYouCan.Configuration
         where TReq : IEnumerable<TK>
         where TRes : IDictionary<TK, TV>
     {
-        internal EnumerableKeyFunctionCacheConfigurationManager(
-            Func<TReq, Task<TRes>> inputFunc,
-            string functionName)
+        internal EnumerableKeyFunctionCacheConfigurationManager(Func<TReq, Task<TRes>> inputFunc)
             : base(
                 inputFunc.ConvertInputToEnumerable<TReq, TRes, TK, TV>().ConvertOutputToDictionary<IEnumerable<TK>, TRes, TK, TV>(),
-                functionName)
+                $"FunctionCache_{typeof(TReq).Name}->{typeof(TRes).Name}")
         { }
 
         internal EnumerableKeyFunctionCacheConfigurationManager(

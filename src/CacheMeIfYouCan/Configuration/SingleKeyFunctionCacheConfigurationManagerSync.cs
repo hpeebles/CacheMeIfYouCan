@@ -8,10 +8,10 @@ namespace CacheMeIfYouCan.Configuration
     public sealed class SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>
         : SingleKeyFunctionCacheConfigurationManagerBase<SingleKeyFunctionCacheConfigurationManagerSync<TK, TV>, TK, TV>
     {
-        internal SingleKeyFunctionCacheConfigurationManagerSync(
-            Func<TK, TV> inputFunc,
-            string functionName)
-            : base(inputFunc.ConvertToAsync(), functionName)
+        internal SingleKeyFunctionCacheConfigurationManagerSync(Func<TK, TV> inputFunc)
+            : base(
+                inputFunc.ConvertToAsync(),
+                $"FunctionCache_{typeof(TK).Name}->{typeof(TV).Name}")
         { }
 
         internal SingleKeyFunctionCacheConfigurationManagerSync(
