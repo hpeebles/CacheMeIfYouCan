@@ -101,7 +101,9 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         
         public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
         {
-            var cache = _cacheFactory.Build<TK, TV>(cacheName);
+            var originalCache = _cacheFactory.Build<TK, TV>(cacheName);
+
+            var cache = originalCache;
 
             // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
@@ -117,8 +119,8 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
-            
-            return cache;
+
+            return new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
         }
 
         public ICache<TK, TV> BuildAsCache<TK, TV>(string cacheName)
@@ -230,7 +232,9 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         
         public ILocalCache<TK, TV> Build(string cacheName)
         {
-            var cache = _cacheFactory.Build(cacheName);
+            var originalCache = _cacheFactory.Build(cacheName);
+
+            var cache = originalCache;
 
             // First apply any custom wrappers
             foreach (var wrapperFactory in _wrapperFactories)
@@ -247,7 +251,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
             
-            return cache;
+            return new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
         }
 
         public ICache<TK, TV> BuildAsCache(string cacheName)
