@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Serializers
     {
         private readonly Dictionary<Type, object> _serializers;
         private readonly Dictionary<Type, object> _deserializers;
-        private ISerializer _default;
+        private Func<Type, ISerializer> _defaultSerializerFactory;
 
         internal KeySerializers()
         {
@@ -19,21 +19,28 @@ namespace CacheMeIfYouCan.Serializers
         private KeySerializers(
             Dictionary<Type, object> serializers,
             Dictionary<Type, object> deserializers,
-            ISerializer defaultSerializer)
+            Func<Type, ISerializer> defaultSerializerFactory)
         {
             _serializers = serializers;
             _deserializers = deserializers;
-            _default = defaultSerializer;
+            _defaultSerializerFactory = defaultSerializerFactory;
         }
-        
+
         internal bool TryGetSerializer<T>(out Func<T, string> serializer)
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj))
+            {
                 serializer = (Func<T, string>)serializerObj;
-            else if (_default != null)
-                serializer = _default.Serialize;
+            }
+            else if (_defaultSerializerFactory != null)
+            {
+                var defaultSerializer = _defaultSerializerFactory(typeof(T));
+                serializer = defaultSerializer.Serialize;
+            }
             else
+            {
                 serializer = null;
+            }
 
             return serializer != null;
         }
@@ -41,11 +48,18 @@ namespace CacheMeIfYouCan.Serializers
         internal bool TryGetDeserializer<T>(out Func<string, T> deserializer)
         {
             if (_deserializers.TryGetValue(typeof(T), out var deserializerObj))
+            {
                 deserializer = (Func<string, T>)deserializerObj;
-            else if (_default != null)
-                deserializer = _default.Deserialize<T>;
+            }
+            else if (_defaultSerializerFactory != null)
+            {
+                var defaultDeserializer = _defaultSerializerFactory(typeof(T));
+                deserializer = defaultDeserializer.Deserialize<T>;
+            }
             else
+            {
                 deserializer = null;
+            }
 
             return deserializer != null;
         }
@@ -73,13 +87,19 @@ namespace CacheMeIfYouCan.Serializers
 
         public KeySerializers SetDefault(ISerializer serializer)
         {
-            _default = serializer;
+            _defaultSerializerFactory = t => serializer;
             return this;
         }
 
         public KeySerializers SetDefault(Func<object, string> serializer, Func<string, object> deserializer = null)
         {
-            _default = new Wrapper(serializer, deserializer);
+            _defaultSerializerFactory = t => new Wrapper(serializer, deserializer);
+            return this;
+        }
+
+        public KeySerializers SetDefaultFactory(Func<Type, ISerializer> serializerFactory)
+        {
+            _defaultSerializerFactory = serializerFactory;
             return this;
         }
 
@@ -88,7 +108,7 @@ namespace CacheMeIfYouCan.Serializers
             var serializersClone = _serializers.ToDictionary(kv => kv.Key, kv => kv.Value);
             var deserializersClone = _deserializers.ToDictionary(kv => kv.Key, kv => kv.Value);
             
-            return new KeySerializers(serializersClone, deserializersClone, _default);
+            return new KeySerializers(serializersClone, deserializersClone, _defaultSerializerFactory);
         }
         
         private class Wrapper : ISerializer

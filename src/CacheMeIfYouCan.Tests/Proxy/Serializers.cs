@@ -117,5 +117,65 @@ namespace CacheMeIfYouCan.Tests.Proxy
             serializerA.SerializeCount.Should().Be(0);
             serializerA.DeserializeCount.Should().Be(0);
         }
+
+        [Fact]
+        public async Task SetDefaultKeySerializerFactory()
+        {
+            var serializerA = new TestSerializer();
+            var serializerB = new TestSerializer();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithKeySerializers(c => c
+                        .SetDefaultFactory(t => t == typeof(string) ? serializerA : serializerB))
+                    .Build();
+            }
+
+            await proxy.StringToString("123");
+
+            serializerA.SerializeCount.Should().Be(1);
+            serializerB.SerializeCount.Should().Be(0);
+
+            await proxy.IntToString(123);
+
+            serializerA.SerializeCount.Should().Be(1);
+            serializerB.SerializeCount.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task SetDefaultValueSerializerFactory()
+        {
+            var serializerA = new TestSerializer();
+            var serializerB = new TestSerializer();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithValueSerializers(c => c
+                        .SetDefaultFactory(t => t == typeof(string) ? serializerA : serializerB))
+                    .Build();
+            }
+
+            await proxy.StringToString("123");
+            await proxy.StringToString("123");
+
+            serializerA.DeserializeCount.Should().Be(1);
+            serializerB.DeserializeCount.Should().Be(0);
+
+            await proxy.LongToInt(123);
+            await proxy.LongToInt(123);
+
+            serializerA.DeserializeCount.Should().Be(1);
+            serializerB.DeserializeCount.Should().Be(1);
+        }
     }
 }
