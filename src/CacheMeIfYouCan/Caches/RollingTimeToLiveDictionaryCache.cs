@@ -21,15 +21,16 @@ namespace CacheMeIfYouCan.Caches
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
         
-        // Lock to ensure only 1 thread accesses the non-threadsafe dictionary of TTLs at a time
-        private readonly object _lock = new object();
+        // New keys are added here first, then every 10 seconds they are processed and put into the _ttls dictionary
+        private readonly ConcurrentBag<(long expiry, TK[] keys)> _ttlsPendingProcessing = new ConcurrentBag<(long, TK[])>();
 
         // Each time a key is accessed, set the time to live to be the current timestamp plus the _rollingTimeToLive
         // value up to the MaxExpiry value.
         private readonly long _rollingTimeToLive;
         
-        // Every 10 seconds we check for expired keys and remove them, disposing of this field is the only way to stop that process
-        private readonly IDisposable _keyRemoverProcess;
+        // Every 10 seconds we check for and remove any expired keys, then add pending (ttl, key) pairs to the _ttls
+        // dictionary. Disposing of this field is the only way to stop that process
+        private readonly IDisposable _keyProcessor;
         
         public RollingTimeToLiveDictionaryCache(string cacheName, TimeSpan rollingTimeToLive)
         {
@@ -37,9 +38,9 @@ namespace CacheMeIfYouCan.Caches
 
             _rollingTimeToLive = rollingTimeToLive.Ticks;
 
-            _keyRemoverProcess = Observable
+            _keyProcessor = Observable
                 .Interval(TimeSpan.FromSeconds(10))
-                .Subscribe(_ => RemoveExpiredKeys());
+                .Subscribe(_ => ProcessKeys());
         }
         
         public string CacheName { get; }
@@ -68,20 +69,10 @@ namespace CacheMeIfYouCan.Caches
         public void Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
             var expiryTicks = Timestamp.Now + timeToLive.Ticks;
-            var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
             _values[key] = new CacheItem(value, _rollingTimeToLive, expiryTicks);
 
-            lock (_lock)
-            {
-                if (!_ttls.TryGetValue(expirySeconds, out var existing))
-                {
-                    existing = new List<TK>();
-                    _ttls.Add(expirySeconds, existing);
-                }
-                
-                existing.Add(key);
-            }
+            _ttlsPendingProcessing.Add((expiryTicks, new[] { key.AsObject }));
         }
         
         public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
@@ -115,21 +106,11 @@ namespace CacheMeIfYouCan.Caches
         public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var expiryTicks = Timestamp.Now + timeToLive.Ticks;
-            var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
             foreach (var kv in values)
                 _values[kv.Key] = new CacheItem(kv.Value, _rollingTimeToLive, expiryTicks);
 
-            lock (_lock)
-            {
-                if (!_ttls.TryGetValue(expirySeconds, out var existing))
-                {
-                    existing = new List<TK>();
-                    _ttls.Add(expirySeconds, existing);
-                }
-                
-                existing.AddRange(values.Select(kv => kv.Key.AsObject));
-            }
+            _ttlsPendingProcessing.Add((expiryTicks, values.Select(v => v.Key.AsObject).ToArray()));
         }
 
         public bool Remove(Key<TK> key)
@@ -141,70 +122,78 @@ namespace CacheMeIfYouCan.Caches
 
         public void Dispose()
         {
-            _keyRemoverProcess?.Dispose();
-            _values.Clear();
+            _keyProcessor?.Dispose();
+        }
 
-            lock (_lock)
-                _ttls.Clear();
+        private void ProcessKeys()
+        {
+            RemoveExpiredKeys();
+            ProcessNewKeys();
         }
 
         private void RemoveExpiredKeys()
         {
             var timestampSeconds = (int) (Timestamp.Now / TimeSpan.TicksPerSecond);
 
-            var keysToCheck = new List<TK>();
+            var now = Timestamp.Now;
 
-            lock (_lock)
+            // Since _ttls is a dictionary sorted by expiry timestamp, the first item will be the next to expire
+            var next = _ttls.FirstOrDefault();
+            while (0 < next.Key && next.Key < timestampSeconds)
             {
-                // Since _ttls is a dictionary sorted by expiry timestamp, the first item will be the next to expire
-                var next = _ttls.FirstOrDefault();
-                while (0 < next.Key && next.Key < timestampSeconds)
+                foreach (var key in next.Value)
                 {
-                    keysToCheck.AddRange(next.Value);
-                    _ttls.Remove(next.Key);
+                    if (!_values.TryGetValue(key, out var value))
+                        continue;
 
-                    next = _ttls.FirstOrDefault();
+                    if (value.Expiry < now)
+                    {
+                        _values.TryRemove(key, out _);
+                    }
+                    else
+                    {
+                        var expirySeconds = (int) (value.Expiry / TimeSpan.TicksPerSecond);
+
+                        if (!_ttls.TryGetValue(expirySeconds, out var keys))
+                        {
+                            keys = new List<TK>();
+                            _ttls[expirySeconds] = keys;
+                        }
+
+                        keys.Add(key);
+                    }
                 }
+                
+                _ttls.Remove(next.Key);
+
+                next = _ttls.FirstOrDefault();
             }
+        }
 
-            var keysToReAdd = new Dictionary<int, List<TK>>();
-
+        private void ProcessNewKeys()
+        {
             var now = Timestamp.Now;
             
-            foreach (var key in keysToCheck)
+            while (_ttlsPendingProcessing.TryTake(out var next))
             {
-                if (!_values.TryGetValue(key, out var value))
-                    continue;
-
-                if (value.Expiry < now)
+                if (next.expiry < now)
                 {
-                    _values.TryRemove(key, out _);
+                    foreach (var key in next.keys)
+                    {
+                        if (_values.TryGetValue(key, out var value) && value.Expiry < now)
+                            _values.TryRemove(key, out _);
+                    }
                 }
                 else
                 {
-                    var expirySeconds = (int) (value.Expiry / TimeSpan.TicksPerSecond);
-
-                    if (!keysToReAdd.TryGetValue(expirySeconds, out var keys))
+                    var expirySeconds = (int) (next.expiry / TimeSpan.TicksPerSecond);
+                    if (!_ttls.TryGetValue(expirySeconds, out var keys))
                     {
                         keys = new List<TK>();
-                        keysToReAdd[expirySeconds] = keys;
+                        _ttls[expirySeconds] = keys;
                     }
 
-                    keys.Add(key);
-                }
-            }
-
-            lock (_lock)
-            {
-                foreach (var kv in keysToReAdd)
-                {
-                    if (!_ttls.TryGetValue(kv.Key, out var keys))
-                    {
-                        keys = new List<TK>();
-                        _ttls[kv.Key] = keys;
-                    }
-                    
-                    keys.AddRange(kv.Value);
+                    keys.AddRange(next.keys);
                 }
             }
         }
