@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,10 +6,17 @@ using System.Reactive.Linq;
 
 namespace CacheMeIfYouCan.Caches
 {
-    public class DictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
+    /// <summary>
+    /// A cache which pushes the expiry of each key back when that key is accessed up until the overall time to live
+    /// is reached.
+    /// For example, if a key is set in the cache with a time to live of 1 hour and rollingTimeToLive is set to 1
+    /// minute, then if there is ever a 1 minute gap where the key is not accessed, the key will be expired, otherwise
+    /// it will remain cached until the hour is up, at which point it will be expired.
+    /// </summary>
+    public class RollingTimeToLiveDictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         // Store keys along with their exact expiry times
-        private readonly ConcurrentDictionary<TK, (TV Value, long Expiry)> _values = new ConcurrentDictionary<TK, (TV, long)>();
+        private readonly ConcurrentDictionary<TK, CacheItem> _values = new ConcurrentDictionary<TK, CacheItem>();
         
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
@@ -17,17 +24,18 @@ namespace CacheMeIfYouCan.Caches
         // Lock to ensure only 1 thread accesses the non-threadsafe dictionary of TTLs at a time
         private readonly object _lock = new object();
 
-        // Max number of items to hold. Each time the key remover runs it will ensure the count stays below this value.
-        private readonly int? _maxItems;
+        // Each time a key is accessed, set the time to live to be the current timestamp plus the _rollingTimeToLive
+        // value up to the MaxExpiry value.
+        private readonly long _rollingTimeToLive;
         
         // Every 10 seconds we check for expired keys and remove them, disposing of this field is the only way to stop that process
         private readonly IDisposable _keyRemoverProcess;
         
-        public DictionaryCache(string cacheName, int? maxItems = null)
+        public RollingTimeToLiveDictionaryCache(string cacheName, TimeSpan rollingTimeToLive)
         {
             CacheName = cacheName;
 
-            _maxItems = maxItems;
+            _rollingTimeToLive = rollingTimeToLive.Ticks;
 
             _keyRemoverProcess = Observable
                 .Interval(TimeSpan.FromSeconds(10))
@@ -35,7 +43,7 @@ namespace CacheMeIfYouCan.Caches
         }
         
         public string CacheName { get; }
-        public string CacheType { get; } = "dictionary";
+        public string CacheType { get; } = "rolling-ttl-dictionary";
 
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {
@@ -62,7 +70,7 @@ namespace CacheMeIfYouCan.Caches
             var expiryTicks = Timestamp.Now + timeToLive.Ticks;
             var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
-            _values[key] = (value, expiryTicks);
+            _values[key] = new CacheItem(value, _rollingTimeToLive, expiryTicks);
 
             lock (_lock)
             {
@@ -87,12 +95,12 @@ namespace CacheMeIfYouCan.Caches
                 if (!_values.TryGetValue(key, out var value))
                     continue;
 
-                if (value.Item2 > currentTimestamp)
+                if (value.Expiry > currentTimestamp)
                 {
                     results.Add(new GetFromCacheResult<TK, TV>(
                         key,
-                        value.Item1,
-                        TimeSpan.FromTicks(value.Item2 - currentTimestamp),
+                        value.Value,
+                        TimeSpan.FromTicks(value.Expiry - currentTimestamp),
                         CacheType));
                 }
                 else
@@ -110,7 +118,7 @@ namespace CacheMeIfYouCan.Caches
             var expirySeconds = (int) (expiryTicks / TimeSpan.TicksPerSecond);
             
             foreach (var kv in values)
-                _values[kv.Key] = (kv.Value, expiryTicks);
+                _values[kv.Key] = new CacheItem(kv.Value, _rollingTimeToLive, expiryTicks);
 
             lock (_lock)
             {
@@ -144,7 +152,7 @@ namespace CacheMeIfYouCan.Caches
         {
             var timestampSeconds = (int) (Timestamp.Now / TimeSpan.TicksPerSecond);
 
-            var keysToExpire = new List<TK>();
+            var keysToCheck = new List<TK>();
 
             lock (_lock)
             {
@@ -152,37 +160,79 @@ namespace CacheMeIfYouCan.Caches
                 var next = _ttls.FirstOrDefault();
                 while (0 < next.Key && next.Key < timestampSeconds)
                 {
-                    keysToExpire.AddRange(next.Value);
+                    keysToCheck.AddRange(next.Value);
                     _ttls.Remove(next.Key);
 
                     next = _ttls.FirstOrDefault();
                 }
             }
-        
-            foreach (var key in keysToExpire)
-                _values.TryRemove(key, out _);
 
-            if (!_maxItems.HasValue || _values.Count <= _maxItems.Value)
-                return;
+            var keysToReAdd = new Dictionary<int, List<TK>>();
 
-            var countToRemove = _values.Count - _maxItems.Value;
-
-            var toRemove = new List<TK>();
+            var now = Timestamp.Now;
             
+            foreach (var key in keysToCheck)
+            {
+                if (!_values.TryGetValue(key, out var value))
+                    continue;
+
+                if (value.Expiry < now)
+                {
+                    _values.TryRemove(key, out _);
+                }
+                else
+                {
+                    var expirySeconds = (int) (value.Expiry / TimeSpan.TicksPerSecond);
+
+                    if (!keysToReAdd.TryGetValue(expirySeconds, out var keys))
+                    {
+                        keys = new List<TK>();
+                        keysToReAdd[expirySeconds] = keys;
+                    }
+
+                    keys.Add(key);
+                }
+            }
+
             lock (_lock)
             {
-                while (toRemove.Count < countToRemove)
+                foreach (var kv in keysToReAdd)
                 {
-                    var next = _ttls.FirstOrDefault();
-                    if (next.Key == 0)
-                        break;
+                    if (!_ttls.TryGetValue(kv.Key, out var keys))
+                    {
+                        keys = new List<TK>();
+                        _ttls[kv.Key] = keys;
+                    }
                     
-                    toRemove.AddRange(next.Value);
+                    keys.AddRange(kv.Value);
+                }
+            }
+        }
+
+        private class CacheItem
+        {
+            private readonly TV _value;
+            private readonly long _rollingTimeToLive;
+            private readonly long _maxExpiry;
+
+            public CacheItem(TV value, long rollingTimeToLive, long maxExpiry)
+            {
+                _value = value;
+                _rollingTimeToLive = rollingTimeToLive;
+                _maxExpiry = maxExpiry;
+                Expiry = Timestamp.Now + rollingTimeToLive;
+            }
+
+            public TV Value
+            {
+                get
+                {
+                    Expiry = Math.Min(Timestamp.Now + _rollingTimeToLive, _maxExpiry);
+                    return _value;
                 }
             }
             
-            foreach (var key in toRemove.Take(countToRemove))
-                _values.TryRemove(key, out _);
+            public long Expiry { get; private set; }
         }
     }
 }
