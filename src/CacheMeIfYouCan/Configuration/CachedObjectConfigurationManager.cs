@@ -8,6 +8,7 @@ namespace CacheMeIfYouCan.Configuration
     public class CachedObjectConfigurationManager<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
+        private string _name;
         private Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
         private double _jitterPercentage;
         private Action<CachedObjectRefreshResult<T>> _onRefresh;
@@ -28,6 +29,12 @@ namespace CacheMeIfYouCan.Configuration
             
             if (DefaultSettings.CachedObject.OnExceptionAction != null)
                 OnException(DefaultSettings.CachedObject.OnExceptionAction);
+        }
+
+        public CachedObjectConfigurationManager<T> Named(string name)
+        {
+            _name = name;
+            return this;
         }
         
         public CachedObjectConfigurationManager<T> WithRefreshInterval(TimeSpan refreshInterval)
@@ -91,7 +98,9 @@ namespace CacheMeIfYouCan.Configuration
                 refreshIntervalFunc = r => TimeSpan.FromTicks((long)(_refreshIntervalFunc(r).Ticks * (1 + (JitterFunc() / 100))));
             }
 
-            var cachedObject = new CachedObject<T>(_getValueFunc, refreshIntervalFunc, _onRefresh, _onException);
+            var name = _name ?? $"{nameof(CachedObject<T>)}_{typeof(T).Name}";
+            
+            var cachedObject = new CachedObject<T>(_getValueFunc, name, refreshIntervalFunc, _onRefresh, _onException);
             
             CachedObjectInitializer.Add(cachedObject);
 

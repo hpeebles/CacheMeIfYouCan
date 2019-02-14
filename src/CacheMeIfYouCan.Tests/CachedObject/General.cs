@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using FluentAssertions;
@@ -109,6 +110,32 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             Func<DateTime> act = () => date.Value;
             act.Should().Throw<ObjectDisposedException>();
+        }
+
+        [Fact]
+        public async Task Named()
+        {
+            var refreshResults = new List<CachedObjectRefreshResult>();
+            var name = Guid.NewGuid().ToString();
+            
+            ICachedObject<DateTime> date;
+            using (_setupLock.Enter())
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .Named(name)
+                    .WithRefreshInterval(TimeSpan.FromMilliseconds(1))
+                    .OnRefresh(refreshResults.Add)
+                    .Build();
+            }
+
+            await date.Initialize();
+
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+            date.Dispose();
+
+            refreshResults.First().Name.Should().Be(name);
         }
     }
 }

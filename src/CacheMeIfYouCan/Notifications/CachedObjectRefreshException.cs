@@ -1,15 +1,14 @@
 ﻿using System;
-using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Notifications
 {
     public sealed class CachedObjectRefreshException<T> : CachedObjectRefreshException
     {
-        private static readonly string ExceptionMessage =
-            $"{nameof(CachedObject<T>)} threw an exception while trying to refresh its value";
+        private const string ExceptionMessageFormat =
+            "{0} threw an exception while trying to refresh its value";
         
-        internal CachedObjectRefreshException(Exception exception)
-            : base(ExceptionMessage, exception)
+        internal CachedObjectRefreshException(string name, Exception exception)
+            : base(String.Format(ExceptionMessageFormat, name), exception)
         { }
     }
 
@@ -18,7 +17,5 @@ namespace CacheMeIfYouCan.Notifications
         internal CachedObjectRefreshException(string message, Exception ex)
             : base(message, ex)
         { }
-
-        public long Timestamp { get; } = CacheMeIfYouCan.Timestamp.Now;
     }
 }

@@ -10,6 +10,7 @@ namespace CacheMeIfYouCan.Internal
     internal class CachedObject<T> : ICachedObject<T>
     {
         private readonly Func<Task<T>> _getValueFunc;
+        private readonly string _name;
         private readonly Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
         private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
         private readonly Action<CachedObjectRefreshException<T>> _onException;
@@ -25,11 +26,13 @@ namespace CacheMeIfYouCan.Internal
 
         public CachedObject(
             Func<Task<T>> getValueFunc,
+            string name,
             Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc,
             Action<CachedObjectRefreshResult<T>> onRefresh,
             Action<CachedObjectRefreshException<T>> onException)
         {
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
+            _name = name;
             _refreshIntervalFunc = refreshIntervalFunc ?? throw new ArgumentNullException(nameof(refreshIntervalFunc));
             _onRefresh = onRefresh;
             _onException = onException;
@@ -126,7 +129,7 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                exception = new CachedObjectRefreshException<T>(ex);
+                exception = new CachedObjectRefreshException<T>(_name, ex);
                 newValue = default;
                 
                 _onException?.Invoke(exception);
@@ -137,6 +140,7 @@ namespace CacheMeIfYouCan.Internal
             }
             
             var result = new CachedObjectRefreshResult<T>(
+                _name,
                 start,
                 StopwatchHelper.GetDuration(stopwatchStart),
                 exception,
