@@ -178,46 +178,5 @@ namespace CacheMeIfYouCan
             return new MultiParamEnumerableKeyFunctionCacheConfigurationManager<TK1, TK2, TK3, TK4Enum, TRes, TK4, TV>(
                 func.ConvertToAsync());
         }
-        
-        private static string BuildCacheName<TK, TV>(FunctionCacheType type)
-        {
-            var prefix = GetPrefix(type);
-            
-            return $"{prefix}_{typeof(TK).Name}->{typeof(TV).Name}";
-        }
-
-        private static string BuildCacheName<TK1, TK2, TV>(FunctionCacheType type)
-        {
-            var prefix = GetPrefix(type);
-            
-            return $"{prefix}_{typeof(TK1).Name}+{typeof(TK2).Name}->{typeof(TV).Name}";
-        }
-        
-        private static string BuildCacheName<TK1, TK2, TK3, TV>(FunctionCacheType type)
-        {
-            var prefix = GetPrefix(type);
-            
-            return $"{prefix}_{typeof(TK1).Name}+{typeof(TK2).Name}+{typeof(TK3).Name}->{typeof(TV).Name}";
-        }
-        
-        private static string BuildCacheName<TK1, TK2, TK3, TK4, TV>(FunctionCacheType type)
-        {
-            var prefix = GetPrefix(type);
-            
-            return $"{prefix}_{typeof(TK1).Name}+{typeof(TK2).Name}+{typeof(TK3).Name}+{typeof(TK4).Name}->{typeof(TV).Name}";
-        }
-
-        private static string GetPrefix(FunctionCacheType type)
-        {
-            return type + "FunctionCache";
-        }
-
-        private enum FunctionCacheType
-        {
-            SingleKey,
-            EnumerableKey,
-            MultiParam,
-            MultiParamEnumerableKey
-        }
     }
 }
