@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Tests.Cache
 
             cache.Count.Should().Be(1);
 
-            await Task.Delay(TimeSpan.FromSeconds(11));
+            await Task.Delay(TimeSpan.FromSeconds(22));
             
             cache.Count.Should().Be(0);
         }

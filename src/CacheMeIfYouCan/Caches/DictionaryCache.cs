@@ -149,16 +149,21 @@ namespace CacheMeIfYouCan.Caches
             while (_ttlsPendingProcessing.TryTake(out var next))
             {
                 if (next.expiry < now)
-                    continue;
-
-                var expirySeconds = (int) (next.expiry / TimeSpan.TicksPerSecond);
-                if (!_ttls.TryGetValue(expirySeconds, out var keys))
                 {
-                    keys = new List<TK>();
-                    _ttls[expirySeconds] = keys;
+                    foreach (var key in next.keys)
+                        _values.TryRemove(key, out _);
                 }
+                else
+                {
+                    var expirySeconds = (int) (next.expiry / TimeSpan.TicksPerSecond);
+                    if (!_ttls.TryGetValue(expirySeconds, out var keys))
+                    {
+                        keys = new List<TK>();
+                        _ttls[expirySeconds] = keys;
+                    }
 
-                keys.AddRange(next.keys);
+                    keys.AddRange(next.keys);
+                }
             }
         }
 
