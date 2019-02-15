@@ -91,12 +91,6 @@ namespace CacheMeIfYouCan.Serializers
             return this;
         }
 
-        public KeySerializers SetDefault(Func<object, string> serializer, Func<string, object> deserializer = null)
-        {
-            _defaultSerializerFactory = t => new Wrapper(serializer, deserializer);
-            return this;
-        }
-
         public KeySerializers SetDefaultFactory(Func<Type, ISerializer> serializerFactory)
         {
             _defaultSerializerFactory = serializerFactory;
@@ -109,31 +103,6 @@ namespace CacheMeIfYouCan.Serializers
             var deserializersClone = _deserializers.ToDictionary(kv => kv.Key, kv => kv.Value);
             
             return new KeySerializers(serializersClone, deserializersClone, _defaultSerializerFactory);
-        }
-        
-        private class Wrapper : ISerializer
-        {
-            private readonly Func<object, string> _serializer;
-            private readonly Func<string, object> _deserializer;
-
-            public Wrapper(Func<object, string> serializer, Func<string, object> deserializer)
-            {
-                _serializer = serializer;
-                _deserializer = deserializer;
-            }
-
-            public string Serialize<T>(T value)
-            {
-                return _serializer(value);
-            }
-
-            public T Deserialize<T>(string value)
-            {
-                if (_deserializer == null)
-                    throw new Exception($"No deserializer defined for type '{typeof(T).FullName}'");
-
-                return (T)_deserializer(value);
-            }
         }
     }
 }
