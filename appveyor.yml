@@ -39,4 +39,4 @@ after_deploy:
 
     git tag v$env:APPVEYOR_BUILD_VERSION
 
-    git push --tag
+    git push --tag -q
