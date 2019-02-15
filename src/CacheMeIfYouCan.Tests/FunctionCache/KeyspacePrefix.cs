@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Tests.Common;
 using CacheMeIfYouCan.Tests.Helpers;
 using FluentAssertions;
 using Xunit;

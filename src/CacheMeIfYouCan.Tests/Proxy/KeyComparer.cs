@@ -1,3 +1,4 @@
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Xunit;
 

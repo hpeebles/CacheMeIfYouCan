@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using CacheMeIfYouCan.Serializers;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestSerializer : ISerializer
     {

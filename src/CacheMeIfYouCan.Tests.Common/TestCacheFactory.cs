@@ -1,7 +1,7 @@
 ﻿using System;
 using CacheMeIfYouCan.Configuration;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestCacheFactory : IDistributedCacheFactory
     {

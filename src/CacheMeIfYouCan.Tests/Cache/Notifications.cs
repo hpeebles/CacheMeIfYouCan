@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests.Cache.Helpers;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Xunit;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Tests.Common;
 
 namespace CacheMeIfYouCan.Tests.Cache.Helpers
 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Tests;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using StackExchange.Redis;
 using Xunit;

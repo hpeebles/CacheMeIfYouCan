@@ -1,4 +1,5 @@
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 
 namespace CacheMeIfYouCan.Tests.Helpers

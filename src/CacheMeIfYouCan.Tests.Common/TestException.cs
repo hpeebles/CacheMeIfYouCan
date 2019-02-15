@@ -1,6 +1,6 @@
 using System;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestException : Exception
     {

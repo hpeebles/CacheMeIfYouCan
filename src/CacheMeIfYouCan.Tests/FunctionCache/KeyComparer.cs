@@ -1,4 +1,5 @@
 using System;
+using CacheMeIfYouCan.Tests.Common;
 using CacheMeIfYouCan.Tests.Helpers;
 using FluentAssertions;
 using Xunit;

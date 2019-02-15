@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Xunit;
 

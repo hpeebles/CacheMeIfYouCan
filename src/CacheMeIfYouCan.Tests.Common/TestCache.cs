@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestCache<TK, TV> : IDistributedCache<TK, TV>, INotifyKeyChanges<TK>
     {

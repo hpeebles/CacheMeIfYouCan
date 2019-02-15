@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Xunit;
 

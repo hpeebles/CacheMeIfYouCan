@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj" />
-    <ProjectReference Include="..\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj" />
+    <ProjectReference Include="..\CacheMeIfYouCan.Tests.Common\CacheMeIfYouCan.Tests.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.6.0" />

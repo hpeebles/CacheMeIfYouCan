@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests;
+using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Polly;
 using Polly.CircuitBreaker;

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestEqualityComparer<T> : IEqualityComparer<T>
     {
