@@ -55,7 +55,9 @@ namespace CacheMeIfYouCan.Redis
             {
                 NotifyKeyChangesEnabled = true;
 
-                _recentlySetKeysManager = new RecentlySetKeysManager();
+                if (keyEventsToSubscribeTo.HasFlag(KeyEvents.Set))
+                    _recentlySetKeysManager = new RecentlySetKeysManager();
+                
                 _keyChanges = new Subject<Key<TK>>();
 
                 connection.SubscribeToKeyChanges(_database, keyEventsToSubscribeTo, NotifyKeyChanged);
