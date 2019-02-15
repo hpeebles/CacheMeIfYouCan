@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Configuration
         private bool? _disableCache;
         private ILocalCacheFactory _localCacheFactory;
         private IDistributedCacheFactory _distributedCacheFactory;
-        private Func<CachedProxyFunctionInfo, string> _keyspacePrefixFunc;
+        private Func<MethodInfo, string> _keyspacePrefixFunc;
         private Action<FunctionCacheGetResult> _onResult;
         private Action<FunctionCacheFetchResult> _onFetch;
         private Action<FunctionCacheException> _onException;
@@ -110,17 +110,17 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
-            return WithDistributedCacheFactory(cacheFactory, f => null);
-        }
-        
-        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory, string keyspacePrefix)
-        {
-            return WithDistributedCacheFactory(cacheFactory, f => keyspacePrefix);
-        }
-        
-        public CachedProxyConfigurationManager<T> WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory, Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc)
-        {
             _distributedCacheFactory = cacheFactory;
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithKeyspacePrefix(string keyspacePrefix)
+        {
+            return WithKeyspacePrefix(f => keyspacePrefix);
+        }
+        
+        public CachedProxyConfigurationManager<T> WithKeyspacePrefix(Func<MethodInfo, string> keyspacePrefixFunc)
+        {
             _keyspacePrefixFunc = keyspacePrefixFunc;
             return this;
         }
@@ -128,10 +128,7 @@ namespace CacheMeIfYouCan.Configuration
         public CachedProxyConfigurationManager<T> SkipDistributedCache(bool skipDistributedCache = true)
         {
             if (skipDistributedCache)
-            {
                 _distributedCacheFactory = new NullDistributedCacheFactory();
-                _keyspacePrefixFunc = null;
-            }
 
             return this;
         }

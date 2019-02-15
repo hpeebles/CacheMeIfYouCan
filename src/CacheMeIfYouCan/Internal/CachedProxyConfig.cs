@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Internal
             bool? disableCache,
             ILocalCacheFactory localCacheFactory,
             IDistributedCacheFactory distributedCacheFactory,
-            Func<CachedProxyFunctionInfo, string> keyspacePrefixFunc,
+            Func<MethodInfo, string> keyspacePrefixFunc,
             Action<FunctionCacheGetResult> onResult,
             Action<FunctionCacheFetchResult> onFetch,
             Action<FunctionCacheException> onException,
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Internal
         public bool? DisableCache { get; }
         public ILocalCacheFactory LocalCacheFactory { get; }
         public IDistributedCacheFactory DistributedCacheFactory { get; }
-        public Func<CachedProxyFunctionInfo, string> KeyspacePrefixFunc { get; }
+        public Func<MethodInfo, string> KeyspacePrefixFunc { get; }
         public Action<FunctionCacheGetResult> OnResult { get; }
         public Action<FunctionCacheFetchResult> OnFetch { get; }
         public Action<FunctionCacheException> OnException { get; }

@@ -27,7 +27,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 echo
                     .Cached()
-                    .WithDistributedCacheFactory(cacheFactory, "prefix")
+                    .WithDistributedCacheFactory(cacheFactory)
+                    .WithKeyspacePrefix("prefix")
                     .Build();
             }
 

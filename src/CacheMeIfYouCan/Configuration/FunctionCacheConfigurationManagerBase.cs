@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Configuration
                 else if (interfaceConfig.DistributedCacheFactory != null)
                     DistributedCacheFactory = new DistributedCacheFactoryToGenericAdapter<TK, TV>(interfaceConfig.DistributedCacheFactory);
 
-                KeyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo);
+                KeyspacePrefix = interfaceConfig.KeyspacePrefixFunc?.Invoke(proxyFunctionInfo.MethodInfo);
                 OnResultAction = interfaceConfig.OnResult;
                 OnFetchAction = interfaceConfig.OnFetch;
                 OnExceptionAction = interfaceConfig.OnException;
@@ -238,25 +238,24 @@ namespace CacheMeIfYouCan.Configuration
             return WithDistributedCacheFactory(c => cache);
         }
         
-        public TConfig WithDistributedCacheFactory(
-            IDistributedCacheFactory cacheFactory,
-            string keyspacePrefix = null)
+        public TConfig WithDistributedCacheFactory(IDistributedCacheFactory cacheFactory)
         {
-            return WithDistributedCacheFactory(cacheFactory.Build, keyspacePrefix);
+            return WithDistributedCacheFactory(cacheFactory.Build);
         }
 
-        public TConfig WithDistributedCacheFactory(
-            IDistributedCacheFactory<TK, TV> cacheFactory,
-            string keyspacePrefix = null)
+        public TConfig WithDistributedCacheFactory(IDistributedCacheFactory<TK, TV> cacheFactory)
         {
-            return WithDistributedCacheFactory(cacheFactory.Build, keyspacePrefix);
+            return WithDistributedCacheFactory(cacheFactory.Build);
         }
         
-        public TConfig WithDistributedCacheFactory(
-            Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc,
-            string keyspacePrefix = null)
+        public TConfig WithDistributedCacheFactory(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc)
         {
             DistributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
+            return (TConfig)this;
+        }
+
+        public TConfig WithKeyspacePrefix(string keyspacePrefix)
+        {
             KeyspacePrefix = keyspacePrefix;
             return (TConfig)this;
         }
@@ -264,10 +263,7 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig SkipDistributedCache(bool skipDistributedCache = true)
         {
             if (skipDistributedCache)
-            {
                 DistributedCacheFactory = new NullDistributedCacheFactory<TK, TV>();
-                KeyspacePrefix = null;
-            }
 
             return (TConfig)this;
         }

@@ -20,10 +20,10 @@ namespace CacheMeIfYouCan.Redis.Tests
             var cachedEcho = echo
                 .Cached()
                 .WithRedis(c =>
-                    {
-                        c.ConnectionString = TestConnectionString.Value;
-                    },
-                    keyspacePrefix: prefix)
+                {
+                    c.ConnectionString = TestConnectionString.Value;
+                })
+                .WithKeyspacePrefix(prefix)
                 .Build();
 
             var redisClient = ConnectionMultiplexer.Connect(TestConnectionString.Value);

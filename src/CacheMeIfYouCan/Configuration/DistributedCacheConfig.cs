@@ -13,9 +13,12 @@ namespace CacheMeIfYouCan.Configuration
         public Func<string, TV> ValueDeserializer;
         public KeyComparer<TK> KeyComparer;
 
-        public DistributedCacheConfig(string cacheName = null)
+        public DistributedCacheConfig(string cacheName = null, bool setDefaults = false)
         {
             CacheName = cacheName;
+
+            if (!setDefaults)
+                return;
             
             if (DefaultSettings.Cache.KeySerializers.TryGetSerializer<TK>(out var keySerializer) ||
                 ProvidedSerializers.TryGetSerializer(out keySerializer))

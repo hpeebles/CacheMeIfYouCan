@@ -181,23 +181,6 @@ namespace CacheMeIfYouCan
         }
         
         /// <summary>
-        /// Sets the keyspace prefix generating function which takes the cache name and produces the prefix to be
-        /// prepended to each key in the cache
-        /// </summary>
-        /// <param name="cacheFactory">The cache factory being configured</param>
-        /// <param name="keyspacePrefixFunc">A function which takes the cache name and produces the keyspace prefix to
-        /// be prepended to each key in the cache</param>
-        /// <returns></returns>
-        public static IDistributedCacheFactory WithKeyspacePrefix(
-            this IDistributedCacheFactory cacheFactory,
-            Func<string, string> keyspacePrefixFunc)
-        {
-            return cacheFactory
-                .AsFactory()
-                .WithKeyspacePrefixFunc(keyspacePrefixFunc);
-        }
-
-        /// <summary>
         /// Adds an <see cref="IDistributedCacheWrapperFactory"/> which adds a wrapper to each
         /// <see cref="IDistributedCache{TK,TV}"/> instance built by this factory
         /// </summary>
@@ -631,24 +614,7 @@ namespace CacheMeIfYouCan
         {
             return cacheFactory
                 .AsFactory()
-                .WithKeyspacePrefix(x => keyspacePrefix);
-        }
-        
-        /// <summary>
-        /// Sets the keyspace prefix generating function which takes the cache name and produces the prefix to be
-        /// prepended to each key in the cache
-        /// </summary>
-        /// <param name="cacheFactory">The cache factory being configured</param>
-        /// <param name="keyspacePrefixFunc">A function which takes the cache name and produces the keyspace prefix to
-        /// be prepended to each key in the cache</param>
-        /// <returns></returns>
-        public static IDistributedCacheFactory<TK, TV> WithKeyspacePrefix<TK, TV>(
-            this IDistributedCacheFactory<TK, TV> cacheFactory,
-            Func<string, string> keyspacePrefixFunc)
-        {
-            return cacheFactory
-                .AsFactory()
-                .WithKeyspacePrefix(keyspacePrefixFunc);
+                .WithKeyspacePrefix(keyspacePrefix);
         }
         
         /// <summary>

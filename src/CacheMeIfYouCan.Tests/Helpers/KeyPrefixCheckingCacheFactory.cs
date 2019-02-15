@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Tests.Helpers
 
             BuildCount++;
                 
-            return new TestCache<TK, TV>(null, null);
+            return new TestCache<TK, TV>();
         }
             
         public int BuildCount { get; private set; }

@@ -25,7 +25,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 impl
                     .Cached()
-                    .WithDistributedCacheFactory(cacheFactory, "prefix")
+                    .WithDistributedCacheFactory(cacheFactory)
+                    .WithKeyspacePrefix("prefix")
                     .Build();
             }
 
@@ -42,7 +43,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
             {
                 impl
                     .Cached()
-                    .WithDistributedCacheFactory(cacheFactory, x => "prefix")
+                    .WithDistributedCacheFactory(cacheFactory)
+                    .WithKeyspacePrefix(x => "prefix")
                     .Build();
             }
 

@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         private Action<CacheSetResult> _onSetResult;
         private Action<CacheRemoveResult> _onRemoveResult;
         private Action<CacheException> _onException;
-        private Func<string, string> _keyspacePrefixFunc;
+        private string _keyspacePrefix;
         private Func<Exception, bool> _swallowExceptionsPredicate;
 
         public DistributedCacheFactory(IDistributedCacheFactory cacheFactory)
@@ -83,12 +83,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         
         public DistributedCacheFactory WithKeyspacePrefix(string keyspacePrefix)
         {
-            return WithKeyspacePrefixFunc(c => keyspacePrefix);
-        }
-        
-        public DistributedCacheFactory WithKeyspacePrefixFunc(Func<string, string> keyspacePrefixFunc)
-        {
-            _keyspacePrefixFunc = keyspacePrefixFunc;
+            _keyspacePrefix = keyspacePrefix;
             return this;
         }
         
@@ -131,19 +126,38 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
-            if (_keyspacePrefixFunc != null)
-                config.KeyspacePrefix = _keyspacePrefixFunc(config.CacheName);
-            
-            if (_keySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
+            var original = config;
+
+            config = new DistributedCacheConfig<TK, TV>(original.CacheName, true);
+
+            if (original.KeyspacePrefix != null)
+                config.KeyspacePrefix = original.KeyspacePrefix;
+            else if (_keyspacePrefix != null)
+                config.KeyspacePrefix = _keyspacePrefix;
+
+            if (original.KeySerializer != null)
+                config.KeySerializer = original.KeySerializer;
+            else if (_keySerializers.TryGetSerializer<TK>(out var keySerializer))
+                config.KeySerializer = keySerializer;
+
+            if (original.KeyDeserializer != null)
+                config.KeyDeserializer = original.KeyDeserializer;
+            else if (_keySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
                 config.KeyDeserializer = keyDeserializer;
 
-            if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
+            if (original.ValueSerializer != null)
+                config.ValueSerializer = original.ValueSerializer;
+            else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
                 config.ValueSerializer = valueSerializer;
 
-            if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
+            if (original.ValueDeserializer != null)
+                config.ValueDeserializer = original.ValueDeserializer;
+            else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
                 config.ValueDeserializer = valueDeserializer;
 
-            if (_keyComparers.TryGet<TK>(out var comparer))
+            if (original.KeyComparer != null)
+                config.KeyComparer = original.KeyComparer;
+            else if (_keyComparers.TryGet<TK>(out var comparer))
                 config.KeyComparer = new KeyComparer<TK>(comparer);
             
             var originalCache = _cacheFactory.Build(config);
@@ -198,7 +212,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
         private KeyComparer<TK> _keyComparer;
-        private Func<string, string> _keyspacePrefixFunc;
+        private string _keyspacePrefix;
         private Func<Exception, bool> _swallowExceptionsPredicate;
         
         internal DistributedCacheFactory(IDistributedCacheFactory<TK, TV> cacheFactory)
@@ -283,9 +297,9 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return this;
         }
         
-        public DistributedCacheFactory<TK, TV> WithKeyspacePrefix(Func<string, string> keyspacePrefixFunc)
+        public DistributedCacheFactory<TK, TV> WithKeyspacePrefix(string keyspacePrefix)
         {
-            _keyspacePrefixFunc = keyspacePrefixFunc;
+            _keyspacePrefix = keyspacePrefix;
             return this;
         }
 
@@ -328,16 +342,41 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
         {
-            var cacheConfig = new DistributedCacheConfig<TK, TV>(config.CacheName)
-            {
-                KeyspacePrefix = _keyspacePrefixFunc?.Invoke(config.CacheName) ?? config.KeyspacePrefix,
-                KeyDeserializer = _keyDeserializer ?? config.KeyDeserializer,
-                ValueSerializer = _valueSerializer ?? config.ValueSerializer,
-                ValueDeserializer = _valueDeserializer ?? config.ValueDeserializer,
-                KeyComparer = _keyComparer ?? config.KeyComparer ?? KeyComparerResolver.Get<TK>(allowNull: true)
-            };
-            
-            var originalCache = _cacheFactory.Build(cacheConfig);
+            var original = config;
+
+            config = new DistributedCacheConfig<TK, TV>(original.CacheName, true);
+
+            if (original.KeyspacePrefix != null)
+                config.KeyspacePrefix = original.KeyspacePrefix;
+            else if (_keyspacePrefix != null)
+                config.KeyspacePrefix = _keyspacePrefix;
+
+            if (original.KeySerializer != null)
+                config.KeySerializer = original.KeySerializer;
+            else if (_keySerializer != null)
+                config.KeySerializer = _keySerializer;
+
+            if (original.KeyDeserializer != null)
+                config.KeyDeserializer = original.KeyDeserializer;
+            else if (_keyDeserializer != null)
+                config.KeyDeserializer = _keyDeserializer;
+
+            if (original.ValueSerializer != null)
+                config.ValueSerializer = original.ValueSerializer;
+            else if (_valueSerializer != null)
+                config.ValueSerializer = _valueSerializer;
+
+            if (original.ValueDeserializer != null)
+                config.ValueDeserializer = original.ValueDeserializer;
+            else if (_valueDeserializer != null)
+                config.ValueDeserializer = _valueDeserializer;
+
+            if (original.KeyComparer != null)
+                config.KeyComparer = original.KeyComparer;
+            else if (_keyComparer != null)
+                config.KeyComparer = new KeyComparer<TK>(_keyComparer);
+
+            var originalCache = _cacheFactory.Build(config);
 
             var cache = originalCache;
             
