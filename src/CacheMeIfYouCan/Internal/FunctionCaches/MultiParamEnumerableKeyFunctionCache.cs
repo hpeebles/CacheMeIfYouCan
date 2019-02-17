@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly string _keyParamSeparator;
         private readonly int _maxFetchBatchSize;
         private readonly DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
-        private readonly Func<(TK1, TK2), bool> _skipCacheGetPredicate;
+        private readonly Func<Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
         private readonly Func<(TK1, TK2), bool> _skipCacheSetPredicate;
         private readonly Func<int, List<KeyValuePair<Key<(TK1, TK2)>, TV>>> _valuesToSetInCacheListFactory;
         private readonly Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> _setInCachePredicate;
@@ -74,7 +74,11 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 outerKeyComparer.Inner,
                 innerKeyComparer.Inner);
 
-            _skipCacheGetPredicate = skipCacheGetPredicate;
+            if (skipCacheGetPredicate == null)
+                _keysToGetFromCacheFunc = keys => keys;
+            else
+                _keysToGetFromCacheFunc = keys => keys.Where(k => !skipCacheGetPredicate(k)).ToArray();
+
             _skipCacheSetPredicate = skipCacheSetPredicate;
 
             // ----------------------------------------
@@ -154,9 +158,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     Key<(TK1, TK2)>[] missingKeys = null;
                     if (_cache != null)
                     {
-                        var keysToGet = _skipCacheGetPredicate == null
-                            ? keys
-                            : keys.Where(k => !_skipCacheGetPredicate(k)).ToArray();
+                        var keysToGet = _keysToGetFromCacheFunc(keys);
 
                         if (keysToGet.Any())
                         {

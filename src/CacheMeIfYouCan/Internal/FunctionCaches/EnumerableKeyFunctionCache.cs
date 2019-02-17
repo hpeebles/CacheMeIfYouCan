@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly KeyComparer<TK> _keyComparer;
         private readonly int _maxFetchBatchSize;
         private readonly DuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
-        private readonly Func<TK, bool> _skipCacheGetPredicate;
+        private readonly Func<Key<TK>[], Key<TK>[]> _keysToGetFromCacheFunc;
         private readonly Func<DuplicateTaskCatcherMultiResult<TK, TV>, bool> _setInCachePredicate;
         private int _pendingRequestsCount;
         private bool _disposed;
@@ -60,7 +60,11 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     ? func
                     : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, keyComparer),
                 keyComparer);
-            _skipCacheGetPredicate = skipCacheGetPredicate;
+
+            if (skipCacheGetPredicate == null)
+                _keysToGetFromCacheFunc = keys => keys;
+            else
+                _keysToGetFromCacheFunc = keys => keys.Where(k => !skipCacheGetPredicate(k)).ToArray();
 
             if (skipCacheSetPredicate == null)
                 _setInCachePredicate = kv => !kv.Duplicate;
@@ -109,9 +113,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     Key<TK>[] missingKeys = null;
                     if (_cache != null)
                     {
-                        var keysToGet = _skipCacheGetPredicate == null
-                            ? keys
-                            : keys.Where(k => !_skipCacheGetPredicate(k)).ToArray();
+                        var keysToGet = _keysToGetFromCacheFunc(keys);
 
                         if (keysToGet.Any())
                         {
