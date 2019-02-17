@@ -70,7 +70,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
                 {
                     var values = await _func(outerKey, new ArraySegment<TK2>(toFetch, 0, toFetchCount));
 
-                    var resultsMulti = new ResultsMulti(outerKey, values);
+                    var resultsMulti = new ResultsMulti(values);
 
                     tcs.SetResult(resultsMulti);
 
@@ -129,14 +129,12 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 
         private class ResultsMulti
         {
-            public ResultsMulti(TK1 outerKey, IDictionary<TK2, TV> results)
+            public ResultsMulti(IDictionary<TK2, TV> results)
             {
-                OuterKey = outerKey;
                 Results = results ?? new Dictionary<TK2, TV>();
                 StopwatchTimestampCompleted = Stopwatch.GetTimestamp();
             }
             
-            public TK1 OuterKey { get; }
             public IDictionary<TK2, TV> Results { get; }
             public long StopwatchTimestampCompleted { get; }
         }
