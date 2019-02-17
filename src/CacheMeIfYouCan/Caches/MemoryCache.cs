@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Caches
     {
         private readonly MemoryCache _cache;
         
-        internal MemoryCache(string cacheName, int maxSizeMB = 100)
+        public MemoryCache(string cacheName, int maxSizeMB = 100)
         {
             CacheName = cacheName;
 
