@@ -100,20 +100,13 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     if (result == null)
                     {
-                        var fetched = await Fetch(key);
+                        var fetchResult = await Fetch(key);
 
-                        if (fetched != null)
-                        {
-                            result = new FunctionCacheGetResultInner<TK, TV>(
-                                fetched.Key,
-                                fetched.Value,
-                                Outcome.Fetch,
-                                null);
-                        }
-                        else
-                        {
-                            throw new Exception($"No value returned. Key: '{key}'");
-                        }
+                        result = new FunctionCacheGetResultInner<TK, TV>(
+                            fetchResult.Key,
+                            fetchResult.Value,
+                            Outcome.Fetch,
+                            null);
                     }
                 }
                 catch (Exception ex)
