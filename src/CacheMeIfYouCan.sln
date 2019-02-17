@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.AspNetCoreApp", "Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests.Common", "CacheMeIfYouCan.Tests.Common\CacheMeIfYouCan.Tests.Common.csproj", "{ADDC53D3-285C-4877-9D41-20B01DC88C29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks.CacheComparison", "Benchmarks\Benchmarks.CacheComparison\Benchmarks.CacheComparison.csproj", "{ACA814BC-0749-4656-9CBC-795E449AECC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,9 +84,14 @@ Global
 		{ADDC53D3-285C-4877-9D41-20B01DC88C29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADDC53D3-285C-4877-9D41-20B01DC88C29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADDC53D3-285C-4877-9D41-20B01DC88C29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F80A38D2-3656-4ECB-B4A4-FC8CBDC786B4} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
 		{6DCB625A-E9C8-4AD8-B7D9-3A408620617D} = {CA985CDB-EA8F-4D1D-940B-D5FA8BDE1FA4}
+		{ACA814BC-0749-4656-9CBC-795E449AECC0} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
 	EndGlobalSection
 EndGlobal
