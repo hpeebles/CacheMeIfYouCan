@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
         internal int MaxFetchBatchSize { get; private set; }
+        internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
         internal Func<IEqualityComparer<TK>, int, IDictionary<TK, TV>> DictionaryFactoryFunc { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -40,6 +41,17 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithBatchedFetches(int batchSize)
         {
             MaxFetchBatchSize = batchSize;
+            return (TConfig)this;
+        }
+
+        public TConfig WithNegativeCaching(TV value)
+        {
+            return WithNegativeCaching(k => value);
+        }
+
+        public TConfig WithNegativeCaching(Func<TK, TV> valueFactory)
+        {
+            NegativeCachingValueFactory = valueFactory;
             return (TConfig)this;
         }
 
@@ -70,7 +82,8 @@ namespace CacheMeIfYouCan.Configuration
                 keyComparer,
                 MaxFetchBatchSize,
                 SkipCacheGetPredicate,
-                SkipCacheSetPredicate);
+                SkipCacheSetPredicate,
+                NegativeCachingValueFactory);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

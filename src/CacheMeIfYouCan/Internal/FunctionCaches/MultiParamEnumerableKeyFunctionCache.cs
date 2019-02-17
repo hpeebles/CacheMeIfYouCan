@@ -48,7 +48,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             string keyParamSeparator,
             int maxFetchBatchSize,
             Func<(TK1, TK2), bool> skipCacheGetPredicate,
-            Func<(TK1, TK2), bool> skipCacheSetPredicate)
+            Func<(TK1, TK2), bool> skipCacheSetPredicate,
+            Func<(TK1, TK2), TV> negativeCachingValueFactory)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -67,7 +68,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
             
             _fetchHandler = new DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>(
-                func,
+                negativeCachingValueFactory == null
+                    ? func
+                    : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, _innerKeyComparer),
                 outerKeyComparer.Inner,
                 innerKeyComparer.Inner);
 
@@ -396,6 +399,31 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> BuildSetInCachePredicate(TK1 outerKey)
         {
             return k => !k.Duplicate && !_skipCacheSetPredicate((outerKey, k.Key));
+        }
+
+        private static Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> ConvertIntoNegativeCachingFunc(
+            Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> func,
+            Func<(TK1, TK2), TV> negativeCachingValueFactory,
+            IEqualityComparer<TK2> keyComparer)
+        {
+            return async (outerKey, innerKeys) =>
+            {
+                var values = await func(outerKey, innerKeys);
+
+                IDictionary<TK2, TV> valuesWithFills = null;
+                foreach (var key in innerKeys)
+                {
+                    if (values.ContainsKey(key))
+                        continue;
+                    
+                    if (valuesWithFills == null)
+                        valuesWithFills = values.ToDictionary(kv => kv.Key, kv => kv.Value, keyComparer);
+
+                    valuesWithFills[key] = negativeCachingValueFactory((outerKey, key));
+                }
+
+                return valuesWithFills ?? values;
+            };
         }
     }
 }

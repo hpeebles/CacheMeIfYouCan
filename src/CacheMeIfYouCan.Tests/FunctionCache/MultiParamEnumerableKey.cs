@@ -168,6 +168,44 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "6", outerKey + "7");
             ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "8");
         }
+        
+        [Fact]
+        public void WithNegativeCaching()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            var value = Guid.NewGuid().ToString();
+            
+            Func<string, IEnumerable<int>, IDictionary<int, string>> func = (k1, k2) =>
+            {
+                return k2.Where(k => k != 2).ToDictionary(k => k, k => k1 + k);
+            };
+            
+            Func<string, IEnumerable<int>, IDictionary<int, string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .OnResult(results.Add)
+                    .WithNegativeCaching(value)
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+            
+            var fromFunc = cachedFunc(outerKey, innerKeys);
+
+            fromFunc.Keys.Should().BeEquivalentTo(innerKeys);
+            fromFunc[2].Should().Be(value);
+
+            cachedFunc(outerKey, innerKeys);
+
+            results.Should().HaveCount(2);
+            results.Last().Results.Should().HaveCount(10);
+
+            foreach (var result in results.Last().Results)
+                result.Outcome.Should().Be(Outcome.FromCache);
+        }
 
         [Fact]
         public async Task OuterKeySerializerOnlyRunsOncePerRequest()

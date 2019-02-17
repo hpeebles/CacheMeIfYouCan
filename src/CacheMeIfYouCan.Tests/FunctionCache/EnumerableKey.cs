@@ -277,6 +277,41 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
+        public void WithNegativeCaching()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            var value = Guid.NewGuid().ToString();
+            
+            Func<IEnumerable<string>, IDictionary<string, string>> func = inputKeys =>
+                inputKeys.Where(k => k != "2").ToDictionary(k => k, k => k);
+            
+            Func<IEnumerable<string>, IDictionary<string, string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .OnResult(results.Add)
+                    .WithNegativeCaching(value)
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToArray();
+            
+            var fromFunc = cachedFunc(keys);
+
+            fromFunc.Keys.Should().BeEquivalentTo(keys);
+            fromFunc["2"].Should().Be(value);
+
+            cachedFunc(keys);
+
+            results.Should().HaveCount(2);
+            results.Last().Results.Should().HaveCount(10);
+
+            foreach (var result in results.Last().Results)
+                result.Outcome.Should().Be(Outcome.FromCache);
+        }
+
+        [Fact]
         public async Task WithReturnDictionaryFactory()
         {
             var count = 0;
