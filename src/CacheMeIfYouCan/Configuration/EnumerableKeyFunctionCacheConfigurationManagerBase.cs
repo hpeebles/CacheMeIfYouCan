@@ -44,14 +44,14 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig WithNegativeCaching(TV value)
+        public TConfig WithNegativeCaching(TV value = default)
         {
             return WithNegativeCaching(k => value);
         }
 
         public TConfig WithNegativeCaching(Func<TK, TV> valueFactory)
         {
-            NegativeCachingValueFactory = valueFactory;
+            NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
         }
 
