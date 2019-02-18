@@ -14,6 +14,5 @@
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Json.Newtonsoft\CacheMeIfYouCan.Serializers.Json.Newtonsoft.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj" />
-    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
 </Project>
