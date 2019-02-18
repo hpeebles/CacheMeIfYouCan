@@ -10,5 +10,10 @@ namespace CacheMeIfYouCan.Serializers.Tests
         
         [DataMember(Order=  2)]
         public string StringValue { get; set; }
+
+        public override string ToString()
+        {
+            return $"{IntValue}_{StringValue}";
+        }
     }
 }

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net45;net461</TargetFrameworks>
     <IsPackable>false</IsPackable>
@@ -14,5 +14,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Json.Newtonsoft\CacheMeIfYouCan.Serializers.Json.Newtonsoft.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj" />
+    <ProjectReference Include="..\CacheMeIfYouCan.Serializers.ToString\CacheMeIfYouCan.Serializers.ToString.csproj" />
   </ItemGroup>
 </Project>
