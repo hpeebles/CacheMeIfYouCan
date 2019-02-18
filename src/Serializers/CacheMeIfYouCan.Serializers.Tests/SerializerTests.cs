@@ -1,4 +1,5 @@
 using System;
+using CacheMeIfYouCan.Serializers.Gzip;
 using CacheMeIfYouCan.Serializers.Json.Newtonsoft;
 using CacheMeIfYouCan.Serializers.Protobuf;
 using CacheMeIfYouCan.Serializers.ToString;
@@ -10,12 +11,18 @@ namespace CacheMeIfYouCan.Serializers.Tests
     public class SerializerTests
     {
         [Theory]
-        [InlineData("newtonsoft")]
-        [InlineData("protobuf")]
-        [InlineData("tostring")]
-        public void SerializeTests(string name)
+        [InlineData("newtonsoft", false)]
+        [InlineData("protobuf", false)]
+        [InlineData("tostring", false)]
+        [InlineData("newtonsoft", true)]
+        [InlineData("protobuf", true)]
+        [InlineData("tostring", true)]
+        public void SerializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
+
+            if (useGzip)
+                serializer = serializer.WithGzipCompression();
             
             var intValue = (int)DateTime.UtcNow.Ticks;
             var stringValue = Guid.NewGuid().ToString();
@@ -39,12 +46,18 @@ namespace CacheMeIfYouCan.Serializers.Tests
         }
         
         [Theory]
-        [InlineData("newtonsoft")]
-        [InlineData("protobuf")]
-        [InlineData("tostring")]
-        public void DeserializeTests(string name)
+        [InlineData("newtonsoft", false)]
+        [InlineData("protobuf", false)]
+        [InlineData("tostring", false)]
+        [InlineData("newtonsoft", true)]
+        [InlineData("protobuf", true)]
+        [InlineData("tostring", true)]
+        public void DeserializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
+
+            if (useGzip)
+                serializer = serializer.WithGzipCompression();
             
             var intValue = (int)DateTime.UtcNow.Ticks;
             var stringValue = Guid.NewGuid().ToString();

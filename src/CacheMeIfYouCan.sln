@@ -40,6 +40,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Tests", "Serializers\CacheMeIfYouCan.Serializers.Tests\CacheMeIfYouCan.Serializers.Tests.csproj", "{7A596CE3-E584-4584-B6DB-405E0837C01F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Gzip", "Serializers\CacheMeIfYouCan.Serializers.Gzip\CacheMeIfYouCan.Serializers.Gzip.csproj", "{F25A9B7D-3333-45D0-BDAA-6593EA251F58}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,6 +116,10 @@ Global
 		{7A596CE3-E584-4584-B6DB-405E0837C01F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A596CE3-E584-4584-B6DB-405E0837C01F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A596CE3-E584-4584-B6DB-405E0837C01F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F25A9B7D-3333-45D0-BDAA-6593EA251F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F25A9B7D-3333-45D0-BDAA-6593EA251F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F25A9B7D-3333-45D0-BDAA-6593EA251F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F25A9B7D-3333-45D0-BDAA-6593EA251F58}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F80A38D2-3656-4ECB-B4A4-FC8CBDC786B4} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
@@ -123,5 +129,6 @@ Global
 		{F4ED1BB9-6706-4F7F-8621-088183D07436} = {E960C4E1-8333-430E-A221-CB7892057324}
 		{BA4CA948-B02A-4E91-BF95-00D05B6FB8D5} = {E960C4E1-8333-430E-A221-CB7892057324}
 		{7A596CE3-E584-4584-B6DB-405E0837C01F} = {E960C4E1-8333-430E-A221-CB7892057324}
+		{F25A9B7D-3333-45D0-BDAA-6593EA251F58} = {E960C4E1-8333-430E-A221-CB7892057324}
 	EndGlobalSection
 EndGlobal
