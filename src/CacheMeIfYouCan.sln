@@ -30,6 +30,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests.Commo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks.CacheComparison", "Benchmarks\Benchmarks.CacheComparison\Benchmarks.CacheComparison.csproj", "{ACA814BC-0749-4656-9CBC-795E449AECC0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serializers", "Serializers", "{E960C4E1-8333-430E-A221-CB7892057324}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Protobuf", "CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj", "{4874B731-A94F-4DF3-89D3-B525878C8407}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Protobuf.Tests", "CacheMeIfYouCan.Serializers.Protobuf.Tests\CacheMeIfYouCan.Serializers.Protobuf.Tests.csproj", "{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,10 +94,20 @@ Global
 		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACA814BC-0749-4656-9CBC-795E449AECC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4874B731-A94F-4DF3-89D3-B525878C8407}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4874B731-A94F-4DF3-89D3-B525878C8407}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4874B731-A94F-4DF3-89D3-B525878C8407}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4874B731-A94F-4DF3-89D3-B525878C8407}.Release|Any CPU.Build.0 = Release|Any CPU
+		{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F80A38D2-3656-4ECB-B4A4-FC8CBDC786B4} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
 		{6DCB625A-E9C8-4AD8-B7D9-3A408620617D} = {CA985CDB-EA8F-4D1D-940B-D5FA8BDE1FA4}
 		{ACA814BC-0749-4656-9CBC-795E449AECC0} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
+		{4874B731-A94F-4DF3-89D3-B525878C8407} = {E960C4E1-8333-430E-A221-CB7892057324}
+		{818B2A8D-D6C4-4A61-AC2E-E09E2FB30D23} = {E960C4E1-8333-430E-A221-CB7892057324}
 	EndGlobalSection
 EndGlobal
