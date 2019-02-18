@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace CacheMeIfYouCan.Serializers.Protobuf.Tests
+namespace CacheMeIfYouCan.Serializers.Tests
 {
     [DataContract]
     public class TestClass
