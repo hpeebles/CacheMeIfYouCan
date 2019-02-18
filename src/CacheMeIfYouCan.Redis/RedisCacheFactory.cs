@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Redis
             if (config.ValueSerializer == null) throw new ArgumentNullException(nameof(config.ValueSerializer));
             if (config.ValueDeserializer == null) throw new ArgumentNullException(nameof(config.ValueDeserializer));
             
-            var connection = RedisConnectionManager.GetOrAdd(_redisConfig.ConnectionString ?? _redisConfig.Configuration.ToString());
+            var connection = RedisConnectionManager.GetOrAdd(_redisConfig.Configuration);
             
             return new RedisCache<TK, TV>(
                 connection,

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
@@ -10,8 +11,10 @@ namespace CacheMeIfYouCan.Redis
         private static readonly object Lock = new object();
         private static IReadOnlyDictionary<string, RedisConnection> _connections = new Dictionary<string, RedisConnection>();
         
-        public static RedisConnection GetOrAdd(string connectionString)
+        public static RedisConnection GetOrAdd(ConfigurationOptions configuration)
         {
+            var connectionString = configuration.ToString();
+            
             if (_connections.TryGetValue(connectionString, out var connection))
                 return connection;
 
@@ -20,7 +23,7 @@ namespace CacheMeIfYouCan.Redis
                 if (_connections.TryGetValue(connectionString, out connection))
                     return connection;
                 
-                connection = new RedisConnection(connectionString);
+                connection = new RedisConnection(configuration);
                 connection.Connect();
                 
                 var updated = new ReadOnlyDictionary<string, RedisConnection>(_connections

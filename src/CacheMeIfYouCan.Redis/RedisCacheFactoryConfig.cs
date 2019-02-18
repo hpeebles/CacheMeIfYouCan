@@ -4,13 +4,13 @@ namespace CacheMeIfYouCan.Redis
 {
     public class RedisCacheFactoryConfig
     {
-        public string ConnectionString { get; set; }
-        
-        public ConfigurationOptions Configuration
+        public string ConnectionString
         {
-            get => ConfigurationOptions.Parse(ConnectionString);
-            set => ConnectionString = value.ToString();
+            get => Configuration.ToString();
+            set => Configuration = ConfigurationOptions.Parse(value);
         }
+        
+        public ConfigurationOptions Configuration { get; set; }
 
         public int Database { get; set; }
         

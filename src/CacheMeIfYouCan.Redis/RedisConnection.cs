@@ -8,20 +8,20 @@ namespace CacheMeIfYouCan.Redis
 {
     internal class RedisConnection
     {
-        private readonly string _connectionString;
+        private readonly ConfigurationOptions _configuration;
         private readonly object _lock = new object();
         private IConnectionMultiplexer _multiplexer;
         private ILookup<(int, KeyEvents), Action<string, KeyEvents>> _onKeyChangedActions;
         private const string MessagePrefix = "__keyevent@";
 
-        public RedisConnection(string connectionString)
+        public RedisConnection(ConfigurationOptions configuration)
         {
-            _connectionString = connectionString;
+            _configuration = configuration;
         }
 
         public void Connect()
         {
-            _multiplexer = ConnectionMultiplexer.Connect(_connectionString);
+            _multiplexer = ConnectionMultiplexer.Connect(_configuration);
         }
 
         public IConnectionMultiplexer Get()
