@@ -9,7 +9,11 @@ namespace CacheMeIfYouCan.Notifications
         
         internal CachedObjectRefreshException(string name, Exception exception)
             : base(String.Format(ExceptionMessageFormat, name), exception)
-        { }
+        {
+            Name = name;
+        }
+        
+        public string Name { get; }
     }
 
     public abstract class CachedObjectRefreshException : Exception
