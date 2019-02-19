@@ -88,7 +88,7 @@ namespace CacheMeIfYouCan.Internal
 
         public void Dispose()
         {
-            _state = 2;
+            Interlocked.Exchange(ref _state, 2);
             CachedObjectInitializer.Remove(this);
             _cts.Cancel();
             _cts.Dispose();
@@ -154,7 +154,9 @@ namespace CacheMeIfYouCan.Internal
             
             try
             {
-                _nextRefreshInterval = _refreshIntervalFunc(refreshException == null, newValue);
+                // Don't update _nextRefreshInterval if this is a failed Initialize attempt
+                if (!(_state == 0 && refreshException != null))
+                    _nextRefreshInterval = _refreshIntervalFunc(refreshException == null, newValue);
             }
             catch (Exception ex)
             {
