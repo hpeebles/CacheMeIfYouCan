@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Notifications
             string name,
             DateTime start,
             TimeSpan duration,
-            CachedObjectRefreshException<T> exception,
+            CachedObjectRefreshException exception,
             T newValue,
             int refreshAttemptCount,
             int successfulRefreshCount,

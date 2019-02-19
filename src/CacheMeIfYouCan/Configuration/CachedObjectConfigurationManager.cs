@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Configuration
         private Func<bool, T, TimeSpan> _refreshIntervalFunc;
         private double _jitterPercentage;
         private Action<CachedObjectRefreshResult<T>> _onRefresh;
-        private Action<CachedObjectRefreshException<T>> _onException;
+        private Action<CachedObjectRefreshException> _onException;
 
         internal CachedObjectConfigurationManager(Func<Task<T>> getValueFunc)
         {
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedObjectConfigurationManager<T> OnException(Action<CachedObjectRefreshException<T>> onException)
+        public CachedObjectConfigurationManager<T> OnException(Action<CachedObjectRefreshException> onException)
         {
             _onException = onException;
             return this;

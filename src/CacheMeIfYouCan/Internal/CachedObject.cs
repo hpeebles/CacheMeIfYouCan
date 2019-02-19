@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly string _name;
         private readonly Func<bool, T, TimeSpan> _refreshIntervalFunc;
         private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
-        private readonly Action<CachedObjectRefreshException<T>> _onException;
+        private readonly Action<CachedObjectRefreshException> _onException;
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cts;
         private int _refreshAttemptCount;
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Internal
             string name,
             Func<bool, T, TimeSpan> refreshIntervalFunc,
             Action<CachedObjectRefreshResult<T>> onRefresh,
-            Action<CachedObjectRefreshException<T>> onException)
+            Action<CachedObjectRefreshException> onException)
         {
             _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
             _name = name;
@@ -134,7 +134,7 @@ namespace CacheMeIfYouCan.Internal
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            CachedObjectRefreshException<T> refreshException = null;
+            CachedObjectRefreshException refreshException = null;
             T newValue;
             _refreshAttemptCount++;
 
@@ -146,7 +146,7 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                refreshException = new CachedObjectRefreshException<T>(_name, ex);
+                refreshException = new CachedObjectRefreshException(_name, ex);
                 newValue = default;
                 
                 _onException?.Invoke(refreshException);
@@ -160,7 +160,7 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                var exception = new CachedObjectRefreshException<T>(_name, ex);
+                var exception = new CachedObjectRefreshException(_name, ex);
 
                 if (refreshException == null)
                     refreshException = exception;
