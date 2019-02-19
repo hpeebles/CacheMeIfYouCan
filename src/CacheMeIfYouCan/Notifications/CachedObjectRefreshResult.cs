@@ -12,7 +12,8 @@ namespace CacheMeIfYouCan.Notifications
             int refreshAttemptCount,
             int successfulRefreshCount,
             DateTime lastRefreshAttempt,
-            DateTime lastSuccessfulRefresh)
+            DateTime lastSuccessfulRefresh,
+            TimeSpan nextRefreshInterval)
         {
             Name = name;
             Start = start;
@@ -23,6 +24,7 @@ namespace CacheMeIfYouCan.Notifications
             SuccessfulRefreshCount = successfulRefreshCount;
             LastRefreshAttempt = lastRefreshAttempt;
             LastSuccessfulRefresh = lastSuccessfulRefresh;
+            NextRefreshInterval = nextRefreshInterval;
         }
         
         public string Name { get; }
@@ -34,6 +36,7 @@ namespace CacheMeIfYouCan.Notifications
         public int SuccessfulRefreshCount { get; }
         public DateTime LastRefreshAttempt { get; }
         public DateTime LastSuccessfulRefresh { get; }
+        public TimeSpan NextRefreshInterval { get; }
     }
 
     public sealed class CachedObjectRefreshResult<T> : CachedObjectRefreshResult
@@ -47,8 +50,9 @@ namespace CacheMeIfYouCan.Notifications
             int refreshAttemptCount,
             int successfulRefreshCount,
             DateTime lastRefreshAttempt,
-            DateTime lastSuccessfulRefresh)
-            : base(name, start, duration, exception, refreshAttemptCount, successfulRefreshCount, lastRefreshAttempt, lastSuccessfulRefresh)
+            DateTime lastSuccessfulRefresh,
+            TimeSpan nextRefreshInterval)
+            : base(name, start, duration, exception, refreshAttemptCount, successfulRefreshCount, lastRefreshAttempt, lastSuccessfulRefresh, nextRefreshInterval)
         {
             NewValue = newValue;
         }

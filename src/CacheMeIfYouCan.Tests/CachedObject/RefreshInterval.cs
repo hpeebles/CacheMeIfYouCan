@@ -91,13 +91,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var refreshResults = new List<CachedObjectRefreshResult>();
             var countdown = new CountdownEvent(5);
+            var refreshCount = 0;
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
-                    .WithRefreshInterval(r => TimeSpan.FromSeconds(r.SuccessfulRefreshCount))
+                    .WithRefreshInterval(() => TimeSpan.FromSeconds(++refreshCount))
                     .OnRefresh(r =>
                     {
                         refreshResults.Add(r);
@@ -123,6 +124,61 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .BeGreaterThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1))
                     .And
                     .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 2));
+            }
+        }
+        
+        [Fact]
+        public async Task OnSuccessAndOnFailureRefreshIntervals()
+        {
+            var refreshResults = new List<CachedObjectRefreshResult>();
+            var countdown = new CountdownEvent(5);
+            
+            ICachedObject<DateTime> date;
+            using (_setupLock.Enter())
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => refreshResults.Count % 2 == 0 ? DateTime.UtcNow : throw new Exception())
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3))
+                    .OnRefresh(r =>
+                    {
+                        refreshResults.Add(r);
+                        countdown.Signal();
+                    })
+                    .Build();
+            }
+
+            await date.Initialize();
+
+            countdown.Wait(TimeSpan.FromMinutes(1));
+            
+            date.Dispose();
+            
+            refreshResults.Count.Should().Be(5);
+            
+            for (var i = 1; i < 5; i++)
+            {
+                var result = refreshResults[i];
+                
+                var interval = result.Start - result.LastRefreshAttempt;
+
+                TimeSpan min;
+                TimeSpan max;
+                if (i % 2 == 1)
+                {
+                    min = TimeSpan.FromSeconds(0.9);
+                    max = TimeSpan.FromSeconds(2);
+                }
+                else
+                {
+                    min = TimeSpan.FromSeconds(2.9);
+                    max = TimeSpan.FromSeconds(4);
+                }
+                
+                interval
+                    .Should()
+                    .BeGreaterThan(min)
+                    .And
+                    .BeLessThan(max);
             }
         }
     }

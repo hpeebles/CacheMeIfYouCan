@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
@@ -11,23 +10,23 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<Task<T>> _getValueFunc;
         private readonly string _name;
-        private readonly Func<CachedObjectRefreshResult<T>, TimeSpan> _refreshIntervalFunc;
+        private readonly Func<bool, T, TimeSpan> _refreshIntervalFunc;
         private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
         private readonly Action<CachedObjectRefreshException<T>> _onException;
         private readonly SemaphoreSlim _semaphore;
+        private readonly CancellationTokenSource _cts;
         private int _refreshAttemptCount;
         private int _successfulRefreshCount;
         private DateTime _lastRefreshAttempt;
         private DateTime _lastSuccessfulRefresh;
         private T _value;
-        private State _state;
-        private IDisposable _refreshTask;
         private TimeSpan _nextRefreshInterval;
+        private int _state;
 
         public CachedObject(
             Func<Task<T>> getValueFunc,
             string name,
-            Func<CachedObjectRefreshResult<T>, TimeSpan> refreshIntervalFunc,
+            Func<bool, T, TimeSpan> refreshIntervalFunc,
             Action<CachedObjectRefreshResult<T>> onRefresh,
             Action<CachedObjectRefreshException<T>> onException)
         {
@@ -37,20 +36,20 @@ namespace CacheMeIfYouCan.Internal
             _onRefresh = onRefresh;
             _onException = onException;
             _semaphore = new SemaphoreSlim(1);
-            _state = State.PendingInitialization;
+            _cts = new CancellationTokenSource();
         }
 
         public T Value
         {
             get
             {
-                if (_state == State.Ready)
+                if (_state == 1)
                     return _value;
                 
-                if (_state == State.PendingInitialization)
+                if (_state == 0)
                     Task.Run(Initialize).GetAwaiter().GetResult();
                 
-                if (_state == State.Disposed)
+                if (_state == 2)
                     throw new ObjectDisposedException(nameof(CachedObject<T>));
                 
                 return _value;
@@ -59,14 +58,14 @@ namespace CacheMeIfYouCan.Internal
 
         public async Task<CachedObjectInitializeOutcome> Initialize()
         {
-            if (_state == State.PendingInitialization)
+            if (_state == 0)
             {
                 await _semaphore.WaitAsync();
 
                 try
                 {
-                    if (_state == State.PendingInitialization)
-                        await InitImpl();
+                    if (_state == 0)
+                        await InitializeImpl();
                 }
                 finally
                 {
@@ -76,50 +75,68 @@ namespace CacheMeIfYouCan.Internal
 
             switch (_state)
             {
-                case State.Ready:
+                case 1:
                     return CachedObjectInitializeOutcome.Success;
                 
-                case State.Disposed:
+                case 2:
                     return CachedObjectInitializeOutcome.Disposed;
 
                 default:
                     return CachedObjectInitializeOutcome.Failure;
             }
-            
-            async Task InitImpl()
-            {
-                var result = await RefreshValue();
-
-                if (!result.Success)
-                    return;
-
-                _nextRefreshInterval = _refreshIntervalFunc(result);
-
-                _refreshTask = Observable
-                    .Defer(() => Observable
-                        .FromAsync(RefreshValue)
-                        .Do(r => _nextRefreshInterval = _refreshIntervalFunc(r))
-                        .DelaySubscription(_nextRefreshInterval))
-                    .Repeat()
-                    .Subscribe();
-                
-                _state = State.Ready;
-            }
         }
 
         public void Dispose()
         {
-            _state = State.Disposed;
+            _state = 2;
             CachedObjectInitializer.Remove(this);
-            _refreshTask?.Dispose();
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+
+        private async Task InitializeImpl()
+        {
+            var result = await RefreshValue();
+
+            if (!result.Success)
+                return;
+            
+            Interlocked.Exchange(ref _state, 1);
+
+            Task.Run(RunBackgroundRefreshTask);
+        }
+
+        private async Task RunBackgroundRefreshTask()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(_nextRefreshInterval, _cts.Token);
+
+                    await RefreshValue();
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    // This can only be reached if _onRefresh or _onException throw an exception. In these scenarios
+                    // ensure _nextRefreshInterval isn't zero or tiny as we don't want to get caught in a tight loop
+                    if (_nextRefreshInterval < TimeSpan.FromSeconds(1))
+                        _nextRefreshInterval = TimeSpan.FromSeconds(1);
+                }
+            }
         }
 
         private async Task<CachedObjectRefreshResult<T>> RefreshValue()
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            CachedObjectRefreshException<T> exception = null;
+            CachedObjectRefreshException<T> refreshException = null;
             T newValue;
+            _refreshAttemptCount++;
 
             try
             {
@@ -129,42 +146,46 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                exception = new CachedObjectRefreshException<T>(_name, ex);
+                refreshException = new CachedObjectRefreshException<T>(_name, ex);
                 newValue = default;
                 
-                _onException?.Invoke(exception);
+                _onException?.Invoke(refreshException);
             }
-            finally
+            
+            try
             {
-                _refreshAttemptCount++;
+                _nextRefreshInterval = _refreshIntervalFunc(refreshException == null, newValue);
+            }
+            catch (Exception ex)
+            {
+                var exception = new CachedObjectRefreshException<T>(_name, ex);
+
+                if (refreshException == null)
+                    refreshException = exception;
+                
+                _onException?.Invoke(exception);
             }
             
             var result = new CachedObjectRefreshResult<T>(
                 _name,
                 start,
                 StopwatchHelper.GetDuration(stopwatchStart),
-                exception,
+                refreshException,
                 newValue,
                 _refreshAttemptCount,
                 _successfulRefreshCount,
                 _lastRefreshAttempt,
-                _lastSuccessfulRefresh);
-            
+                _lastSuccessfulRefresh,
+                _nextRefreshInterval);
+
             _lastRefreshAttempt = DateTime.UtcNow;
-            
-            if (exception == null)
-                _lastSuccessfulRefresh = DateTime.UtcNow;
             
             _onRefresh?.Invoke(result);
             
-            return result;
-        }
+            if (refreshException == null)
+                _lastSuccessfulRefresh = DateTime.UtcNow;
 
-        private enum State
-        {
-            PendingInitialization,
-            Ready,
-            Disposed
+            return result;
         }
     }
 }
