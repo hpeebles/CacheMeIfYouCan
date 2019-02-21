@@ -76,7 +76,7 @@ namespace CacheMeIfYouCan.Redis
 
             var valueWithExpiry = await redisDb.StringGetWithExpiryAsync(_toRedisKey(key.AsString));
 
-            if (!valueWithExpiry.Value.HasValue)
+            if (valueWithExpiry.Value.IsNull)
                 return new GetFromCacheResult<TK, TV>();
                     
             return new GetFromCacheResult<TK, TV>(
@@ -112,7 +112,7 @@ namespace CacheMeIfYouCan.Redis
 
             return tasks
                 .Select(t => t.Result)
-                .Where(kv => kv.Value.Value.HasValue)
+                .Where(kv => !kv.Value.Value.IsNull)
                 .Select(kv => new GetFromCacheResult<TK, TV>(
                     kv.Key,
                     _deserializer(kv.Value.Value),
