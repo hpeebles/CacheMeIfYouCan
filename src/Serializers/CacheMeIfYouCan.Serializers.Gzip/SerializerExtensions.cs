@@ -8,5 +8,12 @@ namespace CacheMeIfYouCan.Serializers.Gzip
                 ? new GzipSerializerWrapper(serializer)
                 : serializer;
         }
+        
+        public static IByteSerializer WithGzipCompression(this IByteSerializer serializer, bool enabled = true)
+        {
+            return enabled
+                ? new GzipByteSerializerWrapper(serializer)
+                : serializer;
+        }
     }
 }

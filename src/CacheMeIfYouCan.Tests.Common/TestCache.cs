@@ -10,22 +10,24 @@ namespace CacheMeIfYouCan.Tests.Common
 {
     public class TestCache<TK, TV> : IDistributedCache<TK, TV>, INotifyKeyChanges<TK>
     {
-        private readonly Func<TV, string> _serializer;
-        private readonly Func<string, TV> _deserializer;
+        private readonly Func<TV, object> _serializer;
+        private readonly Func<object, TV> _deserializer;
         private readonly TimeSpan? _delay;
         private readonly Func<bool> _error;
         private readonly Subject<Key<TK>> _keyChanges;
-        public readonly ConcurrentDictionary<string, Tuple<string, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<string, DateTimeOffset>>();
+        public readonly ConcurrentDictionary<string, Tuple<object, DateTimeOffset>> Values = new ConcurrentDictionary<string, Tuple<object, DateTimeOffset>>();
         
         public TestCache(
             Func<TV, string> serializer = null,
             Func<string, TV> deserializer = null,
+            Func<TV, byte[]> byteSerializer = null,
+            Func<byte[], TV> byteDeserializer = null,
             TimeSpan? delay = null,
             Func<bool> error = null,
             string cacheName = "test-name")
         {
-            _serializer = serializer;
-            _deserializer = deserializer;
+            _serializer = v => serializer == null ? (object)byteSerializer(v) : serializer(v);
+            _deserializer = o => serializer == null ? byteDeserializer((byte[])o) : deserializer((string)o);
             _delay = delay;
             _error = error;
             _keyChanges = new Subject<Key<TK>>();

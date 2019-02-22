@@ -184,5 +184,35 @@ namespace CacheMeIfYouCan.Tests.Cache
             serializer2.SerializeCount.Should().Be(1);
             serializer3.SerializeCount.Should().Be(1);
         }
+
+        [Fact]
+        public async Task WithBytesSerializer()
+        {
+            var serializer = new TestByteSerializer();
+            
+            ICache<string, string> cache;
+            using (_setupLock.Enter())
+            {
+                var cacheFactory = new TestCacheFactory()
+                    .WithValueSerializers(c => c
+                        .SetDefault(serializer));
+
+                cache = cacheFactory.BuildAsCache<string, string>("test");
+            }
+
+            var value = Guid.NewGuid().ToString();
+
+            await cache.Set("123", value, TimeSpan.FromSeconds(1));
+           
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(0);
+
+            var fromCache = await cache.Get("123");
+
+            fromCache.Should().Be(value);
+
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(1);
+        }
     }
 }

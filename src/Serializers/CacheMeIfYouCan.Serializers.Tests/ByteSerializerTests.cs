@@ -8,15 +8,11 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Serializers.Tests
 {
-    public class SerializerTests
+    public class ByteSerializerTests
     {
         [Theory]
-        [InlineData("newtonsoft", false)]
         [InlineData("protobuf", false)]
-        [InlineData("tostring", false)]
-        [InlineData("newtonsoft", true)]
         [InlineData("protobuf", true)]
-        [InlineData("tostring", true)]
         public void SerializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
@@ -42,16 +38,12 @@ namespace CacheMeIfYouCan.Serializers.Tests
             var serialized1 = serializer.Serialize(obj1);
             var serialized2 = serializer.Serialize(obj2);
 
-            serialized1.Should().Be(serialized2);
+            serialized1.Should().BeEquivalentTo(serialized2);
         }
         
         [Theory]
-        [InlineData("newtonsoft", false)]
         [InlineData("protobuf", false)]
-        [InlineData("tostring", false)]
-        [InlineData("newtonsoft", true)]
         [InlineData("protobuf", true)]
-        [InlineData("tostring", true)]
         public void DeserializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
@@ -69,36 +61,21 @@ namespace CacheMeIfYouCan.Serializers.Tests
             };
 
             var serialized = serializer.Serialize(obj);
-            
-            if (name == "tostring")
-            {
-                Func<TestClass> deserialize = () => serializer.Deserialize<TestClass>(serialized);
-                deserialize.Should().ThrowExactly<NotImplementedException>();
-            }
-            else
-            {
-                var deserialized = serializer.Deserialize<TestClass>(serialized);
+            var deserialized = serializer.Deserialize<TestClass>(serialized);
 
-                deserialized.IntValue.Should().Be(intValue);
-                deserialized.StringValue.Should().Be(stringValue);
-            }
+            deserialized.IntValue.Should().Be(intValue);
+            deserialized.StringValue.Should().Be(stringValue);
         }
 
-        private static ISerializer GetSerializer(string name)
+        private static IByteSerializer GetSerializer(string name)
         {
             switch (name)
             {
-                case "newtonsoft":
-                    return new JsonSerializer();
-                
                 case "protobuf":
-                    return new ProtobufStringSerializer();
+                    return new ProtobufSerializer();
                     
-                case "tostring":
-                    return new ToStringSerializer();
-                
                 default:
-                    throw new Exception($"No serializer found matching name '{name}'");
+                    throw new Exception($"No byte serializer found matching name '{name}'");
             }
         }
     }

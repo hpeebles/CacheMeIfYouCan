@@ -8,6 +8,7 @@ namespace CacheMeIfYouCan.Serializers
         private readonly Dictionary<Type, object> _serializers;
         private readonly Dictionary<Type, object> _deserializers;
         private Func<Type, ISerializer> _defaultSerializerFactory;
+        private Func<Type, IByteSerializer> _defaultByteSerializerFactory;
 
         internal ValueSerializers()
         {
@@ -19,7 +20,10 @@ namespace CacheMeIfYouCan.Serializers
         {
             if (_serializers.TryGetValue(typeof(T), out var serializerObj))
             {
-                serializer = (Func<T, string>)serializerObj;
+                if (serializerObj is Func<T, string> s)
+                    serializer = s;
+                else
+                    serializer = null;
             }
             else if (_defaultSerializerFactory != null)
             {
@@ -38,11 +42,58 @@ namespace CacheMeIfYouCan.Serializers
         {
             if (_deserializers.TryGetValue(typeof(T), out var deserializerObj))
             {
-                deserializer = (Func<string, T>)deserializerObj;
+                if (deserializerObj is Func<string, T> d)
+                    deserializer = d;
+                else
+                    deserializer = null;
             }
             else if (_defaultSerializerFactory != null)
             {
                 var defaultDeserializer = _defaultSerializerFactory(typeof(T));
+                deserializer = defaultDeserializer.Deserialize<T>;
+            }
+            else
+            {
+                deserializer = null;
+            }
+
+            return deserializer != null;
+        }
+        
+        internal bool TryGetByteSerializer<T>(out Func<T, byte[]> serializer)
+        {
+            if (_serializers.TryGetValue(typeof(T), out var serializerObj))
+            {
+                if (serializerObj is Func<T, byte[]> s)
+                    serializer = s;
+                else
+                    serializer = null;
+            }
+            else if (_defaultByteSerializerFactory != null)
+            {
+                var defaultSerializer = _defaultByteSerializerFactory(typeof(T));
+                serializer = defaultSerializer.Serialize;
+            }
+            else
+            {
+                serializer = null;
+            }
+
+            return serializer != null;
+        }
+
+        internal bool TryGetByteDeserializer<T>(out Func<byte[], T> deserializer)
+        {
+            if (_deserializers.TryGetValue(typeof(T), out var deserializerObj))
+            {
+                if (deserializerObj is Func<byte[], T> d)
+                    deserializer = d;
+                else
+                    deserializer = null;
+            }
+            else if (_defaultByteSerializerFactory != null)
+            {
+                var defaultDeserializer = _defaultByteSerializerFactory(typeof(T));
                 deserializer = defaultDeserializer.Deserialize<T>;
             }
             else
@@ -77,12 +128,35 @@ namespace CacheMeIfYouCan.Serializers
         public ValueSerializers SetDefault(ISerializer serializer)
         {
             _defaultSerializerFactory = t => serializer;
+            _defaultByteSerializerFactory = null;
             return this;
         }
 
         public ValueSerializers SetDefaultFactory(Func<Type, ISerializer> serializerFactory)
         {
             _defaultSerializerFactory = serializerFactory;
+            _defaultByteSerializerFactory = null;
+            return this;
+        }
+        
+        public ValueSerializers Set<T>(IByteSerializer<T> serializer)
+        {
+            _serializers[typeof(T)] = (Func<T, byte[]>)serializer.Serialize;
+            _deserializers[typeof(T)] = (Func<byte[], T>)serializer.Deserialize;
+            return this;
+        }
+
+        public ValueSerializers SetDefault(IByteSerializer serializer)
+        {
+            _defaultByteSerializerFactory = t => serializer;
+            _defaultSerializerFactory = null;
+            return this;
+        }
+
+        public ValueSerializers SetDefaultFactory(Func<Type, IByteSerializer> serializerFactory)
+        {
+            _defaultByteSerializerFactory = serializerFactory;
+            _defaultSerializerFactory = null;
             return this;
         }
     }

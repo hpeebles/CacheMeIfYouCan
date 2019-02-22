@@ -1,23 +1,22 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using ProtoBuf;
 
 namespace CacheMeIfYouCan.Serializers.Protobuf
 {
-    public class ProtobufSerializer : ISerializer
+    public class ProtobufSerializer : IByteSerializer
     {
-        public string Serialize<T>(T value)
+        public byte[] Serialize<T>(T value)
         {
             using (var stream = new MemoryStream())
             {
                 Serializer.Serialize(stream, value);
-                return Convert.ToBase64String(stream.GetBuffer(), 0, (int)stream.Length);
+                return stream.ToArray();
             }
         }
 
-        public T Deserialize<T>(string value)
+        public T Deserialize<T>(byte[] value)
         {
-            using (var stream = new MemoryStream(Convert.FromBase64String(value)))
+            using (var stream = new MemoryStream(value))
                 return Serializer.Deserialize<T>(stream);
         }
     }

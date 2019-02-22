@@ -11,6 +11,8 @@ namespace CacheMeIfYouCan.Configuration
         public Func<string, TK> KeyDeserializer;
         public Func<TV, string> ValueSerializer;
         public Func<string, TV> ValueDeserializer;
+        public Func<TV, byte[]> ValueByteSerializer;
+        public Func<byte[], TV> ValueByteDeserializer;
         public KeyComparer<TK> KeyComparer;
 
         public DistributedCacheConfig(string cacheName = null, bool setDefaults = false)
@@ -31,20 +33,53 @@ namespace CacheMeIfYouCan.Configuration
             {
                 KeyDeserializer = keyDeserializer;
             }
-
-            if (DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer) ||
+            
+            if (DefaultSettings.Cache.ValueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
+            {
+                ValueByteSerializer = valueByteSerializer;
+            }
+            else if (DefaultSettings.Cache.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer) ||
                 ProvidedSerializers.TryGetSerializer(out valueSerializer))
             {
                 ValueSerializer = valueSerializer;
             }
 
-            if (DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer) ||
+            if (DefaultSettings.Cache.ValueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
+            {
+                ValueByteDeserializer = valueByteDeserializer;
+            }
+            else if (DefaultSettings.Cache.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out valueDeserializer))
             {
                 ValueDeserializer = valueDeserializer;
             }
 
             KeyComparer = KeyComparerResolver.Get<TK>(allowNull: true);
+        }
+
+        public void Validate()
+        {
+            if (CacheName == null)
+                throw new ArgumentNullException(nameof(CacheName));
+            
+            if (ValueSerializer == null)
+                throw new ArgumentNullException(nameof(ValueSerializer));
+            
+            if (ValueDeserializer == null)
+                throw new ArgumentNullException(nameof(ValueDeserializer));
+            
+            if (ValueByteSerializer != null)
+                ValueSerializer = null;
+
+            if (ValueByteDeserializer != null)
+                ValueDeserializer = null;
+
+            var validValueSerializers =
+                (ValueSerializer != null && ValueDeserializer != null) ||
+                (ValueByteSerializer != null && ValueByteDeserializer != null);
+
+            if (!validValueSerializers)
+                throw new Exception("Value serializers are not valid. Both a serializer and a deserializer must be set");
         }
     }
 }

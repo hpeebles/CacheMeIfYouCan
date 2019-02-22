@@ -14,8 +14,8 @@ namespace CacheMeIfYouCan.Redis
         private readonly int _database;
         private readonly string _keySpacePrefix;
         private readonly Func<string, TK> _keyDeserializer;
-        private readonly Func<TV, string> _serializer;
-        private readonly Func<string, TV> _deserializer;
+        private readonly Func<TV, RedisValue> _serializer;
+        private readonly Func<RedisValue, TV> _deserializer;
         private readonly Func<string, string> _toRedisKey;
         private readonly Func<string, string> _fromRedisKey;
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
@@ -27,8 +27,8 @@ namespace CacheMeIfYouCan.Redis
             int database,
             string keySpacePrefix,
             Func<string, TK> keyDeserializer,
-            Func<TV, string> serializer,
-            Func<string, TV> deserializer,
+            Func<TV, RedisValue> serializer,
+            Func<RedisValue, TV> deserializer,
             KeyEvents keyEventsToSubscribeTo)
         {
             _connection = connection;

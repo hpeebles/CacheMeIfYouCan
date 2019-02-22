@@ -16,7 +16,14 @@ namespace CacheMeIfYouCan.Tests.Common
         
         public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
         {
-            return new TestCache<TK, TV>(config.ValueSerializer, config.ValueDeserializer, _delay, _error, config.CacheName);
+            return new TestCache<TK, TV>(
+                config.ValueSerializer,
+                config.ValueDeserializer,
+                config.ValueByteSerializer,
+                config.ValueByteDeserializer,
+                _delay,
+                _error,
+                config.CacheName);
         }
     }
 }

@@ -149,17 +149,23 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                 config.ValueSerializer = original.ValueSerializer;
             else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
                 config.ValueSerializer = valueSerializer;
+            else if (_valueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
+                config.ValueByteSerializer = valueByteSerializer;
 
             if (original.ValueDeserializer != null)
                 config.ValueDeserializer = original.ValueDeserializer;
             else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
                 config.ValueDeserializer = valueDeserializer;
+            else if (_valueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
+                config.ValueByteDeserializer = valueByteDeserializer;
 
             if (original.KeyComparer != null)
                 config.KeyComparer = original.KeyComparer;
             else if (_keyComparers.TryGet<TK>(out var comparer))
                 config.KeyComparer = new KeyComparer<TK>(comparer);
             
+            config.Validate();
+
             var originalCache = _cacheFactory.Build(config);
 
             var cache = originalCache;
@@ -211,6 +217,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         private Func<string, TK> _keyDeserializer;
         private Func<TV, string> _valueSerializer;
         private Func<string, TV> _valueDeserializer;
+        private Func<TV, byte[]> _valueByteSerializer;
+        private Func<byte[], TV> _valueByteDeserializer;
         private KeyComparer<TK> _keyComparer;
         private string _keyspacePrefix;
         private Func<Exception, bool> _swallowExceptionsPredicate;
@@ -288,6 +296,29 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         {
             _valueSerializer = serializer;
             _valueDeserializer = deserializer;
+            _valueByteSerializer = null;
+            _valueByteDeserializer = null;
+            return this;
+        }
+        
+        public DistributedCacheFactory<TK, TV> WithValueSerializer(IByteSerializer<TV> serializer)
+        {
+            return WithValueSerializer(serializer.Serialize, serializer.Deserialize);
+        }
+
+        public DistributedCacheFactory<TK, TV> WithValueSerializer(IByteSerializer serializer)
+        {
+            return WithValueSerializer(serializer.Serialize, serializer.Deserialize<TV>);
+        }
+
+        public DistributedCacheFactory<TK, TV> WithValueSerializer(
+            Func<TV, byte[]> serializer,
+            Func<byte[], TV> deserializer)
+        {
+            _valueByteSerializer = serializer;
+            _valueByteDeserializer = deserializer;
+            _valueSerializer = null;
+            _valueDeserializer = null;
             return this;
         }
 
@@ -365,17 +396,23 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                 config.ValueSerializer = original.ValueSerializer;
             else if (_valueSerializer != null)
                 config.ValueSerializer = _valueSerializer;
-
+            else if (_valueByteSerializer != null)
+                config.ValueByteSerializer = _valueByteSerializer;
+            
             if (original.ValueDeserializer != null)
                 config.ValueDeserializer = original.ValueDeserializer;
             else if (_valueDeserializer != null)
                 config.ValueDeserializer = _valueDeserializer;
+            else if (_valueByteDeserializer != null)
+                config.ValueByteDeserializer = _valueByteDeserializer;
 
             if (original.KeyComparer != null)
                 config.KeyComparer = original.KeyComparer;
             else if (_keyComparer != null)
                 config.KeyComparer = new KeyComparer<TK>(_keyComparer);
 
+            config.Validate();
+            
             var originalCache = _cacheFactory.Build(config);
 
             var cache = originalCache;
