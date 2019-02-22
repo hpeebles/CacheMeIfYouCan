@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Tests.Common\CacheMeIfYouCan.Tests.Common.csproj" />
+    <ProjectReference Include="..\Serializers\CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.6.0" />

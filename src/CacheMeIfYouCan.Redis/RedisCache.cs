@@ -133,7 +133,7 @@ namespace CacheMeIfYouCan.Redis
         {
             var redisDb = GetDatabase();
             
-            async Task SetSingle(string key, string value)
+            async Task SetSingle(string key, RedisValue value)
             {
                 var redisKey = _toRedisKey(key);
 

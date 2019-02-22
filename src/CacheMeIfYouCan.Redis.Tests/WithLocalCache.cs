@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(KeyEvents.All)]
         public async Task OnKeyChangedExternallyRemovesFromLocalCache(KeyEvents keyEvents)
         {
-            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> echo = new Echo();
 
             var results = new List<FunctionCacheGetResult>();
             
