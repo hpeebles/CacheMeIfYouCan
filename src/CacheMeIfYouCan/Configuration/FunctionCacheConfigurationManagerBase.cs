@@ -27,6 +27,8 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<CacheException<TK>> OnCacheExceptionAction { get; private set; }
         internal Func<TV, string> ValueSerializer { get; private set; }
         internal Func<string, TV> ValueDeserializer { get; private set; }
+        internal Func<TV, byte[]> ValueByteSerializer { get; private set; }
+        internal Func<byte[], TV> ValueByteDeserializer { get; private set; }
         internal ILocalCacheFactory<TK, TV> LocalCacheFactory { get; private set; }
         internal IDistributedCacheFactory<TK, TV> DistributedCacheFactory { get; private set; }
         internal string KeyspacePrefix { get; private set; }
@@ -47,11 +49,15 @@ namespace CacheMeIfYouCan.Configuration
             {
                 KeySerializers = interfaceConfig.KeySerializers.Clone();
                 KeyComparers = interfaceConfig.KeyComparers.Clone();
-
-                if (interfaceConfig.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer))
+                
+                if (interfaceConfig.ValueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
+                    ValueByteSerializer = valueByteSerializer;
+                else if (interfaceConfig.ValueSerializers.TryGetSerializer<TV>(out var valueSerializer))
                     ValueSerializer = valueSerializer;
 
-                if (interfaceConfig.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
+                if (interfaceConfig.ValueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
+                    ValueByteDeserializer = valueByteDeserializer;
+                else if (interfaceConfig.ValueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
                     ValueDeserializer = valueDeserializer;
 
                 if (interfaceConfig.NameGenerator != null)
@@ -163,6 +169,27 @@ namespace CacheMeIfYouCan.Configuration
         {
             ValueSerializer = serializer;
             ValueDeserializer = deserializer;
+            ValueByteSerializer = null;
+            ValueByteDeserializer = null;
+            return (TConfig)this;
+        }
+        
+        public TConfig WithValueSerializer(IByteSerializer serializer)
+        {
+            return WithValueSerializer(serializer.Serialize, serializer.Deserialize<TV>);
+        }
+        
+        public TConfig WithValueSerializer(IByteSerializer<TV> serializer)
+        {
+            return WithValueSerializer(serializer.Serialize, serializer.Deserialize);
+        }
+        
+        public TConfig WithValueSerializer(Func<TV, byte[]> serializer, Func<byte[], TV> deserializer)
+        {
+            ValueByteSerializer = serializer;
+            ValueByteDeserializer = deserializer;
+            ValueSerializer = null;
+            ValueDeserializer = null;
             return (TConfig)this;
         }
 
@@ -436,8 +463,10 @@ namespace CacheMeIfYouCan.Configuration
                 KeyspacePrefix = KeyspacePrefix,
                 KeySerializer = keySerializer,
                 KeyDeserializer = GetKeyDeserializer(),
-                ValueSerializer = GetValueSerializer(),
-                ValueDeserializer = GetValueDeserializer(),
+                ValueSerializer = ValueSerializer,
+                ValueDeserializer = ValueDeserializer,
+                ValueByteSerializer = ValueByteSerializer,
+                ValueByteDeserializer = ValueByteDeserializer,
                 KeyComparer = keyComparer
             };
 
@@ -512,32 +541,6 @@ namespace CacheMeIfYouCan.Configuration
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
 
             return deserializer ?? (_ => throw new Exception($"No key deserializer defined for type '{typeof(T).FullName}'"));
-        }
-        
-        private Func<TV, string> GetValueSerializer()
-        {
-            var serializer = ValueSerializer;
-
-            if (serializer == null)
-                DefaultSettings.Cache.ValueSerializers.TryGetSerializer(out serializer);
-
-            if (serializer == null)
-                ProvidedSerializers.TryGetSerializer(out serializer);
-
-            return serializer ?? (_ => throw new Exception($"No value serializer defined for type '{typeof(TV).FullName}'"));
-        }
-        
-        private Func<string, TV> GetValueDeserializer()
-        {
-            var deserializer = ValueDeserializer;
-            
-            if (deserializer == null)
-                DefaultSettings.Cache.ValueSerializers.TryGetDeserializer(out deserializer);
-            
-            if (deserializer == null)
-                ProvidedSerializers.TryGetDeserializer(out deserializer);
-
-            return deserializer ?? (_ => throw new Exception($"No value deserializer defined for type '{typeof(TV).FullName}'"));
         }
 
         internal virtual KeyComparer<TK> GetKeyComparer()

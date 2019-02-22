@@ -104,6 +104,16 @@ namespace CacheMeIfYouCan.Serializers
             return deserializer != null;
         }
 
+        public ValueSerializers Set<T>(ISerializer serializer)
+        {
+            return Set(serializer.Serialize, serializer.Deserialize<T>);
+        }
+
+        public ValueSerializers Set<T>(ISerializer<T> serializer)
+        {
+            return Set(serializer.Serialize, serializer.Deserialize);
+        }
+
         public ValueSerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer)
         {
             _serializers[typeof(T)] = serializer;
@@ -111,25 +121,9 @@ namespace CacheMeIfYouCan.Serializers
             return this;
         }
 
-        public ValueSerializers Set<T>(ISerializer serializer)
-        {
-            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
-            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize<T>;
-            return this;
-        }
-
-        public ValueSerializers Set<T>(ISerializer<T> serializer)
-        {
-            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
-            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize;
-            return this;
-        }
-
         public ValueSerializers SetDefault(ISerializer serializer)
         {
-            _defaultSerializerFactory = t => serializer;
-            _defaultByteSerializerFactory = null;
-            return this;
+            return SetDefaultFactory(t => serializer);
         }
 
         public ValueSerializers SetDefaultFactory(Func<Type, ISerializer> serializerFactory)
@@ -138,19 +132,27 @@ namespace CacheMeIfYouCan.Serializers
             _defaultByteSerializerFactory = null;
             return this;
         }
+
+        public ValueSerializers Set<T>(IByteSerializer serializer)
+        {
+            return Set(serializer.Serialize, serializer.Deserialize<T>);
+        }
         
         public ValueSerializers Set<T>(IByteSerializer<T> serializer)
         {
-            _serializers[typeof(T)] = (Func<T, byte[]>)serializer.Serialize;
-            _deserializers[typeof(T)] = (Func<byte[], T>)serializer.Deserialize;
+            return Set(serializer.Serialize, serializer.Deserialize);
+        }
+        
+        public ValueSerializers Set<T>(Func<T, byte[]> serializer, Func<byte[], T> deserializer)
+        {
+            _serializers[typeof(T)] = serializer;
+            _deserializers[typeof(T)] = deserializer;
             return this;
         }
 
         public ValueSerializers SetDefault(IByteSerializer serializer)
         {
-            _defaultByteSerializerFactory = t => serializer;
-            _defaultSerializerFactory = null;
-            return this;
+            return SetDefaultFactory(t => serializer);
         }
 
         public ValueSerializers SetDefaultFactory(Func<Type, IByteSerializer> serializerFactory)

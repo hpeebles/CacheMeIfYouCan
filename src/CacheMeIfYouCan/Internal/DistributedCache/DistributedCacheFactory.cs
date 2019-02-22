@@ -147,6 +147,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
             if (original.ValueSerializer != null)
                 config.ValueSerializer = original.ValueSerializer;
+            else if (original.ValueByteSerializer != null)
+                config.ValueByteSerializer = original.ValueByteSerializer;
             else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
                 config.ValueSerializer = valueSerializer;
             else if (_valueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
@@ -154,6 +156,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
             if (original.ValueDeserializer != null)
                 config.ValueDeserializer = original.ValueDeserializer;
+            else if (original.ValueByteDeserializer != null)
+                config.ValueByteDeserializer = original.ValueByteDeserializer;
             else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
                 config.ValueDeserializer = valueDeserializer;
             else if (_valueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
@@ -394,6 +398,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
             if (original.ValueSerializer != null)
                 config.ValueSerializer = original.ValueSerializer;
+            else if (original.ValueByteSerializer != null)
+                config.ValueByteSerializer = original.ValueByteSerializer;
             else if (_valueSerializer != null)
                 config.ValueSerializer = _valueSerializer;
             else if (_valueByteSerializer != null)
@@ -401,6 +407,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             
             if (original.ValueDeserializer != null)
                 config.ValueDeserializer = original.ValueDeserializer;
+            else if (original.ValueByteDeserializer != null)
+                config.ValueByteDeserializer = original.ValueByteDeserializer;
             else if (_valueDeserializer != null)
                 config.ValueDeserializer = _valueDeserializer;
             else if (_valueByteDeserializer != null)

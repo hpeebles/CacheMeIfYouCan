@@ -178,5 +178,63 @@ namespace CacheMeIfYouCan.Tests.Proxy
             serializerA.DeserializeCount.Should().Be(1);
             serializerB.DeserializeCount.Should().Be(1);
         }
+        
+        [Fact]
+        public async Task SetValueByteSerializer()
+        {
+            var serializer = new TestByteSerializer();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithValueSerializers(c => c
+                        .SetDefault(serializer))
+                    .Build();
+            }
+
+            await proxy.StringToString("123");
+
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(0);
+
+            await proxy.StringToString("123");
+
+            serializer.SerializeCount.Should().Be(1);
+            serializer.DeserializeCount.Should().Be(1);
+        }
+        
+        [Fact]
+        public async Task MixValueStringAndByteSerializers()
+        {
+            var serializerA = new TestSerializer();
+            var serializerB = new TestByteSerializer();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .WithValueSerializers(c => c
+                        .Set<string>(serializerA)
+                        .Set<int>(serializerB))
+                    .Build();
+            }
+
+            await proxy.StringToString("123");
+
+            serializerA.SerializeCount.Should().Be(1);
+            serializerB.SerializeCount.Should().Be(0);
+
+            await proxy.LongToInt(123);
+
+            serializerA.SerializeCount.Should().Be(1);
+            serializerB.SerializeCount.Should().Be(1);
+        }
     }
 }

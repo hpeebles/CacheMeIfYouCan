@@ -64,24 +64,20 @@ namespace CacheMeIfYouCan.Serializers
             return deserializer != null;
         }
 
-        public KeySerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
-        {
-            _serializers[typeof(T)] = serializer;
-            _deserializers[typeof(T)] = deserializer;
-            return this;
-        }
-
         public KeySerializers Set<T>(ISerializer serializer)
         {
-            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
-            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize<T>;
-            return this;
+            return Set(serializer.Serialize, serializer.Deserialize<T>);
         }
 
         public KeySerializers Set<T>(ISerializer<T> serializer)
         {
-            _serializers[typeof(T)] = (Func<T, string>)serializer.Serialize;
-            _deserializers[typeof(T)] = (Func<string, T>)serializer.Deserialize;
+            return Set(serializer.Serialize, serializer.Deserialize);
+        }
+
+        public KeySerializers Set<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
+        {
+            _serializers[typeof(T)] = serializer;
+            _deserializers[typeof(T)] = deserializer;
             return this;
         }
 
