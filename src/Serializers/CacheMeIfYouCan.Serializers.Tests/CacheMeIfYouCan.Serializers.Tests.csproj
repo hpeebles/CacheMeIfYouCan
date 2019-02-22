@@ -12,7 +12,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Gzip\CacheMeIfYouCan.Serializers.Gzip.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Json.Newtonsoft\CacheMeIfYouCan.Serializers.Json.Newtonsoft.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.ToString\CacheMeIfYouCan.Serializers.ToString.csproj" />
