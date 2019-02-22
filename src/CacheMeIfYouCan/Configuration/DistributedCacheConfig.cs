@@ -62,11 +62,11 @@ namespace CacheMeIfYouCan.Configuration
             if (CacheName == null)
                 throw new ArgumentNullException(nameof(CacheName));
             
-            if (ValueSerializer == null)
-                throw new ArgumentNullException(nameof(ValueSerializer));
+            if (KeySerializer == null)
+                throw new ArgumentNullException(nameof(KeySerializer));
             
-            if (ValueDeserializer == null)
-                throw new ArgumentNullException(nameof(ValueDeserializer));
+            if (KeyDeserializer == null)
+                throw new ArgumentNullException(nameof(KeyDeserializer));
             
             if (ValueByteSerializer != null)
                 ValueSerializer = null;

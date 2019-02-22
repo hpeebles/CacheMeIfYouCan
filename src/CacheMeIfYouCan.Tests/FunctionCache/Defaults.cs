@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
+using CacheMeIfYouCan.Serializers;
 using CacheMeIfYouCan.Tests.Common;
 using FluentAssertions;
 using Xunit;
@@ -240,6 +241,30 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             errors.Single().Keys.Should().ContainSingle();
             Assert.Equal(key, errors.Single().Keys.Single());
             Assert.Equal("test", errors.Single().CacheType);
+        }
+        
+        [Fact]
+        public async Task DefaultValueByteSerializer()
+        {
+            var serializer = new TestByteSerializer();
+            
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter(true))
+            {
+                DefaultSettings.Cache.ValueSerializers.SetDefault(serializer);
+
+                cachedEcho = echo
+                    .Cached()
+                    .WithDistributedCacheFactory(new TestCacheFactory())
+                    .Build();
+
+                DefaultSettings.Cache.ValueSerializers.SetDefaultFactory(default(Func<Type, IByteSerializer>));
+            }
+
+            await cachedEcho("123");
+
+            serializer.SerializeCount.Should().Be(1);
         }
         
         private static string GetRandomKey()
