@@ -15,5 +15,7 @@ namespace CacheMeIfYouCan.Redis
         public int Database { get; set; }
         
         public KeyEvents KeyEventsToSubscribeTo { get; set; }
+        
+        public RedisValue NullValue { get; set; }
     }
 }

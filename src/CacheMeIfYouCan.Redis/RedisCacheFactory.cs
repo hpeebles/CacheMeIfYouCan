@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Redis
                 _redisConfig.KeyEventsToSubscribeTo);
         }
 
-        private static (Func<TV, RedisValue>, Func<RedisValue, TV>) GetValueSerializers<TK, TV>(
+        private (Func<TV, RedisValue>, Func<RedisValue, TV>) GetValueSerializers<TK, TV>(
             DistributedCacheConfig<TK, TV> config)
         {
             Func<TV, RedisValue> serializer;
@@ -51,6 +51,15 @@ namespace CacheMeIfYouCan.Redis
             {
                 // This should be unreachable
                 throw new Exception($"Value serializers are not set up correctly. CacheName: {config.CacheName}");
+            }
+
+            if (_redisConfig.NullValue != default)
+            {
+                var nullValue = _redisConfig.NullValue;
+                var originalSerializer = serializer;
+                var originalDeserializer = deserializer;
+                serializer = v => v == null ? nullValue : originalSerializer(v);
+                deserializer = v => v == nullValue ? default : originalDeserializer(v);
             }
 
             return (serializer, deserializer);
