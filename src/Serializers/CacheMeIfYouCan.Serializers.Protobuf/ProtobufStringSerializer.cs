@@ -4,7 +4,7 @@ using ProtoBuf;
 
 namespace CacheMeIfYouCan.Serializers.Protobuf
 {
-    public class ProtobufStringSerializer : ISerializer
+    public sealed class ProtobufStringSerializer : ISerializer
     {
         public string Serialize<T>(T value)
         {

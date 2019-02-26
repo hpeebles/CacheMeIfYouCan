@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Serializers.ToString
 {
-    public class ToStringSerializer : ISerializer
+    public sealed class ToStringSerializer : ISerializer
     {
         public string Serialize<T>(T value)
         {

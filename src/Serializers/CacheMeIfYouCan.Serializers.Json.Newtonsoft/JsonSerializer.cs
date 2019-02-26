@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Serializers.Json.Newtonsoft
 {
-    public class JsonSerializer : ISerializer
+    public sealed class JsonSerializer : ISerializer
     {
         private readonly JsonSerializerSettings _settings;
 
