@@ -314,14 +314,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task WithReturnDictionaryFactory()
         {
-            var count = 0;
-            var dictionary = new Dictionary<string, string>();
-
-            Func<IEqualityComparer<string>, int, IDictionary<string, string>> dictionaryFactoryFunc = (k, c) =>
-            {
-                count++;
-                return dictionary;
-            };
+            var builder = new TestDictionaryBuilder(EqualityComparer<string>.Default);
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
@@ -329,16 +322,35 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedEcho = echo
                     .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
-                    .WithReturnDictionaryFactory(dictionaryFactoryFunc)
+                    .WithReturnDictionaryBuilder(builder)
                     .Build();
             }
 
             var keys = new[] { "123", "234" };
             
-            await cachedEcho(keys);
+            var results = await cachedEcho(keys);
 
-            count.Should().Be(1);
-            dictionary.Should().ContainKeys(keys);
+            results.Should().ContainKeys(keys);
+            builder.Count.Should().Be(1);
+        }
+
+        private class TestDictionaryBuilder : ReturnDictionaryBuilder<string, string, IDictionary<string, string>>
+        {
+            public TestDictionaryBuilder(IEqualityComparer<string> keyComparer)
+                : base(keyComparer)
+            {
+                
+            }
+
+            public int Count { get; private set; }
+
+            protected override IDictionary<string, string> InitializeDictionary(
+                IEqualityComparer<string> keyComparer, int count)
+            {
+                Count++;
+                
+                return new Dictionary<string, string>();
+            }
         }
     }
 }

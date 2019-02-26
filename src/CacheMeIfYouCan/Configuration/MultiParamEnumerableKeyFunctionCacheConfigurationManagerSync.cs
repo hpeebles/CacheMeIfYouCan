@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -12,6 +13,8 @@ namespace CacheMeIfYouCan.Configuration
         where TKInnerEnumerable : IEnumerable<TKInner>
         where TRes : IDictionary<TKInner, TV>
     {
+        internal Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> ReturnDictionaryBuilderFunc { get; private set; }
+        
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
             Func<TKOuter, TKInnerEnumerable, TRes> inputFunc)
             : base(
@@ -102,14 +105,29 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeyComparerInternal(comparer);
         }
         
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
+        {
+            return WithReturnDictionaryBuilder(c => builder);
+        }
+        
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> builder)
+        {
+            ReturnDictionaryBuilderFunc = builder;
+            return this;
+        }
+        
         public Func<TKOuter, TKInnerEnumerable, TRes> Build()
         {
             var functionCache = BuildMultiParamEnumerableKeyFunctionCache();
-
-            var dictionaryFactoryFunc = DictionaryFactoryFunc ?? DictionaryFactoryFuncResolver.Get<TRes, TKInner, TV>();
-
-            var keyComparer = KeyComparerResolver.GetInner<TKInner>();
             
+            var keyComparer = KeyComparerResolver.GetInner<TKInner>();
+
+            var returnDictionaryBuilder = ReturnDictionaryBuilderFunc == null
+                ? ReturnDictionaryBuilderResolver.Get<TRes, TKInner, TV>(keyComparer)
+                : ReturnDictionaryBuilderFunc(keyComparer);
+
             Func<TKOuter, IEnumerable<TKInner>, Task<IDictionary<TKInner, TV>>> func = GetResults;
             
             return func
@@ -121,12 +139,9 @@ namespace CacheMeIfYouCan.Configuration
             {
                 var results = await functionCache.GetMulti(outerKey, innerKeys);
 
-                var dictionary = dictionaryFactoryFunc(keyComparer, results.Count);
-                
-                foreach (var kv in results)
-                    dictionary[kv.Key.Item2] = kv.Value;
-
-                return dictionary;
+                return returnDictionaryBuilder.BuildResponse(
+                    results.Select(r => (IKeyValuePair<TKInner, TV>)new KeyValuePairInternal<TKInner, TV>(r.Key.Item2, r.Value)),
+                    results.Count);
             }
         }
     }
@@ -136,6 +151,8 @@ namespace CacheMeIfYouCan.Configuration
         where TKInnerEnumerable : IEnumerable<TKInner>
         where TRes : IDictionary<TKInner, TV>
     {
+        internal Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> ReturnDictionaryBuilderFunc { get; private set; }
+        
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
             Func<TKOuter1, TKOuter2, TKInnerEnumerable, TRes> inputFunc)
             : base(
@@ -254,6 +271,19 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+        
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
+        {
+            return WithReturnDictionaryBuilder(c => builder);
+        }
+        
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> builder)
+        {
+            ReturnDictionaryBuilderFunc = builder;
+            return this;
+        }
 
         public Func<TKOuter1, TKOuter2, TKInnerEnumerable, TRes> Build()
         {
@@ -261,9 +291,11 @@ namespace CacheMeIfYouCan.Configuration
                 TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2>(KeyComparers),
                 TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2>(KeySerializers, KeyParamSeparator));
 
-            var dictionaryFactoryFunc = DictionaryFactoryFunc ?? DictionaryFactoryFuncResolver.Get<TRes, TKInner, TV>();
-
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
+
+            var returnDictionaryBuilder = ReturnDictionaryBuilderFunc == null
+                ? ReturnDictionaryBuilderResolver.Get<TRes, TKInner, TV>(keyComparer)
+                : ReturnDictionaryBuilderFunc(keyComparer);
 
             Func<(TKOuter1, TKOuter2), IEnumerable<TKInner>, Task<IDictionary<TKInner, TV>>> func = GetResults;
 
@@ -279,12 +311,9 @@ namespace CacheMeIfYouCan.Configuration
             {
                 var results = await functionCache.GetMulti(outerKeys, innerKeys);
 
-                var dictionary = dictionaryFactoryFunc(keyComparer, results.Count);
-
-                foreach (var kv in results)
-                    dictionary[kv.Key.Item2] = kv.Value;
-
-                return dictionary;
+                return returnDictionaryBuilder.BuildResponse(
+                    results.Select(r => (IKeyValuePair<TKInner, TV>)new KeyValuePairInternal<TKInner, TV>(r.Key.Item2, r.Value)),
+                    results.Count);
             }
         }
     }
@@ -294,6 +323,8 @@ namespace CacheMeIfYouCan.Configuration
         where TKInnerEnumerable : IEnumerable<TKInner>
         where TRes : IDictionary<TKInner, TV>
     {
+        internal Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> ReturnDictionaryBuilderFunc { get; private set; }
+        
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync(
             Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes> inputFunc)
             : base(
@@ -437,6 +468,19 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+        
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
+        {
+            return WithReturnDictionaryBuilder(c => builder);
+        }
+        
+        public MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV> WithReturnDictionaryBuilder(
+            Func<IEqualityComparer<TKInner>, IReturnDictionaryBuilder<TKInner, TV, TRes>> builder)
+        {
+            ReturnDictionaryBuilderFunc = builder;
+            return this;
+        }
 
         public Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes> Build()
         {
@@ -444,9 +488,11 @@ namespace CacheMeIfYouCan.Configuration
                 TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2, TKOuter3>(KeyComparers),
                 TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3>(KeySerializers, KeyParamSeparator));
 
-            var dictionaryFactoryFunc = DictionaryFactoryFunc ?? DictionaryFactoryFuncResolver.Get<TRes, TKInner, TV>();
-
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
+
+            var returnDictionaryBuilder = ReturnDictionaryBuilderFunc == null
+                ? ReturnDictionaryBuilderResolver.Get<TRes, TKInner, TV>(keyComparer)
+                : ReturnDictionaryBuilderFunc(keyComparer);
 
             Func<(TKOuter1, TKOuter2, TKOuter3), IEnumerable<TKInner>, Task<IDictionary<TKInner, TV>>>
                 func = GetResults;
@@ -463,12 +509,9 @@ namespace CacheMeIfYouCan.Configuration
             {
                 var results = await functionCache.GetMulti(outerKeys, innerKeys);
 
-                var dictionary = dictionaryFactoryFunc(keyComparer, results.Count);
-
-                foreach (var kv in results)
-                    dictionary[kv.Key.Item2] = kv.Value;
-
-                return dictionary;
+                return returnDictionaryBuilder.BuildResponse(
+                    results.Select(r => (IKeyValuePair<TKInner, TV>)new KeyValuePairInternal<TKInner, TV>(r.Key.Item2, r.Value)),
+                    results.Count);
             }
         }
     }

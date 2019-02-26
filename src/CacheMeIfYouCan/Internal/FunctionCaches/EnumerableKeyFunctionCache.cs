@@ -312,8 +312,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 .ToArray();
         }
         
-        private static Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> ConvertIntoNegativeCachingFunc(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func,
+        private static Func<ICollection<TK>, Task<IDictionary<TK, TV>>> ConvertIntoNegativeCachingFunc(
+            Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func,
             Func<TK, TV> negativeCachingValueFactory,
             IEqualityComparer<TK> keyComparer)
         {

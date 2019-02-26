@@ -403,8 +403,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             return k => !k.Duplicate && !_skipCacheSetPredicate((outerKey, k.Key));
         }
 
-        private static Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> ConvertIntoNegativeCachingFunc(
-            Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> func,
+        private static Func<TK1, ICollection<TK2>, Task<IDictionary<TK2, TV>>> ConvertIntoNegativeCachingFunc(
+            Func<TK1, ICollection<TK2>, Task<IDictionary<TK2, TV>>> func,
             Func<(TK1, TK2), TV> negativeCachingValueFactory,
             IEqualityComparer<TK2> keyComparer)
         {

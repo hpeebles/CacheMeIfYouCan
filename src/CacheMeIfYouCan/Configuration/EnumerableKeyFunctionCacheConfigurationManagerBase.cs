@@ -15,7 +15,6 @@ namespace CacheMeIfYouCan.Configuration
         private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
         internal int MaxFetchBatchSize { get; private set; }
         internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
-        internal Func<IEqualityComparer<TK>, int, IDictionary<TK, TV>> DictionaryFactoryFunc { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
             Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
@@ -52,13 +51,6 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithNegativeCaching(Func<TK, TV> valueFactory)
         {
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            return (TConfig)this;
-        }
-
-        public TConfig WithReturnDictionaryFactory(
-            Func<IEqualityComparer<TK>, int, IDictionary<TK, TV>> dictionaryFactoryFunc)
-        {
-            DictionaryFactoryFunc = dictionaryFactoryFunc;
             return (TConfig)this;
         }
         
