@@ -11,9 +11,8 @@ namespace CacheMeIfYouCan.Redis
     internal class RecentlySetKeysManager : IDisposable
     {
         private readonly ConcurrentDictionary<string, long> _dictionary = new ConcurrentDictionary<string, long>();
-        private readonly Queue<KeyValuePair<string, long>> _queue = new Queue<KeyValuePair<string, long>>();
+        private readonly ConcurrentQueue<KeyValuePair<string, long>> _queue = new ConcurrentQueue<KeyValuePair<string, long>>();
         private readonly long _recentWindow = TimeSpan.FromSeconds(5).Ticks;
-        private readonly object _lock = new object();
 
         // Every second we prune keys which are no longer relevant, disposing of this field is the only way to stop that process
         private readonly IDisposable _keyRemoverProcess;
@@ -32,8 +31,7 @@ namespace CacheMeIfYouCan.Redis
             if (!_dictionary.TryAdd(key, now))
                 return;
             
-            lock (_lock)
-                _queue.Enqueue(new KeyValuePair<string, long>(key, now));
+            _queue.Enqueue(new KeyValuePair<string, long>(key, now));
         }
 
         public bool IsRecentlySet(string key)
@@ -50,18 +48,16 @@ namespace CacheMeIfYouCan.Redis
 
         private void Prune()
         {
-            lock (_lock)
+            while (_queue.Any())
             {
-                while (_queue.Any())
-                {
-                    var next = _queue.Peek();
+                if (!_queue.TryPeek(out var next))
+                    return;
 
-                    if (IsRecent(next.Value))
-                        break;
-                    
-                    _queue.Dequeue();
-                    _dictionary.TryRemove(next.Key, out _);
-                }
+                if (IsRecent(next.Value))
+                    break;
+                
+                _queue.TryDequeue(out next);
+                _dictionary.TryRemove(next.Key, out _);
             }
         }
 
