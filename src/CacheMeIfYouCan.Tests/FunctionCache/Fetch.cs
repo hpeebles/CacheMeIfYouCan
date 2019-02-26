@@ -103,12 +103,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var now = Timestamp.Now;
+            var start = DateTime.UtcNow;
             
             await cachedEcho("abc");
             
             fetches.Should().ContainSingle();
-            Assert.True(now <= fetches[0].Start && fetches[0].Start < now + TimeSpan.FromMilliseconds(100).Ticks);
+            fetches[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
         }
     }
 }

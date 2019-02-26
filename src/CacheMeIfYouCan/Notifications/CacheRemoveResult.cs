@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Notifications
             string cacheType,
             bool success,
             bool keyRemoved,
-            long start,
+            DateTime start,
             TimeSpan duration,
             string key)
         {
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Notifications
         public string CacheType { get; }
         public bool Success { get; }
         public bool KeyRemoved { get; }
-        public long Start { get; }
+        public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public string Key { get; }
     }
@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Notifications
             Key<TK> key,
             bool success,
             bool keyRemoved,
-            long start,
+            DateTime start,
             TimeSpan duration)
             : base(
                 cacheName,

@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Notifications
             string cacheName,
             string cacheType,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration,
             int keysCount,
             Lazy<IList<string>> keys)
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Notifications
         public string CacheName { get; }
         public string CacheType { get; }
         public bool Success { get; }
-        public long Start { get; }
+        public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public int KeysCount { get; }
         public IList<string> Keys => _keys.Value;
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Notifications
             string cacheType,
             ICollection<KeyValuePair<Key<TK>, TV>> values,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration)
         : base(
             cacheName,

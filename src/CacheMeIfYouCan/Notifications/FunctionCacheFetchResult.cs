@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Notifications
             string functionName,
             IReadOnlyCollection<IFunctionCacheFetchResultInner> results,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration)
         {
             FunctionName = functionName;
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Notifications
         public string FunctionName { get; }
         public IReadOnlyCollection<IFunctionCacheFetchResultInner> Results { get; }
         public bool Success { get; }
-        public long Start { get; }
+        public DateTime Start { get; }
         public TimeSpan Duration { get; }
     }
     
@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Notifications
             string functionName,
             IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> results,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration)
             : base(functionName, results, success, start, duration)
         {

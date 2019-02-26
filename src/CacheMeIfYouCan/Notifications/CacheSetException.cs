@@ -13,10 +13,9 @@ namespace CacheMeIfYouCan.Notifications
             string cacheType,
             ICollection<KeyValuePair<Key<TK>, TV>> values,
             TimeSpan timeToLive,
-            long timestamp,
             string message,
             Exception exception)
-            : base(cacheName, cacheType, new Lazy<IList<string>>(() => values.Select(kv => kv.Key.AsStringSafe).ToArray()), timestamp, message, exception)
+            : base(cacheName, cacheType, new Lazy<IList<string>>(() => values.Select(kv => kv.Key.AsStringSafe).ToArray()), message, exception)
         {
             Values = values;
             TimeToLive = timeToLive;

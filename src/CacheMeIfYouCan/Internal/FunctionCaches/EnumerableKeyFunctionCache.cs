@@ -87,7 +87,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (_disposed)
                 throw new ObjectDisposedException($"{Name} - {Type}");
             
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
             Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>> results;
@@ -180,7 +180,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         Name,
                         readonlyResults,
                         !error,
-                        timestamp,
+                        start,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
             }
@@ -206,7 +206,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             
             async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> FetchBatch(IList<Key<TK>> batchKeys)
             {
-                var timestamp = Timestamp.Now;
+                var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
                 var error = false;
 
@@ -262,7 +262,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     var exception = new FunctionCacheFetchException<TK>(
                         Name,
                         batchKeys,
-                        Timestamp.Now,
                         "Unable to fetch value(s)",
                         ex);
 
@@ -277,7 +276,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         Name,
                         results,
                         !error,
-                        timestamp,
+                        start,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
 
@@ -294,7 +293,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var exception = new FunctionCacheGetException<TK>(
                 Name,
                 keys,
-                Timestamp.Now,
                 message,
                 ex);
             

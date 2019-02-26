@@ -9,10 +9,9 @@ namespace CacheMeIfYouCan.Notifications
         internal FunctionCacheException(
             string functionName,
             IList<Key<TK>> keys,
-            long timestamp,
             string message,
             Exception exception)
-            : base(functionName, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), timestamp, message, exception)
+            : base(functionName, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), message, exception)
         {
             Keys = keys;
         }
@@ -27,18 +26,15 @@ namespace CacheMeIfYouCan.Notifications
         internal FunctionCacheException(
             string functionName,
             Lazy<IList<string>> keys,
-            long timestamp,
             string message,
             Exception exception)
             : base(message, exception)
         {
             FunctionName = functionName;
             _keys = keys;
-            Timestamp = timestamp;
         }
 
         public string FunctionName { get; }
-        public long Timestamp { get; }
         public IList<string> Keys => _keys.Value;
     }
 }

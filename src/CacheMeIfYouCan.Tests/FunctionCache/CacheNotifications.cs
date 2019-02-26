@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var start = Timestamp.Now;
+            var start = DateTime.UtcNow;
             
             await cachedEcho("123");
             results.Should().ContainSingle();
@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results[0].MissesCount.Should().Be(1);
             results[0].Misses.Should().ContainSingle();
             results[0].Misses[0].Should().Be("123");
-            results[0].Start.Should().BeInRange(start, Timestamp.Now);
+            results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
             
             await cachedEcho("123");
             results.Count.Should().Be(2);
@@ -72,13 +72,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var start = Timestamp.Now;
+            var start = DateTime.UtcNow;
             
             await cachedEcho("123");
             results.Should().ContainSingle();
             results[0].Keys.Should().ContainSingle();
             results[0].Keys[0].Should().Be("123");
-            results[0].Start.Should().BeInRange(start, Timestamp.Now);
+            results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
             
             await cachedEcho("123");
             results.Should().ContainSingle();
@@ -103,7 +103,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var start = Timestamp.Now;
+            var start = DateTime.UtcNow;
             
             await cachedEcho("123");
             
@@ -112,7 +112,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Should().ContainSingle();
             results[0].Key.Should().Be("123");
             results[0].KeyRemoved.Should().BeTrue();
-            results[0].Start.Should().BeInRange(start, Timestamp.Now);
+            results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
             
             keysToRemove.OnNext("123");
 
@@ -136,15 +136,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var start = Timestamp.Now;
-
             Func<Task<string>> func = () => cachedEcho("123");
             await func.Should().ThrowAsync<FunctionCacheException>();
             
             errors.Should().ContainSingle();
             errors[0].Keys.Should().ContainSingle();
             errors[0].Keys.First().Should().Be("123");
-            errors[0].Timestamp.Should().BeInRange(start, Timestamp.Now);
             errors[0].Should().BeOfType<CacheGetException<string>>();
         }
 

@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         
         public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
             var result = new GetFromCacheResult<TK, TV>();
@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     result.Success ? new[] { result } : new GetFromCacheResult<TK, TV>[0],
                     result.Success ? new Key<TK>[0] : new[] { key },
                     !error,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public async Task Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
 
@@ -94,14 +94,14 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     CacheType,
                     new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
                     !error,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
             IList<GetFromCacheResult<TK, TV>> results = null;
@@ -127,7 +127,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         ? keys
                         : keys.Except(results.Select(r => r.Key)).ToArray(),
                     !error,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
@@ -136,7 +136,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
 
@@ -158,14 +158,14 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     CacheType,
                     values,
                     !error,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }
 
         public async Task<bool> Remove(Key<TK> key)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
             var keyRemoved = false;
@@ -191,7 +191,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     key,
                     !error,
                     keyRemoved,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
         }

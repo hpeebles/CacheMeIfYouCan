@@ -36,7 +36,6 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     CacheName,
                     CacheType,
                     new[] { key },
-                    Timestamp.Now,
                     CacheGetErrorMessage,
                     ex);
             }
@@ -55,7 +54,6 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     CacheType,
                     new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
                     timeToLive,
-                    Timestamp.Now,
                     CacheSetErrorMessage,
                     ex);
             }
@@ -73,7 +71,6 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     CacheName,
                     CacheType,
                     keys,
-                    Timestamp.Now,
                     CacheGetErrorMessage,
                     ex);
             }
@@ -92,7 +89,6 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     CacheType,
                     values,
                     timeToLive,
-                    Timestamp.Now,
                     CacheSetErrorMessage,
                     ex);
             }
@@ -110,7 +106,6 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     CacheName,
                     CacheType,
                     key,
-                    Timestamp.Now,
                     CacheRemoveErrorMessage,
                     ex);
             }

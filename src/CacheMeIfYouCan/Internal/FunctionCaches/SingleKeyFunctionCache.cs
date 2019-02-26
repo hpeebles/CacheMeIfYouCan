@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             
             using (SynchronizationContextRemover.StartNew())
             {
-                var timestamp = Timestamp.Now;
+                var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
 
                 var key = new Key<TK>(keyObj, _keySerializer);
@@ -122,7 +122,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         Name,
                         new[] { result },
                         !error,
-                        timestamp,
+                        start,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
 
@@ -132,7 +132,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
         private async Task<FunctionCacheFetchResultInner<TK, TV>> Fetch(Key<TK> key)
         {
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             var error = false;
 
@@ -165,7 +165,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 var exception = new FunctionCacheFetchException<TK>(
                     Name,
                     new[] { key },
-                    Timestamp.Now,
                     "Unable to fetch value",
                     ex);
                 
@@ -180,7 +179,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     Name,
                     new[] { result },
                     !error,
-                    timestamp,
+                    start,
                     StopwatchHelper.GetDuration(stopwatchStart)));
             }
 
@@ -196,7 +195,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var exception = new FunctionCacheGetException<TK>(
                 Name,
                 new[] { key },
-                Timestamp.Now,
                 message,
                 ex);
             

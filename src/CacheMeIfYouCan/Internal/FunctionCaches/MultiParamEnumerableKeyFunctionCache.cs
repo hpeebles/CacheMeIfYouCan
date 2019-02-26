@@ -127,7 +127,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (_disposed)
                 throw new ObjectDisposedException($"{Name} - {Type}");
             
-            var timestamp = Timestamp.Now;
+            var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
             Dictionary<Key<(TK1, TK2)>, FunctionCacheGetResultInner<(TK1, TK2), TV>> results;
@@ -225,7 +225,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         Name,
                         readonlyResults,
                         !error,
-                        timestamp,
+                        start,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
             }
@@ -254,7 +254,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             async Task<IList<FunctionCacheFetchResultInner<(TK1, TK2), TV>>> FetchBatch(
                 IList<Key<(TK1, TK2)>> batchInnerKeys)
             {
-                var timestamp = Timestamp.Now;
+                var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
                 var error = false;
 
@@ -311,7 +311,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     var exception = new FunctionCacheFetchException<(TK1, TK2)>(
                         Name,
                         batchInnerKeys,
-                        Timestamp.Now,
                         "Unable to fetch value(s)",
                         ex);
 
@@ -326,7 +325,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         Name,
                         results,
                         !error,
-                        timestamp,
+                        start,
                         StopwatchHelper.GetDuration(stopwatchStart)));
                 }
 
@@ -345,7 +344,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var exception = new FunctionCacheGetException<(TK1, TK2)>(
                 Name,
                 keys,
-                Timestamp.Now,
                 message,
                 ex);
             

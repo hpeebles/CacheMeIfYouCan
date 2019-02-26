@@ -9,14 +9,12 @@ namespace CacheMeIfYouCan.Notifications
             string cacheName,
             string cacheType,
             Key<TK> key,
-            long timestamp,
             string message,
             Exception exception)
             : base(
                 cacheName,
                 cacheType,
                 new Lazy<IList<string>>(() => new[] { key.AsStringSafe }),
-                timestamp,
                 message,
                 exception)
         {

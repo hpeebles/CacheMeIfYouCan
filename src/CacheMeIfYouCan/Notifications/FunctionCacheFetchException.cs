@@ -8,10 +8,9 @@ namespace CacheMeIfYouCan.Notifications
         internal FunctionCacheFetchException(
             string functionName,
             IList<Key<TK>> keys,
-            long timestamp,
             string message,
             Exception exception)
-            : base(functionName, keys, timestamp, message, exception)
+            : base(functionName, keys, message, exception)
         { }
     }
 }

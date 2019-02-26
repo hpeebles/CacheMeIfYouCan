@@ -191,34 +191,5 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await Task.Delay(5);
             }
         }
-        
-        [Fact]
-        public async Task ErrorTimestampIsAccurate()
-        {
-            var errors = new List<FunctionCacheException>();
-            
-            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
-            Func<string, Task<string>> cachedEcho;
-            using (_setupLock.Enter())
-            {
-                cachedEcho = echo
-                    .Cached()
-                    .OnException(errors.Add)
-                    .Build();
-            }
-
-            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("warmup"));
-            
-            errors.Clear();
-            
-            var now = Timestamp.Now;
-            
-            await Assert.ThrowsAnyAsync<FunctionCacheException>(() => cachedEcho("abc"));
-
-            Assert.Equal(2, errors.Count);
-            
-            foreach (var error in errors)
-                Assert.InRange(error.Timestamp, now, now + TimeSpan.FromMilliseconds(100).Ticks);
-        }
     }
 }

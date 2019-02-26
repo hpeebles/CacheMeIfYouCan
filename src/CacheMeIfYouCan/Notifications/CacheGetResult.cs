@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Notifications
             string cacheName,
             string cacheType,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration,
             int hitsCount,
             int missesCount,
@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Notifications
         public string CacheName { get; }
         public string CacheType { get; }
         public bool Success { get; }
-        public long Start { get; }
+        public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public int HitsCount { get; }
         public int MissesCount { get; }
@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Notifications
             ICollection<GetFromCacheResult<TK, TV>> hits,
             ICollection<Key<TK>> misses,
             bool success,
-            long start,
+            DateTime start,
             TimeSpan duration)
         : base(
             cacheName,

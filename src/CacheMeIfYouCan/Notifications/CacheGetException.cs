@@ -10,10 +10,9 @@ namespace CacheMeIfYouCan.Notifications
             string cacheName,
             string cacheType,
             ICollection<Key<TK>> keys,
-            long timestamp,
             string message,
             Exception exception)
-            : base(cacheName, cacheType, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), timestamp, message, exception)
+            : base(cacheName, cacheType, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), message, exception)
         {
             Keys = keys;
         }

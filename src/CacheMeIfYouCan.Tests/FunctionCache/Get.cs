@@ -60,12 +60,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
-            var now = Timestamp.Now;
+            var start = DateTime.UtcNow;
 
             await cachedEcho("abc");
             
             results.Should().ContainSingle();
-            Assert.True(now <= results[0].Start && results[0].Start < now + TimeSpan.FromMilliseconds(10).Ticks);
+            results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
         }
     }
 }
