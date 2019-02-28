@@ -427,7 +427,7 @@ namespace CacheMeIfYouCan.Configuration
             return ObservablesHelper.SetupObservable(onCacheException, OnCacheException, behaviour);
         }
 
-        public TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings)
+        public TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             if (settings.HasFlag(SkipCacheSettings.SkipGet))
             {
