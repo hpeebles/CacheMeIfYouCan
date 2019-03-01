@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Common
@@ -28,9 +29,9 @@ namespace CacheMeIfYouCan.Tests.Common
             _errorFunc = errorFunc;
         }
 
-        private async Task<IDictionary<string, string>> Call(IEnumerable<string> keys)
+        private async Task<IDictionary<string, string>> Call(IEnumerable<string> keys, CancellationToken token)
         {
-            await Task.Delay(_delayFunc());
+            await Task.Delay(_delayFunc(), token);
             
             if (_errorFunc())
                 throw new Exception();
@@ -39,6 +40,11 @@ namespace CacheMeIfYouCan.Tests.Common
         }
 
         public static implicit operator Func<IEnumerable<string>, Task<IDictionary<string, string>>>(MultiEcho echo)
+        {
+            return k => echo.Call(k, CancellationToken.None);
+        }
+        
+        public static implicit operator Func<IEnumerable<string>, CancellationToken,  Task<IDictionary<string, string>>>(MultiEcho echo)
         {
             return echo.Call;
         }

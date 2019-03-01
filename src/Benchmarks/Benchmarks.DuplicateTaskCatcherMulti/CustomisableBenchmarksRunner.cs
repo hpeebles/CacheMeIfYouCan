@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
@@ -45,7 +46,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
                 .Select(_ => Guid.NewGuid().ToString())
                 .ToArray();
 
-            async Task<IDictionary<string, string>> Func(ICollection<string> keys)
+            async Task<IDictionary<string, string>> Func(ICollection<string> keys, CancellationToken token)
             {
                 await Task.Delay(_delay);
                 
@@ -73,25 +74,25 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
         [Benchmark(Baseline = true)]
         public void Current()
         {
-            Parallelize(() => _current.ExecuteAsync(_keys));
+            Parallelize(() => _current.ExecuteAsync(_keys, CancellationToken.None));
         }
 
         [Benchmark]
         public void Variant1()
         {
-            Parallelize(() => _variant1.ExecuteAsync(_keys));
+            Parallelize(() => _variant1.ExecuteAsync(_keys, CancellationToken.None));
         }
 
         [Benchmark]
         public void Variant2()
         {
-            Parallelize(() => _variant2.ExecuteAsync(_keys));
+            Parallelize(() => _variant2.ExecuteAsync(_keys, CancellationToken.None));
         }
         
         [Benchmark]
         public void Variant3()
         {
-            Parallelize(() => _variant3.ExecuteAsync(_keys));
+            Parallelize(() => _variant3.ExecuteAsync(_keys, CancellationToken.None));
         }
 
         private void Parallelize(Func<Task> func)

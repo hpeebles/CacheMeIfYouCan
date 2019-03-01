@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private bool _disposed;
         
         public EnumerableKeyFunctionCache(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> func,
+            Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             string functionName,
             ICacheInternal<TK, TV> cache,
             TimeSpan timeToLive,
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             PendingRequestsCounterContainer.Remove(this);
         }
         
-        public async Task<IReadOnlyCollection<IKeyValuePair<TK, TV>>> GetMulti(IEnumerable<TK> keyObjs)
+        public async Task<IReadOnlyCollection<IKeyValuePair<TK, TV>>> GetMulti(IEnumerable<TK> keyObjs, CancellationToken token)
         {
             if (_disposed)
                 throw new ObjectDisposedException($"{Name} - {Type}");
@@ -108,6 +108,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             {
                 try
                 {
+                    token.ThrowIfCancellationRequested();
+                    
                     Interlocked.Increment(ref _pendingRequestsCount);
 
                     Key<TK>[] missingKeys = null;
@@ -146,7 +148,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     if (missingKeys.Any())
                     {
-                        var fetched = await Fetch(missingKeys);
+                        var fetched = await Fetch(missingKeys, token);
 
                         if (fetched != null && fetched.Any())
                         {
@@ -188,7 +190,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             return readonlyResults;
         }
 
-        private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> Fetch(Key<TK>[] keys)
+        private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> Fetch(Key<TK>[] keys, CancellationToken token)
         {
             if (keys.Length < _maxFetchBatchSize)
                 return await FetchBatch(keys);
@@ -214,7 +216,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                 try
                 {
-                    var fetched = await _fetchHandler.ExecuteAsync(batchKeys.Select(k => k.AsObject).ToArray());
+                    var fetched = await _fetchHandler.ExecuteAsync(batchKeys.Select(k => k.AsObject).ToArray(), token);
 
                     if (fetched != null && fetched.Any())
                     {
@@ -310,14 +312,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 .ToArray();
         }
         
-        private static Func<ICollection<TK>, Task<IDictionary<TK, TV>>> ConvertIntoNegativeCachingFunc(
-            Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func,
+        private static Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertIntoNegativeCachingFunc(
+            Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             Func<TK, TV> negativeCachingValueFactory,
             IEqualityComparer<TK> keyComparer)
         {
-            return async keys =>
+            return async (keys, token) =>
             {
-                var values = await func(keys);
+                var values = await func(keys, token);
 
                 IDictionary<TK, TV> valuesWithFills = null;
                 foreach (var key in keys)

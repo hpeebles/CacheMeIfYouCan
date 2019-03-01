@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 
@@ -12,7 +13,7 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyParamSeparator { get; private set; }
 
         internal MultiParamFunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFunc,
+            Func<TK, CancellationToken, Task<TV>> inputFunc,
             string functionName)
             : base(inputFunc, functionName)
         {
@@ -20,7 +21,7 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         internal MultiParamFunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFunc,
+            Func<TK, CancellationToken, Task<TV>> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(

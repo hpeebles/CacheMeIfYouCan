@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.FunctionCaches;
@@ -12,17 +13,17 @@ namespace CacheMeIfYouCan.Configuration
         : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : SingleKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private readonly Func<TK, Task<TV>> _inputFunc;
+        private readonly Func<TK, CancellationToken, Task<TV>> _inputFunc;
         private Func<TK, TV, TimeSpan> _timeToLiveFactory;
 
-        internal SingleKeyFunctionCacheConfigurationManagerBase(Func<TK, Task<TV>> inputFunc, string name)
+        internal SingleKeyFunctionCacheConfigurationManagerBase(Func<TK, CancellationToken, Task<TV>> inputFunc, string name)
             : base(name)
         {
             _inputFunc = inputFunc;
         }
 
         internal SingleKeyFunctionCacheConfigurationManagerBase(
-            Func<TK, Task<TV>> inputFunc,
+            Func<TK, CancellationToken, Task<TV>> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.FunctionCaches;
@@ -12,12 +13,12 @@ namespace CacheMeIfYouCan.Configuration
         : FunctionCacheConfigurationManagerBase<TConfig, TK, TV>
         where TConfig : EnumerableKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
-        private readonly Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> _inputFunc;
+        private readonly Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _inputFunc;
         internal int MaxFetchBatchSize { get; private set; }
         internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
+            Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> inputFunc,
             string functionName)
             : base(functionName)
         {
@@ -25,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
-            Func<IEnumerable<TK>, Task<IDictionary<TK, TV>>> inputFunc,
+            Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(

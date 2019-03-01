@@ -27,40 +27,40 @@ namespace CacheMeIfYouCan.Tests.Proxy
         {
             var methods = typeof(ITest).GetMethods();
             
-            _stringToString_0 = new SingleKeyFunctionCacheConfigurationManager<string, string>(
+            _stringToString_0 = new SingleKeyFunctionCacheConfigurationManagerNoCanx<string, string>(
                 impl.StringToString, config, methods[0]).Build();
             
-            _intToString_1 = new SingleKeyFunctionCacheConfigurationManager<int, string>(
+            _intToString_1 = new SingleKeyFunctionCacheConfigurationManagerNoCanx<int, string>(
                 impl.IntToString, config, methods[1]).Build();
             
-            _longToInt_2 = new SingleKeyFunctionCacheConfigurationManager<long, int>(
+            _longToInt_2 = new SingleKeyFunctionCacheConfigurationManagerNoCanx<long, int>(
                 impl.LongToInt, config, methods[2]).Build();
             
-            _multiEcho_3 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, IDictionary<string, string>, string, string>(
+            _multiEcho_3 = new EnumerableKeyFunctionCacheConfigurationManagerNoCanx<IEnumerable<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEcho, config, methods[3]).Build();
             
-            _multiEchoList_4 = new EnumerableKeyFunctionCacheConfigurationManager<IList<string>, IDictionary<string, string>, string, string>(
+            _multiEchoList_4 = new EnumerableKeyFunctionCacheConfigurationManagerNoCanx<IList<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEchoList, config, methods[4]).Build();
             
-            _multiEchoSet_5 = new EnumerableKeyFunctionCacheConfigurationManager<ISet<string>, IDictionary<string, string>, string, string>(
+            _multiEchoSet_5 = new EnumerableKeyFunctionCacheConfigurationManagerNoCanx<ISet<string>, IDictionary<string, string>, string, string>(
                 impl.MultiEchoSet, config, methods[5]).Build();
             
-            _stringToStringSync_6 = new SingleKeyFunctionCacheConfigurationManagerSync<string, string>(
+            _stringToStringSync_6 = new SingleKeyFunctionCacheConfigurationManagerSyncNoCanx<string, string>(
                 impl.StringToStringSync, config, methods[6]).Build();
             
-            _multiStringToStringSync_7 = new EnumerableKeyFunctionCacheConfigurationManagerSync<ICollection<string>, IDictionary<string, string>, string, string>(
+            _multiStringToStringSync_7 = new EnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<ICollection<string>, IDictionary<string, string>, string, string>(
                 impl.MultiStringToStringSync, config, methods[7]).Build();
             
-            _multiStringToConcurrent_8 = new EnumerableKeyFunctionCacheConfigurationManager<IEnumerable<string>, ConcurrentDictionary<string, string>, string, string>(
+            _multiStringToConcurrent_8 = new EnumerableKeyFunctionCacheConfigurationManagerNoCanx<IEnumerable<string>, ConcurrentDictionary<string, string>, string, string>(
                 impl.MultiEchoToConcurrent, config, methods[8]).Build();
             
-            _multiParamEcho_9 = new MultiParamFunctionCacheConfigurationManager<string, int, string>(
+            _multiParamEcho_9 = new MultiParamFunctionCacheConfigurationManagerNoCanx<string, int, string>(
                 impl.MultiParamEcho, config, methods[9]).Build();
             
-            _multiParamEchoSync_10 = new MultiParamFunctionCacheConfigurationManagerSync<string, int, string>(
+            _multiParamEchoSync_10 = new MultiParamFunctionCacheConfigurationManagerSyncNoCanx<string, int, string>(
                 impl.MultiParamEchoSync, config, methods[10]).Build();
             
-            _multiParamEnumerableKey_11 = new MultiParamEnumerableKeyFunctionCacheConfigurationManager<string, IEnumerable<int>, IDictionary<int, string>, int, string>(
+            _multiParamEnumerableKey_11 = new MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<string, IEnumerable<int>, IDictionary<int, string>, int, string>(
                 impl.MultiParamEnumerableKey, config, methods[11]).Build();
         }
         

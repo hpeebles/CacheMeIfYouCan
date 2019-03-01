@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Common
@@ -30,9 +31,9 @@ namespace CacheMeIfYouCan.Tests.Common
             _errorFunc = errorFunc;
         }
 
-        private string Call(string key)
+        private string Call(string key, CancellationToken token)
         {
-            Task.Delay(_delayFunc(key)).GetAwaiter().GetResult();
+            Task.Delay(_delayFunc(key), token).GetAwaiter().GetResult();
             
             if (_errorFunc(key))
                 throw new Exception();
@@ -41,6 +42,11 @@ namespace CacheMeIfYouCan.Tests.Common
         }
 
         public static implicit operator Func<string, string>(EchoSync echo)
+        {
+            return k => echo.Call(k, CancellationToken.None);
+        }
+        
+        public static implicit operator Func<string, CancellationToken, string>(EchoSync echo)
         {
             return echo.Call;
         }

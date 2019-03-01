@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.FunctionCaches;
@@ -12,13 +13,13 @@ namespace CacheMeIfYouCan.Configuration
         : FunctionCacheConfigurationManagerBase<TConfig, (TK1, TK2), TV>
         where TConfig : MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase<TConfig, TK1, TK2, TV>
     {
-        private readonly Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> _inputFunc;
+        private readonly Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _inputFunc;
         internal string KeyParamSeparator { get; private set; }
         internal int MaxFetchBatchSize { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
-            Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> inputFunc,
+            Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> inputFunc,
             string functionName)
             : base(functionName)
         {
@@ -26,7 +27,7 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
-            Func<TK1, IEnumerable<TK2>, Task<IDictionary<TK2, TV>>> inputFunc,
+            Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> inputFunc,
             CachedProxyConfig interfaceConfig,
             MethodInfo methodInfo)
             : base(

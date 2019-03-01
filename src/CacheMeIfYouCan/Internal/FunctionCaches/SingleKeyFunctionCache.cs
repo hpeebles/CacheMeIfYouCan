@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private bool _disposed;
         
         public SingleKeyFunctionCache(
-            Func<TK, Task<TV>> func,
+            Func<TK, CancellationToken, Task<TV>> func,
             string functionName,
             ICacheInternal<TK, TV> cache,
             Func<TK, TV, TimeSpan> timeToLiveFactory,
@@ -62,7 +62,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _disposed = true;
         }
         
-        public async Task<TV> Get(TK keyObj)
+        public async Task<TV> Get(TK keyObj, CancellationToken token)
         {
             if (_disposed)
                 throw new ObjectDisposedException($"{Name} - {Type}");
@@ -78,6 +78,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 FunctionCacheGetResultInner<TK, TV> result = null;
                 try
                 {
+                    token.ThrowIfCancellationRequested();
+                    
                     Interlocked.Increment(ref _pendingRequestsCount);
 
                     if (_cache != null && (_skipCacheGetPredicate == null || !_skipCacheGetPredicate(key)))
@@ -100,7 +102,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     if (result == null)
                     {
-                        var fetchResult = await Fetch(key);
+                        var fetchResult = await Fetch(key, token);
 
                         result = new FunctionCacheGetResultInner<TK, TV>(
                             fetchResult.Key,
@@ -130,7 +132,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
         }
 
-        private async Task<FunctionCacheFetchResultInner<TK, TV>> Fetch(Key<TK> key)
+        private async Task<FunctionCacheFetchResultInner<TK, TV>> Fetch(Key<TK> key, CancellationToken token)
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -139,7 +141,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             FunctionCacheFetchResultInner<TK, TV> result = null;
             try
             {
-                var (fetched, duplicate) = await _fetchHandler.ExecuteAsync(key);
+                var (fetched, duplicate) = await _fetchHandler.ExecuteAsync(key, token);
 
                 result = new FunctionCacheFetchResultInner<TK, TV>(
                     key,

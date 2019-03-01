@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
@@ -12,12 +13,12 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
     // Always takes array from pool
     internal class DuplicateTaskCatcherMulti_3<TK, TV>
     {
-        private readonly Func<ICollection<TK>, Task<IDictionary<TK, TV>>> _func;
+        private readonly Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
         private readonly ArrayPool<TK> _arrayPool;
 
-        public DuplicateTaskCatcherMulti_3(Func<ICollection<TK>, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherMulti_3(Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _comparer = comparer;
@@ -25,7 +26,9 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
             _arrayPool = ArrayPool<TK>.Shared;
         }
 
-        public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(ICollection<TK> keys)
+        public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(
+            ICollection<TK> keys,
+            CancellationToken token)
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();
             var alreadyPending = new List<KeyValuePair<TK, Task<ResultsMulti>>>();
@@ -54,7 +57,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
             {
                 if (toFetch.Any())
                 {
-                    var values = await _func(new ArraySegment<TK>(toFetch, 0, toFetchCount));
+                    var values = await _func(new ArraySegment<TK>(toFetch, 0, toFetchCount), token);
 
                     var resultsMulti = new ResultsMulti(values);
 

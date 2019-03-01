@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 
@@ -20,8 +21,8 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         {
             _cache = cache;
             _keyComparer = keyComparer;
-            _getHandlerSingle = new DuplicateTaskCatcherSingle<Key<TK>, GetFromCacheResult<TK, TV>>(_cache.Get, keyComparer);
-            _getHandlerMulti = new DuplicateTaskCatcherMulti<Key<TK>, GetFromCacheResult<TK, TV>>(GetMultiImpl, keyComparer);
+            _getHandlerSingle = new DuplicateTaskCatcherSingle<Key<TK>, GetFromCacheResult<TK, TV>>((k, t) => _cache.Get(k), keyComparer);
+            _getHandlerMulti = new DuplicateTaskCatcherMulti<Key<TK>, GetFromCacheResult<TK, TV>>((k, t) => GetMultiImpl(k), keyComparer);
 
             CacheName = cache.CacheName;
             CacheType = cache.CacheType;
@@ -34,7 +35,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         
         public async Task<GetFromCacheResult<TK, TV>> Get(Key<TK> key)
         {
-            var (result, duplicate) = await _getHandlerSingle.ExecuteAsync(key);
+            var (result, duplicate) = await _getHandlerSingle.ExecuteAsync(key, CancellationToken.None);
 
             return result.Value.WithStatusCode(duplicate ? DuplicateStatusCode : 0);
         }
@@ -46,7 +47,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
         {
-            var results = await _getHandlerMulti.ExecuteAsync(keys);
+            var results = await _getHandlerMulti.ExecuteAsync(keys, CancellationToken.None);
 
             return results
                 .Select(kv => kv.Value.Value.WithStatusCode(kv.Value.Duplicate ? DuplicateStatusCode : 0))

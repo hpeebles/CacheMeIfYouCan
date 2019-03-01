@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 
@@ -143,6 +144,8 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}'");
                 .Select(p => p.ParameterType)
                 .ToArray();
 
+            var hasCancellation = parameterTypes.Length > 1 && parameterTypes.Last() == typeof(CancellationToken);
+            
             var isAsync = typeof(Task).IsAssignableFrom(methodInfo.ReturnType);
 
             var returnType = methodInfo.ReturnType;
@@ -175,6 +178,10 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}'");
                     funcTypeGeneric = typeof(Func<,,,,>);
                     break;
 
+                case 6:
+                    funcTypeGeneric = typeof(Func<,,,,,>);
+                    break;
+
                 default:
                     throw new Exception("Only functions with up to 4 input parameters are supported");
             }
@@ -190,15 +197,16 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}'");
                 KeyType = keyType,
                 ValueType = valueType,
                 IsEnumerableKey = isEnumerableKey,
-                IsAsync = isAsync
+                IsAsync = isAsync,
+                HasCancellation = hasCancellation
             };
 
             bool IsEnumerableKeyFunc(out Type _keyType, out Type _valueType)
             {
-                var lastParam = parameterTypes.Last();
+                var lastKeyParam = hasCancellation ? parameterTypes[parameterTypes.Length - 1] : parameterTypes.Last();
             
-                if (lastParam != typeof(String) &&
-                    IsEnumerable(lastParam, out _keyType) &&
+                if (lastKeyParam != typeof(String) &&
+                    IsEnumerable(lastKeyParam, out _keyType) &&
                     IsDictionary(returnTypeInner, out var returnKeyType, out _valueType))
                 {
                     if (_keyType != returnKeyType)
@@ -230,30 +238,46 @@ The key type in the returned dictionary must match the type of the items in the 
                     .Concat(new[] { definition.ReturnTypeInner, definition.KeyType, definition.ValueType })
                     .ToArray();
 
-                switch (genericTypeInputs.Length)
+                switch (definition.HasCancellation ? genericTypeInputs.Length - 1 : genericTypeInputs.Length)
                 {
                     case 5:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,>)
-                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,,>);
                         break;
 
                     case 6:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,,>)
-                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<,,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,,,>);
                         break;
 
                     case 7:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManager<,,,,,,>)
-                            : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSync<,,,,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<,,,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,,,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,,,,>)
+                                : typeof(MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,,,,>);
                         break;
                 
                     default:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(EnumerableKeyFunctionCacheConfigurationManager<,,,>)
-                            : typeof(EnumerableKeyFunctionCacheConfigurationManagerSync<,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerCanx<,,,>)
+                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,>)
+                            : definition.HasCancellation
+                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,>)
+                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,>);
                         break;
                 }
 
@@ -271,26 +295,42 @@ The key type in the returned dictionary must match the type of the items in the 
                 {
                     case 3:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,>)
-                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerCanx<,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerNoCanx<,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerSyncCanx<,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerSyncNoCanx<,,>);
                         break;
 
                     case 4:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,,>)
-                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerCanx<,,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerNoCanx<,,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerSyncCanx<,,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerSyncNoCanx<,,,>);
                         break;
 
                     case 5:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(MultiParamFunctionCacheConfigurationManager<,,,,>)
-                            : typeof(MultiParamFunctionCacheConfigurationManagerSync<,,,,>);
+                            ? definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerCanx<,,,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerNoCanx<,,,,>)
+                            : definition.HasCancellation
+                                ? typeof(MultiParamFunctionCacheConfigurationManagerSyncCanx<,,,,>)
+                                : typeof(MultiParamFunctionCacheConfigurationManagerSyncNoCanx<,,,,>);
                         break;
                 
                     default:
                         configManagerGenericType = definition.IsAsync
-                            ? typeof(SingleKeyFunctionCacheConfigurationManager<,>)
-                            : typeof(SingleKeyFunctionCacheConfigurationManagerSync<,>);
+                            ? definition.HasCancellation
+                                ? typeof(SingleKeyFunctionCacheConfigurationManagerCanx<,>)
+                                : typeof(SingleKeyFunctionCacheConfigurationManagerNoCanx<,>)
+                            : definition.HasCancellation
+                                ? typeof(SingleKeyFunctionCacheConfigurationManagerSyncCanx<,>)
+                                : typeof(SingleKeyFunctionCacheConfigurationManagerSyncNoCanx<,>);
                         break;
                 }
                 
@@ -347,6 +387,7 @@ The key type in the returned dictionary must match the type of the items in the 
             public Type ValueType; // Only populated for enumerable key functions
             public bool IsEnumerableKey;
             public bool IsAsync;
+            public bool HasCancellation;
         }
     }
 }

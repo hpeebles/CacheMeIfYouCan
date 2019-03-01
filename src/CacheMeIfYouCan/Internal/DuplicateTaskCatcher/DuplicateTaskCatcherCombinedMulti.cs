@@ -4,20 +4,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal class DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>
     {
-        private readonly Func<TK1, ICollection<TK2>, Task<IDictionary<TK2, TV>>> _func;
+        private readonly Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _func;
         private readonly IEqualityComparer<TK2> _innerKeyComparer;
         private readonly ConcurrentDictionary<(TK1, TK2), Task<ResultsMulti>> _tasks;
         private readonly ArrayPool<TK2> _arrayPool;
         private const int ArrayPoolCutOffSize = 100;
 
         public DuplicateTaskCatcherCombinedMulti(
-            Func<TK1, ICollection<TK2>, Task<IDictionary<TK2, TV>>> func,
+            Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> func,
             IEqualityComparer<TK1> outerComparer,
             IEqualityComparer<TK2> innerComparer)
         {
@@ -32,7 +33,8 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 
         public async Task<IDictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>>> ExecuteAsync(
             TK1 outerKey,
-            ICollection<TK2> innerKeys)
+            ICollection<TK2> innerKeys,
+            CancellationToken token)
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();
             var alreadyPending = new List<KeyValuePair<TK2, Task<ResultsMulti>>>();
@@ -68,7 +70,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             {
                 if (toFetch.Any())
                 {
-                    var values = await _func(outerKey, new ArraySegment<TK2>(toFetch, 0, toFetchCount));
+                    var values = await _func(outerKey, new ArraySegment<TK2>(toFetch, 0, toFetchCount), token);
 
                     var resultsMulti = new ResultsMulti(values);
 

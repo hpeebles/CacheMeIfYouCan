@@ -2,22 +2,23 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal class DuplicateTaskCatcherSingle<TK, TV>
     {
-        private readonly Func<TK, Task<TV>> _func;
+        private readonly Func<TK, CancellationToken, Task<TV>> _func;
         private readonly ConcurrentDictionary<TK, Task<ValueWithTimestamp<TV>>> _tasks;
         
-        public DuplicateTaskCatcherSingle(Func<TK, Task<TV>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherSingle(Func<TK, CancellationToken, Task<TV>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _tasks = new ConcurrentDictionary<TK, Task<ValueWithTimestamp<TV>>>(comparer);
         }
 
-        public async Task<(ValueWithTimestamp<TV> value, bool duplicate)> ExecuteAsync(TK key)
+        public async Task<(ValueWithTimestamp<TV> value, bool duplicate)> ExecuteAsync(TK key, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<ValueWithTimestamp<TV>>();
 
@@ -28,7 +29,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 
             try
             {
-                var result = await _func(key);
+                var result = await _func(key, token);
 
                 var returnValue = new ValueWithTimestamp<TV>(result, Stopwatch.GetTimestamp());
                 
