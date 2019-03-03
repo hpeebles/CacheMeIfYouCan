@@ -504,6 +504,186 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter, TKInnerEnumerable, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter, TKInnerEnumerable, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKInnerEnumerable, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKInnerEnumerable, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter, TKInnerEnumerable, CancellationToken, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter, TKInnerEnumerable, CancellationToken, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<TKOuter, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKInnerEnumerable, CancellationToken, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKInnerEnumerable, CancellationToken, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<TKOuter1, TKOuter2, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, CancellationToken, Task<TRes>>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> ConfigureFor<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>(
+            Expression<Func<T, Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, CancellationToken, TRes>>> expression,
+            Action<MultiParamEnumerableKeyFunctionCacheConfigurationManagerSyncCanx<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, TRes, TKInner, TV>> configAction)
+            where TKInnerEnumerable : IEnumerable<TKInner>
+            where TRes : IDictionary<TKInner, TV>
+        {
+            var methodInfo = GetMethodInfo(expression);
+            
+            var key = new MethodInfoKey(typeof(T), methodInfo);
+            
+            _functionCacheConfigActions[key] = configAction;
+            
+            return this;
+        }
+        
         public T Build()
         {
             var config = new CachedProxyConfig(
