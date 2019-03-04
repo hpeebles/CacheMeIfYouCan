@@ -119,5 +119,47 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Last().Results.Should().ContainSingle();
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
+
+        [Fact]
+        public async Task ExcludeParametersFromKey()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            Func<string, int, Task<string>> func = (k1, k2) => Task.FromResult($"{k1}_{k2}");
+            Func<string, int, Task<string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached()
+                    .OnResult(results.Add)
+                    .ExcludeParametersFromKey(0)
+                    .Build();
+            }
+
+            var key1 = Guid.NewGuid().ToString();
+            var key2 = 2;
+
+            await cachedFunc(key1, key2);
+            
+            var result = await cachedFunc(Guid.NewGuid().ToString(), key2);
+            
+            result.Should().Be($"{key1}_{key2}");
+            results.Last().Results.Single().Outcome.Should().Be(Outcome.FromCache);
+        }
+        
+        [Fact]
+        public void ExcludeParametersFromKeyFailsIfAllKeysAreExcluded()
+        {
+            Func<string, int, Task<string>> func = (k1, k2) => Task.FromResult($"{k1}_{k2}");
+            using (_setupLock.Enter())
+            {
+                Action action = () => func
+                    .Cached()
+                    .ExcludeParametersFromKey(0, 1)
+                    .Build();
+
+                action.Should().Throw<ArgumentOutOfRangeException>();
+            }
+        }
     }
 }

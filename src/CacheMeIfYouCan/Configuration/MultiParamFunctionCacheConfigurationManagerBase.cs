@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : MultiParamFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
         internal string KeyParamSeparator { get; private set; }
+        internal int[] ParametersToExcludeFromKey { get; private set; }
 
         internal MultiParamFunctionCacheConfigurationManagerBase(
             Func<TK, CancellationToken, Task<TV>> inputFunc,
@@ -35,6 +37,24 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithKeyParamSeparator(string separator)
         {
             KeyParamSeparator = separator;
+            return (TConfig)this;
+        }
+
+        protected TConfig ExcludeParametersFromKeyImpl(int[] parameterIndexes, int totalParameterCount)
+        {
+            parameterIndexes = parameterIndexes.Distinct().ToArray();
+            
+            foreach (var index in parameterIndexes)
+            {
+                if (0 < index || index > totalParameterCount - 1)
+                    throw new ArgumentOutOfRangeException(nameof(parameterIndexes), $"Index '{index}' is not valid");
+            }
+            
+            if (parameterIndexes.Length >= totalParameterCount)
+                throw new ArgumentException("You cannot exclude all parameters from the key");
+
+            
+            ParametersToExcludeFromKey = parameterIndexes;
             return (TConfig)this;
         }
     }

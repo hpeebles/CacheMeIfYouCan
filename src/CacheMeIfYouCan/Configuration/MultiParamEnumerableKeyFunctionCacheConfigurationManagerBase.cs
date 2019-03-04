@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
@@ -17,6 +18,7 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyParamSeparator { get; private set; }
         internal int MaxFetchBatchSize { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
+        internal int[] ParametersToExcludeFromKey { get; private set; }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
             Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> inputFunc,
@@ -61,41 +63,53 @@ namespace CacheMeIfYouCan.Configuration
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
         }
+        
+        protected TConfig ExcludeParametersFromKeyImpl(int[] parameterIndexes, int totalParameterCount)
+        {
+            parameterIndexes = parameterIndexes.Distinct().ToArray();
+            
+            foreach (var index in parameterIndexes)
+            {
+                if (0 < index || index >= totalParameterCount - 1)
+                    throw new ArgumentOutOfRangeException(nameof(parameterIndexes), $"Index '{index}' is not valid");
+            }
+            
+            if (parameterIndexes.Length >= totalParameterCount)
+                throw new ArgumentException("You cannot exclude all parameters from the key");
+
+            
+            ParametersToExcludeFromKey = parameterIndexes;
+            return (TConfig)this;
+        }
 
         internal MultiParamEnumerableKeyFunctionCache<TK1, TK2, TV> BuildMultiParamEnumerableKeyFunctionCache(
-            KeyComparer<TK1> keyComparer1 = null,
-            Func<TK1, string> keySerializer1 = null)
+            KeyComparer<TK1> key1Comparer,
+            Func<TK1, string> key1Serializer)
         {
-            if (keyComparer1 == null)
-                keyComparer1 = KeyComparerResolver.Get<TK1>(KeyComparers);
-
-            if (keySerializer1 == null)
-                keySerializer1 = GetKeySerializerImpl<TK1>();
-            
-            var keyComparer2 = KeyComparerResolver.Get<TK2>(KeyComparers);
+            var key2Comparer = KeyComparerResolver.Get<TK2>(KeyComparers);
             
             var combinedKeyComparer = new KeyComparer<(TK1, TK2)>(
-                new ValueTupleComparer<TK1, TK2>(keyComparer1.Inner, keyComparer2.Inner));
+                new ValueTupleComparer<TK1, TK2>(key1Comparer.Inner, key2Comparer.Inner));
             
             var cache = BuildCache(GetKeySerializer(), combinedKeyComparer);
 
             var timeToLive = TimeToLive ?? DefaultSettings.Cache.TimeToLive;
 
-            var keySerializer2 = GetKeySerializerImpl<TK2>();
+            var key2Serializer = GetKeySerializerImpl<TK2>();
             
             var functionCache = new MultiParamEnumerableKeyFunctionCache<TK1, TK2, TV>(
                 _inputFunc,
                 Name,
                 cache,
                 timeToLive,
-                keySerializer1,
-                keySerializer2,
+                key1Serializer,
+                key2Serializer,
                 DefaultValueFactory,
                 OnResultAction,
                 OnFetchAction,
                 OnExceptionAction,
-                keyComparer1,
-                keyComparer2,
+                key1Comparer,
+                key2Comparer,
                 KeyParamSeparator,
                 MaxFetchBatchSize,
                 SkipCacheGetPredicate,

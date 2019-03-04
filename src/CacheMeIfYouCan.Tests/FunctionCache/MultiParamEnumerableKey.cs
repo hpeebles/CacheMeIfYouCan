@@ -273,5 +273,57 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             serializer.SerializeCount.Should().Be(1);
             serializer.DeserializeCount.Should().Be(0);
         }
+        
+        [Fact]
+        public async Task ExcludeParametersFromKey()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            Func<string, IEnumerable<int>, Task<Dictionary<int, string>>> func = (k1, k2) =>
+            {
+                return Task.FromResult(k2.ToDictionary(k => k, k => $"{k1}_{k}"));
+            };
+            
+            Func<string, IEnumerable<int>, Task<Dictionary<int, string>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<int>, Dictionary<int, string>, int, string>()
+                    .OnResult(results.Add)
+                    .ExcludeParametersFromKey(0)
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(outerKey, innerKeys);
+            
+            var result = await cachedFunc(Guid.NewGuid().ToString(), innerKeys);
+            
+            foreach (var key in innerKeys)
+                result[key].Should().Be($"{outerKey}_{key}");
+
+            results.Last().Results.Select(r => r.Outcome).Should().OnlyContain(o => o == Outcome.FromCache);
+        }
+        
+        [Fact]
+        public void ExcludeParametersFromKeyFailsIfAllKeysAreExcluded()
+        {
+            Func<string, IEnumerable<int>, Task<Dictionary<int, string>>> func = (k1, k2) =>
+            {
+                return Task.FromResult(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            using (_setupLock.Enter())
+            {
+                Action action = () => func
+                    .Cached<string, IEnumerable<int>, Dictionary<int, string>, int, string>()
+                    .ExcludeParametersFromKey(0, 1)
+                    .Build();
+
+                action.Should().Throw<ArgumentOutOfRangeException>();
+            }
+        }
     }
 }

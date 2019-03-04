@@ -96,6 +96,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
+        }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
         {
@@ -128,7 +133,15 @@ namespace CacheMeIfYouCan.Configuration
         
         public Func<TKOuter, TKInnerEnumerable, Task<TRes>> Build()
         {
-            var functionCache = BuildMultiParamEnumerableKeyFunctionCache();
+            var key1Comparer = ParametersToExcludeFromKey == null || !ParametersToExcludeFromKey.Contains(0)
+                ? KeyComparerResolver.Get<TKOuter>(KeyComparers)
+                : new KeyComparer<TKOuter>(new AlwaysEqualComparer<TKOuter>());
+
+            var key1Serializer = ParametersToExcludeFromKey == null || !ParametersToExcludeFromKey.Contains(0)
+                ? GetKeySerializerImpl<TKOuter>()
+                : k => null;
+            
+            var functionCache = BuildMultiParamEnumerableKeyFunctionCache(key1Comparer, key1Serializer);
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 
@@ -173,7 +186,15 @@ namespace CacheMeIfYouCan.Configuration
         
         public Func<TKOuter, TKInnerEnumerable, CancellationToken, Task<TRes>> Build()
         {
-            var functionCache = BuildMultiParamEnumerableKeyFunctionCache();
+            var key1Comparer = ParametersToExcludeFromKey == null || !ParametersToExcludeFromKey.Contains(0)
+                ? KeyComparerResolver.Get<TKOuter>(KeyComparers)
+                : new KeyComparer<TKOuter>(new AlwaysEqualComparer<TKOuter>());
+
+            var key1Serializer = ParametersToExcludeFromKey == null || !ParametersToExcludeFromKey.Contains(0)
+                ? GetKeySerializerImpl<TKOuter>()
+                : k => null;
+
+            var functionCache = BuildMultiParamEnumerableKeyFunctionCache(key1Comparer, key1Serializer);
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 
@@ -309,6 +330,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 3);
+        }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
         {
@@ -342,8 +368,8 @@ namespace CacheMeIfYouCan.Configuration
         public Func<TKOuter1, TKOuter2, TKInnerEnumerable, Task<TRes>> Build()
         {
             var functionCache = BuildMultiParamEnumerableKeyFunctionCache(
-                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2>(KeyComparers),
-                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2>(KeySerializers, KeyParamSeparator));
+                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2>(KeyComparers, ParametersToExcludeFromKey),
+                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey));
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 
@@ -393,8 +419,8 @@ namespace CacheMeIfYouCan.Configuration
         public Func<TKOuter1, TKOuter2, TKInnerEnumerable, CancellationToken, Task<TRes>> Build()
         {
             var functionCache = BuildMultiParamEnumerableKeyFunctionCache(
-                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2>(KeyComparers),
-                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2>(KeySerializers, KeyParamSeparator));
+                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2>(KeyComparers, ParametersToExcludeFromKey),
+                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey));
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 
@@ -551,6 +577,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 4);
+        }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
         {
@@ -584,8 +615,8 @@ namespace CacheMeIfYouCan.Configuration
         public Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, Task<TRes>> Build()
         {
             var functionCache = BuildMultiParamEnumerableKeyFunctionCache(
-                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2, TKOuter3>(KeyComparers),
-                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3>(KeySerializers, KeyParamSeparator));
+                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2, TKOuter3>(KeyComparers, ParametersToExcludeFromKey),
+                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey));
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 
@@ -635,8 +666,8 @@ namespace CacheMeIfYouCan.Configuration
         public Func<TKOuter1, TKOuter2, TKOuter3, TKInnerEnumerable, CancellationToken, Task<TRes>> Build()
         {
             var functionCache = BuildMultiParamEnumerableKeyFunctionCache(
-                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2, TKOuter3>(KeyComparers),
-                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3>(KeySerializers, KeyParamSeparator));
+                TupleKeyHelper.BuildKeyComparer<TKOuter1, TKOuter2, TKOuter3>(KeyComparers, ParametersToExcludeFromKey),
+                TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey));
 
             var keyComparer = KeyComparerResolver.GetInner<TKInner>();
 

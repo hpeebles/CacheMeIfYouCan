@@ -1,14 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using CacheMeIfYouCan.Serializers;
 
 namespace CacheMeIfYouCan.Internal
 {
     internal static class TupleKeyHelper
     {
-        public static KeyComparer<(TK1, TK2)> BuildKeyComparer<TK1, TK2>(EqualityComparers keyComparers)
+        public static KeyComparer<(TK1, TK2)> BuildKeyComparer<TK1, TK2>(
+            EqualityComparers keyComparers,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Comparer = KeyComparerResolver.GetInner<TK1>(keyComparers);
-            var key2Comparer = KeyComparerResolver.GetInner<TK2>(keyComparers);
+            var key1Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? KeyComparerResolver.GetInner<TK1>(keyComparers)
+                : new AlwaysEqualComparer<TK1>();
+
+            var key2Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? KeyComparerResolver.GetInner<TK2>(keyComparers)
+                : new AlwaysEqualComparer<TK2>();
 
             var combinedComparer = new ValueTupleComparer<TK1, TK2>(key1Comparer, key2Comparer);
 
@@ -17,42 +26,96 @@ namespace CacheMeIfYouCan.Internal
 
         public static Func<(TK1, TK2), string> BuildKeySerializer<TK1, TK2>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
-            var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
+            var serializers = new List<Func<(TK1, TK2), string>>();
 
-            return x =>
-                key1Serializer(x.Item1) +
-                keyParamSeparator +
-                key2Serializer(x.Item2);
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0))
+            {
+                var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
+                serializers.Add(x => key1Serializer(x.Item1));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1))
+            {
+                var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
+                serializers.Add(x => key2Serializer(x.Item2));
+            }
+
+            return Serialize;
+
+            string Serialize((TK1, TK2) key)
+            {
+                return String.Join(keyParamSeparator, serializers.Select(s => s(key)));
+            }
         }
 
         public static Func<string, (TK1, TK2)> BuildKeyDeserializer<TK1, TK2>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Deserializer = GetKeyDeserializerSingle<TK1>(keySerializers);
-            var key2Deserializer = GetKeyDeserializerSingle<TK2>(keySerializers);
+            var key1Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? GetKeyDeserializerSingle<TK1>(keySerializers)
+                : null;
+
+            var key2Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? GetKeyDeserializerSingle<TK2>(keySerializers)
+                : null;
 
             return Deserialize;
 
             (TK1, TK2) Deserialize(string str)
             {
-                var index = str.IndexOf(keyParamSeparator, StringComparison.Ordinal);
+                TK1 value1;
+                TK2 value2;
 
-                var k1 = str.Substring(0, index - 1);
-                var k2 = str.Substring(index + keyParamSeparator.Length);
+                var separator = new StringSeparator(str, keyParamSeparator);
 
-                return (key1Deserializer(k1), key2Deserializer(k2));
+                if (key1Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value1 = key1Deserializer(value);
+                }
+                else
+                {
+                    value1 = default;
+                }
+
+                if (key2Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value2 = key2Deserializer(value);
+                }
+                else
+                {
+                    value2 = default;
+                }
+
+                return (value1, value2);
             }
         }
 
-        public static KeyComparer<(TK1, TK2, TK3)> BuildKeyComparer<TK1, TK2, TK3>(EqualityComparers keyComparers)
+        public static KeyComparer<(TK1, TK2, TK3)> BuildKeyComparer<TK1, TK2, TK3>(
+            EqualityComparers keyComparers,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Comparer = KeyComparerResolver.GetInner<TK1>(keyComparers);
-            var key2Comparer = KeyComparerResolver.GetInner<TK2>(keyComparers);
-            var key3Comparer = KeyComparerResolver.GetInner<TK3>(keyComparers);
+            var key1Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? KeyComparerResolver.GetInner<TK1>(keyComparers)
+                : new AlwaysEqualComparer<TK1>();
+
+            var key2Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? KeyComparerResolver.GetInner<TK2>(keyComparers)
+                : new AlwaysEqualComparer<TK2>();
+
+            var key3Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2)
+                ? KeyComparerResolver.GetInner<TK3>(keyComparers)
+                : new AlwaysEqualComparer<TK3>();
 
             var combinedComparer = new ValueTupleComparer<TK1, TK2, TK3>(key1Comparer, key2Comparer, key3Comparer);
 
@@ -61,48 +124,123 @@ namespace CacheMeIfYouCan.Internal
 
         public static Func<(TK1, TK2, TK3), string> BuildKeySerializer<TK1, TK2, TK3>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
-            var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
-            var key3Serializer = GetKeySerializerSingle<TK3>(keySerializers);
+            var serializers = new List<Func<(TK1, TK2, TK3), string>>();
 
-            return x =>
-                key1Serializer(x.Item1) +
-                keyParamSeparator +
-                key2Serializer(x.Item2) +
-                keyParamSeparator +
-                key3Serializer;
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0))
+            {
+                var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
+                serializers.Add(x => key1Serializer(x.Item1));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1))
+            {
+                var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
+                serializers.Add(x => key2Serializer(x.Item2));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2))
+            {
+                var key3Serializer = GetKeySerializerSingle<TK3>(keySerializers);
+                serializers.Add(x => key3Serializer(x.Item3));
+            }
+
+            return Serialize;
+
+            string Serialize((TK1, TK2, TK3) key)
+            {
+                return String.Join(keyParamSeparator, serializers.Select(s => s(key)));
+            }
         }
 
         public static Func<string, (TK1, TK2, TK3)> BuildKeyDeserializer<TK1, TK2, TK3>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Deserializer = GetKeyDeserializerSingle<TK1>(keySerializers);
-            var key2Deserializer = GetKeyDeserializerSingle<TK2>(keySerializers);
-            var key3Deserializer = GetKeyDeserializerSingle<TK3>(keySerializers);
+            var key1Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? GetKeyDeserializerSingle<TK1>(keySerializers)
+                : null;
+
+            var key2Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? GetKeyDeserializerSingle<TK2>(keySerializers)
+                : null;
+
+            var key3Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2)
+                ? GetKeyDeserializerSingle<TK3>(keySerializers)
+                : null;
 
             return Deserialize;
 
             (TK1, TK2, TK3) Deserialize(string str)
             {
-                var parts = str.Split(new[] {keyParamSeparator}, 3, StringSplitOptions.None);
+                TK1 value1;
+                TK2 value2;
+                TK3 value3;
 
-                return (
-                    key1Deserializer(parts[0]),
-                    key2Deserializer(parts[1]),
-                    key3Deserializer(parts[2]));
+                var separator = new StringSeparator(str, keyParamSeparator);
+
+                if (key1Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value1 = key1Deserializer(value);
+                }
+                else
+                {
+                    value1 = default;
+                }
+
+                if (key2Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value2 = key2Deserializer(value);
+                }
+                else
+                {
+                    value2 = default;
+                }
+
+                if (key3Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value3 = key3Deserializer(value);
+                }
+                else
+                {
+                    value3 = default;
+                }
+
+                return (value1, value2, value3);
             }
         }
 
         public static KeyComparer<(TK1, TK2, TK3, TK4)> BuildKeyComparer<TK1, TK2, TK3, TK4>(
-            EqualityComparers keyComparers)
+            EqualityComparers keyComparers,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Comparer = KeyComparerResolver.GetInner<TK1>(keyComparers);
-            var key2Comparer = KeyComparerResolver.GetInner<TK2>(keyComparers);
-            var key3Comparer = KeyComparerResolver.GetInner<TK3>(keyComparers);
-            var key4Comparer = KeyComparerResolver.GetInner<TK4>(keyComparers);
+            var key1Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? KeyComparerResolver.GetInner<TK1>(keyComparers)
+                : new AlwaysEqualComparer<TK1>();
+
+            var key2Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? KeyComparerResolver.GetInner<TK2>(keyComparers)
+                : new AlwaysEqualComparer<TK2>();
+
+            var key3Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2)
+                ? KeyComparerResolver.GetInner<TK3>(keyComparers)
+                : new AlwaysEqualComparer<TK3>();
+
+            var key4Comparer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(3)
+                ? KeyComparerResolver.GetInner<TK4>(keyComparers)
+                : new AlwaysEqualComparer<TK4>();
 
             var combinedComparer = new ValueTupleComparer<TK1, TK2, TK3, TK4>(
                 key1Comparer,
@@ -115,43 +253,124 @@ namespace CacheMeIfYouCan.Internal
 
         public static Func<(TK1, TK2, TK3, TK4), string> BuildKeySerializer<TK1, TK2, TK3, TK4>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
-            var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
-            var key3Serializer = GetKeySerializerSingle<TK3>(keySerializers);
-            var key4Serializer = GetKeySerializerSingle<TK3>(keySerializers);
+            var serializers = new List<Func<(TK1, TK2, TK3, TK4), string>>();
 
-            return x =>
-                key1Serializer(x.Item1) +
-                keyParamSeparator +
-                key2Serializer(x.Item2) +
-                keyParamSeparator +
-                key3Serializer +
-                keyParamSeparator +
-                key4Serializer;
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0))
+            {
+                var key1Serializer = GetKeySerializerSingle<TK1>(keySerializers);
+                serializers.Add(x => key1Serializer(x.Item1));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1))
+            {
+                var key2Serializer = GetKeySerializerSingle<TK2>(keySerializers);
+                serializers.Add(x => key2Serializer(x.Item2));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2))
+            {
+                var key3Serializer = GetKeySerializerSingle<TK3>(keySerializers);
+                serializers.Add(x => key3Serializer(x.Item3));
+            }
+
+            if (parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(3))
+            {
+                var key4Serializer = GetKeySerializerSingle<TK4>(keySerializers);
+                serializers.Add(x => key4Serializer(x.Item4));
+            }
+
+            return Serialize;
+
+            string Serialize((TK1, TK2, TK3, TK4) key)
+            {
+                return String.Join(keyParamSeparator, serializers.Select(s => s(key)));
+            }
         }
 
         public static Func<string, (TK1, TK2, TK3, TK4)> BuildKeyDeserializer<TK1, TK2, TK3, TK4>(
             KeySerializers keySerializers,
-            string keyParamSeparator)
+            string keyParamSeparator,
+            int[] parametersToExcludeFromKey)
         {
-            var key1Deserializer = GetKeyDeserializerSingle<TK1>(keySerializers);
-            var key2Deserializer = GetKeyDeserializerSingle<TK2>(keySerializers);
-            var key3Deserializer = GetKeyDeserializerSingle<TK3>(keySerializers);
-            var key4Deserializer = GetKeyDeserializerSingle<TK4>(keySerializers);
+            var key1Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(0)
+                ? GetKeyDeserializerSingle<TK1>(keySerializers)
+                : null;
+
+            var key2Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(1)
+                ? GetKeyDeserializerSingle<TK2>(keySerializers)
+                : null;
+
+            var key3Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(2)
+                ? GetKeyDeserializerSingle<TK3>(keySerializers)
+                : null;
+
+            var key4Deserializer = parametersToExcludeFromKey == null || !parametersToExcludeFromKey.Contains(3)
+                ? GetKeyDeserializerSingle<TK4>(keySerializers)
+                : null;
 
             return Deserialize;
 
             (TK1, TK2, TK3, TK4) Deserialize(string str)
             {
-                var parts = str.Split(new[] {keyParamSeparator}, 4, StringSplitOptions.None);
+                TK1 value1;
+                TK2 value2;
+                TK3 value3;
+                TK4 value4;
 
-                return (
-                    key1Deserializer(parts[0]),
-                    key2Deserializer(parts[1]),
-                    key3Deserializer(parts[2]),
-                    key4Deserializer(parts[3]));
+                var separator = new StringSeparator(str, keyParamSeparator);
+
+                if (key1Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value1 = key1Deserializer(value);
+                }
+                else
+                {
+                    value1 = default;
+                }
+
+                if (key2Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value2 = key2Deserializer(value);
+                }
+                else
+                {
+                    value2 = default;
+                }
+
+                if (key3Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value3 = key3Deserializer(value);
+                }
+                else
+                {
+                    value3 = default;
+                }
+
+                if (key4Deserializer != null)
+                {
+                    if (!separator.TryGetNext(out var value))
+                        throw new Exception("");
+
+                    value4 = key4Deserializer(value);
+                }
+                else
+                {
+                    value4 = default;
+                }
+
+                return (value1, value2, value3, value4);
             }
         }
 

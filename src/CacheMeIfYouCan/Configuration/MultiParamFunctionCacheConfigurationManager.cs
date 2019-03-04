@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,12 +58,12 @@ namespace CacheMeIfYouCan.Configuration
 
         internal override Func<(TK1, TK2), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)
@@ -79,10 +80,15 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, v));
         }
-        
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
+        }
+
         internal override KeyComparer<(TK1, TK2)> GetKeyComparer()
         {
-            return TupleKeyHelper.BuildKeyComparer<TK1, TK2>(KeyComparers);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2>(KeyComparers, ParametersToExcludeFromKey);
         }
     }
 
@@ -194,12 +200,12 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2, TK3)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)
@@ -221,10 +227,15 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, v));
         }
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 3);
+        }
         
         internal override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer()
         {
-            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3>(KeyComparers);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3>(KeyComparers, ParametersToExcludeFromKey);
         }
     }
     
@@ -347,12 +358,12 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2, TK3, TK4)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)
@@ -379,10 +390,15 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, k.Item4, v));
         }
+
+        public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
+        {
+            return ExcludeParametersFromKeyImpl(parameterIndexes, 4);
+        }
         
         internal override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer()
         {
-            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3, TK4>(KeyComparers);
+            return TupleKeyHelper.BuildKeyComparer<TK1, TK2, TK3, TK4>(KeyComparers, ParametersToExcludeFromKey);
         }
     }
     
