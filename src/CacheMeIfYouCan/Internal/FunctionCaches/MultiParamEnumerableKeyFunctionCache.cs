@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
     internal sealed class MultiParamEnumerableKeyFunctionCache<TK1, TK2, TV> : IPendingRequestsCounter, IDisposable
     {
         private readonly ICacheInternal<(TK1, TK2), TV> _cache;
-        private readonly TimeSpan _timeToLive;
+        private readonly Func<TK1, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK1, string> _outerKeySerializer;
         private readonly Func<TK2, string> _innerKeySerializer;
         private readonly Func<TV> _defaultValueFactory;
@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> func,
             string functionName,
             ICacheInternal<(TK1, TK2), TV> cache,
-            TimeSpan timeToLive,
+            Func<TK1, TimeSpan> timeToLiveFactory,
             Func<TK1, string> outerKeySerializer,
             Func<TK2, string> innerKeySerializer,
             Func<TV> defaultValueFactory,
@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Name = functionName;
             Type = GetType().Name;
             _cache = cache;
-            _timeToLive = timeToLive;
+            _timeToLiveFactory = timeToLiveFactory;
             _outerKeySerializer = outerKeySerializer;
             _innerKeySerializer = innerKeySerializer;
             _defaultValueFactory = defaultValueFactory;
@@ -295,7 +295,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                         if (valuesToSetInCache != null && valuesToSetInCache.Any())
                         {
-                            var setValueTask = _cache.Set(valuesToSetInCache, _timeToLive);
+                            var setValueTask = _cache.Set(valuesToSetInCache, _timeToLiveFactory(outerKey));
 
                             if (!setValueTask.IsCompleted)
                                 await setValueTask;

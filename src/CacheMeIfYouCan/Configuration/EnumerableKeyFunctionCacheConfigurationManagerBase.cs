@@ -37,6 +37,12 @@ namespace CacheMeIfYouCan.Configuration
             _inputFunc = inputFunc;
             MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
         }
+
+        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        {
+            TimeToLive = timeToLive;
+            return (TConfig)this;
+        }
         
         public TConfig WithBatchedFetches(int batchSize)
         {

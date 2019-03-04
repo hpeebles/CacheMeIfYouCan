@@ -132,6 +132,49 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Fact]
+        public async Task WithTimeToLiveFactory()
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .OnResult(results.Add)
+                    .WithTimeToLiveFactory(k => TimeSpan.FromMilliseconds(k))
+                    .Build();
+            }
+
+            var outerKey = 100;
+            
+            await cachedFunc(outerKey, new[] { 1, 2 });
+
+            await Task.Delay(TimeSpan.FromMilliseconds(120));
+            
+            await cachedFunc(outerKey, new[] { 1, 2 });
+
+            results.Should().HaveCount(2).And
+                .Subject.Last().Results.Should().OnlyContain(r => r.Outcome == Outcome.Fetch);
+
+            outerKey = 200;
+            
+            await cachedFunc(outerKey, new[] { 1, 2 });
+
+            await Task.Delay(TimeSpan.FromMilliseconds(120));
+            
+            await cachedFunc(outerKey, new[] { 1, 2 });
+            
+            results.Should().HaveCount(4).And
+                .Subject.Last().Results.Should().OnlyContain(r => r.Outcome == Outcome.FromCache);
+        }
+        
+        [Fact]
         public async Task WithBatchedFetches()
         {
             var fetches = new List<FunctionCacheFetchResult>();

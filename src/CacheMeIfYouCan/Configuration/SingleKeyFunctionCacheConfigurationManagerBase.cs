@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : SingleKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
         private readonly Func<TK, CancellationToken, Task<TV>> _inputFunc;
-        private Func<TK, TV, TimeSpan> _timeToLiveFactory;
+        internal Func<TK, TV, TimeSpan> TimeToLiveFactory { get; private set; }
 
         internal SingleKeyFunctionCacheConfigurationManagerBase(Func<TK, CancellationToken, Task<TV>> inputFunc, string name)
             : base(name)
@@ -34,16 +34,21 @@ namespace CacheMeIfYouCan.Configuration
             _inputFunc = inputFunc;
         }
 
-        public override TConfig WithTimeToLive(TimeSpan timeToLive)
+        public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
             TimeToLive = timeToLive;
-            _timeToLiveFactory = null;
+            TimeToLiveFactory = null;
             return (TConfig)this;
+        }
+        
+        public TConfig WithTimeToLiveFactory(Func<TK, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k));
         }
         
         public TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
         {
-            _timeToLiveFactory = timeToLiveFactory;
+            TimeToLiveFactory = timeToLiveFactory;
             TimeToLive = null;
             return (TConfig)this;
         }
@@ -61,9 +66,9 @@ namespace CacheMeIfYouCan.Configuration
             var cache = BuildCache(keySerializer, keyComparer);
 
             Func<TK, TV, TimeSpan> timeToLiveFactory;
-            if (_timeToLiveFactory != null)
+            if (TimeToLiveFactory != null)
             {
-                timeToLiveFactory = _timeToLiveFactory;
+                timeToLiveFactory = TimeToLiveFactory;
             }
             else
             {

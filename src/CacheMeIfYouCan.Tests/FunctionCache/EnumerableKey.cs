@@ -338,9 +338,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         {
             public TestDictionaryBuilder(IEqualityComparer<string> keyComparer)
                 : base(keyComparer)
-            {
-                
-            }
+            { }
 
             public int Count { get; private set; }
 

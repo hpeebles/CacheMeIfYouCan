@@ -117,12 +117,6 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public virtual TConfig WithTimeToLive(TimeSpan timeToLive)
-        {
-            TimeToLive = timeToLive;
-            return (TConfig)this;
-        }
-
         public TConfig WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
         {
             LocalCacheTimeToLiveOverride = timeToLive;

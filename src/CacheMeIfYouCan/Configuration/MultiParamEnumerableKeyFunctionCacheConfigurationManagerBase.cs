@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase<TConfig, TK1, TK2, TV>
     {
         private readonly Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _inputFunc;
+        internal Func<TK1, TimeSpan> TimeToLiveFactory { get; private set; }
         internal string KeyParamSeparator { get; private set; }
         internal int MaxFetchBatchSize { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
@@ -39,6 +40,20 @@ namespace CacheMeIfYouCan.Configuration
         {
             _inputFunc = inputFunc;
             MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
+        }
+        
+        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        {
+            TimeToLive = timeToLive;
+            TimeToLiveFactory = null;
+            return (TConfig)this;
+        }
+
+        public TConfig WithTimeToLiveFactory(Func<TK1, TimeSpan> timeToLiveFactory)
+        {
+            TimeToLiveFactory = timeToLiveFactory;
+            TimeToLive = null;
+            return (TConfig)this;
         }
         
         public TConfig WithKeyParamSeparator(string separator)
@@ -93,7 +108,16 @@ namespace CacheMeIfYouCan.Configuration
             
             var cache = BuildCache(GetKeySerializer(), combinedKeyComparer);
 
-            var timeToLive = TimeToLive ?? DefaultSettings.Cache.TimeToLive;
+            Func<TK1, TimeSpan> timeToLiveFactory;
+            if (TimeToLiveFactory != null)
+            {
+                timeToLiveFactory = TimeToLiveFactory;
+            }
+            else
+            {
+                var timeToLive = TimeToLive ?? DefaultSettings.Cache.TimeToLive;
+                timeToLiveFactory = k => timeToLive;
+            }
 
             var key2Serializer = GetKeySerializerImpl<TK2>();
             
@@ -101,7 +125,7 @@ namespace CacheMeIfYouCan.Configuration
                 _inputFunc,
                 Name,
                 cache,
-                timeToLive,
+                timeToLiveFactory,
                 key1Serializer,
                 key2Serializer,
                 DefaultValueFactory,
