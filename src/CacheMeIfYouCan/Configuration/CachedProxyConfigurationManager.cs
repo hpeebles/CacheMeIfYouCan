@@ -427,7 +427,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TV>(
-            Expression<Func<T, Func<TK1, TK2, Task<TV>>>> expression,
+            Expression<Func<T, Func<TK1, TK2, CancellationToken, Task<TV>>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerCanx<TK1, TK2, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
@@ -440,7 +440,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TV>(
-            Expression<Func<T, Func<TK1, TK2, TV>>> expression,
+            Expression<Func<T, Func<TK1, TK2, CancellationToken, TV>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerSyncCanx<TK1, TK2, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
@@ -453,7 +453,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TK3, TV>(
-            Expression<Func<T, Func<TK1, TK2, TK3, Task<TV>>>> expression,
+            Expression<Func<T, Func<TK1, TK2, TK3, CancellationToken, Task<TV>>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerCanx<TK1, TK2, TK3, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
@@ -466,7 +466,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TK3, TV>(
-            Expression<Func<T, Func<TK1, TK2, TK3, TV>>> expression,
+            Expression<Func<T, Func<TK1, TK2, TK3, CancellationToken, TV>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerSyncCanx<TK1, TK2, TK3, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
@@ -479,7 +479,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TK3, TK4, TV>(
-            Expression<Func<T, Func<TK1, TK2, TK3, TK4, Task<TV>>>> expression,
+            Expression<Func<T, Func<TK1, TK2, TK3, TK4, CancellationToken, Task<TV>>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerCanx<TK1, TK2, TK3, TK4, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
@@ -492,7 +492,7 @@ namespace CacheMeIfYouCan.Configuration
         }
         
         public CachedProxyConfigurationManager<T> ConfigureFor<TK1, TK2, TK3, TK4, TV>(
-            Expression<Func<T, Func<TK1, TK2, TK3, TK4, TV>>> expression,
+            Expression<Func<T, Func<TK1, TK2, TK3, TK4, CancellationToken, TV>>> expression,
             Action<MultiParamFunctionCacheConfigurationManagerSyncCanx<TK1, TK2, TK3, TK4, TV>> configAction)
         {
             var methodInfo = GetMethodInfo(expression);
