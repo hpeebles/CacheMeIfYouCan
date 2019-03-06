@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +38,7 @@ namespace CacheMeIfYouCan.Configuration
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof((TK1, TK2)), typeof(TV)))
         {
             _inputFunc = inputFunc;
+            KeyParamSeparator = interfaceConfig.KeyParamSeparator;
             MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
         }
         
@@ -58,6 +58,9 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithKeyParamSeparator(string separator)
         {
+            if (String.IsNullOrEmpty(separator))
+                throw new ArgumentException(nameof(separator));
+
             KeyParamSeparator = separator;
             return (TConfig)this;
         }
@@ -135,7 +138,7 @@ namespace CacheMeIfYouCan.Configuration
                 OnExceptionAction,
                 key1Comparer,
                 key2Comparer,
-                KeyParamSeparator,
+                KeyParamSeparator ?? DefaultSettings.Cache.KeyParamSeparator,
                 MaxFetchBatchSize,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,

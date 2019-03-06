@@ -49,8 +49,6 @@ namespace CacheMeIfYouCan.Configuration
             _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
             _onCacheRemove = DefaultSettings.Cache.OnCacheRemoveAction;
             _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
-            _keyParamSeparator = DefaultSettings.Cache.KeyParamSeparator;
-            _maxFetchBatchSize = DefaultSettings.Cache.MaxFetchBatchSize;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
 
@@ -233,6 +231,9 @@ namespace CacheMeIfYouCan.Configuration
         
         public CachedProxyConfigurationManager<T> WithKeyParamSeparator(string separator)
         {
+            if (String.IsNullOrEmpty(separator))
+                throw new ArgumentException(nameof(separator));
+
             _keyParamSeparator = separator;
             return this;
         }

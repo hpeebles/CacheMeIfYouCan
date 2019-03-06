@@ -120,6 +120,34 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Assert.Equal(Outcome.FromCache, results.Last().Results.Single().Outcome);
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task WithKeyParamSeparator(bool overrideDefault)
+        {
+            var results = new List<FunctionCacheGetResult>();
+            
+            Func<string, int, Task<string>> func = (k1, k2) => Task.FromResult($"{k1}_{k2}");
+            Func<string, int, Task<string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                var configManager = func
+                    .Cached()
+                    .OnResult(results.Add);
+
+                if (overrideDefault)
+                    configManager.WithKeyParamSeparator("+");
+
+                cachedFunc = configManager.Build();
+            }
+
+            await cachedFunc("123", 456);
+
+            results.Should().HaveCount(1);
+
+            results[0].Results.Single().KeyString.Should().Be(overrideDefault ? "123+456" : "123_456");
+        }
+
         [Fact]
         public async Task ExcludeParametersFromKey()
         {

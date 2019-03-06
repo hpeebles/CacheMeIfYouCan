@@ -215,7 +215,39 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Should()
                 .Be(catchDuplicateRequests ? 4 : 0);
         }
-        
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task WithKeyParamSeparator(bool overrideDefault)
+        {
+            var results = new List<FunctionCacheGetResult>();
+
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> echo = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                var configManager = echo
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .OnResult(results.Add);
+
+                if (overrideDefault)
+                    configManager.WithKeyParamSeparator("+");
+
+                cachedEcho = configManager.Build();
+            }
+            
+            await cachedEcho("123", new[] { 456 });
+            
+            results.Should().HaveCount(1);
+
+            results[0].Results.Single().KeyString.Should().Be(overrideDefault ? "123+456" : "123_456");
+        }
+
         [Fact]
         public async Task WithBatchedFetches()
         {
@@ -247,11 +279,11 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             var ordered = fetches.OrderBy(f => f.Results.First().KeyString).ToArray();
 
-            ordered[0].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "0", outerKey + "1");
-            ordered[1].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "2", outerKey + "3");
-            ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "4", outerKey + "5");
-            ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "6", outerKey + "7");
-            ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "8");
+            ordered[0].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "_0", outerKey + "_1");
+            ordered[1].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "_2", outerKey + "_3");
+            ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "_4", outerKey + "_5");
+            ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "_6", outerKey + "_7");
+            ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "_8");
         }
         
         [Fact]

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
@@ -133,40 +132,6 @@ namespace CacheMeIfYouCan.Tests.Proxy
             ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo("4", "5");
             ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo("6", "7");
             ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo("8");
-        }
-        
-        [Fact]
-        public async Task WithBatchedFetchesMultiParam()
-        {
-            var fetches = new List<FunctionCacheFetchResult>();
-            
-            ITest impl = new TestImpl();
-            ITest proxy;
-            using (_setupLock.Enter())
-            {
-                proxy = impl
-                    .Cached()
-                    .OnFetch(fetches.Add)
-                    .WithBatchedFetches(2)
-                    .Build();
-            }
-
-            var outerKey = Guid.NewGuid().ToString();
-            var innerKeys = Enumerable.Range(0, 9).ToArray();
-            
-            var results = await proxy.MultiParamEnumerableKey(outerKey, innerKeys);
-
-            results.Should().ContainKeys(innerKeys);
-            
-            fetches.Should().HaveCount(5);
-
-            var ordered = fetches.OrderBy(f => f.Results.First().KeyString).ToArray();
-
-            ordered[0].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "0", outerKey + "1");
-            ordered[1].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "2", outerKey + "3");
-            ordered[2].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "4", outerKey + "5");
-            ordered[3].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "6", outerKey + "7");
-            ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo(outerKey + "8");
         }
     }
 }

@@ -31,11 +31,14 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 methodInfo)
         {
-            KeyParamSeparator = interfaceConfig.KeyParamSeparator;
+            KeyParamSeparator = interfaceConfig.KeyParamSeparator ?? DefaultSettings.Cache.KeyParamSeparator;
         }
 
         public TConfig WithKeyParamSeparator(string separator)
         {
+            if (String.IsNullOrEmpty(separator))
+                throw new ArgumentException(nameof(separator));
+
             KeyParamSeparator = separator;
             return (TConfig)this;
         }

@@ -179,5 +179,33 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 .Should()
                 .Be(catchDuplicateRequests ? 4 : 0);
         }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task WithKeyParamSeparator(bool overrideDefault)
+        {
+            var results = new List<FunctionCacheGetResult>();
+
+            ITest impl = new TestImpl();
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                var configManager = impl
+                    .Cached()
+                    .OnResult(results.Add);
+
+                if (overrideDefault)
+                    configManager.WithKeyParamSeparator("+");
+
+                proxy = configManager.Build();
+            }
+
+            await proxy.MultiParamEcho("123", 456);
+
+            results.Should().HaveCount(1);
+
+            results[0].Results.Single().KeyString.Should().Be(overrideDefault ? "123+456" : "123_456");
+        }
     }
 }

@@ -124,6 +124,9 @@ namespace CacheMeIfYouCan.Configuration
 
         public DefaultCacheConfiguration WithKeyParamSeparator(string separator)
         {
+            if (String.IsNullOrEmpty(separator))
+                throw new ArgumentException(nameof(separator));
+
             KeyParamSeparator = separator;
             return this;
         }
