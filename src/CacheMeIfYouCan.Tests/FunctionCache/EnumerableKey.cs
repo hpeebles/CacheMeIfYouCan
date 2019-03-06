@@ -248,7 +248,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData(false)]
         public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
         {
-            var fetches = new List<FunctionCacheFetchResult>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.FromSeconds(1));
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;

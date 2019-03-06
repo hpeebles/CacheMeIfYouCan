@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -179,7 +180,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData(false)]
         public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
         {
-            var fetches = new List<FunctionCacheFetchResult>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
             
             Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = async (k1, k2) =>
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -151,7 +152,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [InlineData(false)]
         public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
         {
-            var fetches = new List<FunctionCacheFetchResult>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
             ITest impl = new TestImpl(TimeSpan.FromSeconds(1));
             ITest proxy;
