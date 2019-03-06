@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
-    internal class DuplicateTaskCatcherSingle<TK, TV>
+    internal class DuplicateTaskCatcherSingle<TK, TV> : IDuplicateTaskCatcherSingle<TK, TV>
     {
         private readonly Func<TK, CancellationToken, Task<TV>> _func;
         private readonly ConcurrentDictionary<TK, Task<ValueWithTimestamp<TV>>> _tasks;

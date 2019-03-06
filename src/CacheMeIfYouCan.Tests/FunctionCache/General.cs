@@ -201,6 +201,42 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Single().FunctionName.Should().Be(name);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+
+            Func<string, Task<string>> echo = new Echo(TimeSpan.FromSeconds(1));
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .CatchDuplicateRequests(catchDuplicateRequests)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            await cachedEcho("warmup");
+            
+            var tasks = Enumerable
+                .Range(0, 5)
+                .Select(i => cachedEcho("123"))
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+            
+            fetches.Should().HaveCount(6);
+
+            fetches
+                .SelectMany(f => f.Results)
+                .Count(f => f.Duplicate)
+                .Should()
+                .Be(catchDuplicateRequests ? 4 : 0);
+        }
+
         private static ILocalCacheFactory GetCacheFactory(string cacheType)
         {
             switch (cacheType)

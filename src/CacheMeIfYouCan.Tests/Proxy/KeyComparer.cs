@@ -26,6 +26,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
                 proxy = impl
                     .Cached()
                     .WithKeyComparer(comparer)
+                    .CatchDuplicateRequests()
                     .Build();
             }
 

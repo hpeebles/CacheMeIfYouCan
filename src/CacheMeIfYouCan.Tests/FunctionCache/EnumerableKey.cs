@@ -243,6 +243,42 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             }
         }
         
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.FromSeconds(1));
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .CatchDuplicateRequests(catchDuplicateRequests)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+            
+            await cachedEcho(new[] { "warmup" });
+
+            var tasks = Enumerable
+                .Range(0, 5)
+                .Select(i => cachedEcho(new[] { "123" }))
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+
+            fetches.Should().HaveCount(6);
+
+            fetches
+                .SelectMany(f => f.Results)
+                .Count(f => f.Duplicate)
+                .Should()
+                .Be(catchDuplicateRequests ? 4 : 0);
+        }
+        
         [Fact]
         public async Task WithBatchedFetches()
         {

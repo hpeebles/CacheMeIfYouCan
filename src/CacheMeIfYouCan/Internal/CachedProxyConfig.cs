@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Internal
             TimeSpan? timeToLive,
             TimeSpan? localCacheTimeToLiveOverride,
             bool? disableCache,
+            bool? catchDuplcateRequests,
             ILocalCacheFactory localCacheFactory,
             IDistributedCacheFactory distributedCacheFactory,
             Func<MethodInfo, string> keyspacePrefixFunc,
@@ -39,6 +40,7 @@ namespace CacheMeIfYouCan.Internal
             TimeToLive = timeToLive;
             LocalCacheTimeToLiveOverride = localCacheTimeToLiveOverride;
             DisableCache = disableCache;
+            CatchDuplicateRequests = catchDuplcateRequests;
             LocalCacheFactory = localCacheFactory;
             DistributedCacheFactory = distributedCacheFactory;
             KeyspacePrefixFunc = keyspacePrefixFunc;
@@ -62,6 +64,7 @@ namespace CacheMeIfYouCan.Internal
         public TimeSpan? TimeToLive { get; }
         public TimeSpan? LocalCacheTimeToLiveOverride { get; }
         public bool? DisableCache { get; }
+        public bool? CatchDuplicateRequests { get; }
         public ILocalCacheFactory LocalCacheFactory { get; }
         public IDistributedCacheFactory DistributedCacheFactory { get; }
         public Func<MethodInfo, string> KeyspacePrefixFunc { get; }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
-    internal class DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>
+    internal class DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> : IDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>
     {
         private readonly Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _func;
         private readonly IEqualityComparer<TK2> _innerKeyComparer;

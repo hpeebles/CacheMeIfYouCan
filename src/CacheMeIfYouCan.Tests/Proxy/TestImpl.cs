@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,64 +8,108 @@ namespace CacheMeIfYouCan.Tests.Proxy
 {
     public class TestImpl : ITest
     {
-        public Task<string> StringToString(string key)
+        private readonly TimeSpan? _delay;
+
+        public TestImpl(TimeSpan? delay = null)
         {
-            return Task.FromResult(key);
+            _delay = delay;
         }
 
-        public Task<string> IntToString(int key)
+        public async Task<string> StringToString(string key)
         {
-            return Task.FromResult(key.ToString());
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+            
+            return key;
         }
 
-        public Task<int> LongToInt(long key)
+        public async Task<string> IntToString(int key)
         {
-            return Task.FromResult((int) key * 2);
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return key.ToString();
         }
 
-        public Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys)
+        public async Task<int> LongToInt(long key)
         {
-            return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            
+            return (int) key * 2;
+        }
+
+        public async Task<IDictionary<string, string>> MultiEcho(IEnumerable<string> keys)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return keys.ToDictionary(k => k);
         }
         
-        public Task<IDictionary<string, string>> MultiEchoList(IList<string> keys)
+        public async Task<IDictionary<string, string>> MultiEchoList(IList<string> keys)
         {
-            return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return keys.ToDictionary(k => k);
         }
         
-        public Task<IDictionary<string, string>> MultiEchoSet(ISet<string> keys)
+        public async Task<IDictionary<string, string>> MultiEchoSet(ISet<string> keys)
         {
-            return Task.FromResult<IDictionary<string, string>>(keys.ToDictionary(k => k));
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return keys.ToDictionary(k => k);
         }
 
         public string StringToStringSync(string key)
         {
+            if (_delay.HasValue)
+                Task.Delay(_delay.Value).GetAwaiter().GetResult();
+
             return key;
         }
 
         public IDictionary<string, string> MultiStringToStringSync(ICollection<string> keys)
         {
+            if (_delay.HasValue)
+                Task.Delay(_delay.Value).GetAwaiter().GetResult();
+
             return keys.ToDictionary(k => k);
         }
         
-        public Task<ConcurrentDictionary<string, string>> MultiEchoToConcurrent(IEnumerable<string> keys)
+        public async Task<ConcurrentDictionary<string, string>> MultiEchoToConcurrent(IEnumerable<string> keys)
         {
-            return Task.FromResult(new ConcurrentDictionary<string, string>(keys.ToDictionary(k => k)));
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return new ConcurrentDictionary<string, string>(keys.ToDictionary(k => k));
         }
 
-        public Task<string> MultiParamEcho(string key1, int key2)
+        public async Task<string> MultiParamEcho(string key1, int key2)
         {
-            return Task.FromResult($"{key1}_{key2}");
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return $"{key1}_{key2}";
         }
         
         public string MultiParamEchoSync(string key1, int key2)
         {
+            if (_delay.HasValue)
+                Task.Delay(_delay.Value).GetAwaiter().GetResult();
+
             return $"{key1}_{key2}";
         }
 
-        public Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys)
+        public async Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys)
         {
-            return Task.FromResult<IDictionary<int, string>>(innerKeys.ToDictionary(k => k, k => outerKey + k));
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value);
+
+            return innerKeys.ToDictionary(k => k, k => outerKey + k);
         }
     }
 }

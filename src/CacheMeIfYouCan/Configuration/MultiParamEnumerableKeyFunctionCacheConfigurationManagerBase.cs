@@ -126,6 +126,7 @@ namespace CacheMeIfYouCan.Configuration
                 Name,
                 cache,
                 timeToLiveFactory,
+                DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
                 key1Serializer,
                 key2Serializer,
                 DefaultValueFactory,

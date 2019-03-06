@@ -18,6 +18,7 @@ namespace CacheMeIfYouCan.Configuration
         internal TimeSpan? TimeToLive { get; set; }
         internal TimeSpan? LocalCacheTimeToLiveOverride { get; set; }
         internal bool? Disabled { get; private set; }
+        internal bool? DuplicateRequestCatchingEnabled { get; private set; }
         internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
         internal Action<FunctionCacheFetchResult<TK, TV>> OnFetchAction { get; private set; }
         internal Action<FunctionCacheException<TK>> OnExceptionAction { get; private set; }
@@ -66,7 +67,8 @@ namespace CacheMeIfYouCan.Configuration
                 TimeToLive = interfaceConfig.TimeToLive;
                 LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
                 Disabled = interfaceConfig.DisableCache;
-
+                DuplicateRequestCatchingEnabled = interfaceConfig.CatchDuplicateRequests;
+                
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
                     LocalCacheFactory = new NullLocalCacheFactory<TK, TV>();
                 else if (interfaceConfig.LocalCacheFactory != null)
@@ -196,6 +198,12 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig DisableCache(bool disableCache = true)
         {
             Disabled = disableCache;
+            return (TConfig)this;
+        }
+
+        public TConfig CatchDuplicateRequests(bool catchDuplicateRequests = true)
+        {
+            DuplicateRequestCatchingEnabled = catchDuplicateRequests;
             return (TConfig)this;
         }
         

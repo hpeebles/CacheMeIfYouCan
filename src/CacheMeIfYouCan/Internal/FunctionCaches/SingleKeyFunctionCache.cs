@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Action<FunctionCacheGetResult<TK, TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<TK, TV>> _onFetch;
         private readonly Action<FunctionCacheException<TK>> _onException;
-        private readonly DuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
+        private readonly IDuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
         private readonly Func<TK, bool> _skipCacheGetPredicate;
         private readonly Func<TK, bool> _skipCacheSetPredicate;
         private int _pendingRequestsCount;
@@ -28,6 +28,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             string functionName,
             ICacheInternal<TK, TV> cache,
             Func<TK, TV, TimeSpan> timeToLiveFactory,
+            bool catchDuplicateRequests,
             Func<TK, string> keySerializer,
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
@@ -47,7 +48,12 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _onResult = onResult;
             _onFetch = onFetch;
             _onException = onException;
-            _fetchHandler = new DuplicateTaskCatcherSingle<TK, TV>(func, keyComparer);
+            
+            if (catchDuplicateRequests)
+                _fetchHandler = new DuplicateTaskCatcherSingle<TK, TV>(func, keyComparer);
+            else
+                _fetchHandler = new DisabledDuplicateTaskCatcherSingle<TK, TV>(func);
+            
             _skipCacheGetPredicate = skipCacheGetPredicate;
             _skipCacheSetPredicate = skipCacheSetPredicate;
         }

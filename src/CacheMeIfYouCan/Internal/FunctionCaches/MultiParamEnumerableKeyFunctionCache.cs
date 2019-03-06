@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly IEqualityComparer<Key<(TK1, TK2)>> _tupleKeysOnlyDifferingBySecondItemComparer;
         private readonly string _keyParamSeparator;
         private readonly int _maxFetchBatchSize;
-        private readonly DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
+        private readonly IDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
         private readonly Func<Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
         private readonly Func<(TK1, TK2), bool> _skipCacheSetPredicate;
         private readonly Func<int, List<KeyValuePair<Key<(TK1, TK2)>, TV>>> _valuesToSetInCacheListFactory;
@@ -37,6 +37,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             string functionName,
             ICacheInternal<(TK1, TK2), TV> cache,
             Func<TK1, TimeSpan> timeToLiveFactory,
+            bool catchDuplicateRequests,
             Func<TK1, string> outerKeySerializer,
             Func<TK2, string> innerKeySerializer,
             Func<TV> defaultValueFactory,
@@ -66,13 +67,24 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _tupleKeysOnlyDifferingBySecondItemComparer = new TupleKeysOnlyDifferingBySecondItemComparer(innerKeyComparer);
             _keyParamSeparator = keyParamSeparator;
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
-            
-            _fetchHandler = new DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>(
-                negativeCachingValueFactory == null
-                    ? func
-                    : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, _innerKeyComparer),
-                outerKeyComparer.Inner,
-                innerKeyComparer.Inner);
+
+            var convertedFunc = negativeCachingValueFactory == null
+                ? func
+                : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, _innerKeyComparer);
+
+            if (catchDuplicateRequests)
+            {
+                _fetchHandler = new DuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>(
+                    convertedFunc,
+                    outerKeyComparer.Inner,
+                    innerKeyComparer.Inner);
+            }
+            else
+            {
+                _fetchHandler = new DisabledDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV>(
+                    convertedFunc,
+                    innerKeyComparer.Inner);
+            }
 
             if (skipCacheGetPredicate == null)
                 _keysToGetFromCacheFunc = keys => keys;

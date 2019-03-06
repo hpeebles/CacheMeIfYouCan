@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                    .WithDuplicateRequestCatching()
+                    .CatchDuplicateRequests()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
             }
@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             using (_setupLock.Enter())
             {
                 cache = new TestCacheFactory(TimeSpan.FromSeconds(1))
-                    .WithDuplicateRequestCatching()
+                    .CatchDuplicateRequests()
                     .OnGetResult(results.Add)
                     .Build<string, string>(Guid.NewGuid().ToString());
             }

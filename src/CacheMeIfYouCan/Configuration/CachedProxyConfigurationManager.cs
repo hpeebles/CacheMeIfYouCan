@@ -21,6 +21,7 @@ namespace CacheMeIfYouCan.Configuration
         private TimeSpan? _timeToLive;
         private TimeSpan? _localCacheTimeToLiveOverride;
         private bool? _disableCache;
+        private bool? _catchDuplicateRequests;
         private ILocalCacheFactory _localCacheFactory;
         private IDistributedCacheFactory _distributedCacheFactory;
         private Func<MethodInfo, string> _keyspacePrefixFunc;
@@ -68,6 +69,12 @@ namespace CacheMeIfYouCan.Configuration
         public CachedProxyConfigurationManager<T> WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
         {
             _localCacheTimeToLiveOverride = timeToLive;
+            return this;
+        }
+
+        public CachedProxyConfigurationManager<T> CatchDuplicateRequests(bool catchDuplicateRequests = true)
+        {
+            _catchDuplicateRequests = catchDuplicateRequests;
             return this;
         }
         
@@ -695,6 +702,7 @@ namespace CacheMeIfYouCan.Configuration
                 _timeToLive,
                 _localCacheTimeToLiveOverride,
                 _disableCache,
+                _catchDuplicateRequests,
                 _localCacheFactory,
                 _distributedCacheFactory,
                 _keyspacePrefixFunc,

@@ -81,6 +81,7 @@ namespace CacheMeIfYouCan.Configuration
                 Name,
                 cache,
                 timeToLiveFactory,
+                DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
                 keySerializer,
                 DefaultValueFactory,
                 OnResultAction,

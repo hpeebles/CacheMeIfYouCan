@@ -73,6 +73,7 @@ namespace CacheMeIfYouCan.Configuration
                 Name,
                 cache,
                 TimeToLive ?? DefaultSettings.Cache.TimeToLive,
+                DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
                 keySerializer,
                 DefaultValueFactory,
                 OnResultAction,

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 [assembly: InternalsVisibleTo("Benchmarks.DuplicateTaskCatcherMulti")]
 namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
-    internal class DuplicateTaskCatcherMulti<TK, TV>
+    internal class DuplicateTaskCatcherMulti<TK, TV> : IDuplicateTaskCatcherMulti<TK, TV>
     {
         private readonly Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;

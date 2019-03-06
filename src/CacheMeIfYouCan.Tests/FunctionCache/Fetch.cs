@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Fact]
-        public async Task AtMostOneActiveFetchPerKey()
+        public async Task AtMostOneActiveFetchPerKeyWhenDuplicateRequestCatchingIsEnabled()
         {
             var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
@@ -32,6 +32,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedEcho = echo
                     .Cached()
+                    .CatchDuplicateRequests()
                     .OnFetch(fetches.Add)
                     .Build();
             }

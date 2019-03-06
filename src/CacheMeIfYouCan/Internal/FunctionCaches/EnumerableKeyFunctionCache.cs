@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly KeyComparer<TK> _keyComparer;
         private readonly int _maxFetchBatchSize;
-        private readonly DuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
+        private readonly IDuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
         private readonly Func<Key<TK>[], Key<TK>[]> _keysToGetFromCacheFunc;
         private readonly Func<DuplicateTaskCatcherMultiResult<TK, TV>, bool> _setInCachePredicate;
         private int _pendingRequestsCount;
@@ -32,6 +32,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             string functionName,
             ICacheInternal<TK, TV> cache,
             TimeSpan timeToLive,
+            bool catchDuplicateRequests,
             Func<TK, string> keySerializer,
             Func<TV> defaultValueFactory,
             Action<FunctionCacheGetResult<TK, TV>> onResult,
@@ -55,11 +56,15 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _onException = onException;
             _keyComparer = keyComparer;
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
-            _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(
-                negativeCachingValueFactory == null
-                    ? func
-                    : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, keyComparer),
-                keyComparer);
+
+            var convertedFunc = negativeCachingValueFactory == null
+                ? func
+                : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, keyComparer);
+            
+            if (catchDuplicateRequests)
+                _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(convertedFunc, keyComparer);
+            else
+                _fetchHandler = new DisabledDuplicateTaskCatcherMulti<TK, TV>(convertedFunc, keyComparer);
 
             if (skipCacheGetPredicate == null)
                 _keysToGetFromCacheFunc = keys => keys;

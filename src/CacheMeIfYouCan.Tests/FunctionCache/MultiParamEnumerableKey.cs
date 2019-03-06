@@ -174,6 +174,47 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Subject.Last().Results.Should().OnlyContain(r => r.Outcome == Outcome.FromCache);
         }
         
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = async (k1, k2) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                return k2.ToDictionary(k => k, k => k1 + k);
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .CatchDuplicateRequests(catchDuplicateRequests)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+            
+            await cachedFunc(0, new[] { 0 });
+
+            var tasks = Enumerable
+                .Range(0, 5)
+                .Select(i => cachedFunc(123, new[] { 456 }))
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+
+            fetches.Should().HaveCount(6);
+
+            fetches
+                .SelectMany(f => f.Results)
+                .Count(f => f.Duplicate)
+                .Should()
+                .Be(catchDuplicateRequests ? 4 : 0);
+        }
+        
         [Fact]
         public async Task WithBatchedFetches()
         {

@@ -145,5 +145,38 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             results.Single().FunctionName.Should().Be("IntToString");
         }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CatchDuplicateRequests(bool catchDuplicateRequests)
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+
+            ITest impl = new TestImpl(TimeSpan.FromSeconds(1));
+            ITest proxy;
+            using (_setupLock.Enter())
+            {
+                proxy = impl
+                    .Cached()
+                    .CatchDuplicateRequests(catchDuplicateRequests)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            await proxy.StringToString("warmup");
+            
+            var tasks = Enumerable.Range(0, 5).Select(i => proxy.StringToString("123")).ToArray();
+
+            await Task.WhenAll(tasks);
+
+            fetches.Should().HaveCount(6);
+
+            fetches
+                .SelectMany(f => f.Results)
+                .Count(f => f.Duplicate)
+                .Should()
+                .Be(catchDuplicateRequests ? 4 : 0);
+        }
     }
 }

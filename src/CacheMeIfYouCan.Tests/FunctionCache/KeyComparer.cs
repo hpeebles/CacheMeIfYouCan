@@ -28,6 +28,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedEcho = echo
                     .Cached()
                     .WithKeyComparer(comparer)
+                    .CatchDuplicateRequests()
                     .Build();
             }
 
@@ -52,6 +53,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Cached()
                     .WithKeyComparer(comparer1)
                     .WithKeyComparer(comparer2)
+                    .CatchDuplicateRequests()
                     .Build();
             }
 
