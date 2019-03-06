@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public async Task WithBatchedFetches()
         {
-            var fetches = new List<FunctionCacheFetchResult>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
 
             ITest impl = new TestImpl();
             ITest proxy;

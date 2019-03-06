@@ -282,7 +282,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Fact]
         public async Task WithBatchedFetches()
         {
-            var fetches = new List<FunctionCacheFetchResult>();
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
             
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
             Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
