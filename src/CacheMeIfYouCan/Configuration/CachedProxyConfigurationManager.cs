@@ -240,6 +240,9 @@ namespace CacheMeIfYouCan.Configuration
         
         public CachedProxyConfigurationManager<T> WithBatchedFetches(int batchSize)
         {
+            if (batchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(batchSize));
+            
             _maxFetchBatchSize = batchSize;
             return this;
         }

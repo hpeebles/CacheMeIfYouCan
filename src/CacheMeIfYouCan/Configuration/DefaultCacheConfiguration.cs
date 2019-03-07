@@ -133,6 +133,9 @@ namespace CacheMeIfYouCan.Configuration
         
         public DefaultCacheConfiguration WithBatchedFetches(int batchSize)
         {
+            if (batchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(batchSize));
+            
             MaxFetchBatchSize = batchSize;
             return this;
         }

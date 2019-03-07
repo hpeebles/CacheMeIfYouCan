@@ -287,6 +287,37 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Fact]
+        public async Task WithBatchedFetchesFunc()
+        {
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
+            
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> echo = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
+                    .OnFetch(fetches.Add)
+                    .WithBatchedFetches(Int32.Parse)
+                    .Build();
+            }
+
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+            
+            await cachedEcho("1", innerKeys);
+            
+            fetches.Should().HaveCount(10);
+
+            await cachedEcho("2", innerKeys);
+
+            fetches.Should().HaveCount(15);
+        }
+        
+        [Fact]
         public void WithNegativeCaching()
         {
             var results = new List<FunctionCacheGetResult>();

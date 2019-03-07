@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly KeyComparer<TK2> _innerKeyComparer;
         private readonly IEqualityComparer<Key<(TK1, TK2)>> _tupleKeysOnlyDifferingBySecondItemComparer;
         private readonly string _keyParamSeparator;
-        private readonly int _maxFetchBatchSize;
+        private readonly Func<TK1, int> _maxFetchBatchSizeFunc;
         private readonly IDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
         private readonly Func<Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
         private readonly Func<(TK1, TK2), bool> _skipCacheSetPredicate;
@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             KeyComparer<TK1> outerKeyComparer,
             KeyComparer<TK2> innerKeyComparer,
             string keyParamSeparator,
-            int maxFetchBatchSize,
+            Func<TK1, int> maxFetchBatchSizeFunc,
             Func<(TK1, TK2), bool> skipCacheGetPredicate,
             Func<(TK1, TK2), bool> skipCacheSetPredicate,
             Func<(TK1, TK2), TV> negativeCachingValueFactory)
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _innerKeyComparer = innerKeyComparer;
             _tupleKeysOnlyDifferingBySecondItemComparer = new TupleKeysOnlyDifferingBySecondItemComparer(innerKeyComparer);
             _keyParamSeparator = keyParamSeparator;
-            _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
+            _maxFetchBatchSizeFunc = maxFetchBatchSizeFunc;
 
             var convertedFunc = negativeCachingValueFactory == null
                 ? func
@@ -253,11 +253,19 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Key<(TK1, TK2)>[] innerKeys,
             CancellationToken token)
         {
-            if (innerKeys.Length < _maxFetchBatchSize)
+            if (_maxFetchBatchSizeFunc == null)
+                return await FetchBatch(innerKeys);
+            
+            var maxFetchBatchSize = _maxFetchBatchSizeFunc(outerKey);
+
+            if (maxFetchBatchSize <= 0)
+                maxFetchBatchSize = Int32.MaxValue;
+
+            if (innerKeys.Length < maxFetchBatchSize)
                 return await FetchBatch(innerKeys);
 
             var tasks = innerKeys
-                .Batch(_maxFetchBatchSize)
+                .Batch(maxFetchBatchSize)
                 .Select(FetchBatch)
                 .ToArray();
 

@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Configuration
         private readonly Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _inputFunc;
         internal Func<TK1, TimeSpan> TimeToLiveFactory { get; private set; }
         internal string KeyParamSeparator { get; private set; }
-        internal int MaxFetchBatchSize { get; private set; }
+        internal Func<TK1, int> MaxFetchBatchSizeFunc { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
         internal int[] ParametersToExcludeFromKey { get; private set; }
 
@@ -39,7 +39,15 @@ namespace CacheMeIfYouCan.Configuration
         {
             _inputFunc = inputFunc;
             KeyParamSeparator = interfaceConfig.KeyParamSeparator;
-            MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
+
+            var maxFetchBatchSize = 0;
+            if (interfaceConfig.MaxFetchBatchSize > 0)
+                maxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
+            else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
+                maxFetchBatchSize = DefaultSettings.Cache.MaxFetchBatchSize;
+            
+            if (maxFetchBatchSize > 0)
+                MaxFetchBatchSizeFunc = k => maxFetchBatchSize;
         }
         
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -67,7 +75,16 @@ namespace CacheMeIfYouCan.Configuration
         
         public TConfig WithBatchedFetches(int batchSize)
         {
-            MaxFetchBatchSize = batchSize;
+            if (batchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(batchSize));
+            
+            MaxFetchBatchSizeFunc = k => batchSize;
+            return (TConfig)this;
+        }
+
+        public TConfig WithBatchedFetches(Func<TK1, int> batchSizeFunc)
+        {
+            MaxFetchBatchSizeFunc = batchSizeFunc;
             return (TConfig)this;
         }
 
@@ -139,7 +156,7 @@ namespace CacheMeIfYouCan.Configuration
                 key1Comparer,
                 key2Comparer,
                 KeyParamSeparator ?? DefaultSettings.Cache.KeyParamSeparator,
-                MaxFetchBatchSize,
+                MaxFetchBatchSizeFunc,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,
                 NegativeCachingValueFactory);
