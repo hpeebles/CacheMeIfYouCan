@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Tests.Helpers
 {
     public class KeyspacePrefixCheckingCacheFactory : IDistributedCacheFactory
     {
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(IDistributedCacheConfig<TK, TV> config)
         {
             config.KeyspacePrefix.Should().Be("prefix");
 

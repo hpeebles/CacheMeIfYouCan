@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Internal
     {
         public static KeyComparer<T> Get<T>(EqualityComparers comparers = null, bool allowNull = false)
         {
-            var inner = GetInner<T>(comparers);
+            var inner = GetInner<T>(comparers, allowNull);
 
             return inner == null
                 ? null

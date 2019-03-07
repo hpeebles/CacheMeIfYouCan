@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Caches
     public class RollingTimeToLiveDictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         // Store keys along with their exact expiry times
-        private readonly ConcurrentDictionary<TK, CacheItem> _values = new ConcurrentDictionary<TK, CacheItem>();
+        private readonly ConcurrentDictionary<TK, CacheItem> _values;
         
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
@@ -32,10 +32,11 @@ namespace CacheMeIfYouCan.Caches
         // dictionary. Disposing of this field is the only way to stop that process
         private readonly IDisposable _keyProcessor;
         
-        public RollingTimeToLiveDictionaryCache(string cacheName, TimeSpan rollingTimeToLive)
+        public RollingTimeToLiveDictionaryCache(string cacheName, TimeSpan rollingTimeToLive, IEqualityComparer<TK> keyComparer = null)
         {
             CacheName = cacheName;
 
+            _values = new ConcurrentDictionary<TK, CacheItem>(keyComparer ?? EqualityComparer<TK>.Default);
             _rollingTimeToLive = rollingTimeToLive.Ticks;
 
             _keyProcessor = Observable

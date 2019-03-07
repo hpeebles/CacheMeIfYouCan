@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Caches
     public class DictionaryCache<TK, TV> : ILocalCache<TK, TV>, ICachedItemCounter, IDisposable
     {
         // Store keys along with their exact expiry times
-        private readonly ConcurrentDictionary<TK, (TV Value, long Expiry)> _values = new ConcurrentDictionary<TK, (TV, long)>();
+        private readonly ConcurrentDictionary<TK, (TV Value, long Expiry)> _values;
         
         // Store keys by expiry second so that we can remove them as they expire (grouping by second rather than tick for efficiency)
         private readonly SortedDictionary<int, List<TK>> _ttls = new SortedDictionary<int, List<TK>>();
@@ -25,10 +25,11 @@ namespace CacheMeIfYouCan.Caches
         // expire. Disposing of this field is the only way to stop that process
         private readonly IDisposable _keyProcessor;
         
-        public DictionaryCache(string cacheName, int? maxItems = null)
+        public DictionaryCache(string cacheName, IEqualityComparer<TK> keyComparer = null, int? maxItems = null)
         {
             CacheName = cacheName;
 
+            _values = new ConcurrentDictionary<TK, (TV Value, long Expiry)>(keyComparer ?? EqualityComparer<TK>.Default);
             _maxItems = maxItems;
 
             _keyProcessor = Observable

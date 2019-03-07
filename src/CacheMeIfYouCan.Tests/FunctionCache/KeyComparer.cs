@@ -66,18 +66,28 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             comparer2.GetHashCodeCount.Should().BeGreaterThan(0);
         }
 
-        [Fact]
-        public void NoKeyComparerThrows()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void NoKeyComparerThrowsWhenDuplicateRequestCatchingEnabled(bool catchDuplicateRequests)
         {
             Func<TypeWithNoEqualityComparer, int> echo = x => x.Value;
             using (_setupLock.Enter())
             {
                 Func<Func<TypeWithNoEqualityComparer, int>> func = () => echo
                     .Cached()
+                    .CatchDuplicateRequests(catchDuplicateRequests)
                     .Build();
-                
-                func.Should().Throw<Exception>()
-                    .Which.Message.Should().StartWith("No equality comparer defined for type:");
+
+                if (catchDuplicateRequests)
+                {
+                    func.Should().Throw<Exception>()
+                        .Which.Message.Should().StartWith("No equality comparer defined for type:");
+                }
+                else
+                {
+                    func.Should().NotThrow();
+                }
             }
         }
     }

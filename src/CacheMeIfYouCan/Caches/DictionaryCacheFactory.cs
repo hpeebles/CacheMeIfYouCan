@@ -1,4 +1,6 @@
-﻿namespace CacheMeIfYouCan.Caches
+﻿using CacheMeIfYouCan.Configuration;
+
+namespace CacheMeIfYouCan.Caches
 {
     public class DictionaryCacheFactory : ILocalCacheFactory
     {
@@ -9,9 +11,9 @@
             _maxItems = maxItems;
         }
         
-        public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
+        public ILocalCache<TK, TV> Build<TK, TV>(ILocalCacheConfig<TK> config)
         {
-            return new DictionaryCache<TK, TV>(cacheName, _maxItems);
+            return new DictionaryCache<TK, TV>(config.CacheName, config.KeyComparer, _maxItems);
         }
     }
 }

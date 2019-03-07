@@ -3,31 +3,14 @@ using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration
 {
-    public class DistributedCacheConfig<TK, TV>
+    public class DistributedCacheConfig<TK, TV> : CacheConfig<TK>, IDistributedCacheConfig<TK, TV>
     {
-        public readonly string CacheName;
-        public string KeyspacePrefix;
-        public Func<TK, string> KeySerializer;
-        public Func<string, TK> KeyDeserializer;
-        public Func<TV, string> ValueSerializer;
-        public Func<string, TV> ValueDeserializer;
-        public Func<TV, byte[]> ValueByteSerializer;
-        public Func<byte[], TV> ValueByteDeserializer;
-        public KeyComparer<TK> KeyComparer;
-
-        public DistributedCacheConfig(string cacheName = null, bool setDefaults = false)
+        public DistributedCacheConfig(string name = null, bool setDefaults = false)
+            : base(name, setDefaults)
         {
-            CacheName = cacheName;
-
             if (!setDefaults)
                 return;
-            
-            if (DefaultSettings.Cache.KeySerializers.TryGetSerializer<TK>(out var keySerializer) ||
-                ProvidedSerializers.TryGetSerializer(out keySerializer))
-            {
-                KeySerializer = keySerializer;
-            }
-            
+
             if (DefaultSettings.Cache.KeySerializers.TryGetDeserializer<TK>(out var keyDeserializer) ||
                 ProvidedSerializers.TryGetDeserializer(out keyDeserializer))
             {
@@ -53,21 +36,23 @@ namespace CacheMeIfYouCan.Configuration
             {
                 ValueDeserializer = valueDeserializer;
             }
-
-            KeyComparer = KeyComparerResolver.Get<TK>(allowNull: true);
         }
+
+        public string KeyspacePrefix { get; set; }
+        public Func<string, TK> KeyDeserializer { get; set; }
+        public Func<TV, string> ValueSerializer { get; set; }
+        public Func<string, TV> ValueDeserializer { get; set; }
+        public Func<TV, byte[]> ValueByteSerializer { get; set; }
+        public Func<byte[], TV> ValueByteDeserializer { get; set; }
 
         public void Validate()
         {
             if (CacheName == null)
                 throw new ArgumentNullException(nameof(CacheName));
-            
+
             if (KeySerializer == null)
                 throw new ArgumentNullException(nameof(KeySerializer));
-            
-            if (KeyDeserializer == null)
-                throw new ArgumentNullException(nameof(KeyDeserializer));
-            
+
             if (ValueByteSerializer != null)
                 ValueSerializer = null;
 

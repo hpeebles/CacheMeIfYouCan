@@ -81,7 +81,7 @@ namespace CacheMeIfYouCan.Configuration
                 Name,
                 cache,
                 timeToLiveFactory,
-                DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
+                CatchDuplicateRequests,
                 keySerializer,
                 DefaultValueFactory,
                 OnResultAction,
@@ -95,5 +95,15 @@ namespace CacheMeIfYouCan.Configuration
 
             return functionCache;
         }
+
+        internal override KeyComparer<TK> GetKeyComparer()
+        {
+            var allowNull = !CatchDuplicateRequests;
+            
+            return KeyComparerResolver.Get<TK>(KeyComparers, allowNull);
+        }
+        
+        private bool CatchDuplicateRequests =>
+            DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled; 
     }
 }

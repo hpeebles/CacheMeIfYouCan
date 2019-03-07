@@ -14,6 +14,9 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
         
         public DuplicateTaskCatcherSingle(Func<TK, CancellationToken, Task<TV>> func, IEqualityComparer<TK> comparer)
         {
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
+
             _func = func;
             _tasks = new ConcurrentDictionary<TK, Task<ValueWithTimestamp<TV>>>(comparer);
         }

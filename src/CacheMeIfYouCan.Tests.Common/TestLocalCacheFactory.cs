@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Tests.Common
 {
@@ -13,9 +14,9 @@ namespace CacheMeIfYouCan.Tests.Common
             _error = error;
         }
         
-        public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
+        public ILocalCache<TK, TV> Build<TK, TV>(ILocalCacheConfig<TK> config)
         {
-            return new TestLocalCache<TK, TV>(_delay, _error, cacheName);
+            return new TestLocalCache<TK, TV>(_delay, _error, config.CacheName);
         }
     }
 }

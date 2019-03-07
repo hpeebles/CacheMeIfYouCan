@@ -124,52 +124,31 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return this;
         }
 
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(IDistributedCacheConfig<TK, TV> config)
         {
-            var original = config;
+            var finalConfig = MergeConfigSettings(config);
 
-            config = new DistributedCacheConfig<TK, TV>(original.CacheName, true);
+            return BuildImpl(finalConfig);
+        }
 
-            if (original.KeyspacePrefix != null)
-                config.KeyspacePrefix = original.KeyspacePrefix;
-            else if (_keyspacePrefix != null)
-                config.KeyspacePrefix = _keyspacePrefix;
-
-            if (original.KeySerializer != null)
-                config.KeySerializer = original.KeySerializer;
-            else if (_keySerializers.TryGetSerializer<TK>(out var keySerializer))
-                config.KeySerializer = keySerializer;
-
-            if (original.KeyDeserializer != null)
-                config.KeyDeserializer = original.KeyDeserializer;
-            else if (_keySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
-                config.KeyDeserializer = keyDeserializer;
-
-            if (original.ValueSerializer != null)
-                config.ValueSerializer = original.ValueSerializer;
-            else if (original.ValueByteSerializer != null)
-                config.ValueByteSerializer = original.ValueByteSerializer;
-            else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
-                config.ValueSerializer = valueSerializer;
-            else if (_valueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
-                config.ValueByteSerializer = valueByteSerializer;
-
-            if (original.ValueDeserializer != null)
-                config.ValueDeserializer = original.ValueDeserializer;
-            else if (original.ValueByteDeserializer != null)
-                config.ValueByteDeserializer = original.ValueByteDeserializer;
-            else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
-                config.ValueDeserializer = valueDeserializer;
-            else if (_valueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
-                config.ValueByteDeserializer = valueByteDeserializer;
-
-            if (original.KeyComparer != null)
-                config.KeyComparer = original.KeyComparer;
-            else if (_keyComparers.TryGet<TK>(out var comparer))
-                config.KeyComparer = new KeyComparer<TK>(comparer);
+        internal IDistributedCache<TK, TV> Build<TK, TV>(string cacheName)
+        {
+            var config = MergeConfigSettings(new DistributedCacheConfig<TK, TV>(cacheName));
             
-            config.Validate();
+            return BuildImpl(config);
+        }
+        
+        internal ICache<TK, TV> BuildAsCache<TK, TV>(string cacheName)
+        {
+            var config = MergeConfigSettings(new DistributedCacheConfig<TK, TV>(cacheName));
 
+            var cache = BuildImpl(config);
+            
+            return new DistributedCacheToCacheAdapter<TK, TV>(cache, config.KeySerializer);
+        }
+
+        private IDistributedCache<TK, TV> BuildImpl<TK, TV>(IDistributedCacheConfig<TK, TV> config)
+        {
             var originalCache = _cacheFactory.Build(config);
 
             var cache = originalCache;
@@ -192,20 +171,53 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return new WrappedDistributedCacheWithOriginal<TK, TV>(cache, originalCache);
         }
 
-        public IDistributedCache<TK, TV> Build<TK, TV>(string cacheName)
+        private IDistributedCacheConfig<TK, TV> MergeConfigSettings<TK, TV>(IDistributedCacheConfig<TK, TV> config)
         {
-            var config = new DistributedCacheConfig<TK, TV>(cacheName);
+            // Build the final config by prioritising settings in the following order -
+            // Input config -> this DistributedCacheFactory settings -> default settings
+            var finalConfig = new DistributedCacheConfig<TK, TV>(config.CacheName, true);
+
+            if (config.KeyspacePrefix != null)
+                finalConfig.KeyspacePrefix = config.KeyspacePrefix;
+            else if (_keyspacePrefix != null)
+                finalConfig.KeyspacePrefix = _keyspacePrefix;
+
+            if (config.KeySerializer != null)
+                finalConfig.KeySerializer = config.KeySerializer;
+            else if (_keySerializers.TryGetSerializer<TK>(out var keySerializer))
+                finalConfig.KeySerializer = keySerializer;
+
+            if (config.KeyDeserializer != null)
+                finalConfig.KeyDeserializer = config.KeyDeserializer;
+            else if (_keySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
+                finalConfig.KeyDeserializer = keyDeserializer;
+
+            if (config.ValueSerializer != null)
+                finalConfig.ValueSerializer = config.ValueSerializer;
+            else if (config.ValueByteSerializer != null)
+                finalConfig.ValueByteSerializer = config.ValueByteSerializer;
+            else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
+                finalConfig.ValueSerializer = valueSerializer;
+            else if (_valueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
+                finalConfig.ValueByteSerializer = valueByteSerializer;
+
+            if (config.ValueDeserializer != null)
+                finalConfig.ValueDeserializer = config.ValueDeserializer;
+            else if (config.ValueByteDeserializer != null)
+                finalConfig.ValueByteDeserializer = config.ValueByteDeserializer;
+            else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
+                finalConfig.ValueDeserializer = valueDeserializer;
+            else if (_valueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
+                finalConfig.ValueByteDeserializer = valueByteDeserializer;
+
+            if (config.KeyComparer != null)
+                finalConfig.KeyComparer = config.KeyComparer;
+            else if (_keyComparers.TryGet<TK>(out var comparer))
+                finalConfig.KeyComparer = new KeyComparer<TK>(comparer);
+
+            finalConfig.Validate();
             
-            return Build(config);
-        }
-        
-        public ICache<TK, TV> BuildAsCache<TK, TV>(string cacheName)
-        {
-            var cache = Build<TK, TV>(cacheName);
-            
-            _keySerializers.TryGetSerializer<TK>(out var keySerializer);
-            
-            return new DistributedCacheToCacheAdapter<TK, TV>(cache, keySerializer);
+            return finalConfig;
         }
     }
     
@@ -375,52 +387,33 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return this;
         }
 
-        public IDistributedCache<TK, TV> Build(DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build(IDistributedCacheConfig<TK, TV> config)
         {
-            var original = config;
+            var finalConfig = MergeConfigSettings(config);
 
-            config = new DistributedCacheConfig<TK, TV>(original.CacheName, true);
+            finalConfig.Validate();
 
-            if (original.KeyspacePrefix != null)
-                config.KeyspacePrefix = original.KeyspacePrefix;
-            else if (_keyspacePrefix != null)
-                config.KeyspacePrefix = _keyspacePrefix;
+            return BuildImpl(finalConfig);
+        }
 
-            if (original.KeySerializer != null)
-                config.KeySerializer = original.KeySerializer;
-            else if (_keySerializer != null)
-                config.KeySerializer = _keySerializer;
-
-            if (original.KeyDeserializer != null)
-                config.KeyDeserializer = original.KeyDeserializer;
-            else if (_keyDeserializer != null)
-                config.KeyDeserializer = _keyDeserializer;
-
-            if (original.ValueSerializer != null)
-                config.ValueSerializer = original.ValueSerializer;
-            else if (original.ValueByteSerializer != null)
-                config.ValueByteSerializer = original.ValueByteSerializer;
-            else if (_valueSerializer != null)
-                config.ValueSerializer = _valueSerializer;
-            else if (_valueByteSerializer != null)
-                config.ValueByteSerializer = _valueByteSerializer;
+        internal IDistributedCache<TK, TV> Build(string cacheName)
+        {
+            var config = MergeConfigSettings(new DistributedCacheConfig<TK, TV>(cacheName));
             
-            if (original.ValueDeserializer != null)
-                config.ValueDeserializer = original.ValueDeserializer;
-            else if (original.ValueByteDeserializer != null)
-                config.ValueByteDeserializer = original.ValueByteDeserializer;
-            else if (_valueDeserializer != null)
-                config.ValueDeserializer = _valueDeserializer;
-            else if (_valueByteDeserializer != null)
-                config.ValueByteDeserializer = _valueByteDeserializer;
+            return BuildImpl(config);
+        }
+        
+        internal ICache<TK, TV> BuildAsCache(string cacheName)
+        {
+            var config = MergeConfigSettings(new DistributedCacheConfig<TK, TV>(cacheName));
 
-            if (original.KeyComparer != null)
-                config.KeyComparer = original.KeyComparer;
-            else if (_keyComparer != null)
-                config.KeyComparer = new KeyComparer<TK>(_keyComparer);
-
-            config.Validate();
+            var cache = BuildImpl(config);
             
+            return new DistributedCacheToCacheAdapter<TK, TV>(cache, _keySerializer);
+        }
+
+        private IDistributedCache<TK, TV> BuildImpl(IDistributedCacheConfig<TK, TV> config)
+        {
             var originalCache = _cacheFactory.Build(config);
 
             var cache = originalCache;
@@ -442,19 +435,52 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
             return new WrappedDistributedCacheWithOriginal<TK, TV>(cache, originalCache);
         }
-
-        internal IDistributedCache<TK, TV> Build(string cacheName)
-        {
-            var config = new DistributedCacheConfig<TK, TV>(cacheName);
-            
-            return Build(config);
-        }
         
-        internal ICache<TK, TV> BuildAsCache(string cacheName)
+        private IDistributedCacheConfig<TK, TV> MergeConfigSettings(IDistributedCacheConfig<TK, TV> config)
         {
-            var cache = Build(cacheName);
+            // Build the final config by prioritising settings in the following order -
+            // Input config -> this DistributedCacheFactory settings -> default settings
+            var finalConfig = new DistributedCacheConfig<TK, TV>(config.CacheName, true);
+
+            if (config.KeyspacePrefix != null)
+                finalConfig.KeyspacePrefix = config.KeyspacePrefix;
+            else if (_keyspacePrefix != null)
+                finalConfig.KeyspacePrefix = _keyspacePrefix;
+
+            if (config.KeySerializer != null)
+                finalConfig.KeySerializer = config.KeySerializer;
+            else if (_keySerializer != null)
+                finalConfig.KeySerializer = _keySerializer;
+
+            if (config.KeyDeserializer != null)
+                finalConfig.KeyDeserializer = config.KeyDeserializer;
+            else if (_keyDeserializer != null)
+                finalConfig.KeyDeserializer = _keyDeserializer;
+
+            if (config.ValueSerializer != null)
+                finalConfig.ValueSerializer = config.ValueSerializer;
+            else if (config.ValueByteSerializer != null)
+                finalConfig.ValueByteSerializer = config.ValueByteSerializer;
+            else if (_valueSerializer != null)
+                finalConfig.ValueSerializer = _valueSerializer;
+            else if (_valueByteSerializer != null)
+                finalConfig.ValueByteSerializer = _valueByteSerializer;
             
-            return new DistributedCacheToCacheAdapter<TK, TV>(cache, _keySerializer);
+            if (config.ValueDeserializer != null)
+                finalConfig.ValueDeserializer = config.ValueDeserializer;
+            else if (config.ValueByteDeserializer != null)
+                finalConfig.ValueByteDeserializer = config.ValueByteDeserializer;
+            else if (_valueDeserializer != null)
+                finalConfig.ValueDeserializer = _valueDeserializer;
+            else if (_valueByteDeserializer != null)
+                finalConfig.ValueByteDeserializer = _valueByteDeserializer;
+
+            if (config.KeyComparer != null)
+                finalConfig.KeyComparer = config.KeyComparer;
+            else if (_keyComparer != null)
+                finalConfig.KeyComparer = new KeyComparer<TK>(_keyComparer);
+
+            return finalConfig;
         }
     }
 

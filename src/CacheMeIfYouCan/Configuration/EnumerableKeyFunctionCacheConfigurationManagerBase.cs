@@ -89,5 +89,10 @@ namespace CacheMeIfYouCan.Configuration
 
             return functionCache;
         }
+
+        internal override KeyComparer<TK> GetKeyComparer()
+        {
+            return KeyComparerResolver.Get<TK>(KeyComparers);
+        }
     }
 }

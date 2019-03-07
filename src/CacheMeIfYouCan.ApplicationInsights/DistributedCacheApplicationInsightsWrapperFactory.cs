@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             _config = config;
         }
 
-        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache, DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Wrap<TK, TV>(IDistributedCache<TK, TV> cache, IDistributedCacheConfig<TK, TV> config)
         {
             return new DistributedCacheApplicationInsightsWrapper<TK, TV>(cache, _config);
         }

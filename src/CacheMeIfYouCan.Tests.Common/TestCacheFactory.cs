@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Tests.Common
             _error = error;
         }
         
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(IDistributedCacheConfig<TK, TV> config)
         {
             return new TestCache<TK, TV>(
                 config.ValueSerializer,

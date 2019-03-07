@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Tests.Cache.Helpers
     {
         public IDistributedCache<TK, TV> Wrap<TK, TV>(
             IDistributedCache<TK, TV> cache,
-            DistributedCacheConfig<TK, TV> config)
+            IDistributedCacheConfig<TK, TV> config)
         {
             return new Wrapper<TK, TV>(cache);
         }

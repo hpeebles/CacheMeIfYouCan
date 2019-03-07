@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Redis
             _redisConfig = redisConfig;
         }
 
-        public IDistributedCache<TK, TV> Build<TK, TV>(DistributedCacheConfig<TK, TV> config)
+        public IDistributedCache<TK, TV> Build<TK, TV>(IDistributedCacheConfig<TK, TV> config)
         {
             config.Validate();
             
@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Redis
         }
 
         private (Func<TV, RedisValue>, Func<RedisValue, TV>) GetValueSerializers<TK, TV>(
-            DistributedCacheConfig<TK, TV> config)
+            IDistributedCacheConfig<TK, TV> config)
         {
             Func<TV, RedisValue> serializer;
             Func<RedisValue, TV> deserializer;

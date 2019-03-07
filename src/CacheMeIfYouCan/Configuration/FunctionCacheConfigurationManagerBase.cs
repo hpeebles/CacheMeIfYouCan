@@ -233,7 +233,7 @@ namespace CacheMeIfYouCan.Configuration
             return WithLocalCacheFactory(cacheFactory.Build);
         }
         
-        public TConfig WithLocalCacheFactory(Func<string, ILocalCache<TK, TV>> cacheFactoryFunc)
+        public TConfig WithLocalCacheFactory(Func<ILocalCacheConfig<TK>, ILocalCache<TK, TV>> cacheFactoryFunc)
         {
             LocalCacheFactory = new LocalCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             return (TConfig)this;
@@ -277,7 +277,7 @@ namespace CacheMeIfYouCan.Configuration
             return WithDistributedCacheFactory(cacheFactory.Build);
         }
         
-        public TConfig WithDistributedCacheFactory(Func<DistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc)
+        public TConfig WithDistributedCacheFactory(Func<IDistributedCacheConfig<TK, TV>, IDistributedCache<TK, TV>> cacheFactoryFunc)
         {
             DistributedCacheFactory = new DistributedCacheFactoryFromFuncAdapter<TK, TV>(cacheFactoryFunc);
             return (TConfig)this;
@@ -492,7 +492,6 @@ namespace CacheMeIfYouCan.Configuration
                     .ToList();
 
                 cache = CacheBuilder.Build(
-                    Name,
                     localCacheFactory,
                     distributedCacheFactory,
                     cacheConfig,
@@ -547,7 +546,7 @@ namespace CacheMeIfYouCan.Configuration
 
         internal virtual KeyComparer<TK> GetKeyComparer()
         {
-            return KeyComparerResolver.Get<TK>(KeyComparers);
+            throw new NotImplementedException();
         }
     }
 }

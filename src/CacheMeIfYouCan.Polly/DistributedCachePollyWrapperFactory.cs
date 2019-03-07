@@ -14,7 +14,7 @@ namespace CacheMeIfYouCan.Polly
 
         public IDistributedCache<TK, TV> Wrap<TK, TV>(
             IDistributedCache<TK, TV> cache,
-            DistributedCacheConfig<TK, TV> config)
+            IDistributedCacheConfig<TK, TV> config)
         {
             return new DistributedCachePollyWrapper<TK, TV>(cache, _policy);
         }
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Polly
 
         public IDistributedCache<TK, TV> Wrap(
             IDistributedCache<TK, TV> cache,
-            DistributedCacheConfig<TK, TV> config)
+            IDistributedCacheConfig<TK, TV> config)
         {
             return new DistributedCachePollyWrapper<TK, TV>(cache, _policy);
         }

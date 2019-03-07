@@ -83,7 +83,7 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task MaxItemsIsHonoured()
         {
-            var cache = new DictionaryCache<int, Guid>("test", 1000);
+            var cache = new DictionaryCache<int, Guid>("test", null, 1000);
             
             for (var i = 0; i < 2000; i++)
                 cache.Set(new Key<int>(i, i.ToString()), Guid.NewGuid(), TimeSpan.FromMinutes(1));

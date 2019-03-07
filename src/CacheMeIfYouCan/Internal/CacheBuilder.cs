@@ -13,10 +13,9 @@ namespace CacheMeIfYouCan.Internal
     internal static class CacheBuilder
     {
         public static ICacheInternal<TK, TV> Build<TK, TV>(
-            string cacheName,
             ILocalCacheFactory<TK, TV> localCacheFactory,
             IDistributedCacheFactory<TK, TV> distributedCacheFactory,
-            DistributedCacheConfig<TK, TV> config,
+            IDistributedCacheConfig<TK, TV> config,
             Action<CacheGetResult<TK, TV>> onCacheGet,
             Action<CacheSetResult<TK, TV>> onCacheSet,
             Action<CacheRemoveResult<TK>> onCacheRemove,
@@ -39,7 +38,7 @@ namespace CacheMeIfYouCan.Internal
                     .OnSetResult(onCacheSet)
                     .OnRemoveResult(onCacheRemove)
                     .OnException(onCacheException)
-                    .Build(cacheName);
+                    .Build(config);
             }
 
             if (localCache is WrappedLocalCacheWithOriginal<TK, TV> l)

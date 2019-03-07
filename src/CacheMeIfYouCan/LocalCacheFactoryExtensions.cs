@@ -296,6 +296,25 @@ namespace CacheMeIfYouCan
         }
         
         /// <summary>
+        /// Builds an <see cref="ILocalCache{TK,TV}"/> instance. It is unlikely that you will ever want to use
+        /// this. See <see cref="BuildAsCache{TK,TV}(CacheMeIfYouCan.ILocalCacheFactory,string)"/> if you want to
+        /// build a standalone cache
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory</param>
+        /// <param name="cacheName">The name to be assigned to the newly created cache</param>
+        /// <typeparam name="TK">The type of the cache key</typeparam>
+        /// <typeparam name="TV">The type of the cache value</typeparam>
+        /// <returns></returns>
+        public static ILocalCache<TK, TV> Build<TK, TV>(
+            this ILocalCacheFactory cacheFactory,
+            string cacheName)
+        {
+            return cacheFactory
+                .AsFactory()
+                .Build<TK, TV>(cacheName);
+        }
+        
+        /// <summary>
         /// Builds an <see cref="ICache{TK,TV}"/> instance. Use this to create a standalone cache
         /// </summary>
         /// <param name="cacheFactory">The cache factory</param>
@@ -634,6 +653,25 @@ namespace CacheMeIfYouCan
             return cacheFactory
                 .AsFactory()
                 .SwallowExceptions(ex => ex.InnerException is TException typed && predicate(typed));
+        }
+        
+        /// <summary>
+        /// Builds an <see cref="ILocalCache{TK,TV}"/> instance. It is unlikely that you will ever want to use
+        /// this. See <see cref="BuildAsCache{TK,TV}(CacheMeIfYouCan.ILocalCacheFactory,string)"/> if you want to
+        /// build a standalone cache
+        /// </summary>
+        /// <param name="cacheFactory">The cache factory</param>
+        /// <param name="cacheName">The name to be assigned to the newly created cache</param>
+        /// <typeparam name="TK">The type of the cache key</typeparam>
+        /// <typeparam name="TV">The type of the cache value</typeparam>
+        /// <returns></returns>
+        public static ILocalCache<TK, TV> Build<TK, TV>(
+            this ILocalCacheFactory<TK, TV> cacheFactory,
+            string cacheName)
+        {
+            return cacheFactory
+                .AsFactory()
+                .Build(cacheName);
         }
         
         /// <summary>

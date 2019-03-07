@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Caches
 {
@@ -11,9 +12,9 @@ namespace CacheMeIfYouCan.Caches
             _rollingTimeToLive = rollingTimeToLive;
         }
         
-        public ILocalCache<TK, TV> Build<TK, TV>(string cacheName)
+        public ILocalCache<TK, TV> Build<TK, TV>(ILocalCacheConfig<TK> config)
         {
-            return new RollingTimeToLiveDictionaryCache<TK, TV>(cacheName, _rollingTimeToLive);
+            return new RollingTimeToLiveDictionaryCache<TK, TV>(config.CacheName, _rollingTimeToLive, config.KeyComparer);
         }
     }
 }
