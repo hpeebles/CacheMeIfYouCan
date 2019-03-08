@@ -1,5 +1,6 @@
 using System;
 using CacheMeIfYouCan.Serializers.Gzip;
+using CacheMeIfYouCan.Serializers.Json.Utf8;
 using CacheMeIfYouCan.Serializers.Protobuf;
 using FluentAssertions;
 using Xunit;
@@ -11,6 +12,8 @@ namespace CacheMeIfYouCan.Serializers.Tests
         [Theory]
         [InlineData("protobuf", false)]
         [InlineData("protobuf", true)]
+        [InlineData("utf8json", false)]
+        [InlineData("utf8json", true)]
         public void SerializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
@@ -42,6 +45,8 @@ namespace CacheMeIfYouCan.Serializers.Tests
         [Theory]
         [InlineData("protobuf", false)]
         [InlineData("protobuf", true)]
+        [InlineData("utf8json", false)]
+        [InlineData("utf8json", true)]
         public void DeserializeTests(string name, bool useGzip)
         {
             var serializer = GetSerializer(name);
@@ -72,6 +77,9 @@ namespace CacheMeIfYouCan.Serializers.Tests
                 case "protobuf":
                     return new ProtobufSerializer();
                     
+                case "utf8json":
+                    return new Utf8JsonSerializer();
+                
                 default:
                     throw new Exception($"No byte serializer found matching name '{name}'");
             }
