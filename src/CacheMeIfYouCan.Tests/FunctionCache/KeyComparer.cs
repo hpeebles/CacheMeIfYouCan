@@ -1,4 +1,5 @@
 using System;
+using CacheMeIfYouCan.Notifications;
 using CacheMeIfYouCan.Tests.Common;
 using CacheMeIfYouCan.Tests.Helpers;
 using FluentAssertions;
@@ -69,25 +70,32 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void NoKeyComparerThrowsWhenDuplicateRequestCatchingEnabled(bool catchDuplicateRequests)
+        public void NoKeyComparerSetThrowsOnlyWhenKeyComparerAccessed(bool catchDuplicateRequests)
         {
-            Func<TypeWithNoEqualityComparer, int> echo = x => x.Value;
+            // In this example the key comparer is only used if CatchDuplicateRequests is true
+            Func<TypeWithNoEqualityComparer, int> func = x => x.Value;
+            Func<TypeWithNoEqualityComparer, int> cachedFunc;
             using (_setupLock.Enter())
             {
-                Func<Func<TypeWithNoEqualityComparer, int>> func = () => echo
+                cachedFunc = func
                     .Cached()
+                    .WithKeySerializer(k => k.Value.ToString())
                     .CatchDuplicateRequests(catchDuplicateRequests)
                     .Build();
+            }
 
-                if (catchDuplicateRequests)
-                {
-                    func.Should().Throw<Exception>()
-                        .Which.Message.Should().StartWith("No equality comparer defined for type:");
-                }
-                else
-                {
-                    func.Should().NotThrow();
-                }
+            Action action = () => cachedFunc(new TypeWithNoEqualityComparer(1));
+
+            if (catchDuplicateRequests)
+            {
+                action.Should().ThrowExactly<FunctionCacheGetException<TypeWithNoEqualityComparer>>()
+                    .WithInnerExceptionExactly<FunctionCacheFetchException<TypeWithNoEqualityComparer>>()
+                    .WithInnerException<Exception>()
+                    .WithMessage($"No EqualityComparer defined for type '{nameof(TypeWithNoEqualityComparer)}'");
+            }
+            else
+            {
+                action.Should().NotThrow();
             }
         }
     }

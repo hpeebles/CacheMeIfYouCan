@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Configuration
                 KeySerializer = keySerializer;
             }
             
-            KeyComparer = KeyComparerResolver.Get<TK>(allowNull: true);
+            KeyComparer = KeyComparerResolver.Get<TK>();
         }
 
         public string CacheName { get; set; }

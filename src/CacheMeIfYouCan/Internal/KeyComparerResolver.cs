@@ -5,16 +5,16 @@ namespace CacheMeIfYouCan.Internal
 {
     internal static class KeyComparerResolver
     {
-        public static KeyComparer<T> Get<T>(EqualityComparers comparers = null, bool allowNull = false)
+        public static KeyComparer<T> Get<T>(EqualityComparers comparers = null)
         {
-            var inner = GetInner<T>(comparers, allowNull);
+            var inner = GetInner<T>(comparers);
 
             return inner == null
                 ? null
                 : new KeyComparer<T>(inner);
         }
 
-        public static IEqualityComparer<T> GetInner<T>(EqualityComparers comparers = null, bool allowNull = false)
+        public static IEqualityComparer<T> GetInner<T>(EqualityComparers comparers = null)
         {
             if (comparers != null && comparers.TryGet<T>(out var comparer))
                 return comparer;
@@ -27,10 +27,7 @@ namespace CacheMeIfYouCan.Internal
             if (OverridesGetHashCodeAndEquals(type))
                 return EqualityComparer<T>.Default;
 
-            if (allowNull)
-                return null;
-            
-            throw new Exception($"No equality comparer defined for type: '{typeof(T).FullName}'");
+            return new ExceptionThrowingComparer<T>();
         }
         
         private static bool OverridesGetHashCodeAndEquals(Type type)
