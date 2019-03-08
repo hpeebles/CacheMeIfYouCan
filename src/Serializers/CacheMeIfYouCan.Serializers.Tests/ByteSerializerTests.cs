@@ -1,6 +1,7 @@
 using System;
 using CacheMeIfYouCan.Serializers.Gzip;
 using CacheMeIfYouCan.Serializers.Json.Utf8;
+using CacheMeIfYouCan.Serializers.MessagePack;
 using CacheMeIfYouCan.Serializers.Protobuf;
 using FluentAssertions;
 using Xunit;
@@ -11,8 +12,10 @@ namespace CacheMeIfYouCan.Serializers.Tests
     {
         [Theory]
         [InlineData("protobuf", false)]
-        [InlineData("protobuf", true)]
+        [InlineData("messagepack", false)]
         [InlineData("utf8json", false)]
+        [InlineData("protobuf", true)]
+        [InlineData("messagepack", true)]
         [InlineData("utf8json", true)]
         public void SerializeTests(string name, bool useGzip)
         {
@@ -44,8 +47,10 @@ namespace CacheMeIfYouCan.Serializers.Tests
         
         [Theory]
         [InlineData("protobuf", false)]
-        [InlineData("protobuf", true)]
+        [InlineData("messagepack", false)]
         [InlineData("utf8json", false)]
+        [InlineData("protobuf", true)]
+        [InlineData("messagepack", true)]
         [InlineData("utf8json", true)]
         public void DeserializeTests(string name, bool useGzip)
         {
@@ -77,6 +82,9 @@ namespace CacheMeIfYouCan.Serializers.Tests
                 case "protobuf":
                     return new ProtobufSerializer();
                     
+                case "messagepack":
+                    return new MessagePackSerializer();
+                
                 case "utf8json":
                     return new Utf8JsonSerializer();
                 
