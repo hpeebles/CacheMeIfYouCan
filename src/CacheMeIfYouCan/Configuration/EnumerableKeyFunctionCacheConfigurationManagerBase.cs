@@ -15,6 +15,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         private readonly Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _inputFunc;
         internal int MaxFetchBatchSize { get; private set; }
+        internal BatchBehaviour BatchBehaviour { get; private set; }
         internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -35,7 +36,11 @@ namespace CacheMeIfYouCan.Configuration
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         {
             _inputFunc = inputFunc;
-            MaxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
+            
+            if (interfaceConfig.MaxFetchBatchSize > 0)
+                WithBatchedFetches(interfaceConfig.MaxFetchBatchSize, interfaceConfig.BatchBehaviour);
+            else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
+                WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
         }
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -44,9 +49,10 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        public TConfig WithBatchedFetches(int batchSize)
+        public TConfig WithBatchedFetches(int batchSize, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             MaxFetchBatchSize = batchSize;
+            BatchBehaviour = behaviour;
             return (TConfig)this;
         }
 
@@ -81,6 +87,7 @@ namespace CacheMeIfYouCan.Configuration
                 OnExceptionAction,
                 keyComparer,
                 MaxFetchBatchSize,
+                BatchBehaviour,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,
                 NegativeCachingValueFactory);

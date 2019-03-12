@@ -17,6 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Func<TK1, TimeSpan> TimeToLiveFactory { get; private set; }
         internal string KeyParamSeparator { get; private set; }
         internal Func<TK1, int> MaxFetchBatchSizeFunc { get; private set; }
+        internal BatchBehaviour BatchBehaviour { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
         internal int[] ParametersToExcludeFromKey { get; private set; }
 
@@ -40,14 +41,10 @@ namespace CacheMeIfYouCan.Configuration
             _inputFunc = inputFunc;
             KeyParamSeparator = interfaceConfig.KeyParamSeparator;
 
-            var maxFetchBatchSize = 0;
             if (interfaceConfig.MaxFetchBatchSize > 0)
-                maxFetchBatchSize = interfaceConfig.MaxFetchBatchSize;
+                WithBatchedFetches(interfaceConfig.MaxFetchBatchSize, interfaceConfig.BatchBehaviour);
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
-                maxFetchBatchSize = DefaultSettings.Cache.MaxFetchBatchSize;
-            
-            if (maxFetchBatchSize > 0)
-                MaxFetchBatchSizeFunc = k => maxFetchBatchSize;
+                WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
         }
         
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -73,18 +70,18 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
-        public TConfig WithBatchedFetches(int batchSize)
+        public TConfig WithBatchedFetches(int batchSize, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             if (batchSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(batchSize));
-            
-            MaxFetchBatchSizeFunc = k => batchSize;
-            return (TConfig)this;
+
+            return WithBatchedFetches(k => batchSize, behaviour);
         }
 
-        public TConfig WithBatchedFetches(Func<TK1, int> batchSizeFunc)
+        public TConfig WithBatchedFetches(Func<TK1, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             MaxFetchBatchSizeFunc = batchSizeFunc;
+            BatchBehaviour = behaviour;
             return (TConfig)this;
         }
 
@@ -157,6 +154,7 @@ namespace CacheMeIfYouCan.Configuration
                 key2Comparer,
                 KeyParamSeparator ?? DefaultSettings.Cache.KeyParamSeparator,
                 MaxFetchBatchSizeFunc,
+                BatchBehaviour,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,
                 NegativeCachingValueFactory);

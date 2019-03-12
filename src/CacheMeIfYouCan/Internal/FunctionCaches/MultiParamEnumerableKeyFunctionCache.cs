@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 using CacheMeIfYouCan.Notifications;
 
@@ -24,6 +25,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly IEqualityComparer<Key<(TK1, TK2)>> _tupleKeysOnlyDifferingBySecondItemComparer;
         private readonly string _keyParamSeparator;
         private readonly Func<TK1, int> _maxFetchBatchSizeFunc;
+        private readonly BatchBehaviour _batchBehaviour;
         private readonly IDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
         private readonly Func<Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
         private readonly Func<(TK1, TK2), bool> _skipCacheSetPredicate;
@@ -48,6 +50,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             KeyComparer<TK2> innerKeyComparer,
             string keyParamSeparator,
             Func<TK1, int> maxFetchBatchSizeFunc,
+            BatchBehaviour batchBehaviour,
             Func<(TK1, TK2), bool> skipCacheGetPredicate,
             Func<(TK1, TK2), bool> skipCacheSetPredicate,
             Func<(TK1, TK2), TV> negativeCachingValueFactory)
@@ -67,6 +70,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _tupleKeysOnlyDifferingBySecondItemComparer = new TupleKeysOnlyDifferingBySecondItemComparer(innerKeyComparer);
             _keyParamSeparator = keyParamSeparator;
             _maxFetchBatchSizeFunc = maxFetchBatchSizeFunc;
+            _batchBehaviour = batchBehaviour;
 
             var convertedFunc = negativeCachingValueFactory == null
                 ? func
@@ -256,16 +260,23 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (_maxFetchBatchSizeFunc == null)
                 return await FetchBatch(innerKeys);
             
-            var maxFetchBatchSize = _maxFetchBatchSizeFunc(outerKey);
+            var batchSize = _maxFetchBatchSizeFunc(outerKey);
 
-            if (maxFetchBatchSize <= 0)
-                maxFetchBatchSize = Int32.MaxValue;
+            if (batchSize <= 0)
+                batchSize = Int32.MaxValue;
 
-            if (innerKeys.Length < maxFetchBatchSize)
+            if (innerKeys.Length <= batchSize)
                 return await FetchBatch(innerKeys);
 
+            if (_batchBehaviour == BatchBehaviour.FillBatchesEvenly)
+            {
+                var batchesCount = (innerKeys.Length / batchSize) + 1;
+
+                batchSize = (innerKeys.Length / batchesCount) + 1;
+            }
+            
             var tasks = innerKeys
-                .Batch(maxFetchBatchSize)
+                .Batch(batchSize)
                 .Select(FetchBatch)
                 .ToArray();
 

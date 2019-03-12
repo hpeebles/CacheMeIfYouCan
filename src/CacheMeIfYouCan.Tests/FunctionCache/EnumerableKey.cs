@@ -312,6 +312,38 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             ordered[4].Results.Select(r => r.KeyString).Should().BeEquivalentTo("8");
         }
 
+        [Theory]
+        [InlineData(BatchBehaviour.FillBatchesEvenly)]
+        [InlineData(BatchBehaviour.FillEachBatchBeforeStartingNext)]
+        public async Task SetBatchBehaviour(BatchBehaviour batchBehaviour)
+        {
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .OnFetch(fetches.Add)
+                    .WithBatchedFetches(50, batchBehaviour)
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 101).Select(i => i.ToString()).ToArray();
+            
+            var results = await cachedEcho(keys);
+
+            results.Should().ContainKeys(keys);
+            
+            fetches.Should().HaveCount(3);
+
+            if (batchBehaviour == BatchBehaviour.FillBatchesEvenly)
+                fetches.Select(f => f.Results.Count).OrderBy(c => c).Should().BeEquivalentTo(new[] { 33, 34, 34 });
+            else
+                fetches.Select(f => f.Results.Count).OrderBy(c => c).Should().BeEquivalentTo(new[] { 1, 50, 50 });
+        }
+
         [Fact]
         public void WithNegativeCaching()
         {

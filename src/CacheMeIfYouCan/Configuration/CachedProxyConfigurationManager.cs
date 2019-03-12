@@ -34,6 +34,7 @@ namespace CacheMeIfYouCan.Configuration
         private Action<CacheException> _onCacheException;
         private string _keyParamSeparator;
         private int _maxFetchBatchSize;
+        private BatchBehaviour _batchBehaviour;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -238,12 +239,13 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithBatchedFetches(int batchSize)
+        public CachedProxyConfigurationManager<T> WithBatchedFetches(int batchSize, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             if (batchSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(batchSize));
             
             _maxFetchBatchSize = batchSize;
+            _batchBehaviour = behaviour;
             return this;
         }
 
@@ -719,6 +721,7 @@ namespace CacheMeIfYouCan.Configuration
                 _onCacheException,
                 _keyParamSeparator,
                 _maxFetchBatchSize,
+                _batchBehaviour,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

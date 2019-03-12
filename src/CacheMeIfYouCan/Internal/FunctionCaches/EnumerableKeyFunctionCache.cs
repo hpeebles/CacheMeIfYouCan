@@ -21,6 +21,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly KeyComparer<TK> _keyComparer;
         private readonly int _maxFetchBatchSize;
+        private readonly BatchBehaviour _batchBehaviour;
         private readonly IDuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
         private readonly Func<Key<TK>[], Key<TK>[]> _keysToGetFromCacheFunc;
         private readonly Func<DuplicateTaskCatcherMultiResult<TK, TV>, bool> _setInCachePredicate;
@@ -40,6 +41,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Action<FunctionCacheException<TK>> onException,
             KeyComparer<TK> keyComparer,
             int maxFetchBatchSize,
+            BatchBehaviour batchBehaviour,
             Func<TK, bool> skipCacheGetPredicate,
             Func<TK, bool> skipCacheSetPredicate,
             Func<TK, TV> negativeCachingValueFactory)
@@ -56,6 +58,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _onException = onException;
             _keyComparer = keyComparer;
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
+            _batchBehaviour = batchBehaviour;
 
             var convertedFunc = negativeCachingValueFactory == null
                 ? func
@@ -197,11 +200,23 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
         private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> Fetch(Key<TK>[] keys, CancellationToken token)
         {
-            if (keys.Length < _maxFetchBatchSize)
+            if (keys.Length <= _maxFetchBatchSize)
                 return await FetchBatch(keys);
 
+            int batchSize;
+            if (_batchBehaviour == BatchBehaviour.FillBatchesEvenly)
+            {
+                var batchesCount = (keys.Length / _maxFetchBatchSize) + 1;
+
+                batchSize = (keys.Length / batchesCount) + 1;
+            }
+            else
+            {
+                batchSize = _maxFetchBatchSize;
+            }
+            
             var tasks = keys
-                .Batch(_maxFetchBatchSize)
+                .Batch(batchSize)
                 .Select(FetchBatch)
                 .ToArray();
 

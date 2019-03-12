@@ -23,6 +23,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Action<CacheException> OnCacheExceptionAction { get; private set; }
         internal string KeyParamSeparator { get; private set; } = "_";
         internal int MaxFetchBatchSize { get; private set; }
+        internal BatchBehaviour BatchBehaviour { get; private set; }
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         internal EqualityComparers KeyComparers { get; } = new EqualityComparers();
@@ -131,12 +132,13 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public DefaultCacheConfiguration WithBatchedFetches(int batchSize)
+        public DefaultCacheConfiguration WithBatchedFetches(int maxBatchSize, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
-            if (batchSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(batchSize));
+            if (maxBatchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxBatchSize));
             
-            MaxFetchBatchSize = batchSize;
+            MaxFetchBatchSize = maxBatchSize;
+            BatchBehaviour = behaviour;
             return this;
         }
 
