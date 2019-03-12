@@ -40,6 +40,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
+            await cachedEcho("warmup");
+
             var key = Guid.NewGuid().ToString();
             
             var first = true;
@@ -60,7 +62,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            fetches.Should().ContainSingle();
+            fetches.Should().HaveCount(2);
         }
 
         [Theory]
@@ -80,6 +82,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .OnFetch(fetches.Add)
                     .Build();
             }
+
+            cachedEcho("warmup");
 
             var key = Guid.NewGuid().ToString();
 
@@ -101,7 +105,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 }
             }
             
-            fetches.Should().ContainSingle();
+            fetches.Should().HaveCount(2);
         }
         
         [Theory]
