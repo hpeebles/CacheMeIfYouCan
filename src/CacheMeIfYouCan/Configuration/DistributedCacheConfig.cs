@@ -53,12 +53,6 @@ namespace CacheMeIfYouCan.Configuration
             if (KeySerializer == null)
                 throw new ArgumentNullException(nameof(KeySerializer));
 
-            if (ValueByteSerializer != null)
-                ValueSerializer = null;
-
-            if (ValueByteDeserializer != null)
-                ValueDeserializer = null;
-
             var validValueSerializers =
                 (ValueSerializer != null && ValueDeserializer != null) ||
                 (ValueByteSerializer != null && ValueByteDeserializer != null);

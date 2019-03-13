@@ -37,15 +37,15 @@ namespace CacheMeIfYouCan.Redis
         {
             Func<TV, RedisValue> serializer;
             Func<RedisValue, TV> deserializer;
-            if (config.ValueSerializer != null && config.ValueDeserializer != null)
-            {
-                serializer = v => config.ValueSerializer(v);
-                deserializer = v => config.ValueDeserializer(v);
-            }
-            else if (config.ValueByteSerializer != null && config.ValueByteDeserializer != null)
+            if (config.ValueByteSerializer != null && config.ValueByteDeserializer != null)
             {
                 serializer = v => config.ValueByteSerializer(v);
                 deserializer = v => config.ValueByteDeserializer(v);
+            }
+            else if (config.ValueSerializer != null && config.ValueDeserializer != null)
+            {
+                serializer = v => config.ValueSerializer(v);
+                deserializer = v => config.ValueDeserializer(v);
             }
             else
             {
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Redis
                 var nullValue = _redisConfig.NullValue;
                 var originalSerializer = serializer;
                 var originalDeserializer = deserializer;
-                serializer = v => v == null ? nullValue : originalSerializer(v);
+                serializer = v => v.Equals(null) ? nullValue : originalSerializer(v);
                 deserializer = v => v == nullValue ? default : originalDeserializer(v);
             }
 
