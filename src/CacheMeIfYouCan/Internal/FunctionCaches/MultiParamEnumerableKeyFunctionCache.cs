@@ -444,7 +444,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         {
             return async (outerKey, innerKeys, token) =>
             {
-                var values = await func(outerKey, innerKeys, token);
+                var values = await func(outerKey, innerKeys, token) ?? new Dictionary<TK2, TV>();
 
                 IDictionary<TK2, TV> valuesWithFills = null;
                 foreach (var key in innerKeys)
