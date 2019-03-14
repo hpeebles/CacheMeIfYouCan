@@ -192,23 +192,23 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             else if (_keySerializers.TryGetDeserializer<TK>(out var keyDeserializer))
                 finalConfig.KeyDeserializer = keyDeserializer;
 
-            if (config.ValueSerializer != null)
-                finalConfig.ValueSerializer = config.ValueSerializer;
-            else if (config.ValueByteSerializer != null)
+            if (config.ValueByteSerializer != null)
                 finalConfig.ValueByteSerializer = config.ValueByteSerializer;
-            else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
-                finalConfig.ValueSerializer = valueSerializer;
+            else if (config.ValueSerializer != null)
+                finalConfig.ValueSerializer = config.ValueSerializer;
             else if (_valueSerializers.TryGetByteSerializer<TV>(out var valueByteSerializer))
                 finalConfig.ValueByteSerializer = valueByteSerializer;
+            else if (_valueSerializers.TryGetSerializer<TV>(out var valueSerializer))
+                finalConfig.ValueSerializer = valueSerializer;
 
-            if (config.ValueDeserializer != null)
-                finalConfig.ValueDeserializer = config.ValueDeserializer;
-            else if (config.ValueByteDeserializer != null)
+            if (config.ValueByteDeserializer != null)
                 finalConfig.ValueByteDeserializer = config.ValueByteDeserializer;
-            else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
-                finalConfig.ValueDeserializer = valueDeserializer;
+            else if (config.ValueDeserializer != null)
+                finalConfig.ValueDeserializer = config.ValueDeserializer;
             else if (_valueSerializers.TryGetByteDeserializer<TV>(out var valueByteDeserializer))
                 finalConfig.ValueByteDeserializer = valueByteDeserializer;
+            else if (_valueSerializers.TryGetDeserializer<TV>(out var valueDeserializer))
+                finalConfig.ValueDeserializer = valueDeserializer;
 
             if (config.KeyComparer != null)
                 finalConfig.KeyComparer = config.KeyComparer;

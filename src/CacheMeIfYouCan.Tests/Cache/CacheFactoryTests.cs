@@ -193,11 +193,10 @@ namespace CacheMeIfYouCan.Tests.Cache
             ICache<string, string> cache;
             using (_setupLock.Enter())
             {
-                var cacheFactory = new TestCacheFactory()
+                cache = new TestCacheFactory()
                     .WithValueSerializers(c => c
-                        .SetDefault(serializer));
-
-                cache = cacheFactory.BuildAsCache<string, string>("test");
+                        .SetDefault(serializer))
+                    .BuildAsCache<string, string>("test");
             }
 
             var value = Guid.NewGuid().ToString();

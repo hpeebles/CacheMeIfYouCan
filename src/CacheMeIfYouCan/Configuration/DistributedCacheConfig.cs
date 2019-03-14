@@ -39,11 +39,61 @@ namespace CacheMeIfYouCan.Configuration
         }
 
         public string KeyspacePrefix { get; set; }
+        
         public Func<string, TK> KeyDeserializer { get; set; }
-        public Func<TV, string> ValueSerializer { get; set; }
-        public Func<string, TV> ValueDeserializer { get; set; }
-        public Func<TV, byte[]> ValueByteSerializer { get; set; }
-        public Func<byte[], TV> ValueByteDeserializer { get; set; }
+
+        
+        private Func<TV, string> _valueSerializer;
+        public Func<TV, string> ValueSerializer
+        {
+            get => _valueSerializer;
+            set
+            {
+                if (value != null)
+                    _valueByteSerializer = null;
+                
+                _valueSerializer = value;
+            }
+        }
+
+        private Func<string, TV> _valueDeserializer;
+        public Func<string, TV> ValueDeserializer
+        {
+            get => _valueDeserializer;
+            set
+            {
+                if (value != null)
+                    _valueByteDeserializer = null;
+                
+                _valueDeserializer = value;
+            }
+        }
+        
+        private Func<TV, byte[]> _valueByteSerializer;
+        public Func<TV, byte[]> ValueByteSerializer
+        {
+            get => _valueByteSerializer;
+            set
+            {
+                if (value != null)
+                    _valueSerializer = null;
+                
+                _valueByteSerializer = value;
+            }
+        }
+        
+        private Func<byte[], TV> _valueByteDeserializer;
+        public Func<byte[], TV> ValueByteDeserializer
+        {
+            get => _valueByteDeserializer;
+            set
+            {
+                if (value != null)
+                    _valueDeserializer = null;
+                
+                _valueByteDeserializer = value;
+            }
+        }
 
         public void Validate()
         {
