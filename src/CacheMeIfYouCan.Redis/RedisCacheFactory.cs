@@ -53,12 +53,12 @@ namespace CacheMeIfYouCan.Redis
                 throw new Exception($"Value serializers are not set up correctly. CacheName: {config.CacheName}");
             }
 
-            if (_redisConfig.NullValue != default)
+            if (_redisConfig.NullValue != default && typeof(TV).IsClass)
             {
                 var nullValue = _redisConfig.NullValue;
                 var originalSerializer = serializer;
                 var originalDeserializer = deserializer;
-                serializer = v => v.Equals(null) ? nullValue : originalSerializer(v);
+                serializer = v => v == null ? nullValue : originalSerializer(v);
                 deserializer = v => v == nullValue ? default : originalDeserializer(v);
             }
 
