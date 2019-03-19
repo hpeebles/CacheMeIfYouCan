@@ -16,6 +16,5 @@
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Json.Utf8\CacheMeIfYouCan.Serializers.Json.Utf8.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan.Serializers.Protobuf\CacheMeIfYouCan.Serializers.Protobuf.csproj" />
-    <ProjectReference Include="..\CacheMeIfYouCan.Serializers.ToString\CacheMeIfYouCan.Serializers.ToString.csproj" />
   </ItemGroup>
 </Project>

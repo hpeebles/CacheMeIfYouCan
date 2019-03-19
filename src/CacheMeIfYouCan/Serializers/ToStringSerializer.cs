@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan.Serializers.ToString
+namespace CacheMeIfYouCan.Serializers
 {
     public sealed class ToStringSerializer : ISerializer
     {

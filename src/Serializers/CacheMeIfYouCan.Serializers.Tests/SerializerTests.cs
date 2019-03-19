@@ -2,7 +2,6 @@ using System;
 using CacheMeIfYouCan.Serializers.Gzip;
 using CacheMeIfYouCan.Serializers.Json.Newtonsoft;
 using CacheMeIfYouCan.Serializers.Protobuf;
-using CacheMeIfYouCan.Serializers.ToString;
 using FluentAssertions;
 using Xunit;
 
