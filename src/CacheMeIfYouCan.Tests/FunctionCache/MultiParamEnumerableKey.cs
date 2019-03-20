@@ -510,5 +510,43 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 action.Should().Throw<ArgumentOutOfRangeException>();
             }
         }
+        
+        [Fact]
+        public async Task WithJitter()
+        {
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
+
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<string, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1), 50)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            await cachedFunc("warmup", new[] { "warmup" });
+
+            var keys = Enumerable
+                .Range(0, 20)
+                .Select(i => Guid.NewGuid().ToString())
+                .ToArray();
+            
+            await Task.WhenAll(keys.Select(k => cachedFunc("1", new[] { k })));
+            
+            fetches.Should().HaveCount(21);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(750));
+            
+            await Task.WhenAll(keys.Select(k => cachedFunc("1", new[] { k })));
+
+            fetches.Should().HaveCountGreaterThan(21).And.HaveCountLessThan(41);
+        }
     }
 }

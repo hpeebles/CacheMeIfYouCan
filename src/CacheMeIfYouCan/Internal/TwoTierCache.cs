@@ -16,16 +16,19 @@ namespace CacheMeIfYouCan.Internal
             ILocalCache<TK, TV> localCache,
             IDistributedCache<TK, TV> distributedCache,
             KeyComparer<TK> keyComparer,
-            TimeSpan? localCacheTimeToLiveOverride)
+            Func<TimeSpan> localCacheTimeToLiveOverride)
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
 
-            if (localCacheTimeToLiveOverride.HasValue)
+            if (localCacheTimeToLiveOverride != null)
             {
-                var timeToLiveOverride = localCacheTimeToLiveOverride.Value;
-                _getLocalCacheTimeToLive = t => t < timeToLiveOverride ? t : timeToLiveOverride;
+                _getLocalCacheTimeToLive = t =>
+                {
+                    var timeToLiveOverride = localCacheTimeToLiveOverride();
+                    return t < timeToLiveOverride ? t : timeToLiveOverride;
+                };
             }
             else
             {

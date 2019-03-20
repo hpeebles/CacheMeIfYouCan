@@ -18,8 +18,8 @@ namespace CacheMeIfYouCan.Configuration
         private readonly ValueSerializers _valueSerializers;
         private readonly EqualityComparers _keyComparers;
         private Func<MethodInfo, string> _nameGenerator;
-        private TimeSpan? _timeToLive;
-        private TimeSpan? _localCacheTimeToLiveOverride;
+        private Func<TimeSpan> _timeToLiveFactory;
+        private Func<TimeSpan> _localCacheTimeToLiveOverride;
         private bool? _disableCache;
         private bool? _catchDuplicateRequests;
         private ILocalCacheFactory _localCacheFactory;
@@ -59,15 +59,30 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
                 
-        public CachedProxyConfigurationManager<T> WithTimeToLive(TimeSpan timeToLive)
+        public CachedProxyConfigurationManager<T> WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
-            _timeToLive = timeToLive;
+            _timeToLiveFactory = () => timeToLive;
+
+            if (jitterPercentage > 0)
+                _timeToLiveFactory = _timeToLiveFactory.WithJitter(jitterPercentage);
+            
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
+        public CachedProxyConfigurationManager<T> WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive, double jitterPercentage = 0)
         {
-            _localCacheTimeToLiveOverride = timeToLive;
+            if (timeToLive.HasValue)
+            {
+                _localCacheTimeToLiveOverride = () => timeToLive.Value;
+
+                if (jitterPercentage > 0)
+                    _localCacheTimeToLiveOverride = _localCacheTimeToLiveOverride.WithJitter(jitterPercentage);
+            }
+            else
+            {
+                _localCacheTimeToLiveOverride = null;
+            }
+
             return this;
         }
 
@@ -705,7 +720,7 @@ namespace CacheMeIfYouCan.Configuration
                 _valueSerializers,
                 _keyComparers,
                 _nameGenerator,
-                _timeToLive,
+                _timeToLiveFactory,
                 _localCacheTimeToLiveOverride,
                 _disableCache,
                 _catchDuplicateRequests,

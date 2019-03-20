@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Internal
             Action<CacheRemoveResult<TK>> onCacheRemove,
             Action<CacheException<TK>> onCacheException,
             List<(IObservable<Key<TK>> keysToRemove, bool removeFromLocalOnly)> keyRemovalObservables,
-            TimeSpan? localCacheTimeToLiveOverride)
+            Func<TimeSpan> localCacheTimeToLiveOverride)
         {
             if (localCacheFactory == null && distributedCacheFactory == null)
                 localCacheFactory = GetDefaultLocalCacheFactory<TK, TV>();

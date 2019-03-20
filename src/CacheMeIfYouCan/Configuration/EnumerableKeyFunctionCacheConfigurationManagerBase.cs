@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Configuration
         where TConfig : EnumerableKeyFunctionCacheConfigurationManagerBase<TConfig, TK, TV>
     {
         private readonly Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _inputFunc;
+        internal Func<TimeSpan> TimeToLiveFactory { get; private set; }
         internal int MaxFetchBatchSize { get; private set; }
         internal BatchBehaviour BatchBehaviour { get; private set; }
         internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
@@ -24,6 +25,8 @@ namespace CacheMeIfYouCan.Configuration
             : base(functionName)
         {
             _inputFunc = inputFunc;
+
+            TimeToLiveFactory = DefaultSettings.Cache.TimeToLiveFactory;
         }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -37,15 +40,21 @@ namespace CacheMeIfYouCan.Configuration
         {
             _inputFunc = inputFunc;
             
+            TimeToLiveFactory = interfaceConfig.TimeToLiveFactory ?? DefaultSettings.Cache.TimeToLiveFactory;
+
             if (interfaceConfig.MaxFetchBatchSize > 0)
                 WithBatchedFetches(interfaceConfig.MaxFetchBatchSize, interfaceConfig.BatchBehaviour);
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
                 WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
         }
 
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
-            TimeToLive = timeToLive;
+            TimeToLiveFactory = () => timeToLive;
+
+            if (jitterPercentage > 0)
+                TimeToLiveFactory = TimeToLiveFactory.WithJitter(jitterPercentage);
+            
             return (TConfig)this;
         }
         
@@ -78,7 +87,7 @@ namespace CacheMeIfYouCan.Configuration
                 _inputFunc,
                 Name,
                 cache,
-                TimeToLive ?? DefaultSettings.Cache.TimeToLive,
+                TimeToLiveFactory,
                 DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
                 keySerializer,
                 DefaultValueFactory,

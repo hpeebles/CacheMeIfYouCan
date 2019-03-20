@@ -242,6 +242,40 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Be(catchDuplicateRequests ? 4 : 0);
         }
 
+        [Fact]
+        public async Task WithJitter()
+        {
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
+
+            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1), 50)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            await cachedEcho("warmup");
+
+            var keys = Enumerable
+                .Range(0, 20)
+                .Select(i => Guid.NewGuid().ToString())
+                .ToArray();
+            
+            await Task.WhenAll(keys.Select(cachedEcho));
+            
+            fetches.Should().HaveCount(21);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(750));
+            
+            await Task.WhenAll(keys.Select(cachedEcho));
+
+            fetches.Should().HaveCountGreaterThan(21).And.HaveCountLessThan(41);
+        }
+
         private static ILocalCacheFactory GetCacheFactory(string cacheType)
         {
             switch (cacheType)

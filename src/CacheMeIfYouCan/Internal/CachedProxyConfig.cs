@@ -14,8 +14,8 @@ namespace CacheMeIfYouCan.Internal
             ValueSerializers valueSerializers,
             EqualityComparers keyComparers,
             Func<MethodInfo, string> nameGenerator,
-            TimeSpan? timeToLive,
-            TimeSpan? localCacheTimeToLiveOverride,
+            Func<TimeSpan> timeToLiveFactory,
+            Func<TimeSpan> localCacheTimeToLiveOverride,
             bool? disableCache,
             bool? catchDuplcateRequests,
             ILocalCacheFactory localCacheFactory,
@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Internal
             ValueSerializers = valueSerializers;
             KeyComparers = keyComparers;
             NameGenerator = nameGenerator;
-            TimeToLive = timeToLive;
+            TimeToLiveFactory = timeToLiveFactory;
             LocalCacheTimeToLiveOverride = localCacheTimeToLiveOverride;
             DisableCache = disableCache;
             CatchDuplicateRequests = catchDuplcateRequests;
@@ -63,8 +63,8 @@ namespace CacheMeIfYouCan.Internal
         public ValueSerializers ValueSerializers { get; }
         public EqualityComparers KeyComparers { get; }
         public Func<MethodInfo, string> NameGenerator { get; }
-        public TimeSpan? TimeToLive { get; }
-        public TimeSpan? LocalCacheTimeToLiveOverride { get; }
+        public Func<TimeSpan> TimeToLiveFactory { get; }
+        public Func<TimeSpan> LocalCacheTimeToLiveOverride { get; }
         public bool? DisableCache { get; }
         public bool? CatchDuplicateRequests { get; }
         public ILocalCacheFactory LocalCacheFactory { get; }

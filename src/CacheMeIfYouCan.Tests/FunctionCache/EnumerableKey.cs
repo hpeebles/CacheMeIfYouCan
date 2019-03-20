@@ -401,6 +401,40 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Should().ContainKeys(keys);
             builder.Count.Should().Be(1);
         }
+        
+        [Fact]
+        public async Task WithJitter()
+        {
+            var fetches = new ConcurrentBag<FunctionCacheFetchResult>();
+
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho(TimeSpan.FromSeconds(1));
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithTimeToLive(TimeSpan.FromSeconds(1), 50)
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+            
+            await cachedEcho(new[] { "warmup" });
+
+            var keys = Enumerable
+                .Range(0, 20)
+                .Select(i => Guid.NewGuid().ToString())
+                .ToArray();
+            
+            await Task.WhenAll(keys.Select(k => cachedEcho(new[] { k })));
+            
+            fetches.Should().HaveCount(21);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(750));
+            
+            await Task.WhenAll(keys.Select(k => cachedEcho(new[] { k })));
+
+            fetches.Should().HaveCountGreaterThan(21).And.HaveCountLessThan(41);
+        }
 
         private class TestDictionaryBuilder : ReturnDictionaryBuilder<string, string, IDictionary<string, string>>
         {

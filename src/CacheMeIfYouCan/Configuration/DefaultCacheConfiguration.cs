@@ -8,8 +8,8 @@ namespace CacheMeIfYouCan.Configuration
 {
     public class DefaultCacheConfiguration
     {
-        internal TimeSpan TimeToLive { get; private set; } = TimeSpan.FromHours(1);
-        internal TimeSpan? LocalCacheTimeToLiveOverride { get; private set; }
+        internal Func<TimeSpan> TimeToLiveFactory { get; private set; } = () => TimeSpan.FromHours(1);
+        internal Func<TimeSpan> LocalCacheTimeToLiveOverride { get; private set; }
         internal bool DisableCache { get; private set; }
         internal bool DuplicateRequestCatchingEnabled { get; private set; }
         internal ILocalCacheFactory LocalCacheFactory { get; private set; }
@@ -31,15 +31,23 @@ namespace CacheMeIfYouCan.Configuration
         internal Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory local, IDistributedCacheFactory distributed)> CacheFactoryPresets { get; }
             = new Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory, IDistributedCacheFactory)>();
 
-        public DefaultCacheConfiguration WithTimeToLive(TimeSpan timeToLive)
+        public DefaultCacheConfiguration WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
-            TimeToLive = timeToLive;
+            TimeToLiveFactory = () => timeToLive;
+
+            if (jitterPercentage > 0)
+                TimeToLiveFactory = TimeToLiveFactory.WithJitter(jitterPercentage);
+            
             return this;
         }
 
-        public DefaultCacheConfiguration WithLocalCacheTimeToLiveOverride(TimeSpan timeToLive)
+        public DefaultCacheConfiguration WithLocalCacheTimeToLiveOverride(TimeSpan timeToLive, double jitterPercentage = 0)
         {
-            LocalCacheTimeToLiveOverride = timeToLive;
+            LocalCacheTimeToLiveOverride = () => timeToLive;
+
+            if (jitterPercentage > 0)
+                LocalCacheTimeToLiveOverride = LocalCacheTimeToLiveOverride.WithJitter(jitterPercentage);
+            
             return this;
         }
 

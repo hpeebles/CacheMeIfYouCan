@@ -20,6 +20,10 @@ namespace CacheMeIfYouCan.Configuration
             : base(name)
         {
             _inputFunc = inputFunc;
+            
+            var timeToLiveFactory = DefaultSettings.Cache.TimeToLiveFactory;
+            if (timeToLiveFactory != null)
+                TimeToLiveFactory = (k, v) => timeToLiveFactory();
         }
 
         internal SingleKeyFunctionCacheConfigurationManagerBase(
@@ -32,24 +36,29 @@ namespace CacheMeIfYouCan.Configuration
                 new CachedProxyFunctionInfo(interfaceConfig.InterfaceType, methodInfo, typeof(TK), typeof(TV)))
         {
             _inputFunc = inputFunc;
+
+            var timeToLiveFactory = interfaceConfig.TimeToLiveFactory ?? DefaultSettings.Cache.TimeToLiveFactory;
+            if (timeToLiveFactory != null)
+                TimeToLiveFactory = (k, v) => timeToLiveFactory();
         }
 
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
-            TimeToLive = timeToLive;
-            TimeToLiveFactory = null;
-            return (TConfig)this;
+            return WithTimeToLiveFactory((k, v) => timeToLive, jitterPercentage);
         }
         
-        public TConfig WithTimeToLiveFactory(Func<TK, TimeSpan> timeToLiveFactory)
+        public TConfig WithTimeToLiveFactory(Func<TK, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
         {
-            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k));
+            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k), jitterPercentage);
         }
         
-        public TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory)
+        public TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
         {
-            TimeToLiveFactory = timeToLiveFactory;
-            TimeToLive = null;
+            TimeToLiveFactory = timeToLiveFactory ?? throw new ArgumentNullException(nameof(timeToLiveFactory));
+
+            if (jitterPercentage > 0)
+                TimeToLiveFactory = TimeToLiveFactory.WithJitter(jitterPercentage);
+            
             return (TConfig)this;
         }
 
@@ -65,22 +74,11 @@ namespace CacheMeIfYouCan.Configuration
             
             var cache = BuildCache(keySerializer, keyComparer);
 
-            Func<TK, TV, TimeSpan> timeToLiveFactory;
-            if (TimeToLiveFactory != null)
-            {
-                timeToLiveFactory = TimeToLiveFactory;
-            }
-            else
-            {
-                var timeToLive = TimeToLive ?? DefaultSettings.Cache.TimeToLive;
-                timeToLiveFactory = (k, v) => timeToLive;
-            }
-
             var functionCache = new SingleKeyFunctionCache<TK, TV>(
                 _inputFunc,
                 Name,
                 cache,
-                timeToLiveFactory,
+                TimeToLiveFactory,
                 DuplicateRequestCatchingEnabled ?? DefaultSettings.Cache.DuplicateRequestCatchingEnabled,
                 keySerializer,
                 DefaultValueFactory,

@@ -15,8 +15,7 @@ namespace CacheMeIfYouCan.Configuration
         internal KeySerializers KeySerializers { get; }
         internal EqualityComparers KeyComparers { get; }
         internal string Name { get; private set; }
-        internal TimeSpan? TimeToLive { get; set; }
-        internal TimeSpan? LocalCacheTimeToLiveOverride { get; set; }
+        internal Func<TimeSpan> LocalCacheTimeToLiveOverride { get; set; }
         internal bool? Disabled { get; private set; }
         internal bool? DuplicateRequestCatchingEnabled { get; private set; }
         internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
@@ -64,7 +63,6 @@ namespace CacheMeIfYouCan.Configuration
                 if (interfaceConfig.NameGenerator != null)
                     Name = interfaceConfig.NameGenerator(proxyFunctionInfo.MethodInfo);
                 
-                TimeToLive = interfaceConfig.TimeToLive;
                 LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
                 Disabled = interfaceConfig.DisableCache;
                 DuplicateRequestCatchingEnabled = interfaceConfig.CatchDuplicateRequests;
@@ -119,9 +117,20 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive)
+        public TConfig WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive, double jitterPercentage = 0)
         {
-            LocalCacheTimeToLiveOverride = timeToLive;
+            if (timeToLive.HasValue)
+            {
+                LocalCacheTimeToLiveOverride = () => timeToLive.Value;
+
+                if (jitterPercentage > 0)
+                    LocalCacheTimeToLiveOverride = LocalCacheTimeToLiveOverride.WithJitter(jitterPercentage);
+            }
+            else
+            {
+                LocalCacheTimeToLiveOverride = null;
+            }
+            
             return (TConfig)this;
         }
         
@@ -500,7 +509,7 @@ namespace CacheMeIfYouCan.Configuration
                     OnCacheRemoveAction,
                     OnCacheExceptionAction,
                     keyRemovalObservables,
-                    LocalCacheTimeToLiveOverride);
+                    LocalCacheTimeToLiveOverride ?? DefaultSettings.Cache.LocalCacheTimeToLiveOverride);
             }
 
             return cache;

@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
     internal sealed class EnumerableKeyFunctionCache<TK, TV> : IPendingRequestsCounter, IDisposable
     {
         private readonly ICacheInternal<TK, TV> _cache;
-        private readonly TimeSpan _timeToLive;
+        private readonly Func<TimeSpan> _timeToLiveFactory;
         private readonly Func<TK, string> _keySerializer;
         private readonly Func<TV> _defaultValueFactory;
         private readonly bool _continueOnException;
@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             string functionName,
             ICacheInternal<TK, TV> cache,
-            TimeSpan timeToLive,
+            Func<TimeSpan> timeToLiveFactory,
             bool catchDuplicateRequests,
             Func<TK, string> keySerializer,
             Func<TV> defaultValueFactory,
@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Name = functionName;
             Type = GetType().Name;
             _cache = cache;
-            _timeToLive = timeToLive;
+            _timeToLiveFactory = timeToLiveFactory;
             _keySerializer = keySerializer;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
@@ -263,7 +263,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                             if (valuesToSetInCache.Any())
                             {
-                                var setValueTask = _cache.Set(valuesToSetInCache, _timeToLive);
+                                var setValueTask = _cache.Set(valuesToSetInCache, _timeToLiveFactory());
 
                                 if (!setValueTask.IsCompleted)
                                     await setValueTask;
