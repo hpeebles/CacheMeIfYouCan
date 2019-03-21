@@ -35,6 +35,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Func<TV> DefaultValueFactory { get; private set; }
         internal Func<TK, bool> SkipCacheGetPredicate { get; private set; }
         internal Func<TK, bool> SkipCacheSetPredicate { get; private set; }
+        internal Func<TK, TV, bool> OnlyStoreInLocalCacheWhenPredicate { get; private set; }
         internal List<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
             = new List<(IObservable<TK>, bool)>();
         
@@ -466,6 +467,12 @@ namespace CacheMeIfYouCan.Configuration
             KeyRemovalObservables.Add((keysToRemoveObservable, removeFromLocalOnly));
             return (TConfig)this;
         }
+
+        public TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)
+        {
+            OnlyStoreInLocalCacheWhenPredicate = predicate;
+            return (TConfig)this;
+        }
         
         internal ICacheInternal<TK, TV> BuildCache(Func<TK, string> keySerializer, KeyComparer<TK> keyComparer)
         {
@@ -509,7 +516,8 @@ namespace CacheMeIfYouCan.Configuration
                     OnCacheRemoveAction,
                     OnCacheExceptionAction,
                     keyRemovalObservables,
-                    LocalCacheTimeToLiveOverride ?? DefaultSettings.Cache.LocalCacheTimeToLiveOverride);
+                    LocalCacheTimeToLiveOverride ?? DefaultSettings.Cache.LocalCacheTimeToLiveOverride,
+                    OnlyStoreInLocalCacheWhenPredicate);
             }
 
             return cache;

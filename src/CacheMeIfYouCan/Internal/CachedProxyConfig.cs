@@ -31,6 +31,7 @@ namespace CacheMeIfYouCan.Internal
             string keyParamSeparator,
             int maxFetchBatchSize,
             BatchBehaviour batchBehaviour,
+            bool onlyStoreNegativesInLocalCache,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -55,6 +56,7 @@ namespace CacheMeIfYouCan.Internal
             KeyParamSeparator = keyParamSeparator;
             MaxFetchBatchSize = maxFetchBatchSize;
             BatchBehaviour = batchBehaviour;
+            OnlyStoreNegativesInLocalCache = onlyStoreNegativesInLocalCache;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
         
@@ -80,6 +82,7 @@ namespace CacheMeIfYouCan.Internal
         public string KeyParamSeparator { get; }
         public int MaxFetchBatchSize { get; }
         public BatchBehaviour BatchBehaviour { get; }
+        public bool OnlyStoreNegativesInLocalCache { get; }
         public IDictionary<MethodInfoKey, object> FunctionCacheConfigActions { get; }
     }
 }

@@ -139,5 +139,62 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             results.Last().Results.Single().CacheType.Should().Be("test");
         }
+        
+        [Fact]
+        public async Task OnlyStoreNegativesInLocalCache()
+        {
+            var localCache = new TestLocalCache<int, int>();
+            var distributedCache = new TestCache<int, int>(x => x.ToString(), Int32.Parse);
+
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys => Task.FromResult(keys.Where(k => k % 2 == 1).ToDictionary(k => k));
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter(true))
+            {
+                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache();
+                
+                cachedFunc = func
+                    .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
+                    .WithLocalCache(localCache)
+                    .WithDistributedCache(distributedCache)
+                    .WithNegativeCaching()
+                    .Build();
+                
+                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache(false);
+            }
+
+            var allKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(allKeys);
+
+            localCache.Values.Should().ContainKeys(0, 2, 4, 6, 8);
+            localCache.Values.Values.Select(v => v.Item1).Should().OnlyContain(v => v == 0);
+            distributedCache.Values.Should().ContainKeys(allKeys.Select(k => k.ToString()));
+        }
+
+        [Fact]
+        public async Task OnlyStoreInLocalCacheWhen()
+        {
+            var localCache = new TestLocalCache<int, int>();
+            var distributedCache = new TestCache<int, int>(x => x.ToString(), Int32.Parse);
+
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys => Task.FromResult(keys.ToDictionary(k => k));
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
+                    .WithLocalCache(localCache)
+                    .WithDistributedCache(distributedCache)
+                    .OnlyStoreInLocalCacheWhen((k, v) => k % 2 == 0)
+                    .Build();
+            }
+
+            var allKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(allKeys);
+
+            localCache.Values.Should().ContainKeys(0, 2, 4, 6, 8);
+            distributedCache.Values.Should().ContainKeys(allKeys.Select(k => k.ToString()));
+        }
     }
 }

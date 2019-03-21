@@ -267,6 +267,37 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             serializer.SerializeCount.Should().Be(1);
         }
         
+        [Fact]
+        public async Task OnlyStoreNegativesInLocalCache()
+        {
+            var localCache = new TestLocalCache<int, int>();
+            var distributedCache = new TestCache<int, int>(x => x.ToString(), Int32.Parse);
+
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys => Task.FromResult(keys.Where(k => k % 2 == 1).ToDictionary(k => k));
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter(true))
+            {
+                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache();
+                
+                cachedFunc = func
+                    .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
+                    .WithLocalCache(localCache)
+                    .WithDistributedCache(distributedCache)
+                    .WithNegativeCaching()
+                    .Build();
+                
+                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache(false);
+            }
+
+            var allKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(allKeys);
+
+            localCache.Values.Should().ContainKeys(0, 2, 4, 6, 8);
+            localCache.Values.Values.Select(v => v.Item1).Should().OnlyContain(v => v == 0);
+            distributedCache.Values.Should().ContainKeys(allKeys.Select(k => k.ToString()));
+        }
+        
         private static string GetRandomKey()
         {
             return KeyPrefix + Guid.NewGuid();

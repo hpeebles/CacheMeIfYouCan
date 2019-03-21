@@ -11,16 +11,19 @@ namespace CacheMeIfYouCan.Internal
         private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly KeyComparer<TK> _keyComparer;
         private readonly Func<TimeSpan, TimeSpan> _getLocalCacheTimeToLive;
+        private readonly Func<TK, TV, bool> onlyStoreInLocalCacheWhenPredicate;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
             IDistributedCache<TK, TV> distributedCache,
             KeyComparer<TK> keyComparer,
-            Func<TimeSpan> localCacheTimeToLiveOverride)
+            Func<TimeSpan> localCacheTimeToLiveOverride,
+            Func<TK, TV, bool> onlyStoreInLocalCacheWhenPredicate)
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
+            this.onlyStoreInLocalCacheWhenPredicate = onlyStoreInLocalCacheWhenPredicate;
 
             if (localCacheTimeToLiveOverride != null)
             {
@@ -50,16 +53,24 @@ namespace CacheMeIfYouCan.Internal
                 return fromLocalCache;
 
             var fromDistributedCache = await _distributedCache.Get(key);
-            
-            if (fromDistributedCache.Success)
-                _localCache.Set(key, fromDistributedCache.Value, fromDistributedCache.TimeToLive);
+
+            if (fromDistributedCache.Success &&
+                (onlyStoreInLocalCacheWhenPredicate == null ||
+                 onlyStoreInLocalCacheWhenPredicate(fromDistributedCache.Key, fromDistributedCache.Value)))
+            {
+                _localCache.Set(
+                    key,
+                    fromDistributedCache.Value,
+                    _getLocalCacheTimeToLive(fromDistributedCache.TimeToLive));
+            }
 
             return fromDistributedCache;
         }
 
         public async ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            _localCache.Set(key, value, _getLocalCacheTimeToLive(timeToLive));
+            if (onlyStoreInLocalCacheWhenPredicate == null || onlyStoreInLocalCacheWhenPredicate(key, value))
+                _localCache.Set(key, value, _getLocalCacheTimeToLive(timeToLive));
 
             await _distributedCache.Set(key, value, timeToLive);
         }
@@ -80,8 +91,16 @@ namespace CacheMeIfYouCan.Internal
             
             var fromDistributedCache = await _distributedCache.Get(remaining);
             
-            foreach (var result in fromDistributedCache)
-                _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
+            if (onlyStoreInLocalCacheWhenPredicate == null)
+            {
+                foreach (var result in fromDistributedCache)
+                   _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
+            }
+            else
+            {
+                foreach (var result in fromDistributedCache.Where(r => onlyStoreInLocalCacheWhenPredicate(r.Key, r.Value)))
+                    _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
+            }
 
             return fromLocalCache
                 .Concat(fromDistributedCache)
@@ -90,7 +109,19 @@ namespace CacheMeIfYouCan.Internal
 
         public async ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            _localCache.Set(values, _getLocalCacheTimeToLive(timeToLive));
+            if (onlyStoreInLocalCacheWhenPredicate == null)
+            {
+                _localCache.Set(values, _getLocalCacheTimeToLive(timeToLive));
+            }
+            else
+            {
+                var toStoreInLocalCache = values
+                    .Where(kv => onlyStoreInLocalCacheWhenPredicate(kv.Key, kv.Value))
+                    .ToArray();
+                
+                if (toStoreInLocalCache.Any())
+                    _localCache.Set(toStoreInLocalCache, _getLocalCacheTimeToLive(timeToLive));
+            }
 
             await _distributedCache.Set(values, timeToLive);
         }

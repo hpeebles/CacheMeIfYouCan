@@ -27,6 +27,9 @@ namespace CacheMeIfYouCan.Configuration
             _inputFunc = inputFunc;
 
             TimeToLiveFactory = DefaultSettings.Cache.TimeToLiveFactory;
+            
+            if (DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache)
+                OnlyStoreNegativesInLocalCache();
         }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -46,6 +49,9 @@ namespace CacheMeIfYouCan.Configuration
                 WithBatchedFetches(interfaceConfig.MaxFetchBatchSize, interfaceConfig.BatchBehaviour);
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
                 WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
+            
+            if (interfaceConfig.OnlyStoreNegativesInLocalCache)
+                OnlyStoreNegativesInLocalCache();
         }
 
         public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
@@ -74,6 +80,19 @@ namespace CacheMeIfYouCan.Configuration
         {
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
+        }
+        
+        /// <summary>
+        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
+        /// improve performance without using up much memory as the keys stored locally all have small values (null or
+        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
+        /// tier caching strategy
+        /// </summary>
+        public TConfig OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
+        {
+            return typeof(TV).IsClass
+                ? OnlyStoreInLocalCacheWhen((k, v) => v == null)
+                : OnlyStoreInLocalCacheWhen((k, v) => v.Equals(default(TV)));
         }
         
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()

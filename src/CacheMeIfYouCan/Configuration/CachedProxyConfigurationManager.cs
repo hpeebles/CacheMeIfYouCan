@@ -35,6 +35,7 @@ namespace CacheMeIfYouCan.Configuration
         private string _keyParamSeparator;
         private int _maxFetchBatchSize;
         private BatchBehaviour _batchBehaviour;
+        private bool _onlyStoreNegativesInLocalCache;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -50,6 +51,7 @@ namespace CacheMeIfYouCan.Configuration
             _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
             _onCacheRemove = DefaultSettings.Cache.OnCacheRemoveAction;
             _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
+            _onlyStoreNegativesInLocalCache = DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
 
@@ -261,6 +263,18 @@ namespace CacheMeIfYouCan.Configuration
             
             _maxFetchBatchSize = batchSize;
             _batchBehaviour = behaviour;
+            return this;
+        }
+        
+        /// <summary>
+        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
+        /// improve performance without using up much memory as the keys stored locally all have small values (null or
+        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
+        /// tier caching strategy
+        /// </summary>
+        public CachedProxyConfigurationManager<T> OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
+        {
+            _onlyStoreNegativesInLocalCache = onlyStoreNegativesInLocalCache;
             return this;
         }
 
@@ -737,6 +751,7 @@ namespace CacheMeIfYouCan.Configuration
                 _keyParamSeparator,
                 _maxFetchBatchSize,
                 _batchBehaviour,
+                _onlyStoreNegativesInLocalCache,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);
