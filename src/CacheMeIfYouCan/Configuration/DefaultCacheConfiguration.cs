@@ -24,6 +24,7 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyParamSeparator { get; private set; } = "_";
         internal int MaxFetchBatchSize { get; private set; }
         internal BatchBehaviour BatchBehaviour { get; private set; }
+        internal bool NegativeCachingEnabled { get; private set; }
         internal bool ShouldOnlyStoreNegativesInLocalCache { get; private set; }
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
@@ -148,6 +149,12 @@ namespace CacheMeIfYouCan.Configuration
             
             MaxFetchBatchSize = maxBatchSize;
             BatchBehaviour = behaviour;
+            return this;
+        }
+        
+        public DefaultCacheConfiguration WithNegativeCaching(bool negativeCachingEnabled = true)
+        {
+            NegativeCachingEnabled = negativeCachingEnabled;
             return this;
         }
 

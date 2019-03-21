@@ -32,6 +32,9 @@ namespace CacheMeIfYouCan.Configuration
             if (timeToLiveFactory != null)
                 TimeToLiveFactory = k => timeToLiveFactory();
             
+            if (DefaultSettings.Cache.NegativeCachingEnabled)
+                WithNegativeCaching();
+
             if (DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache)
                 OnlyStoreNegativesInLocalCache();
         }
@@ -58,6 +61,9 @@ namespace CacheMeIfYouCan.Configuration
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
                 WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
             
+            if (interfaceConfig.NegativeCachingEnabled)
+                WithNegativeCaching();
+
             if (interfaceConfig.OnlyStoreNegativesInLocalCache)
                 OnlyStoreNegativesInLocalCache();
         }

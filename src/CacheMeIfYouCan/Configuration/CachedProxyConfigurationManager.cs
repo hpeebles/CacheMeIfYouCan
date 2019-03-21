@@ -35,6 +35,7 @@ namespace CacheMeIfYouCan.Configuration
         private string _keyParamSeparator;
         private int _maxFetchBatchSize;
         private BatchBehaviour _batchBehaviour;
+        private bool _negativeCachingEnabled;
         private bool _onlyStoreNegativesInLocalCache;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
@@ -263,6 +264,12 @@ namespace CacheMeIfYouCan.Configuration
             
             _maxFetchBatchSize = batchSize;
             _batchBehaviour = behaviour;
+            return this;
+        }
+        
+        public CachedProxyConfigurationManager<T> WithNegativeCaching(bool negativeCachingEnabled = true)
+        {
+            _negativeCachingEnabled = negativeCachingEnabled;
             return this;
         }
         
@@ -751,6 +758,7 @@ namespace CacheMeIfYouCan.Configuration
                 _keyParamSeparator,
                 _maxFetchBatchSize,
                 _batchBehaviour,
+                _negativeCachingEnabled,
                 _onlyStoreNegativesInLocalCache,
                 _functionCacheConfigActions);
             

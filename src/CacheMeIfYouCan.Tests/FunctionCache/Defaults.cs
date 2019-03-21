@@ -267,6 +267,37 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             serializer.SerializeCount.Should().Be(1);
         }
         
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task WithNegativeCaching(bool negativeCachingEnabled)
+        {
+            var localCache = new TestLocalCache<int, int>();
+
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys => Task.FromResult(keys.Where(k => k % 2 == 1).ToDictionary(k => k));
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter(true))
+            {
+                DefaultSettings.Cache.WithNegativeCaching(negativeCachingEnabled);
+                
+                cachedFunc = func
+                    .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
+                    .WithLocalCache(localCache)
+                    .Build();
+                
+                DefaultSettings.Cache.WithNegativeCaching(false);
+            }
+
+            var allKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(allKeys);
+
+            if (negativeCachingEnabled)
+                localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
+            else
+                localCache.Values.Keys.Should().BeEquivalentTo(1, 3, 5, 7, 9);
+        }
+        
         [Fact]
         public async Task OnlyStoreNegativesInLocalCache()
         {
