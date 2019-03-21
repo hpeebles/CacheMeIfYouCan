@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -109,6 +110,49 @@ namespace CacheMeIfYouCan.Tests.Proxy
             if (_delay.HasValue)
                 await Task.Delay(_delay.Value);
 
+            return innerKeys.ToDictionary(k => k, k => outerKey + k);
+        }
+
+        public async Task<string> StringToStringCanx(string key, CancellationToken token)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value, token);
+            
+            token.ThrowIfCancellationRequested();
+            
+            return key;
+        }
+
+        public async Task<IDictionary<string, string>> MultiEchoCanx(IEnumerable<string> keys, CancellationToken token)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value, token);
+
+            token.ThrowIfCancellationRequested();
+            
+            return keys.ToDictionary(k => k);
+        }
+        
+        public async Task<string> MultiParamEchoCanx(string key1, int key2, CancellationToken token)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value, token);
+
+            token.ThrowIfCancellationRequested();
+            
+            return $"{key1}_{key2}";
+        }
+
+        public async Task<IDictionary<int, string>> MultiParamEnumerableKeyCanx(
+            string outerKey,
+            IEnumerable<int> innerKeys,
+            CancellationToken token)
+        {
+            if (_delay.HasValue)
+                await Task.Delay(_delay.Value, token);
+
+            token.ThrowIfCancellationRequested();
+            
             return innerKeys.ToDictionary(k => k, k => outerKey + k);
         }
     }

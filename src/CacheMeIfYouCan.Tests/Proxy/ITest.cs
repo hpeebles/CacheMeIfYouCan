@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Proxy
@@ -29,5 +30,13 @@ namespace CacheMeIfYouCan.Tests.Proxy
         string MultiParamEchoSync(string key1, int key2);
 
         Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys);
+        
+        Task<string> StringToStringCanx(string key, CancellationToken token);
+        
+        Task<IDictionary<string, string>> MultiEchoCanx(IEnumerable<string> keys, CancellationToken token);
+
+        Task<string> MultiParamEchoCanx(string key1, int key2, CancellationToken token);
+        
+        Task<IDictionary<int, string>> MultiParamEnumerableKeyCanx(string outerKey, IEnumerable<int> innerKeys, CancellationToken token);
     }
 }

@@ -203,7 +203,7 @@ Method must return a value. '{type.FullName}.{methodInfo.Name}'");
 
             bool IsEnumerableKeyFunc(out Type _keyType, out Type _valueType)
             {
-                var lastKeyParam = hasCancellation ? parameterTypes[parameterTypes.Length - 1] : parameterTypes.Last();
+                var lastKeyParam = hasCancellation ? parameterTypes[parameterTypes.Length - 2] : parameterTypes.Last();
             
                 if (lastKeyParam != typeof(String) &&
                     IsEnumerable(lastKeyParam, out _keyType) &&
@@ -233,13 +233,24 @@ The key type in the returned dictionary must match the type of the items in the 
             
             Type BuildForEnumerableKey()
             {
-                genericTypeInputs = definition
-                    .ParameterTypes
+                genericTypeInputs = (definition.HasCancellation
+                    ? definition.ParameterTypes.Take(definition.ParameterTypes.Length - 1)
+                    : definition.ParameterTypes)
                     .Concat(new[] { definition.ReturnTypeInner, definition.KeyType, definition.ValueType })
                     .ToArray();
 
-                switch (definition.HasCancellation ? genericTypeInputs.Length - 1 : genericTypeInputs.Length)
+                switch (genericTypeInputs.Length)
                 {
+                    case 4:
+                        configManagerGenericType = definition.IsAsync
+                            ? definition.HasCancellation
+                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerCanx<,,,>)
+                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,>)
+                            : definition.HasCancellation
+                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,>)
+                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,>);
+                        break;
+                    
                     case 5:
                         configManagerGenericType = definition.IsAsync
                             ? definition.HasCancellation
@@ -271,14 +282,7 @@ The key type in the returned dictionary must match the type of the items in the 
                         break;
                 
                     default:
-                        configManagerGenericType = definition.IsAsync
-                            ? definition.HasCancellation
-                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerCanx<,,,>)
-                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerNoCanx<,,,>)
-                            : definition.HasCancellation
-                                ? typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncCanx<,,,>)
-                                : typeof(EnumerableKeyFunctionCacheConfigurationManagerSyncNoCanx<,,,>);
-                        break;
+                        throw new Exception($"Too many input parameters: '{String.Join(",", genericTypeInputs.Select(t => t.ToString()))}'");
                 }
 
                 return configManagerGenericType.MakeGenericType(genericTypeInputs);
@@ -286,13 +290,24 @@ The key type in the returned dictionary must match the type of the items in the 
 
             Type BuildForSingleKey()
             {
-                genericTypeInputs = definition
-                    .ParameterTypes
+                genericTypeInputs = (definition.HasCancellation
+                    ? definition.ParameterTypes.Take(definition.ParameterTypes.Length - 1)
+                    : definition.ParameterTypes)
                     .Concat(new[] { definition.ReturnTypeInner })
                     .ToArray();
 
                 switch (genericTypeInputs.Length)
                 {
+                    case 2:
+                        configManagerGenericType = definition.IsAsync
+                            ? definition.HasCancellation
+                                ? typeof(SingleKeyFunctionCacheConfigurationManagerCanx<,>)
+                                : typeof(SingleKeyFunctionCacheConfigurationManagerNoCanx<,>)
+                            : definition.HasCancellation
+                                ? typeof(SingleKeyFunctionCacheConfigurationManagerSyncCanx<,>)
+                                : typeof(SingleKeyFunctionCacheConfigurationManagerSyncNoCanx<,>);
+                        break;
+                    
                     case 3:
                         configManagerGenericType = definition.IsAsync
                             ? definition.HasCancellation
@@ -324,14 +339,7 @@ The key type in the returned dictionary must match the type of the items in the 
                         break;
                 
                     default:
-                        configManagerGenericType = definition.IsAsync
-                            ? definition.HasCancellation
-                                ? typeof(SingleKeyFunctionCacheConfigurationManagerCanx<,>)
-                                : typeof(SingleKeyFunctionCacheConfigurationManagerNoCanx<,>)
-                            : definition.HasCancellation
-                                ? typeof(SingleKeyFunctionCacheConfigurationManagerSyncCanx<,>)
-                                : typeof(SingleKeyFunctionCacheConfigurationManagerSyncNoCanx<,>);
-                        break;
+                        throw new Exception($"Too many input parameters: '{String.Join(",", genericTypeInputs.Select(t => t.ToString()))}'");
                 }
                 
                 return configManagerGenericType.MakeGenericType(genericTypeInputs);

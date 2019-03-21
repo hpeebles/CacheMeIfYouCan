@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal;
@@ -22,6 +23,10 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<string, int, Task<string>> _multiParamEcho_9;
         private readonly Func<string, int, string> _multiParamEchoSync_10;
         private readonly Func<string, IEnumerable<int>, Task<IDictionary<int, string>>> _multiParamEnumerableKey_11;
+        private readonly Func<string, CancellationToken, Task<string>> _stringToStringCanx_12;
+        private readonly Func<IEnumerable<string>, CancellationToken, Task<IDictionary<string, string>>> _multiEchoCanx_13;
+        private readonly Func<string, int, CancellationToken, Task<string>> _multiParamEchoCanx_14;
+        private readonly Func<string, IEnumerable<int>, CancellationToken, Task<IDictionary<int, string>>> _multiParamEnumerableKeyCanx_15;
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
@@ -62,6 +67,18 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             _multiParamEnumerableKey_11 = new MultiParamEnumerableKeyFunctionCacheConfigurationManagerNoCanx<string, IEnumerable<int>, IDictionary<int, string>, int, string>(
                 impl.MultiParamEnumerableKey, config, methods[11]).Build();
+            
+            _stringToStringCanx_12 = new SingleKeyFunctionCacheConfigurationManagerCanx<string, string>(
+                impl.StringToStringCanx, config, methods[12]).Build();
+            
+            _multiEchoCanx_13 = new EnumerableKeyFunctionCacheConfigurationManagerCanx<IEnumerable<string>, IDictionary<string, string>, string, string>(
+                impl.MultiEchoCanx, config, methods[3]).Build();
+
+            _multiParamEchoCanx_14 = new MultiParamFunctionCacheConfigurationManagerCanx<string, int, string>(
+                impl.MultiParamEchoCanx, config, methods[9]).Build();
+            
+            _multiParamEnumerableKeyCanx_15 = new MultiParamEnumerableKeyFunctionCacheConfigurationManagerCanx<string, IEnumerable<int>, IDictionary<int, string>, int, string>(
+                impl.MultiParamEnumerableKeyCanx, config, methods[11]).Build();
         }
         
         public Task<string> StringToString(string key)
@@ -122,6 +139,26 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public Task<IDictionary<int, string>> MultiParamEnumerableKey(string outerKey, IEnumerable<int> innerKeys)
         {
             return _multiParamEnumerableKey_11(outerKey, innerKeys);
+        }
+
+        public Task<string> StringToStringCanx(string key, CancellationToken token)
+        {
+            return _stringToStringCanx_12(key, token);
+        }
+        
+        public Task<IDictionary<string, string>> MultiEchoCanx(IEnumerable<string> keys, CancellationToken token)
+        {
+            return _multiEchoCanx_13(keys, token);
+        }
+
+        public Task<string> MultiParamEchoCanx(string key1, int key2, CancellationToken token)
+        {
+            return _multiParamEchoCanx_14(key1, key2, token);
+        }
+
+        public Task<IDictionary<int, string>> MultiParamEnumerableKeyCanx(string outerKey, IEnumerable<int> innerKeys, CancellationToken token)
+        {
+            return _multiParamEnumerableKeyCanx_15(outerKey, innerKeys, token);
         }
     }
 }
