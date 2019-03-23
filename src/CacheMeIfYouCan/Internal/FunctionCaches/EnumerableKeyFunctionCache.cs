@@ -113,6 +113,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults;
     
             using (SynchronizationContextRemover.StartNew())
+            using (CacheTraceHandler.Start())
             {
                 try
                 {
@@ -186,12 +187,19 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     Interlocked.Decrement(ref _pendingRequestsCount);
 
-                    _onResult?.Invoke(new FunctionCacheGetResult<TK, TV>(
-                        Name,
-                        readonlyResults,
-                        !error,
-                        start,
-                        StopwatchHelper.GetDuration(stopwatchStart)));
+                    var notifyResult = _onResult != null || CacheTraceHandler.Enabled;
+                    if (notifyResult)
+                    {
+                        var functionCacheGetResult = new FunctionCacheGetResult<TK, TV>(
+                            Name,
+                            readonlyResults,
+                            !error,
+                            start,
+                            StopwatchHelper.GetDuration(stopwatchStart));
+                        
+                        _onResult?.Invoke(functionCacheGetResult);
+                        CacheTraceHandler.Mark(functionCacheGetResult);
+                    }
                 }
             }
 
@@ -288,18 +296,26 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         ex);
 
                     _onException?.Invoke(exception);
+                    CacheTraceHandler.Mark(exception);
 
                     error = true;
                     throw exception;
                 }
                 finally
                 {
-                    _onFetch?.Invoke(new FunctionCacheFetchResult<TK, TV>(
-                        Name,
-                        results,
-                        !error,
-                        start,
-                        StopwatchHelper.GetDuration(stopwatchStart)));
+                    var notifyFetch = _onFetch != null || CacheTraceHandler.Enabled;
+                    if (notifyFetch)
+                    {
+                        var functionCacheFetchResult = new FunctionCacheFetchResult<TK, TV>(
+                            Name,
+                            results,
+                            !error,
+                            start,
+                            StopwatchHelper.GetDuration(stopwatchStart));
+
+                        _onFetch?.Invoke(functionCacheFetchResult);
+                        CacheTraceHandler.Mark(functionCacheFetchResult);
+                    }
                 }
 
                 return results;
@@ -319,6 +335,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 ex);
             
             _onException?.Invoke(exception);
+            CacheTraceHandler.Mark(exception);
 
             if (!_continueOnException)
                 throw exception;

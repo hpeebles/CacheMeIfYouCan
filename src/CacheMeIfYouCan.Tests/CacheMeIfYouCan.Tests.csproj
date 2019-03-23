@@ -4,6 +4,9 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'">
+    <DefineConstants>ASYNCLOCAL</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan.Tests.Common\CacheMeIfYouCan.Tests.Common.csproj" />
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />

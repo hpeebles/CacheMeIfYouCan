@@ -143,9 +143,8 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             // Then add a wrapper to catch and format any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Then add a wrapper to handle notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onRemoveResult != null || _onException != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
+            // Then add a wrapper to handle notifications
+            cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
@@ -312,9 +311,8 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             // Then add a wrapper to catch and format any exceptions
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
-            // Then add a wrapper to handle notifications (if any actions are set)
-            if (_onGetResult != null || _onSetResult != null || _onRemoveResult != null || _onException != null)
-                cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
+            // Then add a wrapper to handle notifications
+            cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)

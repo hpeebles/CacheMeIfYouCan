@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal.DuplicateTaskCatcher;
 using CacheMeIfYouCan.Notifications;
 
@@ -167,6 +166,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             IReadOnlyCollection<FunctionCacheGetResultInner<(TK1, TK2), TV>> readonlyResults;
     
             using (SynchronizationContextRemover.StartNew())
+            using (CacheTraceHandler.Start())
             {
                 try
                 {
@@ -240,12 +240,19 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     Interlocked.Decrement(ref _pendingRequestsCount);
 
-                    _onResult?.Invoke(new FunctionCacheGetResult<(TK1, TK2), TV>(
-                        Name,
-                        readonlyResults,
-                        !error,
-                        start,
-                        StopwatchHelper.GetDuration(stopwatchStart)));
+                    var notifyResult = _onResult != null || CacheTraceHandler.Enabled;
+                    if (notifyResult)
+                    {
+                        var functionCacheGetResult = new FunctionCacheGetResult<(TK1, TK2), TV>(
+                            Name,
+                            readonlyResults,
+                            !error,
+                            start,
+                            StopwatchHelper.GetDuration(stopwatchStart));
+                        
+                        _onResult?.Invoke(functionCacheGetResult);
+                        CacheTraceHandler.Mark(functionCacheGetResult);
+                    }
                 }
             }
 
@@ -351,18 +358,26 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         ex);
 
                     _onException?.Invoke(exception);
+                    CacheTraceHandler.Mark(exception);
 
                     error = true;
                     throw exception;
                 }
                 finally
                 {
-                    _onFetch?.Invoke(new FunctionCacheFetchResult<(TK1, TK2), TV>(
-                        Name,
-                        results,
-                        !error,
-                        start,
-                        StopwatchHelper.GetDuration(stopwatchStart)));
+                    var notifyFetch = _onFetch != null || CacheTraceHandler.Enabled;
+                    if (notifyFetch)
+                    {
+                        var functionCacheFetchResult = new FunctionCacheFetchResult<(TK1, TK2), TV>(
+                            Name,
+                            results,
+                            !error,
+                            start,
+                            StopwatchHelper.GetDuration(stopwatchStart));
+
+                        _onFetch?.Invoke(functionCacheFetchResult);
+                        CacheTraceHandler.Mark(functionCacheFetchResult);
+                    }
                 }
 
                 return results;
@@ -384,6 +399,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 ex);
             
             _onException?.Invoke(exception);
+            CacheTraceHandler.Mark(exception);
 
             if (!_continueOnException)
                 throw exception;

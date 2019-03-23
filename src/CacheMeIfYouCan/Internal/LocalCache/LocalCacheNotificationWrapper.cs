@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             Action<CacheRemoveResult<TK>> onCacheRemoveResult,
             Action<CacheException<TK>> onException)
         {
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
             _onCacheRemoveResult = onCacheRemoveResult;
@@ -51,19 +51,27 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             {
                 error = true;
                 _onException?.Invoke(ex);
+                CacheTraceHandler.Mark(ex);
 
                 throw;
             }
             finally
             {
-                _onCacheGetResult?.Invoke(new CacheGetResult<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    result.Success ? new[] { result } : new GetFromCacheResult<TK, TV>[0],
-                    result.Success ? new Key<TK>[0] : new[] { key },
-                    !error,
-                    start,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+                var notifyResult = _onCacheGetResult != null || CacheTraceHandler.Enabled;
+                if (notifyResult)
+                {
+                    var cacheGetResult = new CacheGetResult<TK, TV>(
+                        CacheName,
+                        CacheType,
+                        result.Success ? new[] { result } : new GetFromCacheResult<TK, TV>[0],
+                        result.Success ? new Key<TK>[0] : new[] { key },
+                        !error,
+                        start,
+                        StopwatchHelper.GetDuration(stopwatchStart));
+                    
+                    _onCacheGetResult?.Invoke(cacheGetResult);
+                    CacheTraceHandler.Mark(cacheGetResult);
+                }
             }
 
             return result;
@@ -83,18 +91,26 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             {
                 error = true;
                 _onException?.Invoke(ex);
+                CacheTraceHandler.Mark(ex);
 
                 throw;
             }
             finally
             {
-                _onCacheSetResult?.Invoke(new CacheSetResult<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
-                    !error,
-                    start,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+                var notifyResult = _onCacheSetResult != null || CacheTraceHandler.Enabled;
+                if (notifyResult)
+                {
+                    var cacheSetResult = new CacheSetResult<TK, TV>(
+                        CacheName,
+                        CacheType,
+                        new[] { new KeyValuePair<Key<TK>, TV>(key, value) },
+                        !error,
+                        start,
+                        StopwatchHelper.GetDuration(stopwatchStart));
+                    
+                    _onCacheSetResult?.Invoke(cacheSetResult);
+                    CacheTraceHandler.Mark(cacheSetResult);
+                }
             }
         }
 
@@ -113,21 +129,29 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             {
                 error = true;
                 _onException?.Invoke(ex);
+                CacheTraceHandler.Mark(ex);
 
                 throw;
             }
             finally
             {
-                _onCacheGetResult?.Invoke(new CacheGetResult<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    results,
-                    results == null || !results.Any()
-                        ? keys
-                        : keys.Except(results.Select(r => r.Key)).ToArray(),
-                    !error,
-                    start,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+                var notifyResult = _onCacheGetResult != null || CacheTraceHandler.Enabled;
+                if (notifyResult)
+                {
+                    var cacheGetResult = new CacheGetResult<TK, TV>(
+                        CacheName,
+                        CacheType,
+                        results,
+                        results == null || !results.Any()
+                            ? keys
+                            : keys.Except(results.Select(r => r.Key)).ToArray(),
+                        !error,
+                        start,
+                        StopwatchHelper.GetDuration(stopwatchStart));
+                    
+                    _onCacheGetResult?.Invoke(cacheGetResult);
+                    CacheTraceHandler.Mark(cacheGetResult);
+                }
             }
 
             return results;
@@ -147,18 +171,26 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             {
                 error = true;
                 _onException?.Invoke(ex);
+                CacheTraceHandler.Mark(ex);
 
                 throw;
             }
             finally
             {
-                _onCacheSetResult?.Invoke(new CacheSetResult<TK, TV>(
-                    CacheName,
-                    CacheType,
-                    values,
-                    !error,
-                    start,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+                var notifyResult = _onCacheSetResult != null || CacheTraceHandler.Enabled;
+                if (notifyResult)
+                {
+                    var cacheSetResult = new CacheSetResult<TK, TV>(
+                        CacheName,
+                        CacheType,
+                        values,
+                        !error,
+                        start,
+                        StopwatchHelper.GetDuration(stopwatchStart));
+
+                    _onCacheSetResult?.Invoke(cacheSetResult);
+                    CacheTraceHandler.Mark(cacheSetResult);
+                }
             }
         }
 
@@ -179,19 +211,27 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             {
                 error = true;
                 _onException?.Invoke(ex);
+                CacheTraceHandler.Mark(ex);
 
                 throw;
             }
             finally
             {
-                _onCacheRemoveResult?.Invoke(new CacheRemoveResult<TK>(
-                    CacheName,
-                    CacheType,
-                    key,
-                    !error,
-                    keyRemoved,
-                    start,
-                    StopwatchHelper.GetDuration(stopwatchStart)));
+                var notifyResult = _onCacheRemoveResult != null || CacheTraceHandler.Enabled;
+                if (notifyResult)
+                {
+                    var cacheRemoveResult = new CacheRemoveResult<TK>(
+                        CacheName,
+                        CacheType,
+                        key,
+                        !error,
+                        keyRemoved,
+                        start,
+                        StopwatchHelper.GetDuration(stopwatchStart));
+                    
+                    _onCacheRemoveResult?.Invoke(cacheRemoveResult);
+                    CacheTraceHandler.Mark(cacheRemoveResult);
+                }
             }
         }
     }
