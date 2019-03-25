@@ -5,12 +5,12 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CacheTraceHandler : IDisposable
+    internal class TraceHandlerInternal : IDisposable
     {
 #if ASYNCLOCAL
         private static readonly AsyncLocal<ImmutableStack<CacheTrace>> Traces = new AsyncLocal<ImmutableStack<CacheTrace>>();
 
-        private CacheTraceHandler()
+        private TraceHandlerInternal()
         {
             if (Traces.Value == null)
                 Traces.Value = ImmutableStack<CacheTrace>.Empty;
@@ -21,15 +21,15 @@ namespace CacheMeIfYouCan.Internal
         public void Dispose()
         {
             Traces.Value = Traces.Value.Pop(out var trace);
-            CacheTraceContainer.AddTrace(trace);
+            TraceHandler.AddTrace(trace);
         }
 
         public static IDisposable Start()
         {
-            return Enabled ? new CacheTraceHandler() : null;
+            return Enabled ? new TraceHandlerInternal() : null;
         }
         
-        public static bool Enabled => CacheTraceContainer.Enabled;
+        public static bool Enabled => TraceHandler.Enabled;
 
         public static void Mark<TK, TV>(FunctionCacheGetResult<TK, TV> result)
         {
@@ -81,7 +81,7 @@ namespace CacheMeIfYouCan.Internal
 
         private static CacheTrace Current => Traces.Value.Peek();
 #else
-        private CacheTraceHandler() { }
+        private TraceHandlerInternal() { }
 
         public static IDisposable Start() => null;
         public void Dispose() { }   

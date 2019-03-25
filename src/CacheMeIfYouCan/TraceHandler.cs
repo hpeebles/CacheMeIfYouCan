@@ -2,39 +2,44 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 
 namespace CacheMeIfYouCan
 {
-    public class CacheTraceContainer : IDisposable
+    public class TraceHandler : IDisposable
     {
-        private static readonly AsyncLocal<ImmutableList<CacheTraceContainer>> Containers
-            = new AsyncLocal<ImmutableList<CacheTraceContainer>>();
+        private static readonly AsyncLocal<ImmutableList<TraceHandler>> Containers
+            = new AsyncLocal<ImmutableList<TraceHandler>>();
 
+        private readonly Action<TraceHandler> _onDispose;
         private readonly object _lock = new object();
 
-        private CacheTraceContainer()
+        private TraceHandler(Action<TraceHandler> onDispose)
         {
             if (Containers.Value == null)
-                Containers.Value = ImmutableList<CacheTraceContainer>.Empty;
+                Containers.Value = ImmutableList<TraceHandler>.Empty;
             
             Containers.Value = Containers.Value.Add(this);
+            _onDispose = onDispose;
         }
         
         public static bool Enabled =>
             Containers.Value != null &&
-            Containers.Value != ImmutableList<CacheTraceContainer>.Empty;
+            Containers.Value != ImmutableList<TraceHandler>.Empty;
         
-        public static CacheTraceContainer Create()
+        public static TraceHandler StartNew(Action<TraceHandler> onDispose = null)
         {
-            return new CacheTraceContainer();
+            return new TraceHandler(onDispose);
         }
 
         public List<CacheTrace> Traces { get; } = new List<CacheTrace>();
+        public CacheTrace Trace => Traces.SingleOrDefault();
 
         public void Dispose()
         {
             Containers.Value = Containers.Value.Remove(this);
+            _onDispose?.Invoke(this);
         }
 
         internal static void AddTrace(CacheTrace trace)

@@ -166,7 +166,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             IReadOnlyCollection<FunctionCacheGetResultInner<(TK1, TK2), TV>> readonlyResults;
     
             using (SynchronizationContextRemover.StartNew())
-            using (CacheTraceHandler.Start())
+            using (TraceHandlerInternal.Start())
             {
                 try
                 {
@@ -240,7 +240,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                     Interlocked.Decrement(ref _pendingRequestsCount);
 
-                    var notifyResult = _onResult != null || CacheTraceHandler.Enabled;
+                    var notifyResult = _onResult != null || TraceHandlerInternal.Enabled;
                     if (notifyResult)
                     {
                         var functionCacheGetResult = new FunctionCacheGetResult<(TK1, TK2), TV>(
@@ -251,7 +251,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                             StopwatchHelper.GetDuration(stopwatchStart));
                         
                         _onResult?.Invoke(functionCacheGetResult);
-                        CacheTraceHandler.Mark(functionCacheGetResult);
+                        TraceHandlerInternal.Mark(functionCacheGetResult);
                     }
                 }
             }
@@ -358,14 +358,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         ex);
 
                     _onException?.Invoke(exception);
-                    CacheTraceHandler.Mark(exception);
+                    TraceHandlerInternal.Mark(exception);
 
                     error = true;
                     throw exception;
                 }
                 finally
                 {
-                    var notifyFetch = _onFetch != null || CacheTraceHandler.Enabled;
+                    var notifyFetch = _onFetch != null || TraceHandlerInternal.Enabled;
                     if (notifyFetch)
                     {
                         var functionCacheFetchResult = new FunctionCacheFetchResult<(TK1, TK2), TV>(
@@ -376,7 +376,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                             StopwatchHelper.GetDuration(stopwatchStart));
 
                         _onFetch?.Invoke(functionCacheFetchResult);
-                        CacheTraceHandler.Mark(functionCacheFetchResult);
+                        TraceHandlerInternal.Mark(functionCacheFetchResult);
                     }
                 }
 
@@ -399,7 +399,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 ex);
             
             _onException?.Invoke(exception);
-            CacheTraceHandler.Mark(exception);
+            TraceHandlerInternal.Mark(exception);
 
             if (!_continueOnException)
                 throw exception;

@@ -52,13 +52,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             {
                 error = true;
                 _onException?.Invoke(ex);
-                CacheTraceHandler.Mark(ex);
+                TraceHandlerInternal.Mark(ex);
 
                 throw;
             }
             finally
             {
-                var notifyResult = _onCacheGetResult != null || CacheTraceHandler.Enabled;
+                var notifyResult = _onCacheGetResult != null || TraceHandlerInternal.Enabled;
                 if (notifyResult)
                 {
                     var cacheGetResult = new CacheGetResult<TK, TV>(
@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         StopwatchHelper.GetDuration(stopwatchStart));
                     
                     _onCacheGetResult?.Invoke(cacheGetResult);
-                    CacheTraceHandler.Mark(cacheGetResult);
+                    TraceHandlerInternal.Mark(cacheGetResult);
                 }
             }
 
@@ -92,13 +92,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             {
                 error = true;
                 _onException?.Invoke(ex);
-                CacheTraceHandler.Mark(ex);
+                TraceHandlerInternal.Mark(ex);
 
                 throw;
             }
             finally
             {
-                var notifyResult = _onCacheSetResult != null || CacheTraceHandler.Enabled;
+                var notifyResult = _onCacheSetResult != null || TraceHandlerInternal.Enabled;
                 if (notifyResult)
                 {
                     var cacheSetResult = new CacheSetResult<TK, TV>(
@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         StopwatchHelper.GetDuration(stopwatchStart));
                     
                     _onCacheSetResult?.Invoke(cacheSetResult);
-                    CacheTraceHandler.Mark(cacheSetResult);
+                    TraceHandlerInternal.Mark(cacheSetResult);
                 }
             }
         }
@@ -130,13 +130,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             {
                 error = true;
                 _onException?.Invoke(ex);
-                CacheTraceHandler.Mark(ex);
+                TraceHandlerInternal.Mark(ex);
 
                 throw;
             }
             finally
             {
-                var notifyResult = _onCacheGetResult != null || CacheTraceHandler.Enabled;
+                var notifyResult = _onCacheGetResult != null || TraceHandlerInternal.Enabled;
                 if (notifyResult)
                 {
                     var cacheGetResult = new CacheGetResult<TK, TV>(
@@ -151,7 +151,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         StopwatchHelper.GetDuration(stopwatchStart));
                     
                     _onCacheGetResult?.Invoke(cacheGetResult);
-                    CacheTraceHandler.Mark(cacheGetResult);
+                    TraceHandlerInternal.Mark(cacheGetResult);
                 }
             }
 
@@ -172,13 +172,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             {
                 error = true;
                 _onException?.Invoke(ex);
-                CacheTraceHandler.Mark(ex);
+                TraceHandlerInternal.Mark(ex);
 
                 throw;
             }
             finally
             {
-                var notifyResult = _onCacheSetResult != null || CacheTraceHandler.Enabled;
+                var notifyResult = _onCacheSetResult != null || TraceHandlerInternal.Enabled;
                 if (notifyResult)
                 {
                     var cacheSetResult = new CacheSetResult<TK, TV>(
@@ -190,7 +190,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         StopwatchHelper.GetDuration(stopwatchStart));
 
                     _onCacheSetResult?.Invoke(cacheSetResult);
-                    CacheTraceHandler.Mark(cacheSetResult);
+                    TraceHandlerInternal.Mark(cacheSetResult);
                 }
             }
         }
@@ -212,13 +212,13 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             {
                 error = true;
                 _onException?.Invoke(ex);
-                CacheTraceHandler.Mark(ex);
+                TraceHandlerInternal.Mark(ex);
 
                 throw;
             }
             finally
             {
-                var notifyResult = _onCacheRemoveResult != null || CacheTraceHandler.Enabled;
+                var notifyResult = _onCacheRemoveResult != null || TraceHandlerInternal.Enabled;
                 if (notifyResult)
                 {
                     var cacheRemoveResult = new CacheRemoveResult<TK>(
@@ -231,7 +231,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                         StopwatchHelper.GetDuration(stopwatchStart));
                     
                     _onCacheRemoveResult?.Invoke(cacheRemoveResult);
-                    CacheTraceHandler.Mark(cacheRemoveResult);
+                    TraceHandlerInternal.Mark(cacheRemoveResult);
                 }
             }
         }
