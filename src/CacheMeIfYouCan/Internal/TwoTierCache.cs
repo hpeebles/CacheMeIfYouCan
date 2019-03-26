@@ -82,9 +82,11 @@ namespace CacheMeIfYouCan.Internal
             if (fromLocalCache.Count == keys.Count)
                 return fromLocalCache;
 
-            var remaining = keys
-                .Except(fromLocalCache.Select(c => c.Key), _keyComparer)
-                .ToArray();
+            var remaining = fromLocalCache.Count == 0
+                ? keys
+                : keys
+                    .Except(fromLocalCache.Select(c => c.Key), _keyComparer)
+                    .ToArray();
 
             if (!remaining.Any())
                 return fromLocalCache;
