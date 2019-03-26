@@ -35,8 +35,8 @@ namespace CacheMeIfYouCan.Configuration
         private string _keyParamSeparator;
         private int _maxFetchBatchSize;
         private BatchBehaviour _batchBehaviour;
-        private bool _negativeCachingEnabled;
-        private bool _onlyStoreNegativesInLocalCache;
+        private bool _fillMissingKeysWithDefaultValues;
+        private StoreInLocalCacheWhen _onlyStoreInLocalCacheWhen;
         private readonly IDictionary<MethodInfoKey, object> _functionCacheConfigActions;
 
         internal CachedProxyConfigurationManager(T impl)
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Configuration
             _onCacheSet = DefaultSettings.Cache.OnCacheSetAction;
             _onCacheRemove = DefaultSettings.Cache.OnCacheRemoveAction;
             _onCacheException = DefaultSettings.Cache.OnCacheExceptionAction;
-            _onlyStoreNegativesInLocalCache = DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache;
+            _onlyStoreInLocalCacheWhen = DefaultSettings.Cache.ShouldOnlyStoreInLocalCacheWhen;
             _functionCacheConfigActions = new Dictionary<MethodInfoKey, object>();
         }
 
@@ -267,21 +267,15 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedProxyConfigurationManager<T> WithNegativeCaching(bool negativeCachingEnabled = true)
+        public CachedProxyConfigurationManager<T> FillMissingKeysWithDefaultValues(bool fillMissingKeysWithDefaultValues = true)
         {
-            _negativeCachingEnabled = negativeCachingEnabled;
+            _fillMissingKeysWithDefaultValues = fillMissingKeysWithDefaultValues;
             return this;
         }
         
-        /// <summary>
-        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
-        /// improve performance without using up much memory as the keys stored locally all have small values (null or
-        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
-        /// tier caching strategy
-        /// </summary>
-        public CachedProxyConfigurationManager<T> OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
+        public CachedProxyConfigurationManager<T> OnlyStoreInLocalCacheWhen(StoreInLocalCacheWhen when)
         {
-            _onlyStoreNegativesInLocalCache = onlyStoreNegativesInLocalCache;
+            _onlyStoreInLocalCacheWhen = when;
             return this;
         }
 
@@ -758,8 +752,8 @@ namespace CacheMeIfYouCan.Configuration
                 _keyParamSeparator,
                 _maxFetchBatchSize,
                 _batchBehaviour,
-                _negativeCachingEnabled,
-                _onlyStoreNegativesInLocalCache,
+                _fillMissingKeysWithDefaultValues,
+                _onlyStoreInLocalCacheWhen,
                 _functionCacheConfigActions);
             
             return CachedProxyFactory.Build(_impl, config);

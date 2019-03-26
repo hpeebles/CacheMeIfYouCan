@@ -270,7 +270,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task WithNegativeCaching(bool negativeCachingEnabled)
+        public async Task FillMissingKeys(bool fillMissingKeys)
         {
             var localCache = new TestLocalCache<int, int>();
 
@@ -278,55 +278,74 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.WithNegativeCaching(negativeCachingEnabled);
+                DefaultSettings.Cache.FillMissingKeysWithDefaultValues(fillMissingKeys);
                 
                 cachedFunc = func
                     .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
                     .WithLocalCache(localCache)
                     .Build();
                 
-                DefaultSettings.Cache.WithNegativeCaching(false);
+                DefaultSettings.Cache.FillMissingKeysWithDefaultValues(false);
             }
 
             var allKeys = Enumerable.Range(0, 10).ToArray();
 
             await cachedFunc(allKeys);
 
-            if (negativeCachingEnabled)
+            if (fillMissingKeys)
                 localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
             else
                 localCache.Values.Keys.Should().BeEquivalentTo(1, 3, 5, 7, 9);
         }
         
-        [Fact]
-        public async Task OnlyStoreNegativesInLocalCache()
+        [Theory]
+        [InlineData(StoreInLocalCacheWhen.Never)]
+        [InlineData(StoreInLocalCacheWhen.Never)]
+        [InlineData(StoreInLocalCacheWhen.WhenValueIsNull)]
+        [InlineData(StoreInLocalCacheWhen.WhenValueIsNullOrDefault)]
+        public async Task OnlyStoreInLocalCacheWhen(StoreInLocalCacheWhen when)
         {
             var localCache = new TestLocalCache<int, int>();
             var distributedCache = new TestCache<int, int>(x => x.ToString(), Int32.Parse);
 
-            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys => Task.FromResult(keys.Where(k => k % 2 == 1).ToDictionary(k => k));
+            Func<IEnumerable<int>, Task<Dictionary<int, int>>> func = keys =>
+                Task.FromResult(keys.ToDictionary(k => k, k => k % 2));
             Func<IEnumerable<int>, Task<Dictionary<int, int>>> cachedFunc;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache();
+                DefaultSettings.Cache.OnlyStoreInLocalCacheWhen(when);
                 
                 cachedFunc = func
                     .Cached<IEnumerable<int>, Dictionary<int, int>, int, int>()
                     .WithLocalCache(localCache)
                     .WithDistributedCache(distributedCache)
-                    .WithNegativeCaching()
                     .Build();
                 
-                DefaultSettings.Cache.OnlyStoreNegativesInLocalCache(false);
+                DefaultSettings.Cache.OnlyStoreInLocalCacheWhen(StoreInLocalCacheWhen.Always);
             }
 
             var allKeys = Enumerable.Range(0, 10).ToArray();
 
             await cachedFunc(allKeys);
 
-            localCache.Values.Should().ContainKeys(0, 2, 4, 6, 8);
-            localCache.Values.Values.Select(v => v.Item1).Should().OnlyContain(v => v == 0);
-            distributedCache.Values.Should().ContainKeys(allKeys.Select(k => k.ToString()));
+            distributedCache.Values.Keys.Should().BeEquivalentTo(allKeys.Select(k => k.ToString()));
+
+            switch (when)
+            {
+                case StoreInLocalCacheWhen.Never:
+                case StoreInLocalCacheWhen.WhenValueIsNull:
+                    localCache.Values.Should().BeEmpty();
+                    break;
+                
+                case StoreInLocalCacheWhen.Always:
+                    localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
+                    break;
+                
+                case StoreInLocalCacheWhen.WhenValueIsNullOrDefault:
+                    localCache.Values.Should().ContainKeys(0, 2, 4, 6, 8);
+                    localCache.Values.Values.Select(v => v.Item1).Should().OnlyContain(v => v == 0);
+                    break;
+            }
         }
         
         private static string GetRandomKey()

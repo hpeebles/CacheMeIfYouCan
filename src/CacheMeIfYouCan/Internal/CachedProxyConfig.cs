@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Internal
             Func<TimeSpan> timeToLiveFactory,
             Func<TimeSpan> localCacheTimeToLiveOverride,
             bool? disableCache,
-            bool? catchDuplcateRequests,
+            bool? catchDuplicateRequests,
             ILocalCacheFactory localCacheFactory,
             IDistributedCacheFactory distributedCacheFactory,
             Func<MethodInfo, string> keyspacePrefixFunc,
@@ -31,8 +31,8 @@ namespace CacheMeIfYouCan.Internal
             string keyParamSeparator,
             int maxFetchBatchSize,
             BatchBehaviour batchBehaviour,
-            bool negativeCachingEnabled,
-            bool onlyStoreNegativesInLocalCache,
+            bool fillMissingKeysWithDefaultValues,
+            StoreInLocalCacheWhen onlyStoreInLocalCacheWhen,
             IDictionary<MethodInfoKey, object> functionCacheConfigActions)
         {
             InterfaceType = interfaceType;
@@ -43,7 +43,7 @@ namespace CacheMeIfYouCan.Internal
             TimeToLiveFactory = timeToLiveFactory;
             LocalCacheTimeToLiveOverride = localCacheTimeToLiveOverride;
             DisableCache = disableCache;
-            CatchDuplicateRequests = catchDuplcateRequests;
+            CatchDuplicateRequests = catchDuplicateRequests;
             LocalCacheFactory = localCacheFactory;
             DistributedCacheFactory = distributedCacheFactory;
             KeyspacePrefixFunc = keyspacePrefixFunc;
@@ -57,8 +57,8 @@ namespace CacheMeIfYouCan.Internal
             KeyParamSeparator = keyParamSeparator;
             MaxFetchBatchSize = maxFetchBatchSize;
             BatchBehaviour = batchBehaviour;
-            NegativeCachingEnabled = negativeCachingEnabled;
-            OnlyStoreNegativesInLocalCache = onlyStoreNegativesInLocalCache;
+            FillMissingKeysWithDefaultValues = fillMissingKeysWithDefaultValues;
+            OnlyStoreInLocalCacheWhen = onlyStoreInLocalCacheWhen;
             FunctionCacheConfigActions = functionCacheConfigActions;
         }
         
@@ -84,8 +84,8 @@ namespace CacheMeIfYouCan.Internal
         public string KeyParamSeparator { get; }
         public int MaxFetchBatchSize { get; }
         public BatchBehaviour BatchBehaviour { get; }
-        public bool NegativeCachingEnabled { get; }
-        public bool OnlyStoreNegativesInLocalCache { get; }
+        public bool FillMissingKeysWithDefaultValues { get; }
+        public StoreInLocalCacheWhen OnlyStoreInLocalCacheWhen { get; }
         public IDictionary<MethodInfoKey, object> FunctionCacheConfigActions { get; }
     }
 }

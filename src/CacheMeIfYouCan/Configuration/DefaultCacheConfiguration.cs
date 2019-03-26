@@ -24,8 +24,8 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyParamSeparator { get; private set; } = "_";
         internal int MaxFetchBatchSize { get; private set; }
         internal BatchBehaviour BatchBehaviour { get; private set; }
-        internal bool NegativeCachingEnabled { get; private set; }
-        internal bool ShouldOnlyStoreNegativesInLocalCache { get; private set; }
+        internal bool ShouldFillMissingKeysWithDefaultValues { get; private set; }
+        internal StoreInLocalCacheWhen ShouldOnlyStoreInLocalCacheWhen { get; private set; }
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         internal EqualityComparers KeyComparers { get; } = new EqualityComparers();
@@ -152,21 +152,15 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public DefaultCacheConfiguration WithNegativeCaching(bool negativeCachingEnabled = true)
+        public DefaultCacheConfiguration FillMissingKeysWithDefaultValues(bool fillMissingKeysWithDefaultValues = true)
         {
-            NegativeCachingEnabled = negativeCachingEnabled;
+            ShouldFillMissingKeysWithDefaultValues = fillMissingKeysWithDefaultValues;
             return this;
         }
 
-        /// <summary>
-        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
-        /// improve performance without using up much memory as the keys stored locally all have small values (null or
-        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
-        /// tier caching strategy
-        /// </summary>
-        public DefaultCacheConfiguration OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
+        public DefaultCacheConfiguration OnlyStoreInLocalCacheWhen(StoreInLocalCacheWhen when)
         {
-            ShouldOnlyStoreNegativesInLocalCache = onlyStoreNegativesInLocalCache;
+            ShouldOnlyStoreInLocalCacheWhen = when;
             return this;
         }
 

@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Configuration
         internal Func<TimeSpan> TimeToLiveFactory { get; private set; }
         internal int MaxFetchBatchSize { get; private set; }
         internal BatchBehaviour BatchBehaviour { get; private set; }
-        internal Func<TK, TV> NegativeCachingValueFactory { get; private set; }
+        internal Func<TK, TV> MissingKeyValueFactory { get; private set; }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
             Func<IEnumerable<TK>, CancellationToken, Task<IDictionary<TK, TV>>> inputFunc,
@@ -28,11 +28,8 @@ namespace CacheMeIfYouCan.Configuration
 
             TimeToLiveFactory = DefaultSettings.Cache.TimeToLiveFactory;
 
-            if (DefaultSettings.Cache.NegativeCachingEnabled)
-                WithNegativeCaching();
-            
-            if (DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache)
-                OnlyStoreNegativesInLocalCache();
+            if (DefaultSettings.Cache.ShouldFillMissingKeysWithDefaultValues)
+                FillMissingKeys();
         }
 
         internal EnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -53,11 +50,8 @@ namespace CacheMeIfYouCan.Configuration
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
                 WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
             
-            if (interfaceConfig.NegativeCachingEnabled)
-                WithNegativeCaching();
-
-            if (interfaceConfig.OnlyStoreNegativesInLocalCache)
-                OnlyStoreNegativesInLocalCache();
+            if (interfaceConfig.FillMissingKeysWithDefaultValues)
+                FillMissingKeys();
         }
 
         public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
@@ -76,29 +70,16 @@ namespace CacheMeIfYouCan.Configuration
             BatchBehaviour = behaviour;
             return (TConfig)this;
         }
-
-        public TConfig WithNegativeCaching(TV value = default)
-        {
-            return WithNegativeCaching(k => value);
-        }
-
-        public TConfig WithNegativeCaching(Func<TK, TV> valueFactory)
-        {
-            NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            return (TConfig)this;
-        }
         
-        /// <summary>
-        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
-        /// improve performance without using up much memory as the keys stored locally all have small values (null or
-        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
-        /// tier caching strategy
-        /// </summary>
-        public TConfig OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
+        public TConfig FillMissingKeys(TV value = default)
         {
-            return typeof(TV).IsClass
-                ? OnlyStoreInLocalCacheWhen((k, v) => v == null)
-                : OnlyStoreInLocalCacheWhen((k, v) => v.Equals(default(TV)));
+            return FillMissingKeys(k => value);
+        }
+
+        public TConfig FillMissingKeys(Func<TK, TV> valueFactory)
+        {
+            MissingKeyValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
+            return (TConfig)this;
         }
         
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()
@@ -124,7 +105,7 @@ namespace CacheMeIfYouCan.Configuration
                 BatchBehaviour,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,
-                NegativeCachingValueFactory);
+                MissingKeyValueFactory);
             
             PendingRequestsCounterContainer.Add(functionCache);
 

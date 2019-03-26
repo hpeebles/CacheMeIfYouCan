@@ -86,7 +86,10 @@ namespace CacheMeIfYouCan.Configuration
                 OnCacheSetAction = interfaceConfig.OnCacheSet;
                 OnCacheRemoveAction = interfaceConfig.OnCacheRemove;
                 OnCacheExceptionAction = interfaceConfig.OnCacheException;
-
+            
+                if (interfaceConfig.OnlyStoreInLocalCacheWhen != StoreInLocalCacheWhen.Always)
+                    OnlyStoreInLocalCacheWhen(interfaceConfig.OnlyStoreInLocalCacheWhen);
+                
                 if (interfaceConfig.FunctionCacheConfigActions != null)
                 {
                     var key = new MethodInfoKey(interfaceConfig.InterfaceType, proxyFunctionInfo.MethodInfo);
@@ -109,6 +112,9 @@ namespace CacheMeIfYouCan.Configuration
                 OnCacheGetAction = DefaultSettings.Cache.OnCacheGetAction;
                 OnCacheSetAction = DefaultSettings.Cache.OnCacheSetAction;
                 OnCacheExceptionAction = DefaultSettings.Cache.OnCacheExceptionAction;
+                
+                if (DefaultSettings.Cache.ShouldOnlyStoreInLocalCacheWhen != StoreInLocalCacheWhen.Always)
+                    OnlyStoreInLocalCacheWhen(DefaultSettings.Cache.ShouldOnlyStoreInLocalCacheWhen);
             }
         }
 
@@ -466,6 +472,32 @@ namespace CacheMeIfYouCan.Configuration
         {
             KeyRemovalObservables.Add((keysToRemoveObservable, removeFromLocalOnly));
             return (TConfig)this;
+        }
+        
+        public TConfig OnlyStoreInLocalCacheWhen(StoreInLocalCacheWhen when)
+        {
+            Func<TK, TV, bool> predicate;
+            switch (when)
+            {
+                case StoreInLocalCacheWhen.Always:
+                    predicate = null;
+                    break;
+                case StoreInLocalCacheWhen.Never:
+                case StoreInLocalCacheWhen.WhenValueIsNull when typeof(TV).IsValueType:
+                    predicate = (k, v) => false;
+                    break;
+                case StoreInLocalCacheWhen.WhenValueIsNullOrDefault when typeof(TV).IsClass:
+                case StoreInLocalCacheWhen.WhenValueIsNull when typeof(TV).IsClass:
+                    predicate = (k, v) => v == null;
+                    break;
+                case StoreInLocalCacheWhen.WhenValueIsNullOrDefault when typeof(TV).IsValueType:
+                    predicate = (k, v) => v.Equals(default(TV));
+                    break;
+                default:
+                    throw new Exception($"Unrecognised '{nameof(StoreInLocalCacheWhen)}' value: {when}");
+            }
+
+            return OnlyStoreInLocalCacheWhen(predicate);
         }
 
         public TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)

@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             BatchBehaviour batchBehaviour,
             Func<TK, bool> skipCacheGetPredicate,
             Func<TK, bool> skipCacheSetPredicate,
-            Func<TK, TV> negativeCachingValueFactory)
+            Func<TK, TV> missingKeyValueFactory)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -60,9 +60,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
             _batchBehaviour = batchBehaviour;
 
-            var convertedFunc = negativeCachingValueFactory == null
+            var convertedFunc = missingKeyValueFactory == null
                 ? func
-                : ConvertIntoNegativeCachingFunc(func, negativeCachingValueFactory, keyComparer);
+                : ConvertToFuncThatFillsMissingKeys(func, missingKeyValueFactory, keyComparer);
             
             if (catchDuplicateRequests)
                 _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(convertedFunc, keyComparer);
@@ -349,9 +349,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 .ToArray();
         }
         
-        private static Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertIntoNegativeCachingFunc(
+        private static Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertToFuncThatFillsMissingKeys(
             Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
-            Func<TK, TV> negativeCachingValueFactory,
+            Func<TK, TV> missingKeyValueFactory,
             IEqualityComparer<TK> keyComparer)
         {
             return async (keys, token) =>
@@ -367,7 +367,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     if (valuesWithFills == null)
                         valuesWithFills = values.ToDictionary(kv => kv.Key, kv => kv.Value, keyComparer);
 
-                    valuesWithFills[key] = negativeCachingValueFactory(key);
+                    valuesWithFills[key] = missingKeyValueFactory(key);
                 }
 
                 return valuesWithFills ?? values;

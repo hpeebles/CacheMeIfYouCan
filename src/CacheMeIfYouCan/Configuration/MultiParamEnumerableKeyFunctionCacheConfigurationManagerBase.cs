@@ -32,11 +32,8 @@ namespace CacheMeIfYouCan.Configuration
             if (timeToLiveFactory != null)
                 TimeToLiveFactory = k => timeToLiveFactory();
             
-            if (DefaultSettings.Cache.NegativeCachingEnabled)
-                WithNegativeCaching();
-
-            if (DefaultSettings.Cache.ShouldOnlyStoreNegativesInLocalCache)
-                OnlyStoreNegativesInLocalCache();
+            if (DefaultSettings.Cache.ShouldFillMissingKeysWithDefaultValues)
+                FillMissingKeys();
         }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
@@ -61,11 +58,8 @@ namespace CacheMeIfYouCan.Configuration
             else if (DefaultSettings.Cache.MaxFetchBatchSize > 0)
                 WithBatchedFetches(DefaultSettings.Cache.MaxFetchBatchSize, DefaultSettings.Cache.BatchBehaviour);
             
-            if (interfaceConfig.NegativeCachingEnabled)
-                WithNegativeCaching();
-
-            if (interfaceConfig.OnlyStoreNegativesInLocalCache)
-                OnlyStoreNegativesInLocalCache();
+            if (interfaceConfig.FillMissingKeysWithDefaultValues)
+                FillMissingKeys();
         }
         
         public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
@@ -107,28 +101,15 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig WithNegativeCaching(TV value = default)
+        public TConfig FillMissingKeys(TV value = default)
         {
-            return WithNegativeCaching(k => value);
+            return FillMissingKeys(k => value);
         }
 
-        public TConfig WithNegativeCaching(Func<(TK1, TK2), TV> valueFactory)
+        public TConfig FillMissingKeys(Func<(TK1, TK2), TV> valueFactory)
         {
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
-        }
-        
-        /// <summary>
-        /// If set to true, only keys which have no corresponding values will be stored in the local cache. This can
-        /// improve performance without using up much memory as the keys stored locally all have small values (null or
-        /// default) with all values still stored in the distributed cache. This setting is ignored if not using a 2
-        /// tier caching strategy
-        /// </summary>
-        public TConfig OnlyStoreNegativesInLocalCache(bool onlyStoreNegativesInLocalCache = true)
-        {
-            return typeof(TV).IsClass
-                ? OnlyStoreInLocalCacheWhen((k, v) => v == null)
-                : OnlyStoreInLocalCacheWhen((k, v) => v.Equals(default(TV)));
         }
         
         protected TConfig ExcludeParametersFromKeyImpl(int[] parameterIndexes, int totalParameterCount)

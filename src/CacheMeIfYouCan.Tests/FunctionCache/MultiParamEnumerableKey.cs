@@ -355,7 +355,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Fact]
-        public void WithNegativeCaching()
+        public void FillMissingKeys()
         {
             var results = new List<FunctionCacheGetResult>();
             var value = Guid.NewGuid().ToString();
@@ -371,7 +371,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedFunc = func
                     .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
                     .OnResult(results.Add)
-                    .WithNegativeCaching(value)
+                    .FillMissingKeys(value)
                     .Build();
             }
 
