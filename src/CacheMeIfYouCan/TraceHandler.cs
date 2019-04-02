@@ -12,6 +12,7 @@ namespace CacheMeIfYouCan
         private static readonly AsyncLocal<ImmutableList<TraceHandler>> Containers
             = new AsyncLocal<ImmutableList<TraceHandler>>();
 
+        private readonly List<CacheTrace> _traces = new List<CacheTrace>();
         private readonly Action<TraceHandler> _onDispose;
         private readonly object _lock = new object();
 
@@ -33,7 +34,19 @@ namespace CacheMeIfYouCan
             return new TraceHandler(onDispose);
         }
 
-        public List<CacheTrace> Traces { get; } = new List<CacheTrace>();
+        public IEnumerable<CacheTrace> Traces
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _traces
+                        .OrderBy(t => t.Result.Start)
+                        .ToArray();
+                }
+            }
+        }
+
         public CacheTrace Trace => Traces.SingleOrDefault();
 
         public void Dispose()
@@ -47,7 +60,7 @@ namespace CacheMeIfYouCan
             foreach (var container in Containers.Value)
             {
                 lock (container._lock)
-                    container.Traces.Add(trace);
+                    container._traces.Add(trace);
             }
         }
     }
