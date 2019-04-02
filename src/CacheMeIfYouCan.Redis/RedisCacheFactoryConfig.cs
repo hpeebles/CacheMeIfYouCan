@@ -17,5 +17,7 @@ namespace CacheMeIfYouCan.Redis
         public KeyEvents KeyEventsToSubscribeTo { get; set; }
         
         public RedisValue NullValue { get; set; }
+        
+        public bool UseFireAndForgetWherePossible { get; set; }
     }
 }

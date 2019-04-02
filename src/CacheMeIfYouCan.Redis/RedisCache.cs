@@ -20,6 +20,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly Func<string, string> _fromRedisKey;
         private readonly RecentlySetKeysManager _recentlySetKeysManager;
         private readonly Subject<Key<TK>> _keyChanges;
+        private readonly CommandFlags _flags;
 
         public RedisCache(
             RedisConnection connection,
@@ -29,7 +30,8 @@ namespace CacheMeIfYouCan.Redis
             Func<string, TK> keyDeserializer,
             Func<TV, RedisValue> serializer,
             Func<RedisValue, TV> deserializer,
-            KeyEvents keyEventsToSubscribeTo)
+            KeyEvents keyEventsToSubscribeTo,
+            bool useFireAndForgetWherePossible)
         {
             _connection = connection;
             _database = database;
@@ -37,6 +39,9 @@ namespace CacheMeIfYouCan.Redis
             _keyDeserializer = keyDeserializer;
             _serializer = serializer;
             _deserializer = deserializer;
+            _flags = useFireAndForgetWherePossible
+                ? CommandFlags.FireAndForget
+                : CommandFlags.None;
             
             if (String.IsNullOrWhiteSpace(keySpacePrefix))
             {
@@ -96,7 +101,7 @@ namespace CacheMeIfYouCan.Redis
             
             _recentlySetKeysManager?.Mark(key.AsString);
         
-            await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive);
+            await redisDb.StringSetAsync(redisKey, serializedValue, timeToLive, flags: _flags);
         }
 
         // Must get keys separately since multi key operations will fail if running Redis in cluster mode
@@ -133,20 +138,20 @@ namespace CacheMeIfYouCan.Redis
         {
             var redisDb = GetDatabase();
             
+            var tasks = values
+                .Select(kv => SetSingle(kv.Key.AsString, _serializer(kv.Value)))
+                .ToArray();
+
+            await Task.WhenAll(tasks);
+            
             async Task SetSingle(string key, RedisValue value)
             {
                 var redisKey = _toRedisKey(key);
 
                 _recentlySetKeysManager?.Mark(key);
             
-                await redisDb.StringSetAsync(redisKey, value, timeToLive);
+                await redisDb.StringSetAsync(redisKey, value, timeToLive, flags: _flags);
             }
-            
-            var tasks = values
-                .Select(kv => SetSingle(kv.Key.AsString, _serializer(kv.Value)))
-                .ToArray();
-
-            await Task.WhenAll(tasks);
         }
 
         public async Task<bool> Remove(Key<TK> key)
@@ -155,7 +160,7 @@ namespace CacheMeIfYouCan.Redis
             
             var redisKey = _toRedisKey(key.AsString);
 
-            return await redisDb.KeyDeleteAsync(redisKey);
+            return await redisDb.KeyDeleteAsync(redisKey, _flags);
         }
 
         public IObservable<Key<TK>> KeyChanges => _keyChanges.AsObservable();

@@ -29,7 +29,8 @@ namespace CacheMeIfYouCan.Redis
                 config.KeyDeserializer,
                 serializer,
                 deserializer,
-                _redisConfig.KeyEventsToSubscribeTo);
+                _redisConfig.KeyEventsToSubscribeTo,
+                _redisConfig.UseFireAndForgetWherePossible);
         }
 
         private (Func<TV, RedisValue>, Func<RedisValue, TV>) GetValueSerializers<TK, TV>(
