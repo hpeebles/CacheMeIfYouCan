@@ -141,7 +141,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
 
         [Theory]
-        [InlineData(StoreInLocalCacheWhen.Never)]
+        [InlineData(StoreInLocalCacheWhen.Always)]
         [InlineData(StoreInLocalCacheWhen.Never)]
         [InlineData(StoreInLocalCacheWhen.WhenValueIsNull)]
         [InlineData(StoreInLocalCacheWhen.WhenValueIsNullOrDefault)]
@@ -171,13 +171,13 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             switch (when)
             {
+                case StoreInLocalCacheWhen.Always:
+                    localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
+                    break;
+                
                 case StoreInLocalCacheWhen.Never:
                 case StoreInLocalCacheWhen.WhenValueIsNull:
                     localCache.Values.Should().BeEmpty();
-                    break;
-                
-                case StoreInLocalCacheWhen.Always:
-                    localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
                     break;
                 
                 case StoreInLocalCacheWhen.WhenValueIsNullOrDefault:
@@ -188,7 +188,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Theory]
-        [InlineData(StoreInLocalCacheWhen.Never)]
+        [InlineData(StoreInLocalCacheWhen.Always)]
         [InlineData(StoreInLocalCacheWhen.Never)]
         [InlineData(StoreInLocalCacheWhen.WhenValueIsNull)]
         [InlineData(StoreInLocalCacheWhen.WhenValueIsNullOrDefault)]
@@ -221,12 +221,12 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             switch (when)
             {
-                case StoreInLocalCacheWhen.Never:
-                    localCache.Values.Should().BeEmpty();
-                    break;
-                
                 case StoreInLocalCacheWhen.Always:
                     localCache.Values.Keys.Should().BeEquivalentTo(allKeys);
+                    break;
+                
+                case StoreInLocalCacheWhen.Never:
+                    localCache.Values.Should().BeEmpty();
                     break;
                 
                 case StoreInLocalCacheWhen.WhenValueIsNull:
