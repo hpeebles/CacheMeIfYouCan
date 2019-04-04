@@ -2,12 +2,12 @@
 
 namespace CacheMeIfYouCan.Notifications
 {
-    public sealed class CachedObjectRefreshException : Exception
+    public sealed class CachedObjectUpdateException : Exception
     {
         private const string ExceptionMessageFormat =
-            "{0} threw an exception while trying to refresh its value";
+            "{0} threw an exception while trying to update its value";
         
-        internal CachedObjectRefreshException(string name, Exception exception)
+        internal CachedObjectUpdateException(string name, Exception exception)
             : base(String.Format(ExceptionMessageFormat, name), exception)
         {
             Name = name;

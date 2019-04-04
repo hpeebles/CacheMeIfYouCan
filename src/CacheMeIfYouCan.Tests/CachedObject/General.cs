@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task RefreshedValueIsImmediatelyExposed()
         {
-            var results = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -29,9 +29,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                    .OnRefresh(r =>
+                    .OnUpdate(r =>
                     {
-                        results.Add(r);
+                        refreshResults.Add(r);
                         Assert.InRange(
                             r.NewValue,
                             DateTime.UtcNow.AddMilliseconds(-100),
@@ -46,14 +46,14 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            Assert.NotEmpty(results);
+            Assert.NotEmpty(refreshResults);
         }
 
         [Fact]
         public async Task ContinuesToRefreshAfterException()
         {
             var index = 0;
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -67,7 +67,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                         return DateTime.UtcNow;
                     })
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                    .OnRefresh(refreshResults.Add)
+                    .OnUpdate(refreshResults.Add)
                     .Build();
             }
 
@@ -115,7 +115,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task Named()
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
             var name = Guid.NewGuid().ToString();
             
             ICachedObject<DateTime> date;
@@ -123,9 +123,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
-                    .Named(name)
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(1))
-                    .OnRefresh(refreshResults.Add)
+                    .Named(name)
+                    .OnUpdate(refreshResults.Add)
                     .Build();
             }
 

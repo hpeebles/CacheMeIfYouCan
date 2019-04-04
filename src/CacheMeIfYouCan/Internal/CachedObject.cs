@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,35 +6,37 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CachedObject<T> : ICachedObject<T>
+    internal class CachedObject<T, TUpdates> : ICachedObject<T>
     {
-        private readonly Func<Task<T>> _getValueFunc;
+        private readonly Func<Task<T>> _initialiseValueFunc;
+        private readonly Func<T, TUpdates, Task<T>> _updateValueFunc;
         private readonly string _name;
-        private readonly Func<bool, T, TimeSpan> _refreshIntervalFunc;
-        private readonly Action<CachedObjectRefreshResult<T>> _onRefresh;
-        private readonly Action<CachedObjectRefreshException> _onException;
+        private readonly Action<CachedObjectUpdateResult<T, TUpdates>> _onUpdate;
+        private readonly Action<CachedObjectUpdateException> _onException;
+        private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cts;
-        private int _refreshAttemptCount;
-        private int _successfulRefreshCount;
-        private DateTime _lastRefreshAttempt;
-        private DateTime _lastSuccessfulRefresh;
+        private int _updateAttemptCount;
+        private int _successfulUpdateCount;
+        private DateTime _lastUpdateAttempt;
+        private DateTime _lastSuccessfulUpdate;
         private T _value;
-        private TimeSpan _nextRefreshInterval;
         private int _state;
 
         public CachedObject(
-            Func<Task<T>> getValueFunc,
+            Func<Task<T>> initialiseValueFunc,
+            Func<T, TUpdates, Task<T>> updateValueFunc,
             string name,
-            Func<bool, T, TimeSpan> refreshIntervalFunc,
-            Action<CachedObjectRefreshResult<T>> onRefresh,
-            Action<CachedObjectRefreshException> onException)
+            Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate,
+            Action<CachedObjectUpdateException> onException,
+            ICachedObjectUpdateScheduler<T, TUpdates> updateScheduler)
         {
-            _getValueFunc = getValueFunc ?? throw new ArgumentNullException(nameof(getValueFunc));
+            _initialiseValueFunc = initialiseValueFunc ?? throw new ArgumentNullException(nameof(initialiseValueFunc));
+            _updateValueFunc = updateValueFunc ?? throw new ArgumentNullException(nameof(updateValueFunc));
             _name = name;
-            _refreshIntervalFunc = refreshIntervalFunc ?? throw new ArgumentNullException(nameof(refreshIntervalFunc));
-            _onRefresh = onRefresh;
+            _onUpdate = onUpdate;
             _onException = onException;
+            _updateScheduler = updateScheduler;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
         }
@@ -50,7 +52,7 @@ namespace CacheMeIfYouCan.Internal
                     Task.Run(Initialize).GetAwaiter().GetResult();
                 
                 if (_state == 2)
-                    throw new ObjectDisposedException(nameof(CachedObject<T>));
+                    throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
                 
                 return _value;
             }
@@ -65,7 +67,7 @@ namespace CacheMeIfYouCan.Internal
                 try
                 {
                     if (_state == 0)
-                        await InitializeImpl();
+                        await InitializeWithinLock();
                 }
                 finally
                 {
@@ -84,6 +86,23 @@ namespace CacheMeIfYouCan.Internal
                 default:
                     return CachedObjectInitializeOutcome.Failure;
             }
+
+            async Task InitializeWithinLock()
+            {
+                var result = await UpdateValueImpl((_, __) => _initialiseValueFunc(), default);
+
+                if (!result.Success)
+                    return;
+
+                _updateScheduler.Start(result, UpdateValue);
+                
+                Interlocked.Exchange(ref _state, 1);
+            }
+        }
+
+        public async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValue(TUpdates updates)
+        {
+            return await UpdateValueImpl(_updateValueFunc, updates);
         }
 
         public void Dispose()
@@ -93,99 +112,50 @@ namespace CacheMeIfYouCan.Internal
             _cts.Cancel();
             _cts.Dispose();
         }
-
-        private async Task InitializeImpl()
+        
+        private async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValueImpl(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates)
         {
-            var result = await RefreshValue();
+            if (_state == 2)
+                throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
 
-            if (!result.Success)
-                return;
-            
-            Interlocked.Exchange(ref _state, 1);
-
-            Task.Run(RunBackgroundRefreshTask);
-        }
-
-        private async Task RunBackgroundRefreshTask()
-        {
-            while (!_cts.IsCancellationRequested)
-            {
-                try
-                {
-                    await Task.Delay(_nextRefreshInterval, _cts.Token);
-
-                    await RefreshValue();
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-                catch
-                {
-                    // This can only be reached if _onRefresh or _onException throw an exception. In these scenarios
-                    // ensure _nextRefreshInterval isn't zero or tiny as we don't want to get caught in a tight loop
-                    if (_nextRefreshInterval < TimeSpan.FromSeconds(1))
-                        _nextRefreshInterval = TimeSpan.FromSeconds(1);
-                }
-            }
-        }
-
-        private async Task<CachedObjectRefreshResult<T>> RefreshValue()
-        {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            CachedObjectRefreshException refreshException = null;
+            CachedObjectUpdateException updateException = null;
             T newValue;
-            _refreshAttemptCount++;
+            _updateAttemptCount++;
 
             try
             {
-                newValue = await _getValueFunc();
+                newValue = await updateFunc(_value, updates);
                 _value = newValue;
-                _successfulRefreshCount++;
+                _successfulUpdateCount++;
             }
             catch (Exception ex)
             {
-                refreshException = new CachedObjectRefreshException(_name, ex);
+                updateException = new CachedObjectUpdateException(_name, ex);
                 newValue = default;
                 
-                _onException?.Invoke(refreshException);
+                _onException?.Invoke(updateException);
             }
             
-            try
-            {
-                // Don't update _nextRefreshInterval if this is a failed Initialize attempt
-                if (!(_state == 0 && refreshException != null))
-                    _nextRefreshInterval = _refreshIntervalFunc(refreshException == null, newValue);
-            }
-            catch (Exception ex)
-            {
-                var exception = new CachedObjectRefreshException(_name, ex);
-
-                if (refreshException == null)
-                    refreshException = exception;
-                
-                _onException?.Invoke(exception);
-            }
-            
-            var result = new CachedObjectRefreshResult<T>(
+            var result = new CachedObjectUpdateResult<T, TUpdates>(
                 _name,
                 start,
                 StopwatchHelper.GetDuration(stopwatchStart),
-                refreshException,
                 newValue,
-                _refreshAttemptCount,
-                _successfulRefreshCount,
-                _lastRefreshAttempt,
-                _lastSuccessfulRefresh,
-                _nextRefreshInterval);
+                updates,
+                updateException,
+                _updateAttemptCount,
+                _successfulUpdateCount,
+                _lastUpdateAttempt,
+                _lastSuccessfulUpdate);
 
-            _lastRefreshAttempt = DateTime.UtcNow;
+            _lastUpdateAttempt = DateTime.UtcNow;
             
-            _onRefresh?.Invoke(result);
+            _onUpdate?.Invoke(result);
             
-            if (refreshException == null)
-                _lastSuccessfulRefresh = DateTime.UtcNow;
+            if (updateException == null)
+                _lastSuccessfulUpdate = DateTime.UtcNow;
 
             return result;
         }

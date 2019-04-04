@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
             var countdown = new CountdownEvent(4);
 
             ICachedObject<DateTime> date;
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(4))
-                    .OnRefresh(r =>
+                    .OnUpdate(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -45,8 +45,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             date.Dispose();
             
-            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
-            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
+            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Min();
+            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Max();
 
             min.Should().BeGreaterThan(TimeSpan.FromMilliseconds(3800));
             max.Should().BeLessThan(TimeSpan.FromMilliseconds(6000));
@@ -55,7 +55,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task JitterCausesRefreshIntervalsToFluctuate()
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
             var countdown = new CountdownEvent(15);
             
             ICachedObject<DateTime> date;
@@ -64,8 +64,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                    .WithJitterPercentage(50)
-                    .OnRefresh(r =>
+                    .WithJitter(50)
+                    .OnUpdate(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -79,8 +79,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Min();
-            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastRefreshAttempt).Max();
+            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Min();
+            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Max();
             
             min.Should().BeGreaterThan(TimeSpan.FromMilliseconds(500)).And.BeLessThan(TimeSpan.FromMilliseconds(900));
             max.Should().BeGreaterThan(TimeSpan.FromMilliseconds(1200));
@@ -89,7 +89,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task VariableRefreshInterval()
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
             var countdown = new CountdownEvent(5);
             var refreshCount = 0;
             
@@ -98,8 +98,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             {
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
-                    .WithRefreshInterval(() => TimeSpan.FromSeconds(++refreshCount))
-                    .OnRefresh(r =>
+                    .WithRefreshIntervalFactory(_ => TimeSpan.FromSeconds(++refreshCount))
+                    .OnUpdate(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -117,20 +117,20 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             foreach (var result in refreshResults.Skip(1))
             {
-                var interval = result.Start - result.LastRefreshAttempt;
+                var interval = result.Start - result.LastUpdateAttempt;
                     
                 interval
                     .Should()
-                    .BeGreaterThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount - 1.1))
+                    .BeGreaterThan(TimeSpan.FromSeconds(result.SuccessfulUpdateCount - 1.1))
                     .And
-                    .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulRefreshCount + 2));
+                    .BeLessThan(TimeSpan.FromSeconds(result.SuccessfulUpdateCount + 2));
             }
         }
         
         [Fact]
         public async Task OnSuccessAndOnFailureRefreshIntervals()
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
             var countdown = new CountdownEvent(5);
             
             ICachedObject<DateTime> date;
@@ -139,7 +139,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => refreshResults.Count % 2 == 0 ? DateTime.UtcNow : throw new Exception())
                     .WithRefreshInterval(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3))
-                    .OnRefresh(r =>
+                    .OnUpdate(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -159,7 +159,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             {
                 var result = refreshResults[i];
                 
-                var interval = result.Start - result.LastRefreshAttempt;
+                var interval = result.Start - result.LastUpdateAttempt;
 
                 TimeSpan min;
                 TimeSpan max;

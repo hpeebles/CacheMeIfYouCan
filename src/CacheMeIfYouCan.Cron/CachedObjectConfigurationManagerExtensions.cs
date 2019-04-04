@@ -1,13 +1,15 @@
 ﻿using System;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Configuration.CachedObject;
+using CacheMeIfYouCan.Notifications;
 using NCrontab;
 
 namespace CacheMeIfYouCan.Cron
 {
     public static class CachedObjectConfigurationManagerExtensions
     {
-        public static CachedObjectConfigurationManager<T> WithRefreshSchedule<T>(
-            this CachedObjectConfigurationManager<T> config,
+        public static CachedObjectConfigurationManager<T, Unit> WithRefreshSchedule<T>(
+            this CachedObjectConfigurationManager_ConfigureFor<T> config,
             string cronExpression,
             bool includingSeconds = false)
         {
@@ -17,11 +19,9 @@ namespace CacheMeIfYouCan.Cron
             
             var schedule = CrontabSchedule.Parse(cronExpression, options);
 
-            return config
-                .WithJitterPercentage(0)
-                .WithRefreshInterval(GetNextInterval);
+            return config.WithRefreshIntervalFactory(GetNextInterval);
             
-            TimeSpan GetNextInterval()
+            TimeSpan GetNextInterval(CachedObjectUpdateResult<T, Unit> result)
             {
                 var now = DateTime.UtcNow;
                 

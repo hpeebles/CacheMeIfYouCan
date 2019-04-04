@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task OnRefreshResult()
         {
-            var refreshResults = new List<CachedObjectRefreshResult<DateTime>>();
+            var refreshResults = new List<CachedObjectUpdateResult<DateTime, Unit>>();
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                    .OnRefresh(refreshResults.Add)
+                    .OnUpdate(refreshResults.Add)
                     .Build();
             }
 

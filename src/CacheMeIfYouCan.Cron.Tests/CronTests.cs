@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Cron.Tests
         [InlineData("*/2 * * * * *", 2)]
         public async Task CachedObjectRefreshSchedule(string cronExpression, int intervalSeconds)
         {
-            var refreshResults = new List<CachedObjectRefreshResult>();
+            var refreshResults = new List<CachedObjectUpdateResult>();
 
             var funcDuration = TimeSpan.FromMilliseconds(100);
             
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Cron.Tests
                     return DateTime.UtcNow;
                 })
                 .WithRefreshSchedule(cronExpression, true)
-                .OnRefresh(refreshResults.Add)
+                .OnUpdate(refreshResults.Add)
                 .Build();
 
             await date.Initialize();

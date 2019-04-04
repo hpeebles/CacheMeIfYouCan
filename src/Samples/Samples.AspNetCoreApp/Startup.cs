@@ -25,9 +25,7 @@ namespace Samples.AspNetCoreApp
             // Set up the default ICachedObject settings
             DefaultSettings
                 .CachedObject
-                .WithRefreshInterval(TimeSpan.FromMinutes(5))
-                .OnException(ex => logger.LogError(ex, "CachedObject exception"))
-                .WithJitterPercentage(10);
+                .OnException(ex => logger.LogError(ex, "CachedObject exception"));
             
             // Set up the default cache settings
             DefaultSettings
@@ -48,7 +46,8 @@ namespace Samples.AspNetCoreApp
                 var reader = p.GetService<EnabledAffiliatesReader>();
                 return CachedObjectFactory
                     .ConfigureFor(() => reader.Get())
-                    .WithRefreshInterval(TimeSpan.FromMinutes(1)) // override the default setting
+                    .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                    .WithJitter(10)
                     .Build();
             });
             
