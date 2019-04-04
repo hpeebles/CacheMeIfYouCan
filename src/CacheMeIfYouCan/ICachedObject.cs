@@ -10,6 +10,8 @@ namespace CacheMeIfYouCan
 
     public interface ICachedObjectInitializer
     {
+        string Name { get; }
+        
         Task<CachedObjectInitializeOutcome> Initialize();
     }
 }

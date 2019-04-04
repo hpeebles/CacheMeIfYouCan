@@ -118,6 +118,7 @@ namespace CacheMeIfYouCan
             var outcome = await cachedObject.Initialize();
             
             return new CachedObjectInitializeResult(
+                cachedObject.Name,
                 cachedObject.GetType().GenericTypeArguments[0],
                 outcome,
                 timer.Elapsed);

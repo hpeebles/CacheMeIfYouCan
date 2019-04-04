@@ -10,7 +10,6 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<Task<T>> _initialiseValueFunc;
         private readonly Func<T, TUpdates, Task<T>> _updateValueFunc;
-        private readonly string _name;
         private readonly Action<CachedObjectUpdateResult<T, TUpdates>> _onUpdate;
         private readonly Action<CachedObjectUpdateException> _onException;
         private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
@@ -33,13 +32,15 @@ namespace CacheMeIfYouCan.Internal
         {
             _initialiseValueFunc = initialiseValueFunc ?? throw new ArgumentNullException(nameof(initialiseValueFunc));
             _updateValueFunc = updateValueFunc ?? throw new ArgumentNullException(nameof(updateValueFunc));
-            _name = name;
+            Name = name;
             _onUpdate = onUpdate;
             _onException = onException;
             _updateScheduler = updateScheduler;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
         }
+        
+        public string Name { get; }
 
         public T Value
         {
@@ -132,14 +133,14 @@ namespace CacheMeIfYouCan.Internal
             }
             catch (Exception ex)
             {
-                updateException = new CachedObjectUpdateException(_name, ex);
+                updateException = new CachedObjectUpdateException(Name, ex);
                 newValue = default;
                 
                 _onException?.Invoke(updateException);
             }
             
             var result = new CachedObjectUpdateResult<T, TUpdates>(
-                _name,
+                Name,
                 start,
                 StopwatchHelper.GetDuration(stopwatchStart),
                 newValue,

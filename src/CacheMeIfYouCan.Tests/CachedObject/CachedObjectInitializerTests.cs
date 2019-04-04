@@ -157,6 +157,27 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .Should().BeGreaterThan(TimeSpan.FromSeconds(0.9))
                 .And.BeLessThan(timer.Elapsed);
         }
+        
+        [Fact]
+        public async Task NameIsSetOnInitializationResult()
+        {
+            var name = Guid.NewGuid().ToString();
+            
+            using (_setupLock.Enter())
+            {
+                CachedObjectFactory
+                    .ConfigureFor(() => new Dummy4())
+                    .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                    .Named(name)
+                    .Build();
+            }
+
+            var initializeResult = await CachedObjectInitializer.Initialize<Dummy4>();
+            
+            initializeResult.Success.Should().BeTrue();
+            initializeResult.Results.Should().ContainSingle();
+            initializeResult.Results[0].Name.Should().Be(name);
+        }
 
         private class Dummy1
         {}
@@ -165,6 +186,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {}
         
         private class Dummy3
+        {}
+        
+        private class Dummy4
         {}
     }
 }
