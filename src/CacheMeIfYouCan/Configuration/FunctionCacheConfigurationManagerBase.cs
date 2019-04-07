@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Configuration
         internal EqualityComparers KeyComparers { get; }
         internal string Name { get; private set; }
         internal Func<TimeSpan> LocalCacheTimeToLiveOverride { get; set; }
-        internal bool? Disabled { get; private set; }
+        internal bool IsCacheDisabled { get; private set; }
         internal bool? DuplicateRequestCatchingEnabled { get; private set; }
         internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
         internal Action<FunctionCacheFetchResult<TK, TV>> OnFetchAction { get; private set; }
@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Configuration
                     Name = interfaceConfig.NameGenerator(proxyFunctionInfo.MethodInfo);
                 
                 LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
-                Disabled = interfaceConfig.DisableCache;
+                IsCacheDisabled = interfaceConfig.DisableCache;
                 DuplicateRequestCatchingEnabled = interfaceConfig.CatchDuplicateRequests;
                 
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
@@ -106,6 +106,7 @@ namespace CacheMeIfYouCan.Configuration
             {
                 KeySerializers = new KeySerializers();
                 KeyComparers = new EqualityComparers();
+                IsCacheDisabled = DefaultSettings.Cache.IsCacheDisabled;
                 OnResultAction = DefaultSettings.Cache.OnResultAction;
                 OnFetchAction = DefaultSettings.Cache.OnFetchAction;
                 OnExceptionAction = DefaultSettings.Cache.OnExceptionAction;
@@ -213,7 +214,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public TConfig DisableCache(bool disableCache = true)
         {
-            Disabled = disableCache;
+            IsCacheDisabled |= disableCache;
             return (TConfig)this;
         }
 
@@ -521,7 +522,7 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICacheInternal<TK, TV> cache = null;
-            if (!Disabled ?? !DefaultSettings.Cache.DisableCache)
+            if (!IsCacheDisabled)
             {
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
                 if (LocalCacheFactory != null)

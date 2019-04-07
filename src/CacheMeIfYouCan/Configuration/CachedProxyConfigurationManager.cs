@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Configuration
         private Func<MethodInfo, string> _nameGenerator;
         private Func<TimeSpan> _timeToLiveFactory;
         private Func<TimeSpan> _localCacheTimeToLiveOverride;
-        private bool? _disableCache;
+        private bool _disableCache;
         private bool? _catchDuplicateRequests;
         private ILocalCacheFactory _localCacheFactory;
         private IDistributedCacheFactory _distributedCacheFactory;
@@ -45,6 +45,7 @@ namespace CacheMeIfYouCan.Configuration
             _keySerializers = new KeySerializers();
             _valueSerializers = new ValueSerializers();
             _keyComparers = new EqualityComparers();
+            _disableCache = DefaultSettings.Cache.IsCacheDisabled;
             _onResult = DefaultSettings.Cache.OnResultAction;
             _onFetch = DefaultSettings.Cache.OnFetchAction;
             _onException = DefaultSettings.Cache.OnExceptionAction;
@@ -115,7 +116,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedProxyConfigurationManager<T> DisableCache(bool disableCache = true)
         {
-            _disableCache = disableCache;
+            _disableCache |= disableCache;
             return this;
         }
 

@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         internal Func<TimeSpan> TimeToLiveFactory { get; private set; } = () => TimeSpan.FromHours(1);
         internal Func<TimeSpan> LocalCacheTimeToLiveOverride { get; private set; }
-        internal bool DisableCache { get; private set; }
+        internal bool IsCacheDisabled { get; private set; }
         internal bool DuplicateRequestCatchingEnabled { get; private set; }
         internal ILocalCacheFactory LocalCacheFactory { get; private set; }
         internal IDistributedCacheFactory DistributedCacheFactory { get; private set; }
@@ -53,9 +53,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public DefaultCacheConfiguration WithCacheDisabled(bool disableCache)
+        public DefaultCacheConfiguration DisableCache(bool disableCache)
         {
-            DisableCache = disableCache;
+            IsCacheDisabled = disableCache;
             return this;
         }
 
