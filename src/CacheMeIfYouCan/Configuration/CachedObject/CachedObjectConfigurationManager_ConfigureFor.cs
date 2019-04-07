@@ -6,21 +6,25 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Configuration.CachedObject
 {
-    public class CachedObjectConfigurationManager_ConfigureFor<T> : CachedObjectConfigurationManager<T, Unit>
+    public class CachedObjectConfigurationManager_ConfigureFor<T>
     {
-        internal CachedObjectConfigurationManager_ConfigureFor(Func<Task<T>> getValueFunc)
-            : base(getValueFunc)
-        {}
+        private readonly Func<Task<T>> _initialiseValueFunc;
 
-        public CachedObjectConfigurationManager_WithRefreshInterval<T> WithRefreshInterval(TimeSpan interval)
+        internal CachedObjectConfigurationManager_ConfigureFor(Func<Task<T>> initialiseValueFunc)
+        {
+            _initialiseValueFunc = initialiseValueFunc;
+        }
+
+        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithRefreshInterval(TimeSpan interval)
         {
             return WithRefreshInterval(interval, interval);
         }
         
-        public CachedObjectConfigurationManager_WithRefreshInterval<T> WithRefreshInterval(TimeSpan onSuccess, TimeSpan onFailure)
+        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithRefreshInterval(TimeSpan onSuccess, TimeSpan onFailure)
         {
-            return new CachedObjectConfigurationManager_WithRefreshInterval<T>(
-                InitialiseValueFunc,
+            return new CachedObjectConfigurationManager_WithRegularUpdates<T>(
+                _initialiseValueFunc,
+                null,
                 onSuccess,
                 onFailure);
         }
@@ -29,17 +33,31 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
             Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> refreshIntervalFunc)
         {
             return new CachedObjectConfigurationManager<T, Unit>(
-                InitialiseValueFunc,
+                _initialiseValueFunc,
                 null,
-                new CachedObjectRefreshWithJitterScheduler<T>(refreshIntervalFunc, 0));
+                new CachedObjectRegularIntervalWithJitterScheduler<T>(refreshIntervalFunc, 0));
         }
         
         public CachedObjectConfigurationManager<T, Unit> RefreshOn<TAny>(IObservable<TAny> observable)
         {
             return new CachedObjectConfigurationManager<T, Unit>(
-                InitialiseValueFunc,
+                _initialiseValueFunc,
                 null,
-                new CachedObjectObservableUpdateScheduler<T, Unit>(observable.Select(_ => Unit.Instance)));
+                new CachedObjectObservableScheduler<T, Unit>(observable.Select(_ => Unit.Instance)));
+        }
+
+        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithUpdates(TimeSpan interval, Func<T, T> updateValueFunc)
+        {
+            return WithUpdates(interval, x => Task.Run(() => updateValueFunc(x)));
+        }
+        
+        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithUpdates(TimeSpan interval, Func<T, Task<T>> updateValueFunc)
+        {
+            return new CachedObjectConfigurationManager_WithRegularUpdates<T>(
+                _initialiseValueFunc,
+                (value, _) => updateValueFunc(value),
+                interval,
+                interval);
         }
         
         public CachedObjectConfigurationManager<T, TUpdates> WithUpdates<TUpdates>(
@@ -54,9 +72,9 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
             Func<T, TUpdates, Task<T>> updateValueFunc)
         {
             return new CachedObjectConfigurationManager<T, TUpdates>(
-                InitialiseValueFunc,
+                _initialiseValueFunc,
                 updateValueFunc,
-                new CachedObjectObservableUpdateScheduler<T, TUpdates>(observable));
+                new CachedObjectObservableScheduler<T, TUpdates>(observable));
         }
     }
 }

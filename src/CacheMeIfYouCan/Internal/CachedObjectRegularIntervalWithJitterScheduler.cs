@@ -5,18 +5,18 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CachedObjectRefreshWithJitterScheduler<T> : ICachedObjectUpdateScheduler<T, Unit>
+    internal class CachedObjectRegularIntervalWithJitterScheduler<T> : ICachedObjectUpdateScheduler<T, Unit>
     {
-        private readonly Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> _refreshIntervalFunc;
+        private readonly Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> _getIntervalFunc;
         private readonly CancellationTokenSource _cts;
 
-        public CachedObjectRefreshWithJitterScheduler(
-            Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> refreshIntervalFunc,
+        public CachedObjectRegularIntervalWithJitterScheduler(
+            Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> getIntervalFunc,
             double jitterPercentage)
         {
             if (jitterPercentage.Equals(0))
             {
-                _refreshIntervalFunc = refreshIntervalFunc;
+                _getIntervalFunc = getIntervalFunc;
             }
             else
             {
@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Internal
                 // This gives a uniformly distributed value between +/- percentage
                 double JitterFunc() => (random.NextDouble() - 0.5) * 2 * jitterPercentage;
 
-                _refreshIntervalFunc = result => TimeSpan.FromTicks((long) (refreshIntervalFunc(result).Ticks * (1 + (JitterFunc() / 100))));
+                _getIntervalFunc = result => TimeSpan.FromTicks((long) (getIntervalFunc(result).Ticks * (1 + (JitterFunc() / 100))));
             }
             
             _cts = new CancellationTokenSource();
@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Internal
             CachedObjectUpdateResult<T, Unit> initialiseResult, 
             Func<Unit, Task<CachedObjectUpdateResult<T, Unit>>> updateValueFunc)
         {
-            var firstInterval = _refreshIntervalFunc(initialiseResult);
+            var firstInterval = _getIntervalFunc(initialiseResult);
             
             Task.Run(() => RunScheduler(firstInterval, () => updateValueFunc(Unit.Instance)));
         }
@@ -46,17 +46,17 @@ namespace CacheMeIfYouCan.Internal
             _cts.Dispose();
         }
 
-        private async Task RunScheduler(TimeSpan nextRefreshInterval, Func<Task<CachedObjectUpdateResult<T, Unit>>> refreshValueFunc)
+        private async Task RunScheduler(TimeSpan nextInterval, Func<Task<CachedObjectUpdateResult<T, Unit>>> refreshValueFunc)
         {
             while (!_cts.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(nextRefreshInterval, _cts.Token);
+                    await Task.Delay(nextInterval, _cts.Token);
 
                     var result = await refreshValueFunc();
 
-                    nextRefreshInterval = _refreshIntervalFunc(result);
+                    nextInterval = _getIntervalFunc(result);
                 }
                 catch (OperationCanceledException)
                 {

@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Configuration
     public class CachedObjectConfigurationManager<T, TUpdates>
     {
         protected readonly Func<Task<T>> InitialiseValueFunc;
-        private readonly Func<T, TUpdates, Task<T>> _updateValueFunc;
+        protected readonly Func<T, TUpdates, Task<T>> UpdateValueFunc;
         private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
         private string _name;
         private Action<CachedObjectUpdateResult<T, TUpdates>> _onUpdate;
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Configuration
             ICachedObjectUpdateScheduler<T, TUpdates> updateScheduler = null)
         {
             InitialiseValueFunc = initialiseValueFunc;
-            _updateValueFunc = updateValueFunc;
+            UpdateValueFunc = updateValueFunc;
             _updateScheduler = updateScheduler;
 
             if (DefaultSettings.CachedObject.OnUpdateAction != null)
@@ -54,11 +54,11 @@ namespace CacheMeIfYouCan.Configuration
             
             var cachedObject = new CachedObject<T, TUpdates>(
                 InitialiseValueFunc,
-                _updateValueFunc ?? ((_, __) => InitialiseValueFunc()),
+                UpdateValueFunc ?? ((_, __) => InitialiseValueFunc()),
+                _updateScheduler,
                 name,
                 _onUpdate,
-                _onException,
-                _updateScheduler);
+                _onException);
 
             CachedObjectInitializer.Add(cachedObject);
 

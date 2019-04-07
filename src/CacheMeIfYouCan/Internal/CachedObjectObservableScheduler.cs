@@ -6,12 +6,12 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CachedObjectObservableUpdateScheduler<T, TUpdates> : ICachedObjectUpdateScheduler<T, TUpdates>
+    internal class CachedObjectObservableScheduler<T, TUpdates> : ICachedObjectUpdateScheduler<T, TUpdates>
     {
         private readonly IObservable<TUpdates> _observable;
         private readonly CancellationTokenSource _cts;
         
-        public CachedObjectObservableUpdateScheduler(IObservable<TUpdates> observable)
+        public CachedObjectObservableScheduler(IObservable<TUpdates> observable)
         {
             _observable = observable;
             _cts = new CancellationTokenSource();

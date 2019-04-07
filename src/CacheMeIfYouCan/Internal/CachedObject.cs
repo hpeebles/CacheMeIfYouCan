@@ -25,17 +25,17 @@ namespace CacheMeIfYouCan.Internal
         public CachedObject(
             Func<Task<T>> initialiseValueFunc,
             Func<T, TUpdates, Task<T>> updateValueFunc,
+            ICachedObjectUpdateScheduler<T, TUpdates> updateScheduler,
             string name,
             Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate,
-            Action<CachedObjectUpdateException> onException,
-            ICachedObjectUpdateScheduler<T, TUpdates> updateScheduler)
+            Action<CachedObjectUpdateException> onException)
         {
             _initialiseValueFunc = initialiseValueFunc ?? throw new ArgumentNullException(nameof(initialiseValueFunc));
             _updateValueFunc = updateValueFunc ?? throw new ArgumentNullException(nameof(updateValueFunc));
-            Name = name;
+            _updateScheduler = updateScheduler ?? throw new ArgumentNullException(nameof(updateScheduler));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             _onUpdate = onUpdate;
             _onException = onException;
-            _updateScheduler = updateScheduler;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
         }

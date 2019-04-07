@@ -21,7 +21,29 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public async Task UpdatesAreApplied()
+        public async Task WithRegularUpdates()
+        {
+            var countdown = new CountdownEvent(5);
+            
+            ICachedObject<int> intValue;
+            using (_setupLock.Enter())
+            {
+                intValue = CachedObjectFactory
+                    .ConfigureFor(() => 1)
+                    .WithUpdates(TimeSpan.FromSeconds(1), x => x + 1)
+                    .OnUpdate(_ => countdown.Signal())
+                    .Build();
+            }
+
+            await intValue.Initialize();
+
+            countdown.Wait(TimeSpan.FromSeconds(7)).Should().BeTrue();
+            
+            intValue.Value.Should().Be(5);
+        }
+        
+        [Fact]
+        public async Task UpdatesAreAppliedWhenTriggered()
         {
             var updateResults = new List<CachedObjectUpdateResult<List<int>, int>>();
             var updatesObservable = new Subject<int>();
