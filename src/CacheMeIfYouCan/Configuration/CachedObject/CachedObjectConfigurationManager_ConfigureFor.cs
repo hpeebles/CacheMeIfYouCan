@@ -76,5 +76,10 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
                 updateValueFunc,
                 new CachedObjectObservableScheduler<T, TUpdates>(observable));
         }
+
+        public CachedObjectConfigurationManager<T, Unit> WithNoUpdates()
+        {
+            return new CachedObjectConfigurationManager<T, Unit>(_initialiseValueFunc);
+        }
     }
 }

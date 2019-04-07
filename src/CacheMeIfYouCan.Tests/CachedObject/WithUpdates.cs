@@ -174,5 +174,22 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             countdown.Wait(1000).Should().BeTrue();
         }
+        
+        [Fact]
+        public async Task WithNoUpdates()
+        {
+            ICachedObject<int> intValue;
+            using (_setupLock.Enter())
+            {
+                intValue = CachedObjectFactory
+                    .ConfigureFor(() => 1)
+                    .WithNoUpdates()
+                    .Build();
+            }
+
+            await intValue.Initialize();
+
+            intValue.Value.Should().Be(1);
+        }
     }
 }

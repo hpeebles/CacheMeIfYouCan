@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Internal
         {
             _initialiseValueFunc = initialiseValueFunc ?? throw new ArgumentNullException(nameof(initialiseValueFunc));
             _updateValueFunc = updateValueFunc ?? throw new ArgumentNullException(nameof(updateValueFunc));
-            _updateScheduler = updateScheduler ?? throw new ArgumentNullException(nameof(updateScheduler));
+            _updateScheduler = updateScheduler;
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _onUpdate = onUpdate;
             _onException = onException;
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan.Internal
                 if (!result.Success)
                     return;
 
-                _updateScheduler.Start(result, UpdateValue);
+                _updateScheduler?.Start(result, UpdateValue);
                 
                 Interlocked.Exchange(ref _state, 1);
             }
