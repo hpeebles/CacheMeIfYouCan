@@ -17,12 +17,13 @@ namespace CacheMeIfYouCan.Redis
         {
             config.Validate();
             
-            var connection = RedisConnectionManager.GetOrAdd(_redisConfig.Configuration);
-
+            var connection = _redisConfig.Connection ?? RedisConnectionContainer.GetOrAdd(_redisConfig.Configuration);
+            
             var (serializer, deserializer) = GetValueSerializers(config);
             
             return new RedisCache<TK, TV>(
                 connection,
+                connection as IRedisSubscriber,
                 config.CacheName,
                 _redisConfig.Database,
                 config.KeyspacePrefix,

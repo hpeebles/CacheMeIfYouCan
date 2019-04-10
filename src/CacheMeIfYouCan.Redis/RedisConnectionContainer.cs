@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -6,13 +7,16 @@ using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal static class RedisConnectionManager
+    internal static class RedisConnectionContainer
     {
         private static readonly object Lock = new object();
         private static IReadOnlyDictionary<string, RedisConnection> _connections = new Dictionary<string, RedisConnection>();
         
-        public static RedisConnection GetOrAdd(ConfigurationOptions configuration)
+        public static IRedisConnection GetOrAdd(ConfigurationOptions configuration)
         {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+            
             var connectionString = configuration.ToString();
             
             if (_connections.TryGetValue(connectionString, out var connection))

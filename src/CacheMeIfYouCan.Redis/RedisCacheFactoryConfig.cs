@@ -12,6 +12,8 @@ namespace CacheMeIfYouCan.Redis
         
         public ConfigurationOptions Configuration { get; set; }
 
+        public IRedisConnection Connection { get; set; }
+        
         public int Database { get; set; }
         
         public KeyEvents KeyEventsToSubscribeTo { get; set; }

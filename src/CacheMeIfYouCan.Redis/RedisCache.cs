@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.Redis
 {
     internal class RedisCache<TK, TV> : IDistributedCache<TK, TV>, INotifyKeyChanges<TK>
     {
-        private readonly RedisConnection _connection;
+        private readonly IRedisConnection _connection;
         private readonly int _database;
         private readonly string _keySpacePrefix;
         private readonly Func<string, TK> _keyDeserializer;
@@ -23,7 +23,8 @@ namespace CacheMeIfYouCan.Redis
         private readonly CommandFlags _flags;
 
         public RedisCache(
-            RedisConnection connection,
+            IRedisConnection connection,
+            IRedisSubscriber subscriber,
             string cacheName,
             int database,
             string keySpacePrefix,
@@ -58,6 +59,9 @@ namespace CacheMeIfYouCan.Redis
 
             if (keyEventsToSubscribeTo != KeyEvents.None)
             {
+                if (subscriber == null)
+                    throw new ArgumentNullException(nameof(subscriber));
+                
                 NotifyKeyChangesEnabled = true;
 
                 if (keyEventsToSubscribeTo.HasFlag(KeyEvents.Set))
@@ -65,7 +69,7 @@ namespace CacheMeIfYouCan.Redis
                 
                 _keyChanges = new Subject<Key<TK>>();
 
-                connection.SubscribeToKeyChanges(_database, keyEventsToSubscribeTo, NotifyKeyChanged);
+                subscriber.SubscribeToKeyChanges(_database, keyEventsToSubscribeTo, NotifyKeyChanged);
             }
         }
 

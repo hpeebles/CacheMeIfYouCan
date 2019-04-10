@@ -6,7 +6,7 @@ using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal class RedisConnection
+    public class RedisConnection : IRedisConnection, IRedisSubscriber
     {
         private readonly ConfigurationOptions _configuration;
         private readonly object _lock = new object();
@@ -14,19 +14,52 @@ namespace CacheMeIfYouCan.Redis
         private ILookup<(int, KeyEvents), Action<string, KeyEvents>> _onKeyChangedActions;
         private const string MessagePrefix = "__keyevent@";
 
+        public RedisConnection(string connectionString)
+            : this(ConfigurationOptions.Parse(connectionString))
+        { }
+        
         public RedisConnection(ConfigurationOptions configuration)
         {
             _configuration = configuration;
         }
 
-        public void Connect()
+        public bool Connect()
         {
-            _multiplexer = ConnectionMultiplexer.Connect(_configuration);
+            return _multiplexer?.IsConnected ?? Reset();
         }
 
         public IConnectionMultiplexer Get()
         {
+            if (_multiplexer == null)
+                Connect();
+            
             return _multiplexer;
+        }
+
+        public bool Reset(bool onlyIfDisconnected = true)
+        {
+            if (onlyIfDisconnected && (_multiplexer?.IsConnected ?? false))
+                return true;
+
+            lock (_lock)
+            {
+                if (onlyIfDisconnected && (_multiplexer?.IsConnected ?? false))
+                    return true;
+
+                var oldConnection = _multiplexer;
+                var newConnection = ConnectionMultiplexer.Connect(_configuration);
+                
+                if (newConnection.IsConnected)
+                    RestoreSubscriptions(newConnection);
+                else
+                    newConnection.ConnectionRestored += (sender, args) => RestoreSubscriptions(newConnection);
+
+                Interlocked.Exchange(ref _multiplexer, newConnection);
+
+                oldConnection?.Dispose();
+                
+                return _multiplexer.IsConnected;
+            }
         }
 
         public void SubscribeToKeyChanges(int dbIndex, KeyEvents keyEvents, Action<string, KeyEvents> onKeyChangedAction)
@@ -58,15 +91,27 @@ namespace CacheMeIfYouCan.Redis
                     Interlocked.Exchange(ref _onKeyChangedActions, updated.ToLookup(kv => kv.Key, kv => kv.Value));
 
                     if (startSubscriber)
-                        StartSubscriber(dbIndex, keyEvent);
+                        StartSubscriber_WithinLock(_multiplexer, dbIndex, keyEvent);
                 }
             }
         }
 
-        private void StartSubscriber(int dbIndex, KeyEvents keyEvent)
+        private void RestoreSubscriptions(IConnectionMultiplexer multiplexer)
+        {
+            if (_onKeyChangedActions == null)
+                return;
+
+            lock (_lock)
+            {
+                foreach (var group in _onKeyChangedActions)
+                    StartSubscriber_WithinLock(multiplexer, group.Key.Item1, group.Key.Item2);
+            }
+        }
+
+        private void StartSubscriber_WithinLock(IConnectionMultiplexer multiplexer, int dbIndex, KeyEvents keyEvent)
         {
             // All Redis instances must have keyevent notifications enabled (eg. 'notify-keyspace-events AE')
-            var subscriber = _multiplexer.GetSubscriber();
+            var subscriber = multiplexer.GetSubscriber();
 
             subscriber.Subscribe($"{MessagePrefix}{dbIndex}__:{keyEvent.ToString().ToLower()}", OnKeyChanged);
         }
