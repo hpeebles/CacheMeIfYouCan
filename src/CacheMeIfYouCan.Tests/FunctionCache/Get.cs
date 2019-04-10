@@ -27,22 +27,24 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             var delay = TimeSpan.FromSeconds(seconds);
             
-            Func<string, Task<string>> echo = new Echo();
+            Func<string, Task<string>> echo = new Echo(delay);
             Func<string, Task<string>> cachedEcho;
             using (_setupLock.Enter())
             {
                 cachedEcho = echo
                     .Cached()
-                    .WithDistributedCache(new TestCache<string, string>(x => x, x => x, delay: delay))
                     .OnResult(results.Add)
                     .Build();
             }
 
-            await cachedEcho("abc");
+            await cachedEcho("warmup");
+            
+            results.Clear();
+            
             await cachedEcho("abc");
             
-            Assert.Equal(2, results.Count);
-            Assert.InRange(results[1].Duration.Ticks, delay.Ticks * 0.99, delay.Ticks * 1.2);
+            results.Should().ContainSingle();
+            results[0].Duration.Should().BeCloseTo(delay, TimeSpan.FromMilliseconds(200));
         }
         
         [Fact]

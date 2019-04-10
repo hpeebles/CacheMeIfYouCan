@@ -55,8 +55,8 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 .Select(t => t.Result)
                 .ToList();
             
-            Assert.Equal(1, fetches.Count(f => !f.Results.Single().Duplicate));
-            Assert.True(timings.All(t => t > TimeSpan.FromSeconds(0.5)));
+            fetches.Where(f => !f.Results.Single().Duplicate).Should().ContainSingle();
+            timings.Should().OnlyContain(t => t > TimeSpan.FromSeconds(0.5));
         }
         
         [Theory]
@@ -74,7 +74,6 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedEcho = echo
                     .Cached()
-                    .DisableCache()
                     .OnFetch(fetches.Add)
                     .Build();
             }
@@ -86,7 +85,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("abc");
             
             fetches.Should().ContainSingle();
-            Assert.InRange(fetches[0].Duration.Ticks, duration.Ticks * 0.99, duration.Ticks * 1.1);
+            fetches[0].Duration.Should().BeCloseTo(duration, TimeSpan.FromMilliseconds(200));
         }
         
         [Fact]
@@ -104,6 +103,10 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     .Build();
             }
 
+            await cachedEcho("warmup");
+            
+            fetches.Clear();
+            
             var start = DateTime.UtcNow;
             
             await cachedEcho("abc");
