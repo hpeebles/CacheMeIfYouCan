@@ -29,6 +29,7 @@ namespace CacheMeIfYouCan
         public static async Task<CachedObjectInitializeManyResult> InitializeAll()
         {
             ICachedObjectInitializer[] initializers;
+            var timer = Stopwatch.StartNew();
             
             lock (Lock)
             {
@@ -48,7 +49,7 @@ namespace CacheMeIfYouCan
                 .Select(t => t.Result)
                 .ToArray();
             
-            return new CachedObjectInitializeManyResult(results);
+            return new CachedObjectInitializeManyResult(results, timer.Elapsed);
         }
 
         /// <summary>
@@ -58,6 +59,7 @@ namespace CacheMeIfYouCan
         public static async Task<CachedObjectInitializeManyResult> Initialize<T>()
         {
             List<ICachedObjectInitializer> initializers;
+            var timer = Stopwatch.StartNew();
             
             lock (Lock)
             {
@@ -75,7 +77,7 @@ namespace CacheMeIfYouCan
                 .Select(t => t.Result)
                 .ToArray();
             
-            return new CachedObjectInitializeManyResult(results);
+            return new CachedObjectInitializeManyResult(results, timer.Elapsed);
         }
 
         internal static void Add<T>(ICachedObject<T> cachedObject)

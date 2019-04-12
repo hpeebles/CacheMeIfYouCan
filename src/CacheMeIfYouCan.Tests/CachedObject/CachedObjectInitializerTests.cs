@@ -55,6 +55,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var initializeResults = await CachedObjectInitializer.InitializeAll();
             
             initializeResults.Success.Should().BeTrue();
+            initializeResults.Duration.Should().BeGreaterThan(TimeSpan.Zero).And.BeLessThan(TimeSpan.FromSeconds(2));
 
             var timer = Stopwatch.StartNew();
             
