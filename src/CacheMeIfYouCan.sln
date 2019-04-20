@@ -44,6 +44,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.MessagePack", "Serializers\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj", "{FD2DB373-AD70-452E-AC84-328BBC439AF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks.FunctionCacheComparison", "Benchmarks\Benchmarks.FunctionCacheComparison\Benchmarks.FunctionCacheComparison.csproj", "{7B1701C3-407A-4583-B35A-8DDB76972598}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +128,10 @@ Global
 		{FD2DB373-AD70-452E-AC84-328BBC439AF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD2DB373-AD70-452E-AC84-328BBC439AF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD2DB373-AD70-452E-AC84-328BBC439AF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B1701C3-407A-4583-B35A-8DDB76972598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B1701C3-407A-4583-B35A-8DDB76972598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B1701C3-407A-4583-B35A-8DDB76972598}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B1701C3-407A-4583-B35A-8DDB76972598}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F80A38D2-3656-4ECB-B4A4-FC8CBDC786B4} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
@@ -136,5 +142,6 @@ Global
 		{7A596CE3-E584-4584-B6DB-405E0837C01F} = {E960C4E1-8333-430E-A221-CB7892057324}
 		{411E1AA1-3BAB-4EB8-A9C7-2F1C5B8C978C} = {E960C4E1-8333-430E-A221-CB7892057324}
 		{FD2DB373-AD70-452E-AC84-328BBC439AF0} = {E960C4E1-8333-430E-A221-CB7892057324}
+		{7B1701C3-407A-4583-B35A-8DDB76972598} = {B529B2FD-DBC2-4C96-8BFC-E17EFA1299B5}
 	EndGlobalSection
 EndGlobal
