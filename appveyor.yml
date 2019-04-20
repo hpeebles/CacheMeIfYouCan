@@ -12,11 +12,10 @@ dotnet_csproj:
 environment:
   GitAccessToken:
     secure: dKFXXbtrNHur90Fk0K0s0Z08TDSwAQ8eA0x/1GNp5bdIQly9N3J4o2s6K3io09ob
+  RedisTestEndpoint:
+    secure: QnE1NdfRE6ymk/w9idrTsLNWU5lyqWk6PKF3tZEwIYoTf+jHx6khnTy/2Bhayha6VzwEsbHV6heQKl2/SqE6MQ==
   RedisTestPassword:
     secure: wj5VI/BQkunSJ8RY5/LYrJFg2PfaOeCOLVR5VBi8T/na8iOYimNovMZYO3iL5GG1
-  RedisTestPort: 14456
-hosts:
-  redis-test: 54.246.212.237
 before_build:
 - cmd: nuget restore ./src/CacheMeIfYouCan.sln
 build:
