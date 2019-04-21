@@ -22,7 +22,8 @@ namespace CacheMeIfYouCan.Internal
             Func<TUpdates, Task<CachedObjectUpdateResult<T, TUpdates>>> updateValueFunc)
         {
             _observable
-                .SelectMany(updateValueFunc)
+                .Select(x => Observable.FromAsync(() => updateValueFunc(x)))
+                .Concat()
                 .Retry()
                 .Subscribe(_cts.Token);
         }

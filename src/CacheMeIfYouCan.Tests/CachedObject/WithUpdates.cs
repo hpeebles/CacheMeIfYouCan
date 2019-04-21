@@ -144,6 +144,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         {
             var countdown = new CountdownEvent(10);
             var updatesObservable = new Subject<int>();
+            var error = false;
 
             var currentlyRunningUpdatesCount = 0;
             
@@ -154,10 +155,13 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .ConfigureFor(() => new List<int>())
                     .WithUpdates(updatesObservable, async (curr, next) =>
                     {
-                        if (Interlocked.Increment(ref currentlyRunningUpdatesCount) == 2)
-                            throw new Exception();
+                        if (Interlocked.Increment(ref currentlyRunningUpdatesCount) > 1)
+                        {
+                            error = true;
+                            return curr;
+                        }
 
-                        await Task.Delay(10);
+                        await Task.Delay(20);
 
                         Interlocked.Decrement(ref currentlyRunningUpdatesCount);
                         
@@ -172,7 +176,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             for (var i = 1; i < 10; i++)
                 updatesObservable.OnNext(i);
 
-            countdown.Wait(1000).Should().BeTrue();
+            countdown.Wait(2000).Should().BeTrue();
+            error.Should().BeFalse();
         }
         
         [Fact]
