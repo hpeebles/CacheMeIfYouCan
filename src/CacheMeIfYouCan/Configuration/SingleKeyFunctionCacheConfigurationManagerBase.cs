@@ -41,8 +41,13 @@ namespace CacheMeIfYouCan.Configuration
             if (timeToLiveFactory != null)
                 TimeToLiveFactory = (k, v) => timeToLiveFactory();
         }
+        
+        public TConfig WithTimeToLive(TimeSpan timeToLive)
+        {
+            return WithTimeToLive(timeToLive, 0);
+        }
 
-        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage)
         {
             return WithTimeToLiveFactory((k, v) => timeToLive, jitterPercentage);
         }

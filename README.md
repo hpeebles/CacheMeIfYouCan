@@ -21,6 +21,7 @@ Func<TK, TV> myFunc = ... // Or Func<TK, Task<TV>>
 // Cached copy
 Func<TK, TV> myCachedFunc = myFunc
     .Cached()
+// Configuration options (if any)
     .Build();
 
 // Original interface
@@ -29,6 +30,7 @@ IMyInterface myInterface = ...
 // Cached copy
 IMyInterface myCachedInterface = myInterface
     .Cached()
+// Configuration options (if any)
     .Build();
 ```
 

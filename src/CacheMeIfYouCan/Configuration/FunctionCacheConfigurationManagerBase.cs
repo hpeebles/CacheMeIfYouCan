@@ -119,12 +119,20 @@ namespace CacheMeIfYouCan.Configuration
             }
         }
 
+        /// <summary>
+        /// Sets the name of this function cache. This name will appear on all event notifications and exceptions.
+        /// </summary>
         public TConfig Named(string name)
         {
             Name = name;
             return (TConfig)this;
         }
 
+        /// <summary>
+        /// Overrides the maximum time to live for items set in the local cache. Use this to reduce memory usage locally
+        /// by evicting items after a shorter duration while allowing them to persist longer in the distributed cache.
+        /// This only takes effect if using a two tier caching strategy (local + distributed).
+        /// </summary>
         public TConfig WithLocalCacheTimeToLiveOverride(TimeSpan? timeToLive, double jitterPercentage = 0)
         {
             if (timeToLive.HasValue)
@@ -212,6 +220,10 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
+        /// <summary>
+        /// If set to true, caching will be disabled causing the underlying function to be invoked on each request.
+        /// </summary>
+        /// <param name="disableCache">Whether or not to disable caching</param>
         public TConfig DisableCache(bool disableCache = true)
         {
             IsCacheDisabled |= disableCache;
@@ -224,6 +236,11 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
         
+        /// <summary>
+        /// Causes exceptions that would be thrown back to the caller to be caught (after invoking any OnException
+        /// actions) and the specified default value to be returned instead.
+        /// </summary>
+        /// <param name="defaultValue">The value to return in place of throwing an exception</param>
         public TConfig ContinueOnException(TV defaultValue = default)
         {
             return ContinueOnException(() => defaultValue);
