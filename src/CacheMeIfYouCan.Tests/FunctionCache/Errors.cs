@@ -191,5 +191,53 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await Task.Delay(5);
             }
         }
+
+        [Fact]
+        public async Task ExceptionAddedToOnResultNotification()
+        {
+            var results = new List<FunctionCacheGetResult>();
+
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var key = Guid.NewGuid().ToString();
+            
+            Func<Task<string>> func = () => cachedEcho(key);
+
+            await func.Should().ThrowAsync<Exception>();
+
+            results.Single().Exception.Keys.Should().ContainSingle().Which.Should().Be(key);
+        }
+        
+        [Fact]
+        public async Task ExceptionAddedToOnFetchNotification()
+        {
+            var fetches = new List<FunctionCacheFetchResult>();
+
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => true);
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .OnFetch(fetches.Add)
+                    .Build();
+            }
+
+            var key = Guid.NewGuid().ToString();
+            
+            Func<Task<string>> func = () => cachedEcho(key);
+
+            await func.Should().ThrowAsync<Exception>();
+
+            fetches.Single().Exception.Keys.Should().ContainSingle().Which.Should().Be(key);
+        }
     }
 }

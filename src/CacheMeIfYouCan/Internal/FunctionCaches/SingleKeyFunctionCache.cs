@@ -80,9 +80,10 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 var stopwatchStart = Stopwatch.GetTimestamp();
 
                 var key = new Key<TK>(keyObj, _keySerializer);
-                var error = false;
-
+                
                 FunctionCacheGetResultInner<TK, TV> result = null;
+                FunctionCacheGetException<TK> exception = null;
+                
                 try
                 {
                     token.ThrowIfCancellationRequested();
@@ -120,8 +121,27 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 }
                 catch (Exception ex)
                 {
-                    error = true;
-                    result = HandleError(key, ex);
+                    var message = _continueOnException
+                        ? "Unable to get value. Default being returned"
+                        : "Unable to get value";
+
+                    exception = new FunctionCacheGetException<TK>(
+                        Name,
+                        new[] { key },
+                        message,
+                        ex);
+                    
+                    _onException?.Invoke(exception);
+                    TraceHandlerInternal.Mark(exception);
+
+                    if (!_continueOnException)
+                        throw exception;
+            
+                    var defaultValue = _defaultValueFactory == null
+                        ? default
+                        : _defaultValueFactory();
+            
+                    result = new FunctionCacheGetResultInner<TK, TV>(key, defaultValue, Outcome.Error, null);
                 }
                 finally
                 {
@@ -133,7 +153,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         var functionCacheGetResult = new FunctionCacheGetResult<TK, TV>(
                             Name,
                             new[] { result },
-                            !error,
+                            exception,
                             start,
                             StopwatchHelper.GetDuration(stopwatchStart));
                         
@@ -150,9 +170,10 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            var error = false;
 
             FunctionCacheFetchResultInner<TK, TV> result = null;
+            FunctionCacheFetchException<TK> exception = null;
+            
             try
             {
                 var (fetched, duplicate) = await _fetchHandler.ExecuteAsync(key, token);
@@ -178,7 +199,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 
                 result = new FunctionCacheFetchResultInner<TK, TV>(key, default, false, false, duration);
                 
-                var exception = new FunctionCacheFetchException<TK>(
+                exception = new FunctionCacheFetchException<TK>(
                     Name,
                     new[] { key },
                     "Unable to fetch value",
@@ -187,7 +208,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 _onException?.Invoke(exception);
                 TraceHandlerInternal.Mark(exception);
                 
-                error = true;
                 throw exception;
             }
             finally
@@ -198,7 +218,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     var functionCacheFetchResult = new FunctionCacheFetchResult<TK, TV>(
                         Name,
                         new[] { result },
-                        !error,
+                        exception,
                         start,
                         StopwatchHelper.GetDuration(stopwatchStart));
 
@@ -208,31 +228,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
 
             return result;
-        }
-        
-        private FunctionCacheGetResultInner<TK, TV> HandleError(Key<TK> key, Exception ex)
-        {
-            var message = _continueOnException
-                ? "Unable to get value. Default being returned"
-                : "Unable to get value";
-
-            var exception = new FunctionCacheGetException<TK>(
-                Name,
-                new[] { key },
-                message,
-                ex);
-            
-            _onException?.Invoke(exception);
-            TraceHandlerInternal.Mark(exception);
-
-            if (!_continueOnException)
-                throw exception;
-            
-            var defaultValue = _defaultValueFactory == null
-                ? default
-                : _defaultValueFactory();
-            
-            return new FunctionCacheGetResultInner<TK, TV>(key, defaultValue, Outcome.Error, null);
         }
     }
 }

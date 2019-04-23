@@ -8,20 +8,21 @@ namespace CacheMeIfYouCan.Notifications
         internal FunctionCacheFetchResult(
             string functionName,
             IReadOnlyCollection<IFunctionCacheFetchResultInner> results,
-            bool success,
+            FunctionCacheException exception,
             DateTime start,
             TimeSpan duration)
         {
             FunctionName = functionName;
             Results = results;
-            Success = success;
+            Exception = exception;
             Start = start;
             Duration = duration;
         }
         
         public string FunctionName { get; }
         public IReadOnlyCollection<IFunctionCacheFetchResultInner> Results { get; }
-        public bool Success { get; }
+        public bool Success => Exception == null;
+        public FunctionCacheException Exception { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
     }
@@ -31,15 +32,17 @@ namespace CacheMeIfYouCan.Notifications
         internal FunctionCacheFetchResult(
             string functionName,
             IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> results,
-            bool success,
+            FunctionCacheFetchException<TK> exception,
             DateTime start,
             TimeSpan duration)
-            : base(functionName, results, success, start, duration)
+            : base(functionName, results, exception, start, duration)
         {
             Results = results;
+            Exception = exception;
         }
         
         public new IReadOnlyCollection<FunctionCacheFetchResultInner<TK, TV>> Results { get; }
+        public new FunctionCacheFetchException<TK> Exception { get; }
     }
     
     public interface IFunctionCacheFetchResultInner

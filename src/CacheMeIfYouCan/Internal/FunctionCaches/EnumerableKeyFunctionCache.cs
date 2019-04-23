@@ -108,9 +108,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 .Select(k => new Key<TK>(k, _keySerializer))
                 .ToArray();
 
-            var error = false;
-
-            IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults;
+            IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults = null;
+            FunctionCacheGetException<TK> exception = null;
     
             using (SynchronizationContextRemover.StartNew())
             using (TraceHandlerInternal.Start())
@@ -171,20 +170,41 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    error = true;
-                    return HandleError(keys, ex);
-                }
-                finally
-                {
+                    
 #if NET45
                     readonlyResults = results.Values.ToArray();
 #else
                     readonlyResults = results.Values;
 #endif
+                }
+                catch (Exception ex)
+                {
+                    var message = _continueOnException
+                        ? "Unable to get value(s). Default being returned"
+                        : "Unable to get value(s)";
 
+                    exception = new FunctionCacheGetException<TK>(
+                        Name,
+                        keys,
+                        message,
+                        ex);
+
+                    _onException?.Invoke(exception);
+                    TraceHandlerInternal.Mark(exception);
+
+                    if (!_continueOnException)
+                        throw exception;
+            
+                    var defaultValue = _defaultValueFactory == null
+                        ? default
+                        : _defaultValueFactory();
+            
+                    readonlyResults = keys
+                        .Select(k => new FunctionCacheGetResultInner<TK, TV>(k, defaultValue, Outcome.Error, null))
+                        .ToArray();
+                }
+                finally
+                {
                     Interlocked.Decrement(ref _pendingRequestsCount);
 
                     var notifyResult = _onResult != null || TraceHandlerInternal.Enabled;
@@ -193,7 +213,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         var functionCacheGetResult = new FunctionCacheGetResult<TK, TV>(
                             Name,
                             readonlyResults,
-                            !error,
+                            exception,
                             start,
                             StopwatchHelper.GetDuration(stopwatchStart));
                         
@@ -238,9 +258,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             {
                 var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
-                var error = false;
 
                 var results = new List<FunctionCacheFetchResultInner<TK, TV>>();
+                FunctionCacheFetchException<TK> exception = null;
 
                 try
                 {
@@ -289,7 +309,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         .Except(fetchedKeys)
                         .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
 
-                    var exception = new FunctionCacheFetchException<TK>(
+                    exception = new FunctionCacheFetchException<TK>(
                         Name,
                         batchKeys,
                         "Unable to fetch value(s)",
@@ -298,7 +318,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     _onException?.Invoke(exception);
                     TraceHandlerInternal.Mark(exception);
 
-                    error = true;
                     throw exception;
                 }
                 finally
@@ -309,7 +328,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                         var functionCacheFetchResult = new FunctionCacheFetchResult<TK, TV>(
                             Name,
                             results,
-                            !error,
+                            exception,
                             start,
                             StopwatchHelper.GetDuration(stopwatchStart));
 
@@ -320,33 +339,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                 return results;
             }
-        }
-
-        private IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> HandleError(IList<Key<TK>> keys, Exception ex)
-        {
-            var message = _continueOnException
-                ? "Unable to get value(s). Default being returned"
-                : "Unable to get value(s)";
-
-            var exception = new FunctionCacheGetException<TK>(
-                Name,
-                keys,
-                message,
-                ex);
-            
-            _onException?.Invoke(exception);
-            TraceHandlerInternal.Mark(exception);
-
-            if (!_continueOnException)
-                throw exception;
-            
-            var defaultValue = _defaultValueFactory == null
-                ? default
-                : _defaultValueFactory();
-            
-            return keys
-                .Select(k => new FunctionCacheGetResultInner<TK, TV>(k, defaultValue, Outcome.Error, null))
-                .ToArray();
         }
         
         private static Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertToFuncThatFillsMissingKeys(
