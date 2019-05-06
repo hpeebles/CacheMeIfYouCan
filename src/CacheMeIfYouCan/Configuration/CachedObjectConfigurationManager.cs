@@ -36,15 +36,19 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedObjectConfigurationManager<T, TUpdates> OnUpdate(Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate)
+        public CachedObjectConfigurationManager<T, TUpdates> OnUpdate(
+            Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onUpdate = onUpdate;
+            _onUpdate = ActionsHelper.Combine(_onUpdate, onUpdate, behaviour);
             return this;
         }
 
-        public CachedObjectConfigurationManager<T, TUpdates> OnException(Action<CachedObjectUpdateException> onException)
+        public CachedObjectConfigurationManager<T, TUpdates> OnException(
+            Action<CachedObjectUpdateException> onException,
+            AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onException = onException;
+            _onException = ActionsHelper.Combine(_onException, onException, behaviour);
             return this;
         }
 

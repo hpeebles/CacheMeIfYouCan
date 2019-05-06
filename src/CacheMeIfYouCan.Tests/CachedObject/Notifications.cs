@@ -50,5 +50,33 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .And.BeLessThan(TimeSpan.FromMilliseconds(10));
             }
         }
+        
+        [Fact]
+        public void ActionsCanBeCombined()
+        {
+            var updateResults1 = new List<CachedObjectUpdateResult>();
+            var updateResults2 = new List<CachedObjectUpdateResult>();
+            
+            ICachedObject<DateTime> date;
+            using (_setupLock.Enter(true))
+            {
+                DefaultSettings.CachedObject.OnUpdate(updateResults1.Add);
+                
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .OnUpdate(updateResults2.Add)
+                    .Build();
+
+                DefaultSettings.CachedObject.OnUpdate(null, AdditionBehaviour.Overwrite);
+            }
+
+            date.Initialize();
+
+            date.Dispose();
+            
+            updateResults1.Should().ContainSingle();
+            updateResults2.Should().ContainSingle();
+        }
     }
 }
