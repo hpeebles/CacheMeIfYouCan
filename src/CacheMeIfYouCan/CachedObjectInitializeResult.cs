@@ -3,7 +3,7 @@ using System;
 namespace CacheMeIfYouCan
 {
     /// <summary>
-    /// Represents the result of an attempt to initialize an <see cref="ICachedObject{T}"/> instance
+    /// Represents the result of an attempt to initialize an <see cref="ICachedObject"/> instance
     /// </summary>
     public readonly struct CachedObjectInitializeResult
     {
@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan
         }
         
         /// <summary>
-        /// The name of the <see cref="ICachedObject{T}"/> instance, this can be set using 'Named'
+        /// The name of the <see cref="ICachedObject"/> instance
         /// </summary>
         public string Name { get; }
         
@@ -30,12 +30,12 @@ namespace CacheMeIfYouCan
         public Type CachedObjectType { get; }
         
         /// <summary>
-        /// The outcome of the call to <see cref="ICachedObject{T}.Initialize"/>
+        /// The outcome of the call to <see cref="ICachedObject.Initialize"/>
         /// </summary>
         public CachedObjectInitializeOutcome Outcome { get; }
         
         /// <summary>
-        /// The duration of the call to <see cref="ICachedObject{T}.Initialize"/>
+        /// The duration of the call to <see cref="ICachedObject.Initialize"/>
         /// </summary>
         public TimeSpan Duration { get; }
     }

@@ -4,7 +4,13 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICachedObject<out T> : ICachedObjectInitializer, IDisposable
+    public interface ICachedObject
+    {
+        string Name { get; }
+        Task<CachedObjectInitializeOutcome> Initialize();
+    }
+    
+    public interface ICachedObject<out T> : ICachedObject, IDisposable
     {
         T Value { get; }
         event EventHandler<CachedObjectUpdateExceptionEventArgs> OnException;
@@ -13,12 +19,5 @@ namespace CacheMeIfYouCan
     public interface ICachedObject<T, TUpdates> : ICachedObject<T>
     {
         event EventHandler<CachedObjectUpdateResultEventArgs<T, TUpdates>> OnUpdate;
-    }
-
-    public interface ICachedObjectInitializer
-    {
-        string Name { get; }
-        
-        Task<CachedObjectInitializeOutcome> Initialize();
     }
 }

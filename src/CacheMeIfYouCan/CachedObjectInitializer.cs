@@ -10,36 +10,36 @@ namespace CacheMeIfYouCan
     /// Singleton which holds all of the registered <see cref="ICachedObject{T}"/> instances and exposes the option to
     /// initialize them all.
     /// </summary>
-    /// <remarks>When using <see cref="ICachedObject{T}"/> instances in production it is recommended that you call
+    /// <remarks>When using <see cref="ICachedObject"/> instances in production it is recommended that you call
     /// <see cref="InitializeAll"/> during your service startup</remarks>
     public static class CachedObjectInitializer
     {
-        private static readonly Dictionary<Type, List<ICachedObjectInitializer>> Initializers;
-        private static object Lock = new Object();
+        private static readonly Dictionary<Type, List<ICachedObject>> CachedObjects;
+        private static readonly object Lock = new Object();
 
         static CachedObjectInitializer()
         {
-            Initializers = new Dictionary<Type, List<ICachedObjectInitializer>>();
+            CachedObjects = new Dictionary<Type, List<ICachedObject>>();
         }
         
         /// <summary>
-        /// Initializes all instances of <see cref="ICachedObject{T}"/>
+        /// Initializes all instances of <see cref="ICachedObject"/>
         /// </summary>
         /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
         public static async Task<CachedObjectInitializeManyResult> InitializeAll()
         {
-            ICachedObjectInitializer[] initializers;
+            ICachedObject[] cachedObjects;
             var timer = Stopwatch.StartNew();
             
             lock (Lock)
             {
-                initializers = Initializers
+                cachedObjects = CachedObjects
                     .Values
                     .SelectMany(v => v)
                     .ToArray();
             }
 
-            var tasks = initializers
+            var tasks = cachedObjects
                 .Select(InitializeImpl)
                 .ToArray();
 
@@ -58,16 +58,16 @@ namespace CacheMeIfYouCan
         /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
         public static async Task<CachedObjectInitializeManyResult> Initialize<T>()
         {
-            List<ICachedObjectInitializer> initializers;
+            List<ICachedObject> cachedObjects;
             var timer = Stopwatch.StartNew();
             
             lock (Lock)
             {
-                if (!Initializers.TryGetValue(typeof(T), out initializers))
+                if (!CachedObjects.TryGetValue(typeof(T), out cachedObjects))
                     return new CachedObjectInitializeManyResult();
             }
 
-            var tasks = initializers
+            var tasks = cachedObjects
                 .Select(InitializeImpl)
                 .ToArray();
 
@@ -86,11 +86,11 @@ namespace CacheMeIfYouCan
             
             lock (Lock)
             {
-                if (!Initializers.TryGetValue(type, out var list))
+                if (!CachedObjects.TryGetValue(type, out var list))
                 {
-                    list = new List<ICachedObjectInitializer>();
+                    list = new List<ICachedObject>();
                     
-                    Initializers.Add(type, list);
+                    CachedObjects.Add(type, list);
                 }
                 
                 list.Add(cachedObject);
@@ -103,17 +103,17 @@ namespace CacheMeIfYouCan
 
             lock (Lock)
             {
-                if (!Initializers.TryGetValue(type, out var list))
+                if (!CachedObjects.TryGetValue(type, out var list))
                     return;
 
                 list.RemoveAll(x => ReferenceEquals(x, cachedObject));
 
                 if (!list.Any())
-                    Initializers.Remove(type);
+                    CachedObjects.Remove(type);
             }
         }
 
-        private static async Task<CachedObjectInitializeResult> InitializeImpl(ICachedObjectInitializer cachedObject)
+        private static async Task<CachedObjectInitializeResult> InitializeImpl(ICachedObject cachedObject)
         {
             var timer = Stopwatch.StartNew();
 
