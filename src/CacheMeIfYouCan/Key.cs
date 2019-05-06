@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan
 
         public string AsStringSafe => _canSerialize ? _asString.Value : AsObject.ToString();
 
-        public static implicit operator TK(Key<TK> key)
+        public static implicit operator TK(in Key<TK> key)
         {
             return key.AsObject;
         }
