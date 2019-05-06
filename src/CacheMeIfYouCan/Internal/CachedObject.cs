@@ -6,7 +6,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal class CachedObject<T, TUpdates> : ICachedObject<T>
+    internal class CachedObject<T, TUpdates> : ICachedObject<T, TUpdates>
     {
         private readonly Func<Task<T>> _initialiseValueFunc;
         private readonly Func<T, TUpdates, Task<T>> _updateValueFunc;
@@ -21,7 +21,9 @@ namespace CacheMeIfYouCan.Internal
         private DateTime _lastSuccessfulUpdate;
         private T _value;
         private int _state;
-
+        public event EventHandler<CachedObjectUpdateResultEventArgs<T, TUpdates>> OnUpdate;
+        public event EventHandler<CachedObjectUpdateExceptionEventArgs> OnException;
+        
         public CachedObject(
             Func<Task<T>> initialiseValueFunc,
             Func<T, TUpdates, Task<T>> updateValueFunc,
@@ -137,6 +139,7 @@ namespace CacheMeIfYouCan.Internal
                 newValue = default;
                 
                 _onException?.Invoke(updateException);
+                OnException?.Invoke(this, new CachedObjectUpdateExceptionEventArgs(updateException));
             }
             
             var result = new CachedObjectUpdateResult<T, TUpdates>(
@@ -154,7 +157,8 @@ namespace CacheMeIfYouCan.Internal
             _lastUpdateAttempt = DateTime.UtcNow;
             
             _onUpdate?.Invoke(result);
-            
+            OnUpdate?.Invoke(this, new CachedObjectUpdateResultEventArgs<T, TUpdates>(result));
+
             if (updateException == null)
                 _lastSuccessfulUpdate = DateTime.UtcNow;
 

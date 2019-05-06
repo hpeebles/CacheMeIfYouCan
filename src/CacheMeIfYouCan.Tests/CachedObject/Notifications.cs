@@ -78,5 +78,53 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             updateResults1.Should().ContainSingle();
             updateResults2.Should().ContainSingle();
         }
+        
+        [Fact]
+        public void OnUpdateEvent()
+        {
+            var updateResults = new List<CachedObjectUpdateResult>();
+            
+            ICachedObject<DateTime, Unit> date;
+            using (_setupLock.Enter())
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
+
+            date.OnUpdate += (sender, args) => updateResults.Add(args.Result);
+            
+            date.Initialize();
+
+            date.Dispose();
+            
+            updateResults.Should().ContainSingle();
+        }
+        
+        [Fact]
+        public void OnExceptionEvent()
+        {
+            var exceptions = new List<CachedObjectUpdateException>();
+            
+            ICachedObject<DateTime, Unit> date;
+            using (_setupLock.Enter())
+            {
+                date = CachedObjectFactory
+                    .ConfigureFor(Throw)
+                    .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                    .Build();
+            }
+
+            date.OnException += (sender, args) => exceptions.Add(args.Exception);
+            
+            date.Initialize();
+
+            date.Dispose();
+            
+            exceptions.Should().ContainSingle();
+
+            DateTime Throw() => throw new Exception();
+        }
     }
 }

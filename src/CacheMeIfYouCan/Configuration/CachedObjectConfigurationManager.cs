@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public ICachedObject<T> Build()
+        public ICachedObject<T, TUpdates> Build()
         {
             var name = _name ?? $"{nameof(CachedObject<T, TUpdates>)}_{typeof(T).Name}";
             
