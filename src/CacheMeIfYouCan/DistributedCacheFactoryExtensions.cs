@@ -219,12 +219,17 @@ namespace CacheMeIfYouCan
         /// await the original rather than sending the duplicate
         /// </summary>
         /// <param name="cacheFactory">The cache factory being configured</param>
+        /// <param name="catchDuplicateRequests">Whether or not to catch duplicate requests</param>
         /// <param name="behaviour">How to add the wrapper which catches the duplicate requests to the existing list of wrapperFactories</param>
         /// <returns></returns>
         public static IDistributedCacheFactory CatchDuplicateRequests(
             this IDistributedCacheFactory cacheFactory,
+            bool catchDuplicateRequests = true,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
+            if (!catchDuplicateRequests)
+                return cacheFactory;
+            
             return cacheFactory
                 .AsFactory()
                 .WithWrapper(new DistributedCacheDuplicateRequestCatchingWrapperFactory(), behaviour);
