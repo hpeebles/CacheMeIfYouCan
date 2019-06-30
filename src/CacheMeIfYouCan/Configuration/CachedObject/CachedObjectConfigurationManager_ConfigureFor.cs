@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
                 new CachedObjectRegularIntervalWithJitterScheduler<T>(refreshIntervalFunc, 0));
         }
         
-        public CachedObjectConfigurationManager<T, Unit> RefreshOn<TAny>(IObservable<TAny> observable)
+        public CachedObjectConfigurationManager<T, Unit> RefreshOnEach<TAny>(IObservable<TAny> observable)
         {
             return new CachedObjectConfigurationManager<T, Unit>(
                 _initialiseValueFunc,
