@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
         private DateTime _lastUpdateAttempt;
         private DateTime _lastSuccessfulUpdate;
         private T _value;
-        private int _state;
+        private volatile CachedObjectState _state;
         public event EventHandler<CachedObjectUpdateResultEventArgs<T, TUpdates>> OnUpdate;
         public event EventHandler<CachedObjectUpdateExceptionEventArgs> OnException;
         
@@ -40,21 +40,24 @@ namespace CacheMeIfYouCan.Internal
             _onException = onException;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
+            _state = CachedObjectState.PendingInitialization;
         }
         
         public string Name { get; }
+        public CachedObjectState State => _state;
 
         public T Value
         {
             get
             {
-                if (_state == 1)
+                if (_state == CachedObjectState.Ready)
                     return _value;
                 
-                if (_state == 0)
+                if (_state == CachedObjectState.PendingInitialization ||
+                    _state == CachedObjectState.InitializationInProgress)
                     Task.Run(Initialize).GetAwaiter().GetResult();
                 
-                if (_state == 2)
+                if (_state == CachedObjectState.Disposed)
                     throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
                 
                 return _value;
@@ -63,13 +66,14 @@ namespace CacheMeIfYouCan.Internal
 
         public async Task<CachedObjectInitializeOutcome> Initialize()
         {
-            if (_state == 0)
+            if (_state == CachedObjectState.PendingInitialization ||
+                _state == CachedObjectState.InitializationInProgress)
             {
                 await _semaphore.WaitAsync();
 
                 try
                 {
-                    if (_state == 0)
+                    if (_state == CachedObjectState.PendingInitialization)
                         await InitializeWithinLock();
                 }
                 finally
@@ -80,10 +84,10 @@ namespace CacheMeIfYouCan.Internal
 
             switch (_state)
             {
-                case 1:
+                case CachedObjectState.Ready:
                     return CachedObjectInitializeOutcome.Success;
                 
-                case 2:
+                case CachedObjectState.Disposed:
                     return CachedObjectInitializeOutcome.Disposed;
 
                 default:
@@ -92,14 +96,27 @@ namespace CacheMeIfYouCan.Internal
 
             async Task InitializeWithinLock()
             {
-                var result = await UpdateValueImpl((_, __) => _initialiseValueFunc(), default);
+                _state = CachedObjectState.InitializationInProgress;
 
-                if (!result.Success)
-                    return;
+                try
+                {
+                    var result = await UpdateValueImpl((_, __) => _initialiseValueFunc(), default);
 
-                _updateScheduler?.Start(result, UpdateValue);
-                
-                Interlocked.Exchange(ref _state, 1);
+                    if (!result.Success)
+                    {
+                        _state = CachedObjectState.PendingInitialization;
+                        return;
+                    }
+
+                    _updateScheduler?.Start(result, UpdateValue);
+
+                    _state = CachedObjectState.Ready;
+                }
+                catch
+                {
+                    _state = CachedObjectState.PendingInitialization;
+                    throw;
+                }
             }
         }
 
@@ -110,7 +127,7 @@ namespace CacheMeIfYouCan.Internal
 
         public void Dispose()
         {
-            Interlocked.Exchange(ref _state, 2);
+            _state = CachedObjectState.Disposed;
             CachedObjectInitializer.Remove(this);
             _cts.Cancel();
             _cts.Dispose();
@@ -118,7 +135,7 @@ namespace CacheMeIfYouCan.Internal
         
         private async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValueImpl(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates)
         {
-            if (_state == 2)
+            if (_state == CachedObjectState.Disposed)
                 throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
 
             var start = DateTime.UtcNow;

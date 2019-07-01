@@ -7,6 +7,7 @@ namespace CacheMeIfYouCan
     public interface ICachedObject
     {
         string Name { get; }
+        CachedObjectState State { get; }
         Task<CachedObjectInitializeOutcome> Initialize();
     }
     
