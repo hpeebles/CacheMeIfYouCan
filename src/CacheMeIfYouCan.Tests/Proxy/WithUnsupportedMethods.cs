@@ -11,6 +11,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
         public WithUnsupportedMethods(CacheSetupLock setupLock)
         {
+            DefaultSettings.Cache.AllowInterfacesWithUnsupportedMethods();
+            
             _setupLock = setupLock;
         }
 
@@ -19,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [InlineData(false)]
         public void ThrowsIfNotAllowedInDefaultSettings(bool allowed)
         {
-            ITest impl = new TestImpl();
+            ITestWithUnsupportedMethods impl = new TestImpl();
             using (_setupLock.Enter(true))
             {
                 DefaultSettings.Cache.AllowInterfacesWithUnsupportedMethods(allowed);
@@ -40,8 +42,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public void UnsupportedFuncSucceeds()
         {
-            ITest impl = new TestImpl();
-            ITest proxy;
+            ITestWithUnsupportedMethods impl = new TestImpl();
+            ITestWithUnsupportedMethods proxy;
             using (_setupLock.Enter())
             {
                 proxy = impl
@@ -55,8 +57,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public void UnsupportedActionSucceeds()
         {
-            ITest impl = new TestImpl();
-            ITest proxy;
+            ITestWithUnsupportedMethods impl = new TestImpl();
+            ITestWithUnsupportedMethods proxy;
             using (_setupLock.Enter())
             {
                 proxy = impl
@@ -70,8 +72,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
         [Fact]
         public void UnsupportedPropertySucceeds()
         {
-            ITest impl = new TestImpl();
-            ITest proxy;
+            ITestWithUnsupportedMethods impl = new TestImpl();
+            ITestWithUnsupportedMethods proxy;
             using (_setupLock.Enter())
             {
                 proxy = impl

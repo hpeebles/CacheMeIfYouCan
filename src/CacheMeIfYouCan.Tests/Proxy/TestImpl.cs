@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Tests.Proxy
 {
-    public class TestImpl : ITest
+    public class TestImpl : ITestWithUnsupportedMethods
     {
         private readonly TimeSpan? _delay;
 

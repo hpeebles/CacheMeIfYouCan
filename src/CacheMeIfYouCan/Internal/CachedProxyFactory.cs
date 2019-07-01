@@ -66,11 +66,12 @@ namespace CacheMeIfYouCan.Internal
             ctorGen.Emit(OpCodes.Stfld, implField);
             
             ctorGen.Emit(OpCodes.Ldtoken, interfaceType);
-            ctorGen.Emit(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
-            ctorGen.Emit(OpCodes.Call, typeof(Type).GetMethod("GetMethods", new Type[0]));
+            ctorGen.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
+            ctorGen.Emit(OpCodes.Call, typeof(InterfaceMethodsResolver).GetMethod(nameof(InterfaceMethodsResolver.GetAllMethods), new[] { typeof(Type) }));
             ctorGen.Emit(OpCodes.Stloc_0);
 
-            var methods = interfaceType.GetMethods();
+            var methods = InterfaceMethodsResolver.GetAllMethods(interfaceType);
+            
             var propertyBuilders = new Dictionary<string, PropertyBuilder>();
 
             for (var index = 0; index < methods.Length; index++)

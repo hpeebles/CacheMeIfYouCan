@@ -9,9 +9,9 @@ using CacheMeIfYouCan.Internal;
 namespace CacheMeIfYouCan.Tests.Proxy
 {
     // Leave this class as a template for generating the IL within CachedProxyFactory
-    internal class SampleProxyILTemplate : ITest
+    internal class SampleProxyILTemplate : ITestWithUnsupportedMethods
     {
-        private readonly ITest _impl;
+        private readonly ITestWithUnsupportedMethods _impl;
         private readonly Func<string, Task<string>> _stringToString_0;
         private readonly Func<int, Task<string>> _intToString_1;
         private readonly Func<long, Task<int>> _longToInt_2;
@@ -29,11 +29,11 @@ namespace CacheMeIfYouCan.Tests.Proxy
         private readonly Func<string, int, CancellationToken, Task<string>> _multiParamEchoCanx_14;
         private readonly Func<string, IEnumerable<int>, CancellationToken, Task<IDictionary<int, string>>> _multiParamEnumerableKeyCanx_15;
         
-        public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
+        public SampleProxyILTemplate(ITestWithUnsupportedMethods impl, CachedProxyConfig config)
         {
             _impl = impl;
             
-            var methods = typeof(ITest).GetMethods();
+            var methods = InterfaceMethodsResolver.GetAllMethods(typeof(ITestWithUnsupportedMethods));
             
             _stringToString_0 = new SingleKeyFunctionCacheConfigurationManagerNoCanx<string, string>(
                 impl.StringToString, config, methods[0]).Build();
