@@ -29,6 +29,7 @@ namespace CacheMeIfYouCan.Configuration
         internal KeySerializers KeySerializers { get; } = new KeySerializers();
         internal ValueSerializers ValueSerializers { get; } = new ValueSerializers();
         internal EqualityComparers KeyComparers { get; } = new EqualityComparers();
+        internal bool InterfacesWithUnsupportedMethodsAllowed { get; set; }
         
         internal Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory local, IDistributedCacheFactory distributed)> CacheFactoryPresets { get; }
             = new Dictionary<CacheFactoryPresetKey, (ILocalCacheFactory, IDistributedCacheFactory)>();
@@ -179,6 +180,12 @@ namespace CacheMeIfYouCan.Configuration
         public DefaultCacheConfiguration WithKeyComparer<T>(IEqualityComparer<T> comparer)
         {
             KeyComparers.Set(comparer);
+            return this;
+        }
+
+        public DefaultCacheConfiguration AllowInterfacesWithUnsupportedMethods(bool allow = true)
+        {
+            InterfacesWithUnsupportedMethodsAllowed = allow;
             return this;
         }
         

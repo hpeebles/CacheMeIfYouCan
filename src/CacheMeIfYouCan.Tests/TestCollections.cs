@@ -23,6 +23,14 @@ namespace CacheMeIfYouCan.Tests
     { }
     
     [CollectionDefinition(TestCollections.Proxy)]
-    public class ProxyCollection : ICollectionFixture<CacheSetupLock>
+    public class ProxyCollection : ICollectionFixture<CacheSetupLock>, ICollectionFixture<DefaultProxySettings>
     { }
+
+    public class DefaultProxySettings
+    {
+        public DefaultProxySettings()
+        {
+            DefaultSettings.Cache.AllowInterfacesWithUnsupportedMethods();
+        }
+    }
 }

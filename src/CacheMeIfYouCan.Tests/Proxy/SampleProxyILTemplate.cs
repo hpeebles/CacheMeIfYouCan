@@ -11,6 +11,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
     // Leave this class as a template for generating the IL within CachedProxyFactory
     internal class SampleProxyILTemplate : ITest
     {
+        private readonly ITest _impl;
         private readonly Func<string, Task<string>> _stringToString_0;
         private readonly Func<int, Task<string>> _intToString_1;
         private readonly Func<long, Task<int>> _longToInt_2;
@@ -30,6 +31,8 @@ namespace CacheMeIfYouCan.Tests.Proxy
         
         public SampleProxyILTemplate(ITest impl, CachedProxyConfig config)
         {
+            _impl = impl;
+            
             var methods = typeof(ITest).GetMethods();
             
             _stringToString_0 = new SingleKeyFunctionCacheConfigurationManagerNoCanx<string, string>(
@@ -159,6 +162,22 @@ namespace CacheMeIfYouCan.Tests.Proxy
         public Task<IDictionary<int, string>> MultiParamEnumerableKeyCanx(string outerKey, IEnumerable<int> innerKeys, CancellationToken token)
         {
             return _multiParamEnumerableKeyCanx_15(outerKey, innerKeys, token);
+        }
+
+        public string UnsupportedFunc(int a, int b, int c, int d, int e)
+        {
+            return _impl.UnsupportedFunc(a, b, c, d, e);
+        }
+
+        public void UnsupportedAction(int a)
+        {
+            _impl.UnsupportedAction(a);
+        }
+
+        public int UnsupportedProperty
+        {
+            get => _impl.UnsupportedProperty;
+            set => _impl.UnsupportedProperty = value;
         }
     }
 }

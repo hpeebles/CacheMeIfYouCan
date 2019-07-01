@@ -155,5 +155,18 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             return innerKeys.ToDictionary(k => k, k => outerKey + k);
         }
+
+        public string UnsupportedFunc(int a, int b, int c, int d, int e)
+        {
+            return $"{a}_{b}_{c}_{d}_{e}";
+        }
+
+        public void UnsupportedAction(int a)
+        {
+            if (a == 123)
+                throw new Exception();
+        }
+        
+        public int UnsupportedProperty { get; set; }
     }
 }

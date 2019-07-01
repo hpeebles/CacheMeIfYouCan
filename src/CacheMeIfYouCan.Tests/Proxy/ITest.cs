@@ -38,5 +38,11 @@ namespace CacheMeIfYouCan.Tests.Proxy
         Task<string> MultiParamEchoCanx(string key1, int key2, CancellationToken token);
         
         Task<IDictionary<int, string>> MultiParamEnumerableKeyCanx(string outerKey, IEnumerable<int> innerKeys, CancellationToken token);
+
+        string UnsupportedFunc(int a, int b, int c, int d, int e);
+
+        void UnsupportedAction(int a);
+        
+        int UnsupportedProperty { get; set; }
     }
 }
