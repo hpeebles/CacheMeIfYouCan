@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
     {
         private readonly Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> _func;
         private readonly IEqualityComparer<TK2> _keyComparer;
+        private static readonly IDictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>> EmptyDictionary =
+            new ReadOnlyDictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>>(new Dictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>>());
 
         public DisabledDuplicateTaskCatcherCombinedMulti(
             Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> func,
@@ -24,22 +27,22 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             ICollection<TK2> innerKeys,
             CancellationToken token)
         {
-            var results = new Dictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>>(innerKeys.Count, _keyComparer);
-            
             var values = await _func(outerKey, innerKeys, token);
-            
-            if (values != null)
-            {
-                var stopwatchTimestamp = Stopwatch.GetTimestamp();
+
+            if (values == null || values.Count == 0)
+                return EmptyDictionary;
                 
-                foreach (var kv in values)
-                {
-                    results[kv.Key] = new DuplicateTaskCatcherMultiResult<TK2, TV>(
-                        kv.Key,
-                        kv.Value,
-                        false,
-                        stopwatchTimestamp);
-                }
+            var results = new Dictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>>(innerKeys.Count, _keyComparer);
+
+            var stopwatchTimestamp = Stopwatch.GetTimestamp();
+
+            foreach (var kv in values)
+            {
+                results[kv.Key] = new DuplicateTaskCatcherMultiResult<TK2, TV>(
+                    kv.Key,
+                    kv.Value,
+                    false,
+                    stopwatchTimestamp);
             }
 
             return results;
