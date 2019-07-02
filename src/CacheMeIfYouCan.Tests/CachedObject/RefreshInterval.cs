@@ -55,8 +55,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task JitterCausesRefreshIntervalsToFluctuate()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
-            var countdown = new CountdownEvent(15);
+            var intervals = new List<TimeSpan>();
+            var shortIntervalEvent = new ManualResetEventSlim();
+            var longIntervalEvent = new ManualResetEventSlim();
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -67,23 +68,29 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .WithJitter(50)
                     .OnUpdate(r =>
                     {
-                        refreshResults.Add(r);
-                        countdown.Signal();
+                        if (r.UpdateAttemptCount == 1)
+                            return;
+                        
+                        var interval = r.Start - r.LastUpdateAttempt;
+                        if (interval < TimeSpan.FromMilliseconds(900))
+                            shortIntervalEvent.Set();
+                        else if (interval > TimeSpan.FromMilliseconds(1200))
+                            longIntervalEvent.Set();
+                        
+                        intervals.Add(interval);
                     })
                     .Build();
             }
 
             await date.Initialize();
 
-            countdown.Wait(TimeSpan.FromMinutes(1));
-            
-            date.Dispose();
-            
-            var min = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Min();
-            var max = refreshResults.Skip(1).Select(r => r.Start - r.LastUpdateAttempt).Max();
-            
-            min.Should().BeGreaterThan(TimeSpan.FromMilliseconds(500)).And.BeLessThan(TimeSpan.FromMilliseconds(900));
-            max.Should().BeGreaterThan(TimeSpan.FromMilliseconds(1200));
+            WaitHandle
+                .WaitAll(new[] { shortIntervalEvent.WaitHandle, longIntervalEvent.WaitHandle }, TimeSpan.FromMinutes(1))
+                .Should()
+                .BeTrue();
+
+            intervals.Min().Should().BeGreaterThan(TimeSpan.FromMilliseconds(500));
+            intervals.Max().Should().BeLessThan(TimeSpan.FromMilliseconds(2000));
         }
 
         [Fact]
