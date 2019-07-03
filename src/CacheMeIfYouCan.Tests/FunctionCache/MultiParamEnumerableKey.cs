@@ -548,5 +548,29 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             fetches.Should().HaveCountGreaterThan(21).And.HaveCountLessThan(41);
         }
+
+        [Fact]
+        public async Task WhenCacheIsDisabled_Succeeds()
+        {
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<string, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .DisableCache()
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(1, 10).Select(i => i.ToString()).ToArray();
+            
+            var results = await cachedFunc("123", keys);
+
+            results.Should().ContainKeys(keys);
+        }
     }
 }

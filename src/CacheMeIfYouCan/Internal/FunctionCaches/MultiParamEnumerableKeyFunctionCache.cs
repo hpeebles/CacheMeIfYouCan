@@ -107,7 +107,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (_cache == null)
             {
                 _setInCachePredicate = x => false;
-                _valuesToSetInCacheListFactory = null;
+                _valuesToSetInCacheListFactory = count => null;
             }
             // If skipCacheSetPredicate is null, setInCachePredicate should only exclude duplicates. Given that in the
             // vast majority of cases duplicates will be rare we should initialize the list with enough capacity to
