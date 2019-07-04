@@ -8,6 +8,13 @@ namespace CacheMeIfYouCan.Internal
     {
         public static MethodInfo[] GetAllMethods(Type interfaceType)
         {
+            return GetAllMethodsUnordered(interfaceType)
+                .OrderBy(MethodInfoToStringInjective)
+                .ToArray();
+        }
+
+        private static MethodInfo[] GetAllMethodsUnordered(Type interfaceType)
+        {
             if (!interfaceType.IsInterface)
                 throw new Exception($"Type must be an interface - '{interfaceType.FullName}'");
             
@@ -19,6 +26,20 @@ namespace CacheMeIfYouCan.Internal
             return interfaceType.GetMethods()
                 .Concat(implementedInterfaces.SelectMany(i => i.GetMethods()))
                 .ToArray();
+        }
+
+        private static string MethodInfoToStringInjective(MethodInfo methodInfo)
+        {
+            var parameterTypesString = String.Join(
+                "_",
+                methodInfo.GetParameters().Select(p => GetTypeString(p.ParameterType)));
+
+            return $"{methodInfo.Name}|{parameterTypesString}";
+
+            string GetTypeString(Type type)
+            {
+                return $"{type.FullName}_{type.Assembly}";
+            }
         }
     }
 }
