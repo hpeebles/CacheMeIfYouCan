@@ -26,10 +26,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Func<TK1, int> _maxFetchBatchSizeFunc;
         private readonly BatchBehaviour _batchBehaviour;
         private readonly IDuplicateTaskCatcherCombinedMulti<TK1, TK2, TV> _fetchHandler;
-        private readonly Func<Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
+        private readonly Func<TK1, Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> _keysToGetFromCacheFunc;
         private readonly Func<(TK1, TK2), bool> _skipCacheSetPredicate;
+        private readonly Func<TK1, bool> _skipCacheSetPredicateOuterKeyOnly;
         private readonly Func<int, List<KeyValuePair<Key<(TK1, TK2)>, TV>>> _valuesToSetInCacheListFactory;
         private readonly Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> _setInCachePredicate;
+        private readonly Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> _alwaysFalseSetInCachePredicate = k => false;
+        private readonly Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> _skipDuplicatesSetInCachePredicate = k => !k.Duplicate;
+        private readonly Key<(TK1, TK2)>[] _emptyKeyArray = new Key<(TK1, TK2)>[0];
         private int _pendingRequestsCount;
         private bool _disposed;
         
@@ -52,6 +56,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             BatchBehaviour batchBehaviour,
             Func<(TK1, TK2), bool> skipCacheGetPredicate,
             Func<(TK1, TK2), bool> skipCacheSetPredicate,
+            Func<TK1, bool> skipCacheGetPredicateOuterKeyOnly,
+            Func<TK1, bool> skipCacheSetPredicateOuterKeyOnly,
             Func<(TK1, TK2), TV> negativeCachingValueFactory)
         {
             Name = functionName;
@@ -89,12 +95,10 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     innerKeyComparer.Inner);
             }
 
-            if (skipCacheGetPredicate == null)
-                _keysToGetFromCacheFunc = keys => keys;
-            else
-                _keysToGetFromCacheFunc = keys => keys.Where(k => !skipCacheGetPredicate(k)).ToArray();
+            _keysToGetFromCacheFunc = SetupKeysToGetFromCacheFunc(skipCacheGetPredicate, skipCacheGetPredicateOuterKeyOnly);
 
             _skipCacheSetPredicate = skipCacheSetPredicate;
+            _skipCacheSetPredicateOuterKeyOnly = skipCacheSetPredicateOuterKeyOnly;
 
             // ----------------------------------------
             // The following section is a micro optimization...
@@ -109,16 +113,17 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 _setInCachePredicate = x => false;
                 _valuesToSetInCacheListFactory = count => null;
             }
-            // If skipCacheSetPredicate is null, setInCachePredicate should only exclude duplicates. Given that in the
-            // vast majority of cases duplicates will be rare we should initialize the list with enough capacity to
-            // store all of the fetched values.
-            else if (skipCacheSetPredicate == null)
+            // If skipCacheSetPredicate and skipCacheSetPredicateOuterKeyOnly are both null, setInCachePredicate should
+            // only exclude duplicates. Given that in the vast majority of cases duplicates will be rare we should
+            // initialize the list with enough capacity to store all of the fetched values.
+            else if (skipCacheSetPredicate == null && _skipCacheSetPredicateOuterKeyOnly == null)
             {
                 _setInCachePredicate = x => !x.Duplicate;
                 _valuesToSetInCacheListFactory = count => new List<KeyValuePair<Key<(TK1, TK2)>, TV>>(count);
             }
-            // If skipCacheSetPredicate is not null, initialize valuesToSetInCache using the default list constructor.
-            // Also, we must build a new version of setInCachePredicate each time
+            // If at least one of skipCacheSetPredicate and skipCacheSetPredicateOuterKeyOnly are not null, initialize
+            // valuesToSetInCache using the default list constructor. Also, we must build a new version of
+            // setInCachePredicate each time.
             else
             {
                 _valuesToSetInCacheListFactory = count => new List<KeyValuePair<Key<(TK1, TK2)>, TV>>();
@@ -176,7 +181,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     Key<(TK1, TK2)>[] missingKeys = null;
                     if (_cache != null)
                     {
-                        var keysToGet = _keysToGetFromCacheFunc(keys);
+                        var keysToGet = _keysToGetFromCacheFunc(outerKey, keys);
 
                         if (keysToGet.Any())
                         {
@@ -440,7 +445,41 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
         private Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> BuildSetInCachePredicate(TK1 outerKey)
         {
-            return k => !k.Duplicate && !_skipCacheSetPredicate((outerKey, k.Key));
+            if (_skipCacheSetPredicateOuterKeyOnly != null && _skipCacheSetPredicateOuterKeyOnly(outerKey))
+                return _alwaysFalseSetInCachePredicate;
+            
+            if (_skipCacheSetPredicate != null)
+                return k => !k.Duplicate && !_skipCacheSetPredicate((outerKey, k.Key));
+
+            return _skipDuplicatesSetInCachePredicate;
+        }
+
+        private Func<TK1, Key<(TK1, TK2)>[], Key<(TK1, TK2)>[]> SetupKeysToGetFromCacheFunc(
+            Func<(TK1, TK2), bool> skipCacheGetPredicate,
+            Func<TK1, bool> skipCacheGetPredicateOuterKeyOnly)
+        {
+            if (skipCacheGetPredicate != null && skipCacheGetPredicateOuterKeyOnly != null)
+            {
+                return (outerKey, innerKeys) => skipCacheGetPredicateOuterKeyOnly(outerKey)
+                    ? _emptyKeyArray
+                    : innerKeys.Where(k => !skipCacheGetPredicate(k)).ToArray();
+            }
+            
+            if (skipCacheGetPredicateOuterKeyOnly != null)
+            {
+                return (outerKey, innerKeys) => skipCacheGetPredicateOuterKeyOnly(outerKey)
+                    ? _emptyKeyArray
+                    : innerKeys;
+            }
+            
+            if (skipCacheGetPredicate != null)
+            {
+                return (outerKey, innerKeys) => innerKeys
+                    .Where(k => !skipCacheGetPredicate(k))
+                    .ToArray();
+            }
+
+            return (outerKey, innerKeys) => innerKeys;
         }
 
         private static Func<TK1, ICollection<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> ConvertIntoNegativeCachingFunc(

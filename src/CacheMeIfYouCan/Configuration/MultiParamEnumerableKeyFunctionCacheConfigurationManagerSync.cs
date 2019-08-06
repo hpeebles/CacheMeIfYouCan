@@ -104,6 +104,11 @@ namespace CacheMeIfYouCan.Configuration
             return base.SkipCacheWhen(x => predicate(x.Item1, x.Item2), settings);
         }
 
+        public new TConfig SkipCacheWhen(Func<TKOuter, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate, settings);
+        }
+
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
@@ -349,6 +354,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKInner, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             return base.SkipCacheWhen(x => predicate(x.Item1.Item1, x.Item1.Item2, x.Item2), settings);
+        }
+
+        public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
         }
 
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
@@ -611,6 +621,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             return base.SkipCacheWhen(x => predicate(x.Item1.Item1, x.Item1.Item2, x.Item1.Item3, x.Item2), settings);
+        }
+
+        public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
         }
 
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)

@@ -253,6 +253,82 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             cache.Values.Keys.Should().BeEquivalentTo(innerKeys.Where(k => k != 1).Select(k => (outerKey, k)));
         }
+        
+        [Fact]
+        public async Task MultiParamEnumerableKeySkipGetOuterKeyOnly()
+        {
+            var results = new List<FunctionCacheGetResult<(int, int), int>>();
+            var cache = new TestLocalCache<(int, int), int>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen(k1 => k1 == 1, SkipCacheSettings.SkipGet)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            for (var outerKey = 0; outerKey < 5; outerKey++)
+            {
+                var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+                await cachedFunc(outerKey, innerKeys);
+
+                results.Should().ContainSingle();
+                cache.Values.Should().ContainKeys(innerKeys.Select(i => (outerKey, i)).ToArray());
+
+                await cachedFunc(outerKey, innerKeys);
+
+                results.Should().HaveCount(2);
+
+                foreach (var x in results.Last().Results)
+                    x.Outcome.Should().Be(outerKey == 1 ? Outcome.Fetch : Outcome.FromCache);
+
+                results.Clear();
+            }
+        }
+        
+        [Fact]
+        public async Task MultiParamEnumerableKeySkipSetOuterKeyOnly()
+        {
+            var cache = new TestLocalCache<(int, int), int>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen(k1 => k1 == 1, SkipCacheSettings.SkipSet)
+                    .Build();
+            }
+
+            for (var outerKey = 0; outerKey < 5; outerKey++)
+            {
+                var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+                await cachedFunc(outerKey, innerKeys);
+
+                if (outerKey == 1)
+                    cache.Values.Keys.Should().NotContain(innerKeys.Select(i => (outerKey, i)).ToArray());
+                else
+                    cache.Values.Keys.Should().Contain(innerKeys.Select(i => (outerKey, i)).ToArray());
+            }
+        }
+
 
         [Fact]
         public async Task MultipleSkipGetConditions()
@@ -314,6 +390,83 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 await cachedEcho(k);
            
             cache.Values.Should().ContainKeys(keys.Where(k => k != "1" && k != "2"));
+        }
+        
+        [Fact]
+        public async Task MultiParamEnumerableKeyMultipleConditionsSkipGet()
+        {
+            var results = new List<FunctionCacheGetResult<(int, int), int>>();
+            var cache = new TestLocalCache<(int, int), int>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen(k1 => k1 <= 2, SkipCacheSettings.SkipGet)
+                    .SkipCacheWhen((k1, k2) => k1 + k2 > 10, SkipCacheSettings.SkipGet)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            for (var outerKey = 1; outerKey < 5; outerKey++)
+            {
+                var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+                await cachedFunc(outerKey, innerKeys);
+
+                results.Should().ContainSingle();
+                cache.Values.Should().ContainKeys(innerKeys.Select(i => (outerKey, i)).ToArray());
+
+                await cachedFunc(outerKey, innerKeys);
+
+                results.Should().HaveCount(2);
+
+                foreach (var x in results.Last().Results)
+                    x.Outcome.Should().Be(outerKey <= 2 || (outerKey + x.Key.AsObject.Item2) > 10 ? Outcome.Fetch : Outcome.FromCache);
+                
+                results.Clear();
+            }
+        }
+        
+        [Fact]
+        public async Task MultiParamEnumerableKeyMultipleConditionsSkipSet()
+        {
+            var results = new List<FunctionCacheGetResult<(int, int), int>>();
+            var cache = new TestLocalCache<(int, int), int>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen(k1 => k1 <= 2, SkipCacheSettings.SkipSet)
+                    .SkipCacheWhen((k1, k2) => k1 + k2 > 10, SkipCacheSettings.SkipSet)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            for (var outerKey = 1; outerKey < 5; outerKey++)
+            {
+                var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+                await cachedFunc(outerKey, innerKeys);
+
+                foreach (var innerKey in innerKeys)
+                    cache.Values.Keys.Contains((outerKey, innerKey)).Should().Be(outerKey > 2 && outerKey + innerKey <= 10);
+            }
         }
     }
 }

@@ -20,6 +20,8 @@ namespace CacheMeIfYouCan.Configuration
         internal BatchBehaviour BatchBehaviour { get; private set; }
         internal Func<(TK1, TK2), TV> NegativeCachingValueFactory { get; private set; }
         internal int[] ParametersToExcludeFromKey { get; private set; }
+        internal Func<TK1, bool> SkipCacheGetPredicateOuterKeyOnly { get; private set; }
+        internal Func<TK1, bool> SkipCacheSetPredicateOuterKeyOnly { get; private set; }
 
         internal MultiParamEnumerableKeyFunctionCacheConfigurationManagerBase(
             Func<TK1, IEnumerable<TK2>, CancellationToken, Task<IDictionary<TK2, TV>>> inputFunc,
@@ -116,6 +118,29 @@ namespace CacheMeIfYouCan.Configuration
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
         }
+
+        protected TConfig SkipCacheWhen(Func<TK1, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            if (settings.HasFlag(SkipCacheSettings.SkipGet))
+            {
+                var current = SkipCacheGetPredicateOuterKeyOnly;
+                if (current == null)
+                    SkipCacheGetPredicateOuterKeyOnly = predicate;
+                else
+                    SkipCacheGetPredicateOuterKeyOnly = k => current(k) || predicate(k);
+            }
+            
+            if (settings.HasFlag(SkipCacheSettings.SkipSet))
+            {
+                var current = SkipCacheSetPredicateOuterKeyOnly;
+                if (current == null)
+                    SkipCacheSetPredicateOuterKeyOnly = predicate;
+                else
+                    SkipCacheSetPredicateOuterKeyOnly = k => current(k) || predicate(k);
+            }
+
+            return (TConfig)this;
+        }
         
         protected TConfig ExcludeParametersFromKeyImpl(int[] parameterIndexes, int totalParameterCount)
         {
@@ -167,6 +192,8 @@ namespace CacheMeIfYouCan.Configuration
                 BatchBehaviour,
                 SkipCacheGetPredicate,
                 SkipCacheSetPredicate,
+                SkipCacheGetPredicateOuterKeyOnly,
+                SkipCacheSetPredicateOuterKeyOnly,
                 NegativeCachingValueFactory);
             
             PendingRequestsCounterContainer.Add(functionCache);
