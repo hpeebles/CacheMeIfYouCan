@@ -132,6 +132,61 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             
             cache.Values.Keys.Should().BeEquivalentTo(keys.Where(k => k != "1"));
         }
+        
+        [Fact]
+        public async Task MultiParamKeySkipGet()
+        {
+            var results = new List<FunctionCacheGetResult<(string, string), string>>();
+            var cache = new TestLocalCache<(string, string), string>();
+            
+            Func<string, string, Task<string>> func = (k1, k2) => Task.FromResult(k1 + k2);
+            
+            Func<string, string, Task<string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k1, k2) => k1 == "abc", SkipCacheSettings.SkipGet)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            await cachedFunc("abc", "xyz");
+
+            results.Should().ContainSingle();
+            cache.Values.Should().ContainKey(("abc", "xyz"));
+
+            await cachedFunc("abc", "xyz");
+
+            results.Should().HaveCount(2);
+            results.Last().Results.Single().Outcome.Should().Be(Outcome.Fetch);
+        }
+        
+        [Fact]
+        public async Task MultiParamKeySkipSet()
+        {
+            var results = new List<FunctionCacheGetResult<(string, string), string>>();
+            var cache = new TestLocalCache<(string, string), string>();
+            
+            Func<string, string, Task<string>> func = (k1, k2) => Task.FromResult(k1 + k2);
+            
+            Func<string, string, Task<string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k1, k2) => k1 == "abc", SkipCacheSettings.SkipSet)
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            await cachedFunc("abc", "xyz");
+
+            results.Should().ContainSingle();
+            cache.Values.Should().BeEmpty();
+        }
 
         [Fact]
         public async Task MultiParamEnumerableKeySkipGet()
@@ -150,7 +205,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedFunc = func
                     .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
                     .WithLocalCache(cache)
-                    .SkipCacheWhen(k => k.Item2 == 1, SkipCacheSettings.SkipGet)
+                    .SkipCacheWhen((k1, k2) => k2 == 1, SkipCacheSettings.SkipGet)
                     .OnResult(results.Add)
                     .Build();
             }
@@ -187,7 +242,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedFunc = func
                     .Cached<string, IEnumerable<int>, IDictionary<int, string>, int, string>()
                     .WithLocalCache(cache)
-                    .SkipCacheWhen(k => k.Item2 == 1, SkipCacheSettings.SkipSet)
+                    .SkipCacheWhen((k1, k2) => k2 == 1, SkipCacheSettings.SkipSet)
                     .Build();
             }
 

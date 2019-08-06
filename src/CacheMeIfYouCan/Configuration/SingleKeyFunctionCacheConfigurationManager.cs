@@ -23,6 +23,11 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 methodInfo)
         { }
+        
+        public new TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate, settings);
+        }
     }
     
     public sealed class SingleKeyFunctionCacheConfigurationManagerNoCanx<TK, TV>

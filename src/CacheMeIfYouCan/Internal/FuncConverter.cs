@@ -159,6 +159,25 @@ namespace CacheMeIfYouCan.Internal
             return (x, t) => func(x.Item1, x.Item2, x.Item3, x.Item4, t);
         }
         
+        
+        public static Func<(TK1, TK2), TV> ConvertToSingleParamNoCanx<TK1, TK2, TV>(
+            this Func<TK1, TK2, TV> func)
+        {
+            return x => func(x.Item1, x.Item2);
+        }
+
+        public static Func<(TK1, TK2, TK3), TV> ConvertToSingleParamNoCanx<TK1, TK2, TK3, TV>(
+            this Func<TK1, TK2, TK3, TV> func)
+        {
+            return x => func(x.Item1, x.Item2, x.Item3);
+        }
+        
+        public static Func<(TK1, TK2, TK3, TK4), TV> ConvertToSingleParamNoCanx<TK1, TK2, TK3, TK4, TV>(
+            this Func<TK1, TK2, TK3, TK4, TV> func)
+        {
+            return x => func(x.Item1, x.Item2, x.Item3, x.Item4);
+        }
+        
         public static Func<TK1, TK2, CancellationToken, TV> ConvertToMultiParam<TK1, TK2, TV>(
             this Func<(TK1, TK2), CancellationToken, TV> func)
         {

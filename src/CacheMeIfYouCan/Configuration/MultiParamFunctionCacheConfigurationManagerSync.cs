@@ -80,6 +80,11 @@ namespace CacheMeIfYouCan.Configuration
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, v));
         }
         
+        public TConfig SkipCacheWhen(Func<TK1, TK2, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
+        }
+        
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
@@ -236,6 +241,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithTimeToLiveFactory(Func<TK1, TK2, TK3, TV, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, v));
+        }
+        
+        public TConfig SkipCacheWhen(Func<TK1, TK2, TK3, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
         }
 
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
@@ -410,6 +420,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithTimeToLiveFactory(Func<TK1, TK2, TK3, TK4, TV, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k.Item1, k.Item2, k.Item3, k.Item4, v));
+        }
+        
+        public TConfig SkipCacheWhen(Func<TK1, TK2, TK3, TK4, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
         }
 
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)

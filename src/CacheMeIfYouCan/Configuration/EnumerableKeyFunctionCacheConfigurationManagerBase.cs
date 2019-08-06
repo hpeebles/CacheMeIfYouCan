@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,6 +84,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             MissingKeyValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;
+        }
+        
+        public new TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
+        {
+            return base.SkipCacheWhen(predicate, settings);
         }
         
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()
