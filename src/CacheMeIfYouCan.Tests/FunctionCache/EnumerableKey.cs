@@ -436,6 +436,30 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             fetches.Should().HaveCountGreaterThan(21).And.HaveCountLessThan(41);
         }
 
+        [Fact]
+        public async Task WithDuplicateKeys_Succeeds()
+        {
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .Build();
+            }
+
+            var distinctKeys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToArray();
+            
+            var keys = Enumerable
+                .Range(0, 5)
+                .SelectMany(_ => distinctKeys)
+                .ToArray();
+
+            var results = await cachedEcho(keys);
+
+            results.Keys.Should().BeEquivalentTo(distinctKeys);
+        }
+
         private class TestDictionaryBuilder : ReturnDictionaryBuilder<string, string, IDictionary<string, string>>
         {
             public TestDictionaryBuilder(IEqualityComparer<string> keyComparer)

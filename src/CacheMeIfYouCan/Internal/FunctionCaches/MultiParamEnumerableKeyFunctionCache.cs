@@ -150,21 +150,12 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            
-            Dictionary<Key<(TK1, TK2)>, FunctionCacheGetResultInner<(TK1, TK2), TV>> results;
-            if (innerKeys is ICollection<TK2> c)
-            {
-                results = new Dictionary<Key<(TK1, TK2)>, FunctionCacheGetResultInner<(TK1, TK2), TV>>(
-                    c.Count,
-                    _tupleKeysOnlyDifferingBySecondItemComparer);
-            }
-            else
-            {
-                results = new Dictionary<Key<(TK1, TK2)>, FunctionCacheGetResultInner<(TK1, TK2), TV>>(
-                    _tupleKeysOnlyDifferingBySecondItemComparer);
-            }
 
             var keys = BuildCombinedKeys(outerKey, innerKeys);
+
+            var results = new Dictionary<Key<(TK1, TK2)>, FunctionCacheGetResultInner<(TK1, TK2), TV>>(
+                keys.Length,
+                _tupleKeysOnlyDifferingBySecondItemComparer);
 
             IReadOnlyCollection<FunctionCacheGetResultInner<(TK1, TK2), TV>> readonlyResults = null;
             FunctionCacheGetException<(TK1, TK2)> exception = null;    
@@ -413,6 +404,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var outerKeySerializer = new Lazy<string>(() => _outerKeySerializer(outerKey));
             
             return innerKeys
+                .Distinct(_innerKeyComparer)
                 .Select(k => new Key<(TK1, TK2)>((outerKey, k), Serialize))
                 .ToArray();
 

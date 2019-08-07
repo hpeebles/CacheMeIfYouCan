@@ -98,15 +98,12 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
             
-            Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>> results;
-            if (keyObjs is ICollection<TK> c)
-                results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(c.Count, _keyComparer);
-            else
-                results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(_keyComparer);
-
             var keys = keyObjs
+                .Distinct(_keyComparer)
                 .Select(k => new Key<TK>(k, _keySerializer))
                 .ToArray();
+
+            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keys.Length, _keyComparer);
 
             IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults = null;
             FunctionCacheGetException<TK> exception = null;

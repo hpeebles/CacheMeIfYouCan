@@ -572,5 +572,36 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             results.Should().ContainKeys(keys);
         }
+        
+        [Fact]
+        public async Task WithDuplicateKeys_Succeeds()
+        {
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<string, string>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<string, IEnumerable<string>, Task<IDictionary<string, string>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .DisableCache()
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            
+            var distinctInnerKeys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToArray();
+            
+            var innerKeys = Enumerable
+                .Range(0, 5)
+                .SelectMany(_ => distinctInnerKeys)
+                .ToArray();
+
+            var results = await cachedFunc(outerKey, innerKeys);
+
+            results.Keys.Should().BeEquivalentTo(distinctInnerKeys);
+        }
     }
 }
