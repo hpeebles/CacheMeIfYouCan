@@ -64,17 +64,12 @@ namespace CacheMeIfYouCan.Configuration
                 FillMissingKeys();
         }
         
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
-        {
-            return WithTimeToLive(timeToLive, 0);
-        }
-        
-        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
             return WithTimeToLiveFactory(k => timeToLive, jitterPercentage);
         }
 
-        public TConfig WithTimeToLiveFactory(Func<TK1, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        protected TConfig WithTimeToLiveFactory(Func<TK1, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
         {
             TimeToLiveFactory = timeToLiveFactory ?? throw new ArgumentNullException(nameof(timeToLiveFactory));
 

@@ -53,12 +53,7 @@ namespace CacheMeIfYouCan.Configuration
                 FillMissingKeys();
         }
 
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
-        {
-            return WithTimeToLive(timeToLive, 0);
-        }
-        
-        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
             TimeToLiveFactory = () => timeToLive;
 

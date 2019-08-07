@@ -414,27 +414,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
         }
 
-        // Use this comparer whenever we know the first component of each key is the same
-        private class TupleKeysOnlyDifferingBySecondItemComparer : IEqualityComparer<Key<(TK1, TK2)>>
-        {
-            private readonly IEqualityComparer<TK2> _comparer;
-
-            public TupleKeysOnlyDifferingBySecondItemComparer(IEqualityComparer<TK2> comparer)
-            {
-                _comparer = comparer;
-            }
-
-            public bool Equals(Key<(TK1, TK2)> x, Key<(TK1, TK2)> y)
-            {
-                return _comparer.Equals(x.AsObject.Item2, y.AsObject.Item2);
-            }
-
-            public int GetHashCode(Key<(TK1, TK2)> obj)
-            {
-                return _comparer.GetHashCode(obj.AsObject.Item2);
-            }
-        }
-
         private Func<DuplicateTaskCatcherMultiResult<TK2, TV>, bool> BuildSetInCachePredicate(TK1 outerKey)
         {
             if (_skipCacheSetPredicateOuterKeyOnly != null && _skipCacheSetPredicateOuterKeyOnly(outerKey))
@@ -497,6 +476,27 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                 return valuesWithFills ?? values;
             };
+        }
+
+        // Use this comparer whenever we know the first component of each key is the same
+        private class TupleKeysOnlyDifferingBySecondItemComparer : IEqualityComparer<Key<(TK1, TK2)>>
+        {
+            private readonly IEqualityComparer<TK2> _comparer;
+
+            public TupleKeysOnlyDifferingBySecondItemComparer(IEqualityComparer<TK2> comparer)
+            {
+                _comparer = comparer;
+            }
+
+            public bool Equals(Key<(TK1, TK2)> x, Key<(TK1, TK2)> y)
+            {
+                return _comparer.Equals(x.AsObject.Item2, y.AsObject.Item2);
+            }
+
+            public int GetHashCode(Key<(TK1, TK2)> obj)
+            {
+                return _comparer.GetHashCode(obj.AsObject.Item2);
+            }
         }
     }
 }

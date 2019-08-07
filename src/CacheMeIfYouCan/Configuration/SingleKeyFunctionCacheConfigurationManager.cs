@@ -23,6 +23,11 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 methodInfo)
         { }
+
+        public new TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        {
+            return base.WithTimeToLiveFactory(timeToLiveFactory, jitterPercentage);
+        }
         
         public new TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {

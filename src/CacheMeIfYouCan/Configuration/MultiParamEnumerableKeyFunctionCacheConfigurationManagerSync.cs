@@ -39,6 +39,11 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 methodInfo)
         { }
+
+        public new TConfig WithTimeToLiveFactory(Func<TKOuter, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        {
+            return base.WithTimeToLiveFactory(timeToLiveFactory, jitterPercentage);
+        }
         
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
@@ -268,6 +273,11 @@ namespace CacheMeIfYouCan.Configuration
                 interfaceConfig,
                 methodInfo)
         { }
+
+        public TConfig WithTimeToLiveFactory(Func<TKOuter1, TKOuter2, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        {
+            return base.WithTimeToLiveFactory(timeToLiveFactory.ConvertToSingleParamNoCanx(), jitterPercentage);
+        }
         
         public new TConfig WithKeySerializer(
             ISerializer serializer)
@@ -515,9 +525,14 @@ namespace CacheMeIfYouCan.Configuration
                 methodInfo)
         { }
 
+        public TConfig WithTimeToLiveFactory(Func<TKOuter1, TKOuter2, TKOuter3, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        {
+            return base.WithTimeToLiveFactory(timeToLiveFactory.ConvertToSingleParamNoCanx(), jitterPercentage);
+        }
+
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
-            return (TConfig)base
+            return base
                 .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>)
                 .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>)
                 .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter3>)

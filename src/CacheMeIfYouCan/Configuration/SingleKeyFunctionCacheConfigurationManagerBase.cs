@@ -41,22 +41,12 @@ namespace CacheMeIfYouCan.Configuration
                 TimeToLiveFactory = (k, v) => timeToLiveFactory();
         }
         
-        public TConfig WithTimeToLive(TimeSpan timeToLive)
-        {
-            return WithTimeToLive(timeToLive, 0);
-        }
-
-        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage)
+        public TConfig WithTimeToLive(TimeSpan timeToLive, double jitterPercentage = 0)
         {
             return WithTimeToLiveFactory((k, v) => timeToLive, jitterPercentage);
         }
         
-        public TConfig WithTimeToLiveFactory(Func<TK, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
-        {
-            return WithTimeToLiveFactory((k, v) => timeToLiveFactory(k), jitterPercentage);
-        }
-        
-        public TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
+        protected TConfig WithTimeToLiveFactory(Func<TK, TV, TimeSpan> timeToLiveFactory, double jitterPercentage = 0)
         {
             TimeToLiveFactory = timeToLiveFactory ?? throw new ArgumentNullException(nameof(timeToLiveFactory));
 
