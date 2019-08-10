@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             // If cache is null, setInCachePredicate should always return false so valuesToSetInCache can stay as null
             if (_cache == null)
             {
-                _setInCachePredicate = x => false;
+                _setInCachePredicate = _alwaysFalseSetInCachePredicate;
                 _valuesToSetInCacheListFactory = count => null;
             }
             // If skipCacheSetPredicate and skipCacheSetPredicateOuterKeyOnly are both null, setInCachePredicate should

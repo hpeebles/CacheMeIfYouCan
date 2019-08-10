@@ -96,7 +96,7 @@ namespace CacheMeIfYouCan.Configuration
             return WithBatchedFetches(k => batchSize, behaviour);
         }
 
-        public TConfig WithBatchedFetches(Func<TK1, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
+        protected TConfig WithBatchedFetches(Func<TK1, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             MaxFetchBatchSizeFunc = batchSizeFunc;
             BatchBehaviour = behaviour;
@@ -108,7 +108,7 @@ namespace CacheMeIfYouCan.Configuration
             return FillMissingKeys(k => value);
         }
 
-        public TConfig FillMissingKeys(Func<(TK1, TK2), TV> valueFactory)
+        protected TConfig FillMissingKeys(Func<(TK1, TK2), TV> valueFactory)
         {
             NegativeCachingValueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             return (TConfig)this;

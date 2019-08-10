@@ -103,6 +103,16 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+
+        public new TConfig WithBatchedFetches(Func<TKOuter, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return base.WithBatchedFetches(batchSizeFunc, behaviour);
+        }
+
+        public TConfig FillMissingKeys(Func<TKOuter, TKInner, TV> valueFactory)
+        {
+            return base.FillMissingKeys(t => valueFactory(t.Item1, t.Item2));
+        }
         
         public TConfig SkipCacheWhen(Func<TKOuter, TKInner, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
@@ -359,6 +369,16 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithKeyComparer(IEqualityComparer<TKInner> comparer)
         {
             return WithKeyComparerInternal(comparer);
+        }
+
+        public TConfig WithBatchedFetches(Func<TKOuter1, TKOuter2, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return base.WithBatchedFetches(t => batchSizeFunc(t.Item1, t.Item2), behaviour);
+        }
+
+        public TConfig FillMissingKeys(Func<TKOuter1, TKOuter2, TKInner, TV> valueFactory)
+        {
+            return base.FillMissingKeys(t => valueFactory(t.Item1.Item1, t.Item1.Item2, t.Item2));
         }
         
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKInner, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
@@ -631,6 +651,16 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig WithKeyComparer(IEqualityComparer<TKInner> comparer)
         {
             return WithKeyComparerInternal(comparer);
+        }
+
+        public TConfig WithBatchedFetches(Func<TKOuter1, TKOuter2, TKOuter3, int> batchSizeFunc, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return base.WithBatchedFetches(t => batchSizeFunc(t.Item1, t.Item2, t.Item3), behaviour);
+        }
+
+        public TConfig FillMissingKeys(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, TV> valueFactory)
+        {
+            return base.FillMissingKeys(t => valueFactory(t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2));
         }
         
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
