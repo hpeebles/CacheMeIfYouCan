@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.FunctionCaches;
+using CacheMeIfYouCan.Serializers;
 
 namespace CacheMeIfYouCan.Configuration
 {
@@ -62,7 +63,17 @@ namespace CacheMeIfYouCan.Configuration
             
             return (TConfig)this;
         }
-        
+
+        public TConfig WithKeySerializer(ISerializer<TK> serializer)
+        {
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+        }
+
+        public TConfig WithKeySerializer(Func<TK, string> serializer, Func<string, TK> deserializer = null)
+        {
+            return base.WithKeySerializer(serializer, deserializer);
+        }
+
         public TConfig WithBatchedFetches(int batchSize, BatchBehaviour behaviour = BatchBehaviour.FillBatchesEvenly)
         {
             MaxFetchBatchSize = batchSize;

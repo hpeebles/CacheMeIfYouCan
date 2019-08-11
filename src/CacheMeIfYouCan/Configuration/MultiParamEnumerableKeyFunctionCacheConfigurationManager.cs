@@ -46,28 +46,28 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                .WithKeySerializer<TKOuter>(serializer.Serialize, serializer.Deserialize<TKOuter>)
+                .WithKeySerializer<TKInner>(serializer.Serialize, serializer.Deserialize<TKInner>);
         }
         
         public TConfig WithKeySerializer(ISerializer<TKOuter> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TKInner> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(Func<TKOuter, string> serializer, Func<string, TKOuter> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TKInner, string> serializer, Func<string, TKInner> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer<T>(ISerializer serializer)
@@ -76,13 +76,13 @@ namespace CacheMeIfYouCan.Configuration
             var match = false;
             if (typeof(TKOuter) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter>);
                 match = true;
             }
 
             if (typeof(TKInner) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKInner>);
                 match = true;
             }
 
@@ -283,39 +283,39 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                .WithKeySerializer<TKOuter1>(serializer.Serialize, serializer.Deserialize<TKOuter1>)
+                .WithKeySerializer<TKOuter2>(serializer.Serialize, serializer.Deserialize<TKOuter2>)
+                .WithKeySerializer<TKInner>(serializer.Serialize, serializer.Deserialize<TKInner>);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKOuter1> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TKOuter2> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKInner> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(Func<TKOuter1, string> serializer, Func<string, TKOuter1> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TKOuter2, string> serializer, Func<string, TKOuter2> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer(Func<TKInner, string> serializer, Func<string, TKInner> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer<T>(ISerializer serializer)
@@ -324,19 +324,19 @@ namespace CacheMeIfYouCan.Configuration
             var match = false;
             if (typeof(TKOuter1) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter1>);
                 match = true;
             }
 
             if (typeof(TKOuter2) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter2>);
                 match = true;
             }
 
             if (typeof(TKInner) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKInner>);
                 match = true;
             }
 
@@ -538,50 +538,50 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter3>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                .WithKeySerializer<TKOuter1>(serializer.Serialize, serializer.Deserialize<TKOuter1>)
+                .WithKeySerializer<TKOuter2>(serializer.Serialize, serializer.Deserialize<TKOuter2>)
+                .WithKeySerializer<TKOuter3>(serializer.Serialize, serializer.Deserialize<TKOuter3>)
+                .WithKeySerializer<TKInner>(serializer.Serialize, serializer.Deserialize<TKInner>);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKOuter1> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKOuter2> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKOuter3> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(ISerializer<TKInner> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
 
         public TConfig WithKeySerializer(Func<TKOuter1, string> serializer, Func<string, TKOuter1> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer(Func<TKOuter2, string> serializer, Func<string, TKOuter2> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TKOuter3, string> serializer, Func<string, TKOuter3> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer(Func<TKInner, string> serializer, Func<string, TKInner> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer<T>(ISerializer serializer)
@@ -590,25 +590,25 @@ namespace CacheMeIfYouCan.Configuration
             var match = false;
             if (typeof(TKOuter1) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter1>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter1>);
                 match = true;
             }
 
             if (typeof(TKOuter2) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter2>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter2>);
                 match = true;
             }
 
             if (typeof(TKOuter3) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKOuter3>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKOuter3>);
                 match = true;
             }
 
             if (typeof(TKInner) == type)
             {
-                WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TKInner>);
+                base.WithKeySerializer(serializer.Serialize, serializer.Deserialize<TKInner>);
                 match = true;
             }
 

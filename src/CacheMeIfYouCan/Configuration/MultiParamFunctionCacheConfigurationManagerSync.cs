@@ -36,28 +36,28 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK1>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK2>);
+                .WithKeySerializer<TK1>(serializer.Serialize, serializer.Deserialize<TK1>)
+                .WithKeySerializer<TK2>(serializer.Serialize, serializer.Deserialize<TK2>);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK1> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK2> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(Func<TK1, string> serializer, Func<string, TK1> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TK2, string> serializer, Func<string, TK2> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         internal override Func<(TK1, TK2), string> GetKeySerializer()
@@ -183,39 +183,39 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK1>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK2>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK3>);
+                .WithKeySerializer<TK1>(serializer.Serialize, serializer.Deserialize<TK1>)
+                .WithKeySerializer<TK2>(serializer.Serialize, serializer.Deserialize<TK2>)
+                .WithKeySerializer<TK3>(serializer.Serialize, serializer.Deserialize<TK3>);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK1> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK2> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK3> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(Func<TK1, string> serializer, Func<string, TK1> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TK2, string> serializer, Func<string, TK2> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer(Func<TK3, string> serializer, Func<string, TK3> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         internal override Func<(TK1, TK2, TK3), string> GetKeySerializer()
@@ -346,50 +346,50 @@ namespace CacheMeIfYouCan.Configuration
         public new TConfig WithKeySerializer(ISerializer serializer)
         {
             return base
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK1>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK2>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK3>)
-                .WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize<TK4>);
+                .WithKeySerializer<TK1>(serializer.Serialize, serializer.Deserialize<TK1>)
+                .WithKeySerializer<TK2>(serializer.Serialize, serializer.Deserialize<TK2>)
+                .WithKeySerializer<TK3>(serializer.Serialize, serializer.Deserialize<TK3>)
+                .WithKeySerializer<TK4>(serializer.Serialize, serializer.Deserialize<TK4>);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK1> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK2> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK3> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(ISerializer<TK4> serializer)
         {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
         }
         
         public TConfig WithKeySerializer(Func<TK1, string> serializer, Func<string, TK1> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TK2, string> serializer, Func<string, TK2> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
 
         public TConfig WithKeySerializer(Func<TK3, string> serializer, Func<string, TK3> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         public TConfig WithKeySerializer(Func<TK4, string> serializer, Func<string, TK4> deserializer = null)
         {
-            return WithKeySerializerInternal(serializer, deserializer);
+            return base.WithKeySerializer(serializer, deserializer);
         }
         
         internal override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()

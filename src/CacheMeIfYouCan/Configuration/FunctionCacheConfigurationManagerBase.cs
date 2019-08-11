@@ -154,23 +154,8 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeySerializer(serializer.Serialize, serializer.Deserialize<TK>);
         }
-        
-        public TConfig WithKeySerializer(ISerializer<TK> serializer)
-        {
-            return WithKeySerializer(serializer.Serialize, serializer.Deserialize);
-        }
-        
-        public TConfig WithKeySerializer(Func<TK, string> serializer, Func<string, TK> deserializer = null)
-        {
-            return WithKeySerializerInternal(serializer, deserializer);
-        }
 
-        internal TConfig WithKeySerializerInternal<T>(ISerializer<T> serializer)
-        {
-            return WithKeySerializerInternal(serializer.Serialize, serializer.Deserialize);
-        }
-
-        internal TConfig WithKeySerializerInternal<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
+        internal TConfig WithKeySerializer<T>(Func<T, string> serializer, Func<string, T> deserializer = null)
         {
             KeySerializers.Set(serializer, deserializer);
             return (TConfig)this;

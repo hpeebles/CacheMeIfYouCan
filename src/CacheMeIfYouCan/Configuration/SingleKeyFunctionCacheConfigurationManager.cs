@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Serializers;
 
 namespace CacheMeIfYouCan.Configuration
 {
@@ -29,6 +30,16 @@ namespace CacheMeIfYouCan.Configuration
             return base.WithTimeToLiveFactory(timeToLiveFactory, jitterPercentage);
         }
         
+        public TConfig WithKeySerializer(ISerializer<TK> serializer)
+        {
+            return base.WithKeySerializer(serializer.Serialize, serializer.Deserialize);
+        }
+
+        public TConfig WithKeySerializer(Func<TK, string> serializer, Func<string, TK> deserializer = null)
+        {
+            return base.WithKeySerializer(serializer, deserializer);
+        }
+
         public new TConfig SkipCacheWhen(Func<TK, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             return base.SkipCacheWhen(predicate, settings);
