@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
+    <Authors>hpeebles</Authors>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/hpeebles/CacheMeIfYouCan</RepositoryUrl>
+    <Copyright>Copyright 2019 Hamish Peebles</Copyright>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>

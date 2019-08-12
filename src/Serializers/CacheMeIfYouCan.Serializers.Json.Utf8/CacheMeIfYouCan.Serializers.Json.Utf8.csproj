@@ -1,15 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45;net461</TargetFrameworks>
-    <Version>0.0.1</Version>
     <PackageId>CacheMeIfYouCan.Serializers.Json.Utf8</PackageId>
-    <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <PackageTags>Cache;Json;Utf8Json</PackageTags>
-    <Authors>hpeebles</Authors>
     <Description>Adds an implementation of IByteSerializer based on Utf8Json</Description>
-    <RepositoryUrl>https://github.com/hpeebles/CacheMeIfYouCan</RepositoryUrl>
-    <Copyright>Copyright 2019 Hamish Peebles</Copyright>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Utf8Json" Version="1.3.7" />
