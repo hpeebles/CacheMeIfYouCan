@@ -89,6 +89,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .Should()
                 .BeTrue();
 
+            date.Dispose();
+            
             intervals.Min().Should().BeGreaterThan(TimeSpan.FromMilliseconds(500));
             intervals.Max().Should().BeLessThan(TimeSpan.FromMilliseconds(2000));
         }
