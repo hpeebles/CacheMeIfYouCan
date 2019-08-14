@@ -10,7 +10,8 @@ namespace CacheMeIfYouCan.Configuration
         Func<string, TV> ValueDeserializer { get; }
         Func<TV, byte[]> ValueByteSerializer { get; }
         Func<byte[], TV> ValueByteDeserializer { get; }
-
+        bool HasValidValueStringSerializer { get; }
+        bool HasValidValueByteSerializer { get; }
         void Validate();
     }
 }

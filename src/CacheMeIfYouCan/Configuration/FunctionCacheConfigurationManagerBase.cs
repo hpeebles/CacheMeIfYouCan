@@ -574,7 +574,7 @@ namespace CacheMeIfYouCan.Configuration
             if (serializer == null)
                 ProvidedSerializers.TryGetSerializer(out serializer);
 
-            return serializer ?? (_ => throw new Exception($"No key serializer defined for type '{typeof(T).FullName}'"));
+            return serializer;
         }
 
         internal virtual Func<string, TK> GetKeyDeserializer()
@@ -593,7 +593,7 @@ namespace CacheMeIfYouCan.Configuration
             if (deserializer == null)
                 ProvidedSerializers.TryGetDeserializer(out deserializer);
 
-            return deserializer ?? (_ => throw new Exception($"No key deserializer defined for type '{typeof(T).FullName}'"));
+            return deserializer;
         }
 
         internal virtual KeyComparer<TK> GetKeyComparer()

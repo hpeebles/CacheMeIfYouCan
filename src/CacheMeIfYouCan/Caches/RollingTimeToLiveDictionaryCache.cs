@@ -46,6 +46,8 @@ namespace CacheMeIfYouCan.Caches
         
         public string CacheName { get; }
         public string CacheType { get; } = "rolling-ttl-dictionary";
+        public bool RequiresKeySerializer { get; } = false;
+        public bool RequiresKeyComparer { get; } = true;
 
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)
         {

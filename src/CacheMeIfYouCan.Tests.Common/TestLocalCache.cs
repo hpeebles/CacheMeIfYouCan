@@ -22,6 +22,8 @@ namespace CacheMeIfYouCan.Tests.Common
 
         public string CacheName { get; }
         public string CacheType { get; } = "test-local";
+        public bool RequiresKeySerializer { get; } = false;
+        public bool RequiresKeyComparer { get; } = true;
         
         public void Dispose() { }
 

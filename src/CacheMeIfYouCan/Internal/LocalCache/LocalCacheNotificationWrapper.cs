@@ -26,13 +26,12 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             _onCacheSetResult = onCacheSetResult;
             _onCacheRemoveResult = onCacheRemoveResult;
             _onException = onException;
-
-            CacheName = _cache.CacheName;
-            CacheType = _cache.CacheType;
         }
 
-        public string CacheName { get; }
-        public string CacheType { get; }
+        public string CacheName => _cache.CacheName;
+        public string CacheType => _cache.CacheType;
+        public bool RequiresKeySerializer => _cache.RequiresKeySerializer;
+        public bool RequiresKeyComparer => _cache.RequiresKeyComparer;
         
         public void Dispose() => _cache.Dispose();
         

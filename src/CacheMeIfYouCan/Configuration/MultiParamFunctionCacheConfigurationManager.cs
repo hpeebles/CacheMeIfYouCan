@@ -62,12 +62,18 @@ namespace CacheMeIfYouCan.Configuration
 
         internal override Func<(TK1, TK2), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)
@@ -214,12 +220,18 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2, TK3)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)
@@ -382,12 +394,18 @@ namespace CacheMeIfYouCan.Configuration
         
         internal override Func<(TK1, TK2, TK3, TK4), string> GetKeySerializer()
         {
-            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeySerializer<TK1, TK2, TK3, TK4>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         internal override Func<string, (TK1, TK2, TK3, TK4)> GetKeyDeserializer()
         {
-            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3, TK4>(KeySerializers, KeyParamSeparator, ParametersToExcludeFromKey);
+            return TupleKeyHelper.BuildKeyDeserializer<TK1, TK2, TK3, TK4>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
         }
         
         public TConfig WithKeyComparer(IEqualityComparer<TK1> comparer)

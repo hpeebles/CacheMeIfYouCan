@@ -67,35 +67,20 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             comparer2.GetHashCodeCount.Should().BeGreaterThan(0);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void NoKeyComparerSetThrowsOnlyWhenKeyComparerAccessed(bool catchDuplicateRequests)
+        [Fact]
+        public void NoKeyComparerSetThrowsOnBuild()
         {
-            // In this example the key comparer is only used if CatchDuplicateRequests is true
             Func<TypeWithNoEqualityComparer, int> func = x => x.Value;
-            Func<TypeWithNoEqualityComparer, int> cachedFunc;
             using (_setupLock.Enter())
             {
-                cachedFunc = func
+                var configManager = func
                     .Cached()
-                    .WithKeySerializer(k => k.Value.ToString())
-                    .CatchDuplicateRequests(catchDuplicateRequests)
-                    .Build();
-            }
+                    .WithDictionaryCache()
+                    .WithKeySerializer(k => k.Value.ToString());
 
-            Action action = () => cachedFunc(new TypeWithNoEqualityComparer(1));
+                Action action = () => configManager.Build();
 
-            if (catchDuplicateRequests)
-            {
-                action.Should().ThrowExactly<FunctionCacheGetException<TypeWithNoEqualityComparer>>()
-                    .WithInnerExceptionExactly<FunctionCacheFetchException<TypeWithNoEqualityComparer>>()
-                    .WithInnerException<Exception>()
-                    .WithMessage($"No EqualityComparer defined for type '{nameof(TypeWithNoEqualityComparer)}'");
-            }
-            else
-            {
-                action.Should().NotThrow();
+                action.Should().Throw<Exception>().Which.Message.Should().Contain("KeyComparer");
             }
         }
     }

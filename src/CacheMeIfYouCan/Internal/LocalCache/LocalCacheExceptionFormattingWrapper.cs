@@ -14,13 +14,12 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         public LocalCacheExceptionFormattingWrapper(ILocalCache<TK, TV> cache)
         {
             _cache = cache;
-            
-            CacheName = cache.CacheName;
-            CacheType = cache.CacheType;
         }
 
-        public string CacheName { get; }
-        public string CacheType { get; }
+        public string CacheName => _cache.CacheName;
+        public string CacheType => _cache.CacheType;
+        public bool RequiresKeySerializer => _cache.RequiresKeySerializer;
+        public bool RequiresKeyComparer => _cache.RequiresKeyComparer;
 
         public void Dispose() => _cache.Dispose();
         

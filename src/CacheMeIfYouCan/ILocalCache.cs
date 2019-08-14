@@ -21,6 +21,16 @@ namespace CacheMeIfYouCan
         string CacheType { get; }
         
         /// <summary>
+        /// True if this cache requires a key serializer to get and set items, otherwise false
+        /// </summary>
+        bool RequiresKeySerializer { get; }
+        
+        /// <summary>
+        /// True if this cache requires a key comparer to get and set items, otherwise false
+        /// </summary>
+        bool RequiresKeyComparer { get; }
+        
+        /// <summary>
         /// Gets a single value from the cache
         /// </summary>
         /// <param name="key">The key to lookup in the cache</param>

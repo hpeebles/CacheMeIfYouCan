@@ -13,14 +13,14 @@ namespace CacheMeIfYouCan.Internal.LocalCache
 
             Wrapped = wrapped;
             Original = original;
-            CacheName = wrapped.CacheName;
-            CacheType = wrapped.CacheType;
         }
 
         public ILocalCache<TK, TV> Wrapped { get; }
         public ILocalCache<TK, TV> Original { get; }
-        public string CacheName { get; }
-        public string CacheType { get; }
+        public string CacheName => _wrapped.CacheName;
+        public string CacheType => _wrapped.CacheType;
+        public bool RequiresKeySerializer => _wrapped.RequiresKeySerializer;
+        public bool RequiresKeyComparer => _wrapped.RequiresKeyComparer;
 
         public GetFromCacheResult<TK, TV> Get(Key<TK> key) => _wrapped.Get(key);
 

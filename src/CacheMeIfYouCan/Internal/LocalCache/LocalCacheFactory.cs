@@ -150,7 +150,11 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
 
-            return new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
+            var resultingCache = new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
+
+            ValidateCache(resultingCache, config);
+
+            return resultingCache;
         }
 
         private LocalCacheConfig<TK> MergeConfigSettings<TK>(ILocalCacheConfig<TK> config)
@@ -170,6 +174,15 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                 finalConfig.KeyComparer = new KeyComparer<TK>(comparer);
 
             return finalConfig;
+        }
+        
+        private static void ValidateCache<TK, TV>(ILocalCache<TK, TV> cache, ILocalCacheConfig<TK> config)
+        {
+            if (cache.RequiresKeySerializer && config.KeySerializer == null)
+                throw new Exception($"No {config.KeySerializer} defined. CacheName: '{cache.CacheName}'");
+            
+            if (cache.RequiresKeyComparer && config.KeyComparer == null)
+                throw new Exception($"No {config.KeyComparer} defined. CacheName: '{cache.CacheName}'");
         }
     }
     
@@ -318,9 +331,13 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             if (_swallowExceptionsPredicate != null)
                 cache = new LocalCacheExceptionSwallowingWrapper<TK, TV>(cache, _swallowExceptionsPredicate);
             
-            return new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
-        }
+            var resultingCache = new WrappedLocalCacheWithOriginal<TK, TV>(cache, originalCache);
 
+            ValidateCache(resultingCache, config);
+
+            return resultingCache;
+        }
+        
         private ILocalCacheConfig<TK> MergeConfigSettings(ILocalCacheConfig<TK> config)
         {
             // Build the final config by prioritising settings in the following order -
@@ -338,6 +355,15 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                 finalConfig.KeyComparer = new KeyComparer<TK>(_keyComparer);
 
             return finalConfig;
+        }
+
+        private static void ValidateCache(ILocalCache<TK, TV> cache, ILocalCacheConfig<TK> config)
+        {
+            if (cache.RequiresKeySerializer && config.KeySerializer == null)
+                throw new Exception($"No {nameof(config.KeySerializer)} defined. CacheName: '{cache.CacheName}'");
+            
+            if (cache.RequiresKeyComparer && config.KeyComparer == null)
+                throw new Exception($"No {nameof(config.KeyComparer)} defined. CacheName: '{cache.CacheName}'");
         }
     }
     

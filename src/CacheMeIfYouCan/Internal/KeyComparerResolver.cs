@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Internal
             if (OverridesGetHashCodeAndEquals(type))
                 return EqualityComparer<T>.Default;
 
-            return new ExceptionThrowingComparer<T>();
+            return null;
         }
         
         private static bool OverridesGetHashCodeAndEquals(Type type)

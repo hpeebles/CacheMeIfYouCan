@@ -91,6 +91,22 @@ namespace CacheMeIfYouCan.Configuration
 
             return (TConfig)this;
         }
+        
+        internal override Func<(TKOuter, TKInner), string> GetKeySerializer()
+        {
+            return TupleKeyHelper.BuildKeySerializer<TKOuter, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+        }
+        
+        internal override Func<string, (TKOuter, TKInner)> GetKeyDeserializer()
+        {
+            return TupleKeyHelper.BuildKeyDeserializer<TKOuter, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+        }
 
         public TConfig WithKeyComparer(IEqualityComparer<TKOuter> comparer)
         {
@@ -349,6 +365,31 @@ namespace CacheMeIfYouCan.Configuration
                 throw new InvalidOperationException($"Cannot use '{typeof(T).Name}' as the type argument in {this.GetType().Name}.{nameof(WithKeySerializer)} as no keys are of that type");
 
             return (TConfig)this;
+        }
+        
+        internal override Func<((TKOuter1, TKOuter2), TKInner), string> GetKeySerializer()
+        {
+            var serializer = TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+
+            return t => serializer((t.Item1.Item1, t.Item1.Item2, t.Item2));
+        }
+        
+        internal override Func<string, ((TKOuter1, TKOuter2), TKInner)> GetKeyDeserializer()
+        {
+            var deserializer = TupleKeyHelper.BuildKeyDeserializer<TKOuter1, TKOuter2, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+
+            return str =>
+            {
+                var (kOuter1, kOuter2, kInner) = deserializer(str);
+
+                return ((kOuter1, kOuter2), kInner);
+            };
         }
 
         public TConfig WithKeyComparer(IEqualityComparer<TKOuter1> comparer)
@@ -626,6 +667,31 @@ namespace CacheMeIfYouCan.Configuration
                 throw new InvalidOperationException($"Cannot use '{typeof(T).Name}' as the type argument in {this.GetType().Name}.{nameof(WithKeySerializer)} as no keys are of that type");
 
             return (TConfig)this;
+        }
+        
+        internal override Func<((TKOuter1, TKOuter2, TKOuter3), TKInner), string> GetKeySerializer()
+        {
+            var serializer = TupleKeyHelper.BuildKeySerializer<TKOuter1, TKOuter2, TKOuter3, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+
+            return t => serializer((t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2));
+        }
+        
+        internal override Func<string, ((TKOuter1, TKOuter2, TKOuter3), TKInner)> GetKeyDeserializer()
+        {
+            var deserializer = TupleKeyHelper.BuildKeyDeserializer<TKOuter1, TKOuter2, TKOuter3, TKInner>(
+                KeySerializers,
+                KeyParamSeparator,
+                ParametersToExcludeFromKey);
+
+            return str =>
+            {
+                var (kOuter1, kOuter2, kOuter3, kInner) = deserializer(str);
+
+                return ((kOuter1, kOuter2, kOuter3), kInner);
+            };
         }
 
         public TConfig WithKeyComparer(IEqualityComparer<TKOuter1> comparer)

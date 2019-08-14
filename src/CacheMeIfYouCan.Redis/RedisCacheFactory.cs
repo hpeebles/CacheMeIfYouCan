@@ -39,12 +39,12 @@ namespace CacheMeIfYouCan.Redis
         {
             Func<TV, RedisValue> serializer;
             Func<RedisValue, TV> deserializer;
-            if (config.ValueByteSerializer != null && config.ValueByteDeserializer != null)
+            if (config.HasValidValueByteSerializer)
             {
                 serializer = v => config.ValueByteSerializer(v);
                 deserializer = v => config.ValueByteDeserializer(v);
             }
-            else if (config.ValueSerializer != null && config.ValueDeserializer != null)
+            else if (config.HasValidValueStringSerializer)
             {
                 serializer = v => config.ValueSerializer(v);
                 deserializer = v => config.ValueDeserializer(v);

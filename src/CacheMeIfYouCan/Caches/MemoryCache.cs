@@ -24,6 +24,8 @@ namespace CacheMeIfYouCan.Caches
         
         public string CacheName { get; }
         public string CacheType { get; } = "memory";
+        public bool RequiresKeySerializer { get; } = true;
+        public bool RequiresKeyComparer { get; } = false;
         public long Count => _cache.GetCount();
 
         public GetFromCacheResult<TK, TV> Get(Key<TK> key)

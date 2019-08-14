@@ -38,10 +38,8 @@ namespace CacheMeIfYouCan.Configuration
             }
         }
 
-        public string KeyspacePrefix { get; set; }
-        
+        public string KeyspacePrefix { get; set; }      
         public Func<string, TK> KeyDeserializer { get; set; }
-
         
         private Func<TV, string> _valueSerializer;
         public Func<TV, string> ValueSerializer
@@ -94,6 +92,9 @@ namespace CacheMeIfYouCan.Configuration
                 _valueByteDeserializer = value;
             }
         }
+        
+        public bool HasValidValueStringSerializer => _valueSerializer != null && _valueDeserializer != null;
+        public bool HasValidValueByteSerializer => _valueByteSerializer != null && _valueByteDeserializer != null;
 
         public void Validate()
         {
@@ -103,9 +104,7 @@ namespace CacheMeIfYouCan.Configuration
             if (KeySerializer == null)
                 throw new ArgumentNullException(nameof(KeySerializer));
 
-            var validValueSerializers =
-                (ValueSerializer != null && ValueDeserializer != null) ||
-                (ValueByteSerializer != null && ValueByteDeserializer != null);
+            var validValueSerializers = HasValidValueStringSerializer || HasValidValueByteSerializer;
 
             if (!validValueSerializers)
                 throw new Exception("Value serializers are not valid. Both a serializer and a deserializer must be set");
