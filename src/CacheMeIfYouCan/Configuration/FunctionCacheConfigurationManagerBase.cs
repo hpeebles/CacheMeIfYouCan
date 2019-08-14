@@ -503,7 +503,7 @@ namespace CacheMeIfYouCan.Configuration
             return OnlyStoreInLocalCacheWhen(predicate);
         }
 
-        public TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)
+        internal TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)
         {
             OnlyStoreInLocalCacheWhenPredicate = predicate;
             return (TConfig)this;

@@ -96,6 +96,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return base.SkipCacheWhen(predicate, settings);
         }
+
+        public new TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)
+        {
+            return base.OnlyStoreInLocalCacheWhen(predicate);
+        }
         
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()
         {
