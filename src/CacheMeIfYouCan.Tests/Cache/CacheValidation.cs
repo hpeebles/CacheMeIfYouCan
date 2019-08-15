@@ -27,7 +27,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .WithMemoryCache()
                     .Build();
 
-                shouldThrow.Should().Throw<Exception>().And.Message.Should().StartWith("No KeySerializer defined.");
+                shouldThrow.Should().Throw<Exception>().And.Message.Should().StartWith("No serializer defined");
             }
         }
         
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Tests.Cache
                     .WithDictionaryCache()
                     .Build();
 
-                shouldThrow.Should().Throw<Exception>().And.Message.Should().StartWith("No KeyComparer defined.");
+                shouldThrow.Should().Throw<Exception>().And.Message.Should().StartWith("No IEqualityComparer defined");
             }
         }
     }
