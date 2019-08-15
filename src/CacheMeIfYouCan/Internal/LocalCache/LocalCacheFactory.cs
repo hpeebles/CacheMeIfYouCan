@@ -360,10 +360,10 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         private static void ValidateCache(ILocalCache<TK, TV> cache, ILocalCacheConfig<TK> config)
         {
             if (cache.RequiresKeySerializer && config.KeySerializer == null)
-                throw new Exception($"No {nameof(config.KeySerializer)} defined. CacheName: '{cache.CacheName}'");
+                throw new Exception(Messages.NoKeySerializerDefined<TK>());
             
             if (cache.RequiresKeyComparer && config.KeyComparer == null)
-                throw new Exception($"No {nameof(config.KeyComparer)} defined. CacheName: '{cache.CacheName}'");
+                throw new Exception(Messages.NoKeyComparerDefined<TK>());
         }
     }
     

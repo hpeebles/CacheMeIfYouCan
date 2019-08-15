@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             IEqualityComparer<TK> comparer)
         {
             _func = func;
-            _comparer = comparer;
+            _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer), Messages.NoKeyComparerDefined<TK>());
             _tasks = new ConcurrentDictionary<TK, Task<ResultsMulti>>(comparer);
             _arrayPool = ArrayPool<TK>.Shared;
         }

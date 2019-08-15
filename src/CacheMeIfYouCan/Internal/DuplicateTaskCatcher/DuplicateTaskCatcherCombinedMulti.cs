@@ -23,10 +23,16 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
             IEqualityComparer<TK2> innerComparer)
         {
             _func = func;
-            _innerKeyComparer = innerComparer;
+
+            if (outerComparer == null)
+                throw new ArgumentNullException(nameof(outerComparer), Messages.NoKeyComparerDefined<TK1>());
+            
+            if (innerComparer == null)    
+                throw new ArgumentNullException(nameof(innerComparer), Messages.NoKeyComparerDefined<TK2>());
             
             var combinedComparer = new ValueTupleComparer<TK1, TK2>(outerComparer, innerComparer);
             
+            _innerKeyComparer = innerComparer;
             _tasks = new ConcurrentDictionary<(TK1, TK2), Task<ResultsMulti>>(combinedComparer);
             _arrayPool = ArrayPool<TK2>.Shared;
         }
