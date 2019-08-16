@@ -123,7 +123,7 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public ICachedObject<TOut> Map<TOut>(Func<T, TOut> converter, string name = null)
+        public ICachedObject<TOut, T> Map<TOut>(Func<T, TOut> converter, string name = null)
         {
             if (name == null)
                 name = $"{nameof(CachedObject<T, TUpdates>)}_{TypeNameHelper.GetNameIncludingInnerGenericTypeNames(typeof(T))}";
