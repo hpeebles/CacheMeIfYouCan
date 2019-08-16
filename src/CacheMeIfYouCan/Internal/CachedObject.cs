@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Notifications;
@@ -15,6 +16,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cts;
+        private readonly Subject<T> _valuesObservable;
         private int _updateAttemptCount;
         private int _successfulUpdateCount;
         private DateTime _lastUpdateAttempt;
@@ -40,6 +42,7 @@ namespace CacheMeIfYouCan.Internal
             _onException = onException;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
+            _valuesObservable = new Subject<T>();
             _state = CachedObjectState.PendingInitialization;
         }
         
@@ -100,7 +103,7 @@ namespace CacheMeIfYouCan.Internal
 
                 try
                 {
-                    var result = await UpdateValueImpl((_, __) => _initialiseValueFunc(), default);
+                    var result = await UpdateValue((_, __) => _initialiseValueFunc(), default);
 
                     if (!result.Success)
                     {
@@ -108,7 +111,7 @@ namespace CacheMeIfYouCan.Internal
                         return;
                     }
 
-                    _updateScheduler?.Start(result, UpdateValue);
+                    _updateScheduler?.Start(result, u => UpdateValue(_updateValueFunc, u));
 
                     _state = CachedObjectState.Ready;
                 }
@@ -120,9 +123,18 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValue(TUpdates updates)
+        public ICachedObject<TOut> Map<TOut>(Func<T, TOut> converter, string name = null)
         {
-            return await UpdateValueImpl(_updateValueFunc, updates);
+            if (name == null)
+                name = $"{nameof(CachedObject<T, TUpdates>)}_{TypeNameHelper.GetNameIncludingInnerGenericTypeNames(typeof(T))}";
+            
+            return new CachedObject<TOut, T>(
+                () => Task.FromResult(converter(this.Value)),
+                (_, latest) => Task.FromResult(converter(latest)),
+                new CachedObjectObservableScheduler<TOut, T>(_valuesObservable),
+                name,
+                null,
+                null);
         }
 
         public void Dispose()
@@ -133,7 +145,7 @@ namespace CacheMeIfYouCan.Internal
             _cts.Dispose();
         }
         
-        private async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValueImpl(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates)
+        private async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValue(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates)
         {
             if (_state == CachedObjectState.Disposed)
                 throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
@@ -175,6 +187,7 @@ namespace CacheMeIfYouCan.Internal
             
             _onUpdate?.Invoke(result);
             OnUpdate?.Invoke(this, new CachedObjectUpdateResultEventArgs<T, TUpdates>(result));
+            _valuesObservable.OnNext(newValue);
 
             if (updateException == null)
                 _lastSuccessfulUpdate = DateTime.UtcNow;

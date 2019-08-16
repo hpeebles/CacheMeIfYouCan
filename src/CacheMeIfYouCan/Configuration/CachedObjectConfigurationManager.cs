@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public ICachedObject<T, TUpdates> Build()
         {
-            var name = _name ?? $"{nameof(CachedObject<T, TUpdates>)}_{typeof(T).Name}";
+            var name = _name ?? $"{nameof(CachedObject<T, TUpdates>)}_{TypeNameHelper.GetNameIncludingInnerGenericTypeNames(typeof(T))}";
             
             var cachedObject = new CachedObject<T, TUpdates>(
                 InitialiseValueFunc,
