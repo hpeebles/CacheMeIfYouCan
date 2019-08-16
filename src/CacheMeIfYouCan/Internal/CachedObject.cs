@@ -171,6 +171,9 @@ namespace CacheMeIfYouCan.Internal
                 OnException?.Invoke(this, new CachedObjectUpdateExceptionEventArgs(updateException));
             }
             
+            if (_state == CachedObjectState.Disposed)
+                throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
+            
             var result = new CachedObjectUpdateResult<T, TUpdates>(
                 Name,
                 start,
