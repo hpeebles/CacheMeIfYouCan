@@ -7,7 +7,7 @@ image: Visual Studio 2017
 configuration: Release
 dotnet_csproj:
   patch: true
-  file: '**\*.csproj'
+  file: '**\*.props'
   version: '{version}'
 environment:
   GitAccessToken:
