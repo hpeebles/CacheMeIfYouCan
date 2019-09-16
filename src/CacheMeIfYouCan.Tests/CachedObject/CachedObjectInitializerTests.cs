@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
 
         [Fact]
-        public async Task MultipleCanBeInitializedViaInitializeAll()
+        public void MultipleCanBeInitializedViaInitializeAll()
         {
             ICachedObject<long> ticks;
             ICachedObject<DateTime> date;
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            var initializeResults = await CachedObjectInitializer.InitializeAll();
+            var initializeResults = CachedObjectInitializer.InitializeAll();
             
             initializeResults.Success.Should().BeTrue();
             initializeResults.Duration.Should().BeGreaterThan(TimeSpan.Zero).And.BeLessThan(TimeSpan.FromSeconds(2));

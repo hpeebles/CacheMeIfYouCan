@@ -21,12 +21,19 @@ namespace CacheMeIfYouCan
         {
             CachedObjects = new Dictionary<Type, List<ICachedObject>>();
         }
+
+        /// <summary>
+        /// Initializes all instances of <see cref="ICachedObject"/>
+        /// </summary>
+        public static CachedObjectInitializeManyResult InitializeAll()
+        {
+            return Task.Run(InitializeAllAsync).GetAwaiter().GetResult();
+        }
         
         /// <summary>
         /// Initializes all instances of <see cref="ICachedObject"/>
         /// </summary>
-        /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
-        public static async Task<CachedObjectInitializeManyResult> InitializeAll()
+        public static async Task<CachedObjectInitializeManyResult> InitializeAllAsync()
         {
             ICachedObject[] cachedObjects;
             var timer = Stopwatch.StartNew();
