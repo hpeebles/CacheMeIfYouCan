@@ -471,7 +471,7 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        public TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        protected TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
         {
             KeyRemovalObservables.Add((keysToRemoveObservable, removeFromLocalOnly));
             return (TConfig)this;

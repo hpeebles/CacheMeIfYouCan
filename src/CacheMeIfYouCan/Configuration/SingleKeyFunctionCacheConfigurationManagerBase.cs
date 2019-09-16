@@ -60,6 +60,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return WithKeyComparerInternal(comparer);
         }
+
+        public new TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        {
+            return base.WithKeysToRemoveObservable(keysToRemoveObservable, removeFromLocalOnly);
+        }
         
         internal SingleKeyFunctionCache<TK, TV> BuildFunctionCacheSingle()
         {

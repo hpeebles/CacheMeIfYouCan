@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -159,6 +160,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             ReturnDictionaryBuilderFunc = builder;
             return (TConfig)this;
+        }
+        
+        public new TConfig WithKeysToRemoveObservable(IObservable<(TKOuter, TKInner)> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        {
+            return base.WithKeysToRemoveObservable(keysToRemoveObservable, removeFromLocalOnly);
         }
     }
     
@@ -455,6 +461,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             ReturnDictionaryBuilderFunc = builder;
             return (TConfig)this;
+        }
+        
+        public TConfig WithKeysToRemoveObservable(IObservable<(TKOuter1, TKOuter2, TKInner)> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        {
+            return base.WithKeysToRemoveObservable(keysToRemoveObservable.Select(x => ((x.Item1, x.Item2), x.Item3)), removeFromLocalOnly);
         }
     }
     
@@ -767,6 +778,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             ReturnDictionaryBuilderFunc = builder;
             return (TConfig)this;
+        }
+        
+        public TConfig WithKeysToRemoveObservable(IObservable<(TKOuter1, TKOuter2, TKOuter3, TKInner)> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        {
+            return base.WithKeysToRemoveObservable(keysToRemoveObservable.Select(x => ((x.Item1, x.Item2, x.Item3), x.Item4)), removeFromLocalOnly);
         }
     }
     

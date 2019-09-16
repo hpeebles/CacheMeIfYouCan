@@ -102,6 +102,11 @@ namespace CacheMeIfYouCan.Configuration
             return base.OnlyStoreInLocalCacheWhen(predicate);
         }
         
+        public new TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
+        {
+            return base.WithKeysToRemoveObservable(keysToRemoveObservable, removeFromLocalOnly);
+        }
+        
         internal EnumerableKeyFunctionCache<TK, TV> BuildEnumerableKeyFunctionCache()
         {
             var keySerializer = GetKeySerializer();
