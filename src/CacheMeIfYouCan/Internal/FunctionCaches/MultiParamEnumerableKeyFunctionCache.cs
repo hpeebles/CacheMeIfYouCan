@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Func<TK1, TimeSpan> _timeToLiveFactory;
         private readonly Func<TK1, string> _outerKeySerializer;
         private readonly Func<TK2, string> _innerKeySerializer;
-        private readonly Func<TV> _defaultValueFactory;
+        private readonly Func<(TK1, TK2), TV> _defaultValueFactory;
         private readonly bool _continueOnException;
         private readonly Action<FunctionCacheGetResult<(TK1, TK2), TV>> _onResult;
         private readonly Action<FunctionCacheFetchResult<(TK1, TK2), TV>> _onFetch;
@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             bool catchDuplicateRequests,
             Func<TK1, string> outerKeySerializer,
             Func<TK2, string> innerKeySerializer,
-            Func<TV> defaultValueFactory,
+            Func<(TK1, TK2), TV> defaultValueFactory,
             Action<FunctionCacheGetResult<(TK1, TK2), TV>> onResult,
             Action<FunctionCacheFetchResult<(TK1, TK2), TV>> onFetch,
             Action<FunctionCacheException<(TK1, TK2)>> onException,
@@ -244,12 +244,8 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     if (!_continueOnException)
                         throw exception;
             
-                    var defaultValue = _defaultValueFactory == null
-                        ? default
-                        : _defaultValueFactory();
-            
                     readonlyResults = keys
-                        .Select(k => new FunctionCacheGetResultInner<(TK1, TK2), TV>(k, defaultValue, Outcome.Error, null))
+                        .Select(k => new FunctionCacheGetResultInner<(TK1, TK2), TV>(k, _defaultValueFactory(k), Outcome.Error, null))
                         .ToArray();
                 }
                 finally

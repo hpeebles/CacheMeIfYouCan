@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Configuration
         internal ILocalCacheFactory<TK, TV> LocalCacheFactory { get; private set; }
         internal IDistributedCacheFactory<TK, TV> DistributedCacheFactory { get; private set; }
         internal string KeyspacePrefix { get; private set; }
-        internal Func<TV> DefaultValueFactory { get; private set; }
+        internal Func<TK, TV> DefaultValueFactory { get; private set; }
         internal Func<TK, bool> SkipCacheGetPredicate { get; private set; }
         internal Func<TK, bool> SkipCacheSetPredicate { get; private set; }
         internal Func<TK, TV, bool> OnlyStoreInLocalCacheWhenPredicate { get; private set; }
@@ -226,12 +226,12 @@ namespace CacheMeIfYouCan.Configuration
         /// actions) and the specified default value to be returned instead.
         /// </summary>
         /// <param name="defaultValue">The value to return in place of throwing an exception</param>
-        public TConfig ContinueOnException(TV defaultValue = default)
+        public TConfig ReturnDefaultOnException(TV defaultValue = default)
         {
-            return ContinueOnException(() => defaultValue);
+            return ReturnDefaultOnException(_ => defaultValue);
         }
 
-        public TConfig ContinueOnException(Func<TV> defaultValueFactory)
+        protected TConfig ReturnDefaultOnException(Func<TK, TV> defaultValueFactory)
         {
             DefaultValueFactory = defaultValueFactory;
             return (TConfig)this;

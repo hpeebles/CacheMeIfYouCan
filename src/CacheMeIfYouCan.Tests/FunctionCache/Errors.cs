@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedEcho = echo
                     .Cached()
                     .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                    .ContinueOnException()
+                    .ReturnDefaultOnException()
                     .Build();
             }
 
@@ -98,7 +98,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                 cachedEcho = echo
                     .Cached()
                     .WithTimeToLive(TimeSpan.FromMilliseconds(1))
-                    .ContinueOnException("defaultValue")
+                    .ReturnDefaultOnException("defaultValue")
                     .Build();
             }
 
@@ -110,6 +110,112 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     Assert.Equal("abc", result);
                 else
                     Assert.Equal("defaultValue", result);
+
+                await Task.Delay(5);
+            }
+        }
+        
+        [Fact]
+        public async Task ReturnsDefaultValueUsingFactoryForSingleKeyCache()
+        {
+            var count = 0;
+            
+            Func<string, Task<string>> echo = new Echo(TimeSpan.Zero, x => count++ % 2 == 0);
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .ReturnDefaultOnException(k => k + "_defaultValue")
+                    .Build();
+            }
+
+            for (var i = 0; i < 10; i++)
+            {
+                var key = i.ToString();
+                
+                var result = await cachedEcho(key);
+                
+                if (i % 2 == 1)
+                    result.Should().Be(key);
+                else
+                    result.Should().Be(key + "_defaultValue");
+
+                await Task.Delay(5);
+            }
+        }
+        
+        [Fact]
+        public async Task ReturnsDefaultValueUsingFactoryForEnumerableKeyCache()
+        {
+            var count = 0;
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> multiEcho = new MultiEcho(TimeSpan.Zero, () => count++ % 2 == 0);
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = multiEcho
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .ReturnDefaultOnException(k => k + "_defaultValue")
+                    .Build();
+            }
+
+            for (var i = 0; i < 10; i++)
+            {
+                var keys = new[] { i, i + 1 }.Select(x => x.ToString()).ToArray();
+            
+                var results = await cachedEcho(keys);
+
+                results.Should().HaveCount(2);
+                
+                if (i % 2 == 1)
+                    results.Values.Should().BeSubsetOf(keys);
+                else
+                    results.Values.Should().BeSubsetOf(keys.Select(k => k + "_defaultValue"));
+
+                await Task.Delay(5);
+            }
+        }
+        
+        [Fact]
+        public async Task ReturnsDefaultValueUsingFactoryForMultiParamEnumerableKeyCache()
+        {
+            var count = 0;
+            
+            Func<string, IEnumerable<string>, IDictionary<string, string>> func = (k1, k2) =>
+            {
+                if (count++ % 2 == 0)
+                    throw new Exception();
+                
+                return k2.ToDictionary(k => k, k => k);
+            };
+            
+            Func<string, IEnumerable<string>, IDictionary<string, string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithTimeToLive(TimeSpan.FromMilliseconds(1))
+                    .ReturnDefaultOnException((k1, k2) => k2 + "_defaultValue")
+                    .Build();
+            }
+
+            var outerKey = Guid.NewGuid().ToString();
+            
+            for (var i = 0; i < 10; i++)
+            {
+                var innerKeys = new[] { i, i + 1 }.Select(x => x.ToString()).ToArray();
+            
+                var results = cachedFunc(outerKey, innerKeys);
+
+                results.Should().HaveCount(2);
+                
+                if (i % 2 == 1)
+                    results.Values.Should().BeSubsetOf(innerKeys);
+                else
+                    results.Values.Should().BeSubsetOf(innerKeys.Select(k => k + "_defaultValue"));
 
                 await Task.Delay(5);
             }

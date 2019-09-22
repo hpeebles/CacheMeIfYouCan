@@ -100,6 +100,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
         }
+        
+        public TConfig ReturnDefaultOnException(Func<TK1, TK2, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1, x.Item2));
+        }
 
         internal override KeyComparer<(TK1, TK2)> GetKeyComparer()
         {
@@ -262,6 +267,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 3);
+        }
+        
+        public TConfig ReturnDefaultOnException(Func<TK1, TK2, TK3, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1, x.Item2, x.Item3));
         }
         
         internal override KeyComparer<(TK1, TK2, TK3)> GetKeyComparer()
@@ -441,6 +451,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 4);
+        }
+        
+        public TConfig ReturnDefaultOnException(Func<TK1, TK2, TK3, TK4, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1, x.Item2, x.Item3, x.Item4));
         }
         
         internal override KeyComparer<(TK1, TK2, TK3, TK4)> GetKeyComparer()

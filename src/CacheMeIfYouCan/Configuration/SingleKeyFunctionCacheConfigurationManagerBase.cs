@@ -61,6 +61,11 @@ namespace CacheMeIfYouCan.Configuration
             return WithKeyComparerInternal(comparer);
         }
 
+        public new TConfig ReturnDefaultOnException(Func<TK, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(defaultValueFactory);
+        }
+
         public new TConfig WithKeysToRemoveObservable(IObservable<TK> keysToRemoveObservable, bool removeFromLocalOnly = false)
         {
             return base.WithKeysToRemoveObservable(keysToRemoveObservable, removeFromLocalOnly);

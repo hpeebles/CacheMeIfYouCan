@@ -150,6 +150,11 @@ namespace CacheMeIfYouCan.Configuration
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 2);
         }
+
+        public TConfig ReturnDefaultOnException(Func<TKOuter, TKInner, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1, x.Item2));
+        }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
         {
@@ -450,6 +455,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 3);
+        }
+
+        public TConfig ReturnDefaultOnException(Func<TKOuter1, TKOuter2, TKInner, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1.Item1, x.Item1.Item2, x.Item2));
         }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
@@ -767,6 +777,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig ExcludeParametersFromKey(params int[] parameterIndexes)
         {
             return ExcludeParametersFromKeyImpl(parameterIndexes, 4);
+        }
+
+        public TConfig ReturnDefaultOnException(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, TV> defaultValueFactory)
+        {
+            return base.ReturnDefaultOnException(x => defaultValueFactory(x.Item1.Item1, x.Item1.Item2, x.Item1.Item3, x.Item2));
         }
         
         public TConfig WithReturnDictionaryBuilder(IReturnDictionaryBuilder<TKInner, TV, TRes> builder)
