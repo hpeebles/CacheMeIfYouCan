@@ -10,11 +10,11 @@ using Xunit;
 namespace CacheMeIfYouCan.Tests.FunctionCache
 {
     [Collection(TestCollections.FunctionCache)]
-    public class DisableCache
+    public class DisableCaching
     {
         private readonly CacheSetupLock _setupLock;
 
-        public DisableCache(CacheSetupLock setupLock)
+        public DisableCaching(CacheSetupLock setupLock)
         {
             _setupLock = setupLock;
         }
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task DisableCacheTests(bool disableCache)
+        public async Task DisableCachingTests(bool disableCaching)
         {
             var fetches = new List<FunctionCacheFetchResult>();
 
@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedEcho = echo
                     .Cached()
-                    .DisableCache(disableCache)
+                    .DisableCaching(disableCaching)
                     .OnFetch(fetches.Add)
                     .Build();
             }
@@ -41,7 +41,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 await cachedEcho("abc");
 
-                fetches.Count.Should().Be(disableCache ? i : 1);
+                fetches.Count.Should().Be(disableCaching ? i : 1);
             }
         }
 
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         [InlineData(false, true, false)]
         [InlineData(false, false, true)]
         [InlineData(false, false, false)]
-        public async Task DisableCacheCascades(bool disableDefault, bool disableProxy, bool disableFunction)
+        public async Task DisableCachingCascades(bool disableDefault, bool disableProxy, bool disableFunction)
         {
             var fetches = new List<FunctionCacheFetchResult>();
 
@@ -58,25 +58,25 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             ITest proxy;
             using (_setupLock.Enter(true))
             {
-                DefaultSettings.Cache.DisableCache(disableDefault);
+                DefaultSettings.Cache.DisableCaching(disableDefault);
                 
                 proxy = impl
                     .Cached()
-                    .DisableCache(disableProxy)
+                    .DisableCaching(disableProxy)
                     .OnFetch(fetches.Add)
-                    .ConfigureFor<string, string>(x => x.StringToString, c => c.DisableCache(disableFunction))
+                    .ConfigureFor<string, string>(x => x.StringToString, c => c.DisableCaching(disableFunction))
                     .Build();
                 
-                DefaultSettings.Cache.DisableCache(false);
+                DefaultSettings.Cache.DisableCaching(false);
             }
 
-            var disableCache = disableDefault || disableProxy || disableFunction;
+            var disableCaching = disableDefault || disableProxy || disableFunction;
             
             for (var i = 1; i < 10; i++)
             {
                 await proxy.StringToString("abc");
 
-                fetches.Count.Should().Be(disableCache ? i : 1);
+                fetches.Count.Should().Be(disableCaching ? i : 1);
             }
         }
     }

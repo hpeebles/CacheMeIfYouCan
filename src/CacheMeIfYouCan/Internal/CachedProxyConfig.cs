@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Internal
             Func<MethodInfo, string> nameGenerator,
             Func<TimeSpan> timeToLiveFactory,
             Func<TimeSpan> localCacheTimeToLiveOverride,
-            bool disableCache,
+            bool disableCaching,
             bool? catchDuplicateRequests,
             ILocalCacheFactory localCacheFactory,
             IDistributedCacheFactory distributedCacheFactory,
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Internal
             NameGenerator = nameGenerator;
             TimeToLiveFactory = timeToLiveFactory;
             LocalCacheTimeToLiveOverride = localCacheTimeToLiveOverride;
-            DisableCache = disableCache;
+            DisableCaching = disableCaching;
             CatchDuplicateRequests = catchDuplicateRequests;
             LocalCacheFactory = localCacheFactory;
             DistributedCacheFactory = distributedCacheFactory;
@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Internal
         public Func<MethodInfo, string> NameGenerator { get; }
         public Func<TimeSpan> TimeToLiveFactory { get; }
         public Func<TimeSpan> LocalCacheTimeToLiveOverride { get; }
-        public bool DisableCache { get; }
+        public bool DisableCaching { get; }
         public bool? CatchDuplicateRequests { get; }
         public ILocalCacheFactory LocalCacheFactory { get; }
         public IDistributedCacheFactory DistributedCacheFactory { get; }

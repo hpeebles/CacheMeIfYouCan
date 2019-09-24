@@ -562,7 +562,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedFunc = func
                     .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
-                    .DisableCache()
+                    .DisableCaching()
                     .Build();
             }
 
@@ -586,7 +586,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             {
                 cachedFunc = func
                     .Cached<string, IEnumerable<string>, IDictionary<string, string>, string, string>()
-                    .DisableCache()
+                    .DisableCaching()
                     .Build();
             }
 

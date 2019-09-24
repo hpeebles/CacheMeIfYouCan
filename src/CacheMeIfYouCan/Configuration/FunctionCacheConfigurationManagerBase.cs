@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Configuration
         internal EqualityComparers KeyComparers { get; }
         internal string Name { get; private set; }
         internal Func<TimeSpan> LocalCacheTimeToLiveOverride { get; set; }
-        internal bool IsCacheDisabled { get; private set; }
+        internal bool IsCachingDisabled { get; private set; }
         internal bool? DuplicateRequestCatchingEnabled { get; private set; }
         internal Action<FunctionCacheGetResult<TK, TV>> OnResultAction { get; private set; }
         internal Action<FunctionCacheFetchResult<TK, TV>> OnFetchAction { get; private set; }
@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Configuration
                     Name = interfaceConfig.NameGenerator(proxyFunctionInfo.MethodInfo);
                 
                 LocalCacheTimeToLiveOverride = interfaceConfig.LocalCacheTimeToLiveOverride;
-                IsCacheDisabled = interfaceConfig.DisableCache;
+                IsCachingDisabled = interfaceConfig.DisableCaching;
                 DuplicateRequestCatchingEnabled = interfaceConfig.CatchDuplicateRequests;
                 
                 if (interfaceConfig.LocalCacheFactory is NullLocalCacheFactory)
@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan.Configuration
             {
                 KeySerializers = new KeySerializers();
                 KeyComparers = new EqualityComparers();
-                IsCacheDisabled = DefaultSettings.Cache.IsCacheDisabled;
+                IsCachingDisabled = DefaultSettings.Cache.IsCachingDisabled;
                 OnResultAction = DefaultSettings.Cache.OnResultAction;
                 OnFetchAction = DefaultSettings.Cache.OnFetchAction;
                 OnExceptionAction = DefaultSettings.Cache.OnExceptionAction;
@@ -208,10 +208,10 @@ namespace CacheMeIfYouCan.Configuration
         /// <summary>
         /// If set to true, caching will be disabled causing the underlying function to be invoked on each request.
         /// </summary>
-        /// <param name="disableCache">Whether or not to disable caching</param>
-        public TConfig DisableCache(bool disableCache = true)
+        /// <param name="disableCaching">Whether or not to disable caching</param>
+        public TConfig DisableCaching(bool disableCaching = true)
         {
-            IsCacheDisabled |= disableCache;
+            IsCachingDisabled |= disableCaching;
             return (TConfig)this;
         }
 
@@ -524,7 +524,7 @@ namespace CacheMeIfYouCan.Configuration
             };
 
             ICacheInternal<TK, TV> cache = null;
-            if (!IsCacheDisabled)
+            if (!IsCachingDisabled)
             {
                 ILocalCacheFactory<TK, TV> localCacheFactory = null;
                 if (LocalCacheFactory != null)
