@@ -18,8 +18,8 @@ namespace CacheMeIfYouCan.Internal
         }
         
         public void Start(
-            CachedObjectUpdateResult<T, TUpdates> initialiseResult,
-            Func<TUpdates, Task<CachedObjectUpdateResult<T, TUpdates>>> updateValueFunc)
+            CachedObjectSuccessfulUpdateResult<T, TUpdates> initialiseResult,
+            Func<TUpdates, Task<ICachedObjectUpdateAttemptResult<T, TUpdates>>> updateValueFunc)
         {
             _observable
                 .Select(x => Observable.FromAsync(() => updateValueFunc(x)))

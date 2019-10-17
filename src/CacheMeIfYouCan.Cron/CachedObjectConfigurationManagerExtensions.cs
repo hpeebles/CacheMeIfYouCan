@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Cron
 
             return config.WithRefreshIntervalFactory(GetNextInterval);
             
-            TimeSpan GetNextInterval(CachedObjectUpdateResult<T, Unit> result)
+            TimeSpan GetNextInterval(ICachedObjectUpdateAttemptResult<T, Unit> result)
             {
                 var now = DateTime.UtcNow;
                 

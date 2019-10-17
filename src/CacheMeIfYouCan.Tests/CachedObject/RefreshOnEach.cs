@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task ValueRefreshedWhenTriggered()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var updateResults = new List<CachedObjectSuccessfulUpdateResult>();
             var refreshTrigger = new Subject<bool>();
 
             ICachedObject<DateTime> date;
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .RefreshOnEach(refreshTrigger)
-                    .OnUpdate(refreshResults.Add)
+                    .OnValueUpdated(updateResults.Add)
                     .Build();
             }
 
@@ -38,9 +38,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             for (var i = 1; i < 10; i++)
             {
-                refreshResults.Should().HaveCount(i);
+                updateResults.Should().HaveCount(i);
                 refreshTrigger.OnNext(true);
-                refreshResults.Should().HaveCount(i + 1);
+                updateResults.Should().HaveCount(i + 1);
             }
         }
     }

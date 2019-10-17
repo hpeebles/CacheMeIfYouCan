@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task ValueIsRefreshedAtRegularIntervals()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var refreshResults = new List<CachedObjectSuccessfulUpdateResult>();
             var countdown = new CountdownEvent(4);
 
             ICachedObject<DateTime> date;
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(4))
-                    .OnUpdate(r =>
+                    .OnValueUpdated(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
                     .WithJitter(50)
-                    .OnUpdate(r =>
+                    .OnValueUpdated(r =>
                     {
                         if (r.UpdateAttemptCount == 1)
                             return;
@@ -98,7 +98,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task VariableRefreshInterval()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var refreshResults = new List<CachedObjectSuccessfulUpdateResult>();
             var countdown = new CountdownEvent(5);
             var refreshCount = 0;
             
@@ -108,7 +108,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshIntervalFactory(_ => TimeSpan.FromSeconds(++refreshCount))
-                    .OnUpdate(r =>
+                    .OnValueUpdated(r =>
                     {
                         refreshResults.Add(r);
                         countdown.Signal();
@@ -139,18 +139,23 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task OnSuccessAndOnFailureRefreshIntervals()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var updateAttemptResults = new List<ICachedObjectUpdateAttemptResult>();
             var countdown = new CountdownEvent(5);
             
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
             {
                 date = CachedObjectFactory
-                    .ConfigureFor(() => refreshResults.Count % 2 == 0 ? DateTime.UtcNow : throw new Exception())
+                    .ConfigureFor(() => updateAttemptResults.Count % 2 == 0 ? DateTime.UtcNow : throw new Exception())
                     .WithRefreshInterval(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3))
-                    .OnUpdate(r =>
+                    .OnValueUpdated(r =>
                     {
-                        refreshResults.Add(r);
+                        updateAttemptResults.Add(r);
+                        countdown.Signal();
+                    })
+                    .OnException(ex =>
+                    {
+                        updateAttemptResults.Add(ex);
                         countdown.Signal();
                     })
                     .Build();
@@ -162,11 +167,11 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            refreshResults.Count.Should().Be(5);
+            updateAttemptResults.Count.Should().Be(5);
             
             for (var i = 1; i < 5; i++)
             {
-                var result = refreshResults[i];
+                var result = updateAttemptResults[i];
                 
                 var interval = result.Start - result.LastUpdateAttempt;
 

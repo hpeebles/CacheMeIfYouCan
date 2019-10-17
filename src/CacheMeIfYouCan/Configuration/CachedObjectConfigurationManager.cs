@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Configuration
         protected readonly Func<T, TUpdates, Task<T>> UpdateValueFunc;
         private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
         private string _name;
-        private Action<CachedObjectUpdateResult<T, TUpdates>> _onUpdate;
+        private Action<CachedObjectSuccessfulUpdateResult<T, TUpdates>> _onValueUpdated;
         private Action<CachedObjectUpdateException> _onException;
 
         internal CachedObjectConfigurationManager(
@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.Configuration
             UpdateValueFunc = updateValueFunc;
             _updateScheduler = updateScheduler;
 
-            if (DefaultSettings.CachedObject.OnUpdateAction != null)
-                OnUpdate(DefaultSettings.CachedObject.OnUpdateAction);
+            if (DefaultSettings.CachedObject.OnValueUpdatedAction != null)
+                OnValueUpdated(DefaultSettings.CachedObject.OnValueUpdatedAction);
             
             if (DefaultSettings.CachedObject.OnExceptionAction != null)
                 OnException(DefaultSettings.CachedObject.OnExceptionAction);
@@ -36,11 +36,11 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedObjectConfigurationManager<T, TUpdates> OnUpdate(
-            Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate,
+        public CachedObjectConfigurationManager<T, TUpdates> OnValueUpdated(
+            Action<CachedObjectSuccessfulUpdateResult<T, TUpdates>> onValueUpdated,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            _onUpdate = ActionsHelper.Combine(_onUpdate, onUpdate, behaviour);
+            _onValueUpdated = ActionsHelper.Combine(_onValueUpdated, onValueUpdated, behaviour);
             return this;
         }
 
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Configuration
                 UpdateValueFunc ?? ((_, __) => InitialiseValueFunc()),
                 _updateScheduler,
                 name,
-                _onUpdate,
+                _onValueUpdated,
                 _onException);
 
             CachedObjectInitializer.Add(cachedObject);

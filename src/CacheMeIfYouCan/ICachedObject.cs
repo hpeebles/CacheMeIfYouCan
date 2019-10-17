@@ -24,11 +24,15 @@ namespace CacheMeIfYouCan
         /// </summary>
         ICachedObject<TOut, T> Map<TOut>(Func<T, TOut> mapFunc, string name = null);
         
-        event EventHandler<CachedObjectUpdateExceptionEventArgs> OnException;
+        event EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T>> OnValueUpdated;
+        
+        event EventHandler<CachedObjectUpdateExceptionEventArgs<T>> OnException;
     }
 
     public interface ICachedObject<T, TUpdates> : ICachedObject<T>
     {
-        event EventHandler<CachedObjectUpdateResultEventArgs<T, TUpdates>> OnUpdate;
+        new event EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>> OnValueUpdated;
+        
+        new event EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>> OnException;
     }
 }

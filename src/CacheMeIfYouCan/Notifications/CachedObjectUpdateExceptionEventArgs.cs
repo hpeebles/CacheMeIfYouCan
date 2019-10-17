@@ -2,13 +2,24 @@ using System;
 
 namespace CacheMeIfYouCan.Notifications
 {
-    public class CachedObjectUpdateExceptionEventArgs : EventArgs
+    public abstract class CachedObjectUpdateExceptionEventArgs<T> : EventArgs
     {
-        internal CachedObjectUpdateExceptionEventArgs(CachedObjectUpdateException exception)
+        internal CachedObjectUpdateExceptionEventArgs(CachedObjectUpdateException<T> exception)
         {
             Exception = exception;
         }
         
-        public CachedObjectUpdateException Exception { get; }
+        public CachedObjectUpdateException<T> Exception { get; }
+    }
+    
+    public sealed class CachedObjectUpdateExceptionEventArgs<T, TUpdates> : CachedObjectUpdateExceptionEventArgs<T>
+    {
+        internal CachedObjectUpdateExceptionEventArgs(CachedObjectUpdateException<T, TUpdates> exception)
+            : base(exception)
+        {
+            Exception = exception;
+        }
+        
+        public new CachedObjectUpdateException<T, TUpdates> Exception { get; }
     }
 }

@@ -2,13 +2,24 @@ using System;
 
 namespace CacheMeIfYouCan.Notifications
 {
-    public class CachedObjectUpdateResultEventArgs<T, TUpdates> : EventArgs
+    public abstract class CachedObjectSuccessfulUpdateResultEventArgs<T> : EventArgs
     {
-        internal CachedObjectUpdateResultEventArgs(CachedObjectUpdateResult<T, TUpdates> result)
+        internal CachedObjectSuccessfulUpdateResultEventArgs(CachedObjectSuccessfulUpdateResult<T> result)
         {
             Result = result;
         }
         
-        public CachedObjectUpdateResult<T, TUpdates> Result { get; }
+        public CachedObjectSuccessfulUpdateResult<T> Result { get; }
+    }
+    
+    public sealed class CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates> : CachedObjectSuccessfulUpdateResultEventArgs<T>
+    {
+        internal CachedObjectSuccessfulUpdateResultEventArgs(CachedObjectSuccessfulUpdateResult<T, TUpdates> result)
+            : base(result)
+        {
+            Result = result;
+        }
+        
+        public new CachedObjectSuccessfulUpdateResult<T, TUpdates> Result { get; }
     }
 }

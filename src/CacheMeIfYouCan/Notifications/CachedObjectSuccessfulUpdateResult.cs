@@ -2,13 +2,12 @@ using System;
 
 namespace CacheMeIfYouCan.Notifications
 {
-    public abstract class CachedObjectUpdateResult
+    public abstract class CachedObjectSuccessfulUpdateResult : ICachedObjectUpdateAttemptResult
     {
-        internal CachedObjectUpdateResult(
+        internal CachedObjectSuccessfulUpdateResult(
             string name,
             DateTime start,
             TimeSpan duration,
-            CachedObjectUpdateException exception,
             int updateAttemptCount,
             int successfulUpdateCount,
             DateTime lastUpdateAttempt,
@@ -17,8 +16,6 @@ namespace CacheMeIfYouCan.Notifications
             Name = name;
             Start = start;
             Duration = duration;
-            Success = exception == null;
-            Exception = exception;
             UpdateAttemptCount = updateAttemptCount;
             SuccessfulUpdateCount = successfulUpdateCount;
             LastUpdateAttempt = lastUpdateAttempt;
@@ -28,34 +25,50 @@ namespace CacheMeIfYouCan.Notifications
         public string Name { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public bool Success { get; }
-        public CachedObjectUpdateException Exception { get; }
         public int UpdateAttemptCount { get; }
         public int SuccessfulUpdateCount { get; }
         public DateTime LastUpdateAttempt { get; }
         public DateTime LastSuccessfulUpdate { get; }
+        bool ICachedObjectUpdateAttemptResult.Success => true;
+        Exception ICachedObjectUpdateAttemptResult.Exception => null;
     }
 
-    public sealed class CachedObjectUpdateResult<T, TUpdates> : CachedObjectUpdateResult
+    public abstract class CachedObjectSuccessfulUpdateResult<T> : CachedObjectSuccessfulUpdateResult, ICachedObjectUpdateAttemptResult<T>
     {
-        internal CachedObjectUpdateResult(
+        internal CachedObjectSuccessfulUpdateResult(
+            string name,
+            DateTime start,
+            TimeSpan duration,
+            T newValue,
+            int updateAttemptCount,
+            int successfulUpdateCount,
+            DateTime lastUpdateAttempt,
+            DateTime lastSuccessfulUpdate)
+            : base(name, start, duration, updateAttemptCount, successfulUpdateCount, lastUpdateAttempt, lastSuccessfulUpdate)
+        {
+            NewValue = newValue;
+        }
+
+        public T NewValue { get; }
+    }
+
+    public sealed class CachedObjectSuccessfulUpdateResult<T, TUpdates> : CachedObjectSuccessfulUpdateResult<T>, ICachedObjectUpdateAttemptResult<T, TUpdates>
+    {
+        internal CachedObjectSuccessfulUpdateResult(
             string name,
             DateTime start,
             TimeSpan duration,
             T newValue,
             TUpdates updates,
-            CachedObjectUpdateException exception,
             int updateAttemptCount,
             int successfulUpdateCount,
             DateTime lastUpdateAttempt,
             DateTime lastSuccessfulUpdate)
-            : base(name, start, duration, exception, updateAttemptCount, successfulUpdateCount, lastUpdateAttempt, lastSuccessfulUpdate)
+            : base(name, start, duration, newValue, updateAttemptCount, successfulUpdateCount, lastUpdateAttempt, lastSuccessfulUpdate)
         {
-            NewValue = newValue;
             Updates = updates;
         }
         
-        public T NewValue { get; }
         public TUpdates Updates { get; }
     }
 }

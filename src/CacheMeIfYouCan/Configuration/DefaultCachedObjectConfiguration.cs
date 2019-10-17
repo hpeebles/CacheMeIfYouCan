@@ -6,14 +6,14 @@ namespace CacheMeIfYouCan.Configuration
 {
     public class DefaultCachedObjectConfiguration
     {
-        internal Action<CachedObjectUpdateResult> OnUpdateAction { get; private set; }
+        internal Action<CachedObjectSuccessfulUpdateResult> OnValueUpdatedAction { get; private set; }
         internal Action<CachedObjectUpdateException> OnExceptionAction { get; private set; }
 
-        public DefaultCachedObjectConfiguration OnUpdate(
-            Action<CachedObjectUpdateResult> onUpdate,
+        public DefaultCachedObjectConfiguration OnValueUpdated(
+            Action<CachedObjectSuccessfulUpdateResult> onValueUpdated,
             AdditionBehaviour behaviour = AdditionBehaviour.Append)
         {
-            OnUpdateAction = ActionsHelper.Combine(OnUpdateAction, onUpdate, behaviour);
+            OnValueUpdatedAction = ActionsHelper.Combine(OnValueUpdatedAction, onValueUpdated, behaviour);
             return this;
         }
 

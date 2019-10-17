@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 intValue = CachedObjectFactory
                     .ConfigureFor(() => 1)
                     .WithUpdates(TimeSpan.FromSeconds(1), x => x + 1)
-                    .OnUpdate(_ => countdown.Signal())
+                    .OnValueUpdated(_ => countdown.Signal())
                     .Build();
             }
 
@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task UpdatesAreAppliedWhenTriggered()
         {
-            var updateResults = new List<CachedObjectUpdateResult<List<int>, int>>();
+            var updateResults = new List<CachedObjectSuccessfulUpdateResult<List<int>, int>>();
             var updatesObservable = new Subject<int>();
             
             ICachedObject<List<int>> listOfInts;
@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 listOfInts = CachedObjectFactory
                     .ConfigureFor(() => new List<int>())
                     .WithUpdates(updatesObservable, (curr, next) => curr.Concat(new [] { next }).ToList())
-                    .OnUpdate(updateResults.Add)
+                    .OnValueUpdated(updateResults.Add)
                     .Build();
             }
 
@@ -111,7 +111,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task NotificationsContainTheUpdates()
         {
-            var updateResults = new List<CachedObjectUpdateResult<List<int>, int>>();
+            var updateResults = new List<CachedObjectSuccessfulUpdateResult<List<int>, int>>();
             var updatesObservable = new Subject<int>();
             
             ICachedObject<List<int>> listOfInts;
@@ -120,7 +120,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 listOfInts = CachedObjectFactory
                     .ConfigureFor(() => new List<int>())
                     .WithUpdates(updatesObservable, (curr, next) => curr.Concat(new [] { next }).ToList())
-                    .OnUpdate(updateResults.Add)
+                    .OnValueUpdated(updateResults.Add)
                     .Build();
             }
 
@@ -167,7 +167,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                         
                         return curr.Concat(new[] {next}).ToList();
                     })
-                    .OnUpdate(r => countdown.Signal())
+                    .OnValueUpdated(r => countdown.Signal())
                     .Build();
             }
 

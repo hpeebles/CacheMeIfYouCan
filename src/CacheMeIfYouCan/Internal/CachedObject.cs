@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -11,8 +12,8 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly Func<Task<T>> _initialiseValueFunc;
         private readonly Func<T, TUpdates, Task<T>> _updateValueFunc;
-        private readonly Action<CachedObjectUpdateResult<T, TUpdates>> _onUpdate;
-        private readonly Action<CachedObjectUpdateException> _onException;
+        private readonly Action<CachedObjectSuccessfulUpdateResult<T, TUpdates>> _onValueUpdated;
+        private readonly Action<CachedObjectUpdateException<T, TUpdates>> _onException;
         private readonly ICachedObjectUpdateScheduler<T, TUpdates> _updateScheduler;
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cts;
@@ -23,22 +24,20 @@ namespace CacheMeIfYouCan.Internal
         private DateTime _lastSuccessfulUpdate;
         private T _value;
         private volatile CachedObjectState _state;
-        public event EventHandler<CachedObjectUpdateResultEventArgs<T, TUpdates>> OnUpdate;
-        public event EventHandler<CachedObjectUpdateExceptionEventArgs> OnException;
         
         public CachedObject(
             Func<Task<T>> initialiseValueFunc,
             Func<T, TUpdates, Task<T>> updateValueFunc,
             ICachedObjectUpdateScheduler<T, TUpdates> updateScheduler,
             string name,
-            Action<CachedObjectUpdateResult<T, TUpdates>> onUpdate,
+            Action<CachedObjectSuccessfulUpdateResult<T, TUpdates>> onValueUpdated,
             Action<CachedObjectUpdateException> onException)
         {
             _initialiseValueFunc = initialiseValueFunc ?? throw new ArgumentNullException(nameof(initialiseValueFunc));
             _updateValueFunc = updateValueFunc ?? throw new ArgumentNullException(nameof(updateValueFunc));
             _updateScheduler = updateScheduler;
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            _onUpdate = onUpdate;
+            _onValueUpdated = onValueUpdated;
             _onException = onException;
             _semaphore = new SemaphoreSlim(1);
             _cts = new CancellationTokenSource();
@@ -103,15 +102,12 @@ namespace CacheMeIfYouCan.Internal
 
                 try
                 {
-                    var result = await UpdateValue((_, __) => _initialiseValueFunc(), default);
+                    // Only throw exceptions that happen during initialization
+                    var result = await UpdateValue((_, __) => _initialiseValueFunc(), default, true);
 
-                    if (!result.Success)
-                    {
-                        _state = CachedObjectState.PendingInitialization;
-                        return;
-                    }
-
-                    _updateScheduler?.Start(result, u => UpdateValue(_updateValueFunc, u));
+                    _updateScheduler?.Start(
+                        (CachedObjectSuccessfulUpdateResult<T, TUpdates>)result,
+                        u => UpdateValue(_updateValueFunc, u, false));
 
                     _state = CachedObjectState.Ready;
                 }
@@ -145,57 +141,138 @@ namespace CacheMeIfYouCan.Internal
             _cts.Dispose();
         }
         
-        private async Task<CachedObjectUpdateResult<T, TUpdates>> UpdateValue(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates)
+        private async Task<ICachedObjectUpdateAttemptResult<T, TUpdates>> UpdateValue(Func<T, TUpdates, Task<T>> updateFunc, TUpdates updates, bool throwException)
         {
             if (_state == CachedObjectState.Disposed)
                 throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
 
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
-            CachedObjectUpdateException updateException = null;
-            T newValue;
+            CachedObjectUpdateException<T, TUpdates> updateException = null;
             _updateAttemptCount++;
 
             try
             {
-                newValue = await updateFunc(_value, updates);
+                var newValue = await updateFunc(_value, updates);
+                
+                if (_state == CachedObjectState.Disposed)
+                    throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
+
                 _value = newValue;
                 _successfulUpdateCount++;
+
+                var result = new CachedObjectSuccessfulUpdateResult<T, TUpdates>(
+                    Name,
+                    start,
+                    StopwatchHelper.GetDuration(stopwatchStart),
+                    newValue,
+                    updates,
+                    _updateAttemptCount,
+                    _successfulUpdateCount,
+                    _lastUpdateAttempt,
+                    _lastSuccessfulUpdate);
+
+                _onValueUpdated?.Invoke(result);
+                OnValueUpdated?.Invoke(this, new CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>(result));
+                _valuesObservable.OnNext(newValue);
+
+                return result;
             }
             catch (Exception ex)
             {
-                updateException = new CachedObjectUpdateException(Name, ex);
-                newValue = default;
-                
+                updateException = new CachedObjectUpdateException<T, TUpdates>(
+                    Name,
+                    ex,
+                    start,
+                    StopwatchHelper.GetDuration(stopwatchStart),
+                    _value,
+                    updates,
+                    _updateAttemptCount,
+                    _successfulUpdateCount,
+                    _lastUpdateAttempt,
+                    _lastSuccessfulUpdate);
+
                 _onException?.Invoke(updateException);
-                OnException?.Invoke(this, new CachedObjectUpdateExceptionEventArgs(updateException));
+                OnException?.Invoke(this, new CachedObjectUpdateExceptionEventArgs<T, TUpdates>(updateException));
+
+                if (throwException)
+                    throw;
+
+                return updateException;
             }
-            
-            if (_state == CachedObjectState.Disposed)
-                throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
-            
-            var result = new CachedObjectUpdateResult<T, TUpdates>(
-                Name,
-                start,
-                StopwatchHelper.GetDuration(stopwatchStart),
-                newValue,
-                updates,
-                updateException,
-                _updateAttemptCount,
-                _successfulUpdateCount,
-                _lastUpdateAttempt,
-                _lastSuccessfulUpdate);
+            finally
+            {
+                _lastUpdateAttempt = DateTime.UtcNow;
 
-            _lastUpdateAttempt = DateTime.UtcNow;
-            
-            _onUpdate?.Invoke(result);
-            OnUpdate?.Invoke(this, new CachedObjectUpdateResultEventArgs<T, TUpdates>(result));
-            _valuesObservable.OnNext(newValue);
-
-            if (updateException == null)
-                _lastSuccessfulUpdate = DateTime.UtcNow;
-
-            return result;
+                if (updateException == null)
+                    _lastSuccessfulUpdate = _lastUpdateAttempt;
+            }
         }
+        
+        #region OnValueUpdated and OnException events
+        
+        private readonly List<(EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T>>, EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>>)> _onValueUpdatedHandlers =
+            new List<(EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T>>, EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>>)>();
+        
+        private readonly List<(EventHandler<CachedObjectUpdateExceptionEventArgs<T>>, EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>>)> _onExceptionHandlers =
+            new List<(EventHandler<CachedObjectUpdateExceptionEventArgs<T>>, EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>>)>();
+
+        public event EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>> OnValueUpdated;
+        event EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T>> ICachedObject<T>.OnValueUpdated
+        {
+            add
+            {
+                EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>> handler = (obj, args) => value(obj, args);
+                lock (_onValueUpdatedHandlers)
+                    _onValueUpdatedHandlers.Add((value, handler));
+
+                OnValueUpdated += handler;
+            }
+            remove
+            {
+                EventHandler<CachedObjectSuccessfulUpdateResultEventArgs<T, TUpdates>> handler;
+                lock (_onValueUpdatedHandlers)
+                {
+                    var index = _onValueUpdatedHandlers.FindIndex(x => x.Item1 == value);
+                    if (index < 0)
+                        return;
+                    
+                    handler = _onValueUpdatedHandlers[index].Item2;
+                    _onValueUpdatedHandlers.RemoveAt(index);
+                }
+
+                OnValueUpdated -= handler;
+            }
+        }
+
+        public event EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>> OnException;
+        event EventHandler<CachedObjectUpdateExceptionEventArgs<T>> ICachedObject<T>.OnException
+        {
+            add
+            {
+                EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>> handler = (obj, args) => value(obj, args);
+                lock (_onExceptionHandlers)
+                    _onExceptionHandlers.Add((value, handler));
+
+                OnException += handler;
+            }
+            remove
+            {
+                EventHandler<CachedObjectUpdateExceptionEventArgs<T, TUpdates>> handler;
+                lock (_onExceptionHandlers)
+                {
+                    var index = _onExceptionHandlers.FindIndex(x => x.Item1 == value);
+                    if (index < 0)
+                        return;
+                    
+                    handler = _onExceptionHandlers[index].Item2;
+                    _onExceptionHandlers.RemoveAt(index);
+                }
+
+                OnException -= handler;
+            }
+        }
+        
+        #endregion
     }
 }

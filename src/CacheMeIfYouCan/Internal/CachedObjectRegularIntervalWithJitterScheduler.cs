@@ -7,11 +7,11 @@ namespace CacheMeIfYouCan.Internal
 {
     internal class CachedObjectRegularIntervalWithJitterScheduler<T> : ICachedObjectUpdateScheduler<T, Unit>
     {
-        private readonly Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> _getIntervalFunc;
+        private readonly Func<ICachedObjectUpdateAttemptResult<T, Unit>, TimeSpan> _getIntervalFunc;
         private readonly CancellationTokenSource _cts;
 
         public CachedObjectRegularIntervalWithJitterScheduler(
-            Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> getIntervalFunc,
+            Func<ICachedObjectUpdateAttemptResult<T, Unit>, TimeSpan> getIntervalFunc,
             double jitterPercentage)
         {
             if (jitterPercentage.Equals(0))
@@ -32,8 +32,8 @@ namespace CacheMeIfYouCan.Internal
         }
         
         public void Start(
-            CachedObjectUpdateResult<T, Unit> initialiseResult, 
-            Func<Unit, Task<CachedObjectUpdateResult<T, Unit>>> updateValueFunc)
+            CachedObjectSuccessfulUpdateResult<T, Unit> initialiseResult, 
+            Func<Unit, Task<ICachedObjectUpdateAttemptResult<T, Unit>>> updateValueFunc)
         {
             var firstInterval = _getIntervalFunc(initialiseResult);
             
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Internal
             _cts.Dispose();
         }
 
-        private async Task RunScheduler(TimeSpan nextInterval, Func<Task<CachedObjectUpdateResult<T, Unit>>> refreshValueFunc)
+        private async Task RunScheduler(TimeSpan nextInterval, Func<Task<ICachedObjectUpdateAttemptResult<T, Unit>>> refreshValueFunc)
         {
             while (!_cts.IsCancellationRequested)
             {

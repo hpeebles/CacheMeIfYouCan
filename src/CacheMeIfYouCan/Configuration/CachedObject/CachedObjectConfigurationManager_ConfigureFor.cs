@@ -20,17 +20,17 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
             return WithRefreshInterval(interval, interval);
         }
         
-        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithRefreshInterval(TimeSpan onSuccess, TimeSpan onFailure)
+        public CachedObjectConfigurationManager_WithRegularUpdates<T> WithRefreshInterval(TimeSpan onSuccessfulUpdate, TimeSpan onFailedUpdate)
         {
             return new CachedObjectConfigurationManager_WithRegularUpdates<T>(
                 _initialiseValueFunc,
                 null,
-                onSuccess,
-                onFailure);
+                onSuccessfulUpdate,
+                onFailedUpdate);
         }
 
         public CachedObjectConfigurationManager<T, Unit> WithRefreshIntervalFactory(
-            Func<CachedObjectUpdateResult<T, Unit>, TimeSpan> refreshIntervalFunc)
+            Func<ICachedObjectUpdateAttemptResult<T, Unit>, TimeSpan> refreshIntervalFunc)
         {
             return new CachedObjectConfigurationManager<T, Unit>(
                 _initialiseValueFunc,

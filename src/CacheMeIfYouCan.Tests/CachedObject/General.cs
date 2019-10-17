@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task RefreshedValueIsImmediatelyExposed()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var refreshResults = new List<CachedObjectSuccessfulUpdateResult>();
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 date = CachedObjectFactory
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                    .OnUpdate(r =>
+                    .OnValueUpdated(r =>
                     {
                         refreshResults.Add(r);
                         Assert.InRange(
@@ -50,10 +50,10 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
 
         [Fact]
-        public async Task ContinuesToRefreshAfterException()
+        public async Task CachedObjectContinuesToRefreshAfterException()
         {
             var index = 0;
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var updateAttemptResults = new List<ICachedObjectUpdateAttemptResult>();
 
             ICachedObject<DateTime> date;
             using (_setupLock.Enter())
@@ -67,7 +67,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                         return DateTime.UtcNow;
                     })
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(200))
-                    .OnUpdate(refreshResults.Add)
+                    .OnValueUpdated(updateAttemptResults.Add)
+                    .OnException(updateAttemptResults.Add)
                     .Build();
             }
 
@@ -77,11 +78,11 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             
             date.Dispose();
             
-            refreshResults.Count.Should().BeGreaterThan(2);
+            updateAttemptResults.Count.Should().BeGreaterThan(2);
 
-            for (var i = 0; i < refreshResults.Count; i++)
+            for (var i = 0; i < updateAttemptResults.Count; i++)
             {
-                var result = refreshResults[i];
+                var result = updateAttemptResults[i];
                 
                 if (i == 1)
                     result.Success.Should().BeFalse();
@@ -115,7 +116,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         [Fact]
         public async Task Named()
         {
-            var refreshResults = new List<CachedObjectUpdateResult>();
+            var refreshResults = new List<CachedObjectSuccessfulUpdateResult>();
             var name = Guid.NewGuid().ToString();
             
             ICachedObject<DateTime> date;
@@ -125,7 +126,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMilliseconds(1))
                     .Named(name)
-                    .OnUpdate(refreshResults.Add)
+                    .OnValueUpdated(refreshResults.Add)
                     .Build();
             }
 
