@@ -38,6 +38,31 @@ namespace CacheMeIfYouCan.Configuration.CachedObject
                 new CachedObjectRegularIntervalWithJitterScheduler<T>(refreshIntervalFunc, 0));
         }
         
+        public CachedObjectConfigurationManager<T, Unit> WithRefreshIntervalFactory(
+            Func<CachedObjectSuccessfulUpdateResult<T, Unit>, TimeSpan> onSuccessfulUpdateIntervalFunc,
+            Func<CachedObjectUpdateException<T, Unit>, TimeSpan> onFailedUpdateIntervalFunc)
+        {
+            return new CachedObjectConfigurationManager<T, Unit>(
+                _initialiseValueFunc,
+                null,
+                new CachedObjectRegularIntervalWithJitterScheduler<T>(RefreshIntervalFactory, 0));
+
+            TimeSpan RefreshIntervalFactory(ICachedObjectUpdateAttemptResult<T, Unit> result)
+            {
+                switch (result)
+                {
+                    case CachedObjectSuccessfulUpdateResult<T, Unit> success:
+                        return onSuccessfulUpdateIntervalFunc(success);
+                    
+                    case CachedObjectUpdateException<T, Unit> failure:
+                        return onFailedUpdateIntervalFunc(failure);
+                    
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+        }
+        
         public CachedObjectConfigurationManager<T, Unit> RefreshOnEach<TAny>(IObservable<TAny> observable)
         {
             return new CachedObjectConfigurationManager<T, Unit>(
