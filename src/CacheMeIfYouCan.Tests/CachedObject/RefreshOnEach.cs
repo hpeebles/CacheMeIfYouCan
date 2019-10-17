@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             for (var i = 1; i < 10; i++)
             {

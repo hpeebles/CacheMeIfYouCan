@@ -124,7 +124,7 @@ namespace CacheMeIfYouCan
         {
             var timer = Stopwatch.StartNew();
 
-            var outcome = await cachedObject.Initialize();
+            var outcome = await cachedObject.InitializeAsync();
             
             return new CachedObjectInitializeResult(
                 cachedObject.Name,

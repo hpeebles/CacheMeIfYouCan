@@ -39,7 +39,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             countdown.Wait(TimeSpan.FromMinutes(1));
 
@@ -82,7 +82,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             WaitHandle
                 .WaitAll(new[] { shortIntervalEvent.WaitHandle, longIntervalEvent.WaitHandle }, TimeSpan.FromMinutes(1))
@@ -116,7 +116,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             countdown.Wait(TimeSpan.FromMinutes(1));
             
@@ -161,7 +161,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             countdown.Wait(TimeSpan.FromMinutes(1));
             
@@ -221,7 +221,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             countdown.Wait(TimeSpan.FromMinutes(1));
             

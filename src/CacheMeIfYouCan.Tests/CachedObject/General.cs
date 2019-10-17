@@ -40,7 +40,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
             
@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
             
             await Task.Delay(TimeSpan.FromSeconds(5));
             
@@ -103,7 +103,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             date.Value.Should().BeAfter(DateTime.MinValue);
             
@@ -130,7 +130,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             await Task.Delay(TimeSpan.FromMilliseconds(500));
 

@@ -57,8 +57,10 @@ namespace CacheMeIfYouCan.Internal
                 
                 if (_state == CachedObjectState.PendingInitialization ||
                     _state == CachedObjectState.InitializationInProgress)
-                    Task.Run(Initialize).GetAwaiter().GetResult();
-                
+                {
+                    Initialize();
+                }
+
                 if (_state == CachedObjectState.Disposed)
                     throw new ObjectDisposedException(nameof(CachedObject<T, TUpdates>));
                 
@@ -66,7 +68,12 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        public async Task<CachedObjectInitializeOutcome> Initialize()
+        public CachedObjectInitializeOutcome Initialize()
+        {
+            return Task.Run(InitializeAsync).GetAwaiter().GetResult();
+        }
+
+        public async Task<CachedObjectInitializeOutcome> InitializeAsync()
         {
             if (_state == CachedObjectState.PendingInitialization ||
                 _state == CachedObjectState.InitializationInProgress)

@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Cron.Tests
                 .OnValueUpdated(refreshResults.Add)
                 .Build();
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
 

@@ -8,7 +8,8 @@ namespace CacheMeIfYouCan
     {
         string Name { get; }
         CachedObjectState State { get; }
-        Task<CachedObjectInitializeOutcome> Initialize();
+        CachedObjectInitializeOutcome Initialize();
+        Task<CachedObjectInitializeOutcome> InitializeAsync();
     }
     
     public interface ICachedObject<T> : ICachedObject, IDisposable

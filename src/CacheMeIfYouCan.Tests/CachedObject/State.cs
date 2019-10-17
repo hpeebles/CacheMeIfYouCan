@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             cachedObject.State.Should().Be(CachedObjectState.PendingInitialization);
 
-            var task = cachedObject.Initialize();
+            var task = cachedObject.InitializeAsync();
 
             cachedObject.State.Should().Be(CachedObjectState.InitializationInProgress);
 

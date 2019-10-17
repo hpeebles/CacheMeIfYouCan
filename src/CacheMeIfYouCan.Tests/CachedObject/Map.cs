@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var multipliedByTwo = counter.Map(c => c * 2);
 
-            await counter.Initialize();
+            await counter.InitializeAsync();
             
             for (var i = 1; i < 10; i++)
             {
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             multipliedByTwo.State.Should().Be(CachedObjectState.PendingInitialization);
             counter.State.Should().Be(CachedObjectState.PendingInitialization);
 
-            await multipliedByTwo.Initialize();
+            await multipliedByTwo.InitializeAsync();
 
             multipliedByTwo.State.Should().Be(CachedObjectState.Ready);
             counter.State.Should().Be(CachedObjectState.Ready);
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var multipliedByThree = counter.Map(c => c * 3);
             var multipliedByFour = counter.Map(c => c * 4);
 
-            await counter.Initialize();
+            await counter.InitializeAsync();
 
             for (var i = 1; i < 10; i++)
             {

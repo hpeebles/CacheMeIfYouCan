@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await date.Initialize();
+            await date.InitializeAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public void OnException()
+        public async Task OnException()
         {
             var exceptions = new List<CachedObjectUpdateException>();
             
@@ -66,8 +66,10 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            date.Initialize();
+            Func<Task> initializeFunc = () => date.InitializeAsync();
 
+            await initializeFunc.Should().ThrowAsync<Exception>();
+            
             date.Dispose();
             
             exceptions.Should().ContainSingle();
@@ -76,7 +78,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public void ActionsCanBeCombined()
+        public async Task ActionsCanBeCombined()
         {
             var updateResults1 = new List<CachedObjectSuccessfulUpdateResult>();
             var updateResults2 = new List<CachedObjectSuccessfulUpdateResult>();
@@ -95,7 +97,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 DefaultSettings.CachedObject.OnValueUpdated(null, AdditionBehaviour.Overwrite);
             }
 
-            date.Initialize();
+            await date.InitializeAsync();
 
             date.Dispose();
             
@@ -104,7 +106,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public void OnValueUpdatedEvent()
+        public async Task OnValueUpdatedEvent()
         {
             var updateResults = new List<CachedObjectSuccessfulUpdateResult>();
             
@@ -119,7 +121,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             date.OnValueUpdated += (sender, args) => updateResults.Add(args.Result);
             
-            date.Initialize();
+            await date.InitializeAsync();
 
             date.Dispose();
             
@@ -127,7 +129,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public void OnExceptionEvent()
+        public async Task OnExceptionEvent()
         {
             var exceptions = new List<CachedObjectUpdateException>();
             
@@ -142,7 +144,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             date.OnException += (sender, args) => exceptions.Add(args.Exception);
             
-            date.Initialize();
+            Func<Task> initializeFunc = () => date.InitializeAsync();
+
+            await initializeFunc.Should().ThrowAsync<Exception>();
 
             date.Dispose();
             
@@ -152,7 +156,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public void OnValueUpdatedEventOnBaseInterface()
+        public async Task OnValueUpdatedEventOnBaseInterface()
         {
             var updateResults = new List<CachedObjectSuccessfulUpdateResult>();
             var refreshTrigger = new Subject<Unit>();
@@ -170,7 +174,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             date.OnValueUpdated += handler;
             
-            date.Initialize();
+            await date.InitializeAsync();
             
             updateResults.Should().ContainSingle();
             
@@ -203,7 +207,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             date.OnException += handler;
             
-            Func<Task> func = () => date.Initialize();
+            Func<Task> func = () => date.InitializeAsync();
 
             await func.Should().ThrowAsync<Exception>();
             

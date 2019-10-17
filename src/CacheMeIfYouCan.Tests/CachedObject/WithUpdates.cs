@@ -35,7 +35,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await intValue.Initialize();
+            await intValue.InitializeAsync();
 
             countdown.Wait(TimeSpan.FromSeconds(7)).Should().BeTrue();
             
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await listOfInts.Initialize();
+            await listOfInts.InitializeAsync();
 
             updateResults.Should().HaveCount(1);
             listOfInts.Value.Should().BeEmpty();
@@ -93,7 +93,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await listOfInts.Initialize();
+            await listOfInts.InitializeAsync();
 
             counter.Should().Be(1);
             listOfInts.Value.Should().BeEmpty();
@@ -124,7 +124,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await listOfInts.Initialize();
+            await listOfInts.InitializeAsync();
 
             updateResults.Should().HaveCount(1);
             updateResults.Single().Updates.Should().Be(default);
@@ -171,7 +171,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await listOfInts.Initialize();
+            await listOfInts.InitializeAsync();
 
             for (var i = 1; i < 10; i++)
                 updatesObservable.OnNext(i);
@@ -192,7 +192,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await intValue.Initialize();
+            await intValue.InitializeAsync();
 
             intValue.Value.Should().Be(1);
         }

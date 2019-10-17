@@ -41,8 +41,10 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(1));
         }
         
-        [Fact]
-        public async Task CanBeInitializedDirectly()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CanBeInitializedDirectly(bool async)
         {
             ICachedObject<long> ticks;
             using (_setupLock.Enter())
@@ -57,7 +59,10 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            await ticks.Initialize();
+            if (async)
+                await ticks.InitializeAsync();
+            else
+                ticks.Initialize();
 
             var timer = Stopwatch.StartNew();
 
