@@ -42,6 +42,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 refreshTrigger.OnNext(true);
                 updateResults.Should().HaveCount(i + 1);
             }
+
+            date.Dispose();
         }
     }
 }

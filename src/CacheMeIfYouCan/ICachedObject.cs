@@ -4,7 +4,7 @@ using CacheMeIfYouCan.Notifications;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICachedObject
+    public interface ICachedObject : IDisposable
     {
         string Name { get; }
         CachedObjectState State { get; }
@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan
         Task<CachedObjectInitializeOutcome> InitializeAsync();
     }
     
-    public interface ICachedObject<T> : ICachedObject, IDisposable
+    public interface ICachedObject<T> : ICachedObject
     {
         /// <summary>
         /// Gets the current value of the <see cref="ICachedObject{T}"/>

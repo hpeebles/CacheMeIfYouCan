@@ -142,6 +142,9 @@ namespace CacheMeIfYouCan.Internal
 
         public void Dispose()
         {
+            if (_state == CachedObjectState.Disposed)
+                return;
+        
             _state = CachedObjectState.Disposed;
             CachedObjectInitializer.Remove(this);
             _cts.Cancel();

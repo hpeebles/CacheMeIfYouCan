@@ -40,6 +40,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             countdown.Wait(TimeSpan.FromSeconds(7)).Should().BeTrue();
             
             intValue.Value.Should().Be(5);
+            
+            intValue.Dispose();
         }
         
         [Fact]
@@ -72,6 +74,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 updateResults.Should().HaveCount(i + 1);
                 listOfInts.Value.Should().BeEquivalentTo(Enumerable.Range(1, i));
             }
+            
+            listOfInts.Dispose();
         }
 
         [Fact]
@@ -106,6 +110,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
                 counter.Should().Be(1);
             }
+            
+            listOfInts.Dispose();
         }
         
         [Fact]
@@ -137,6 +143,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
                 updateResults.Last().Updates.Should().Be(i);
             }
+            
+            listOfInts.Dispose();
         }
         
         [Fact]
@@ -178,6 +186,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             countdown.Wait(2000).Should().BeTrue();
             error.Should().BeFalse();
+            
+            listOfInts.Dispose();
         }
         
         [Fact]
@@ -195,6 +205,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             await intValue.InitializeAsync();
 
             intValue.Value.Should().Be(1);
+            
+            intValue.Dispose();
         }
     }
 }

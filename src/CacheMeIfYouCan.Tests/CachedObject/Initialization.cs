@@ -39,6 +39,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             ticks.Value.Should().BeGreaterThan(0);
 
             timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(1));
+            
+            ticks.Dispose();
         }
         
         [Theory]
@@ -69,6 +71,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             ticks.Value.Should().BeGreaterThan(0);
 
             timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(20));
+            
+            ticks.Dispose();
         }
 
         [Fact]
@@ -96,6 +100,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 .ToArray();
 
             count.Should().Be(1);
+            
+            ticks.Dispose();
         }
     }
 }

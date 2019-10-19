@@ -59,34 +59,6 @@ namespace CacheMeIfYouCan
             return new CachedObjectInitializeManyResult(results, timer.Elapsed);
         }
 
-        /// <summary>
-        /// Initializes all instances of <see cref="ICachedObject{T}"/> where the generic argument is of type <typeparamref name="T"/>
-        /// </summary>
-        /// <returns>True if all instances succeeded to initialize (or were already initialized), False if any failed</returns>
-        public static async Task<CachedObjectInitializeManyResult> Initialize<T>()
-        {
-            List<ICachedObject> cachedObjects;
-            var timer = Stopwatch.StartNew();
-            
-            lock (Lock)
-            {
-                if (!CachedObjects.TryGetValue(typeof(T), out cachedObjects))
-                    return new CachedObjectInitializeManyResult();
-            }
-
-            var tasks = cachedObjects
-                .Select(InitializeImpl)
-                .ToArray();
-
-            await Task.WhenAll(tasks);
-
-            var results = tasks
-                .Select(t => t.Result)
-                .ToArray();
-            
-            return new CachedObjectInitializeManyResult(results, timer.Elapsed);
-        }
-
         internal static void Add<T>(ICachedObject<T> cachedObject)
         {
             var type = typeof(T);

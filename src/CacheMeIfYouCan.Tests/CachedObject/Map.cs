@@ -41,6 +41,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 counter.Value.Should().Be(i);
                 multipliedByTwo.Value.Should().Be(i * 2);
             }
+            
+            counter.Dispose();
         }
         
         [Fact]
@@ -68,6 +70,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             multipliedByTwo.State.Should().Be(CachedObjectState.Ready);
             counter.State.Should().Be(CachedObjectState.Ready);
+            
+            counter.Dispose();
         }
         
         [Fact]
@@ -100,6 +104,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                 multipliedByThree.Value.Should().Be(i * 3);
                 multipliedByFour.Value.Should().Be(i * 4);
             }
+
+            counter.Dispose();
         }
     }
 }

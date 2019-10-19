@@ -16,8 +16,10 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             _setupLock = setupLock;
         }
 
-        [Fact]
-        public void MultipleCanBeInitializedViaInitializeAll()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task MultipleCanBeInitializedViaInitializeAll(bool async)
         {
             ICachedObject<long> ticks;
             ICachedObject<DateTime> date;
@@ -52,7 +54,9 @@ namespace CacheMeIfYouCan.Tests.CachedObject
                     .Build();
             }
 
-            var initializeResults = CachedObjectInitializer.InitializeAll();
+            var initializeResults = async
+                ? await CachedObjectInitializer.InitializeAllAsync()
+                : CachedObjectInitializer.InitializeAll();
             
             initializeResults.Success.Should().BeTrue();
             initializeResults.Duration.Should().BeGreaterThan(TimeSpan.Zero).And.BeLessThan(TimeSpan.FromSeconds(2));
@@ -64,83 +68,75 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             var ticksDoubleValue = ticksDouble.Value;
 
             timer.Elapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(100));
-        }
-        
-        [Fact]
-        public async Task CanInitializeMultipleOfTheSameType()
-        {
-            using (_setupLock.Enter())
-            {
-                for (var i = 0; i < 10; i++)
-                {
-                    CachedObjectFactory
-                        .ConfigureFor(Guid.NewGuid)
-                        .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                        .Build();
-                }
-            }
-
-            var initializeResults = await CachedObjectInitializer.Initialize<Guid>();
             
-            initializeResults.Success.Should().BeTrue();
-            initializeResults.Results.Count.Should().Be(10);
+            ticks.Dispose();
+            date.Dispose();
+            ticksDouble.Dispose();
         }
         
-        [Fact]
-        public async Task CallingInitializeMultipleTimesSucceeds()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CallingInitializeAllMultipleTimesSucceeds(bool async)
         {
+            ICachedObject cachedObject;
             using (_setupLock.Enter())
             {
-                CachedObjectFactory
-                    .ConfigureFor(() => new Dummy1())
+                cachedObject = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMinutes(1))
                     .Build();
             }
 
             for (var i = 0; i < 10; i++)
             {
-                var initializeResults = await CachedObjectInitializer.Initialize<Dummy1>();
+                var initializeResults = async
+                    ? await CachedObjectInitializer.InitializeAllAsync()
+                    : CachedObjectInitializer.InitializeAll();
 
                 initializeResults.Success.Should().BeTrue();
                 initializeResults.Results.Should().ContainSingle();
             }
+            
+            cachedObject.Dispose();
         }
 
         [Fact]
-        public async Task RemovedFromInitializerOnceDisposed()
+        public void RemovedFromInitializerOnceDisposed()
         {
-            ICachedObject<Dummy2> cachedObj;
+            ICachedObject cachedObject;
             using (_setupLock.Enter())
             {
-                cachedObj = CachedObjectFactory
-                    .ConfigureFor(() => new Dummy2())
+                cachedObject = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMinutes(1))
                     .Build();
             }
 
-            var initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
+            var initializeResults = CachedObjectInitializer.InitializeAll();
 
             initializeResults.Success.Should().BeTrue();
             initializeResults.Results.Should().ContainSingle();
 
-            cachedObj.Dispose();
+            cachedObject.Dispose();
 
-            initializeResults = await CachedObjectInitializer.Initialize<Dummy2>();
+            initializeResults = CachedObjectInitializer.InitializeAll();
 
-            initializeResults.Success.Should().BeFalse();
+            initializeResults.Success.Should().BeTrue();
             initializeResults.Results.Should().BeEmpty();
         }
 
         [Fact]
-        public async Task InitializeDurationIsAccurate()
+        public void InitializeDurationIsAccurate()
         {
+            ICachedObject cachedObject;
             using (_setupLock.Enter())
             {
-                CachedObjectFactory
+                cachedObject = CachedObjectFactory
                     .ConfigureFor(async () =>
                     {
                         await Task.Delay(TimeSpan.FromSeconds(1));
-                        return new Dummy3();
+                        return DateTime.UtcNow;
                     })
                     .WithRefreshInterval(TimeSpan.FromMinutes(1))
                     .Build();
@@ -148,9 +144,11 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             var timer = Stopwatch.StartNew();
             
-            var initializeResult = await CachedObjectInitializer.Initialize<Dummy3>();
+            var initializeResult = CachedObjectInitializer.InitializeAll();
             
             timer.Stop();
+            
+            cachedObject.Dispose();
             
             initializeResult.Success.Should().BeTrue();
             initializeResult.Results.Should().ContainSingle();
@@ -160,36 +158,27 @@ namespace CacheMeIfYouCan.Tests.CachedObject
         }
         
         [Fact]
-        public async Task NameIsSetOnInitializationResult()
+        public void NameIsSetOnInitializationResult()
         {
             var name = Guid.NewGuid().ToString();
-            
+
+            ICachedObject cachedObject;            
             using (_setupLock.Enter())
             {
-                CachedObjectFactory
-                    .ConfigureFor(() => new Dummy4())
+                cachedObject = CachedObjectFactory
+                    .ConfigureFor(() => DateTime.UtcNow)
                     .WithRefreshInterval(TimeSpan.FromMinutes(1))
                     .Named(name)
                     .Build();
             }
 
-            var initializeResult = await CachedObjectInitializer.Initialize<Dummy4>();
+            var initializeResult = CachedObjectInitializer.InitializeAll();
+
+            cachedObject.Dispose();
             
             initializeResult.Success.Should().BeTrue();
             initializeResult.Results.Should().ContainSingle();
             initializeResult.Results[0].Name.Should().Be(name);
         }
-
-        private class Dummy1
-        {}
-        
-        private class Dummy2
-        {}
-        
-        private class Dummy3
-        {}
-        
-        private class Dummy4
-        {}
     }
 }

@@ -187,6 +187,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             refreshTrigger.OnNext(Unit.Instance);
 
             updateResults.Should().HaveCount(2);
+
+            date.Dispose();
         }
         
         [Fact]
@@ -218,6 +220,8 @@ namespace CacheMeIfYouCan.Tests.CachedObject
             await func.Should().ThrowAsync<Exception>();
 
             exceptions.Should().ContainSingle();
+            
+            date.Dispose();
             
             DateTime Throw() => throw new Exception();
         }
