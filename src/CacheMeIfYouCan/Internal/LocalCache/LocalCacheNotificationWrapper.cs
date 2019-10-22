@@ -13,19 +13,22 @@ namespace CacheMeIfYouCan.Internal.LocalCache
         private readonly Action<CacheSetResult<TK, TV>> _onCacheSetResult;
         private readonly Action<CacheRemoveResult<TK>> _onCacheRemoveResult;
         private readonly Action<CacheException<TK>> _onException;
+        private readonly IEqualityComparer<Key<TK>> _keyComparer;
 
         public LocalCacheNotificationWrapper(
             ILocalCache<TK, TV> cache,
             Action<CacheGetResult<TK, TV>> onCacheGetResult,
             Action<CacheSetResult<TK, TV>> onCacheSetResult,
             Action<CacheRemoveResult<TK>> onCacheRemoveResult,
-            Action<CacheException<TK>> onException)
+            Action<CacheException<TK>> onException,
+            IEqualityComparer<Key<TK>> keyComparer)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _onCacheGetResult = onCacheGetResult;
             _onCacheSetResult = onCacheSetResult;
             _onCacheRemoveResult = onCacheRemoveResult;
             _onException = onException;
+            _keyComparer = keyComparer;
         }
 
         public string CacheName => _cache.CacheName;
@@ -143,7 +146,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                         results,
                         results == null || !results.Any()
                             ? keys
-                            : keys.Except(results.Select(r => r.Key)).ToArray(),
+                            : keys.Except(results.Select(r => r.Key), _keyComparer).ToList(),
                         !error,
                         start,
                         StopwatchHelper.GetDuration(stopwatchStart));

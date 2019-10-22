@@ -144,7 +144,13 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Then add a wrapper to handle notifications
-            cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
+            cache = new LocalCacheNotificationWrapper<TK, TV>(
+                cache,
+                _onGetResult,
+                _onSetResult,
+                _onRemoveResult,
+                _onException,
+                config.KeyComparer);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
@@ -325,7 +331,13 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             cache = new LocalCacheExceptionFormattingWrapper<TK, TV>(cache);
 
             // Then add a wrapper to handle notifications
-            cache = new LocalCacheNotificationWrapper<TK, TV>(cache, _onGetResult, _onSetResult, _onRemoveResult, _onException);
+            cache = new LocalCacheNotificationWrapper<TK, TV>(
+                cache,
+                _onGetResult,
+                _onSetResult,
+                _onRemoveResult,
+                _onException,
+                config.KeyComparer);
 
             // Then add a wrapper to swallow exceptions (if required)
             if (_swallowExceptionsPredicate != null)
