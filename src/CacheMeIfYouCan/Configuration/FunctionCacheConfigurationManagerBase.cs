@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
         internal string KeyspacePrefix { get; private set; }
         internal Func<TK, TV> DefaultValueFactory { get; private set; }
         internal Func<TK, bool> SkipCacheGetPredicate { get; private set; }
-        internal Func<TK, bool> SkipCacheSetPredicate { get; private set; }
+        internal Func<TK, TV, bool> SkipCacheSetPredicate { get; private set; }
         internal Func<TK, TV, bool> OnlyStoreInLocalCacheWhenPredicate { get; private set; }
         internal List<(IObservable<TK> keysToRemove, bool removeFromLocalOnly)> KeyRemovalObservables { get; }
             = new List<(IObservable<TK>, bool)>();
@@ -463,10 +463,21 @@ namespace CacheMeIfYouCan.Configuration
             {
                 var current = SkipCacheSetPredicate;
                 if (current == null)
-                    SkipCacheSetPredicate = predicate;
+                    SkipCacheSetPredicate = (k, v) => predicate(k);
                 else
-                    SkipCacheSetPredicate = k => current(k) || predicate(k);
+                    SkipCacheSetPredicate = (k, v) => current(k, v) || predicate(k);
             }
+
+            return (TConfig)this;
+        }
+        
+        protected TConfig SkipCacheWhen(Func<TK, TV, bool> predicate)
+        {
+            var current = SkipCacheSetPredicate;
+            if (current == null)
+                SkipCacheSetPredicate = predicate;
+            else
+                SkipCacheSetPredicate = (k, v) => current(k, v) || predicate(k, v);
 
             return (TConfig)this;
         }

@@ -74,6 +74,33 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results.Should().ContainSingle();
             cache.Values.Should().BeEmpty();
         }
+        
+        [Fact]
+        public async Task SingleKeySkipSetBasedOnKeyAndValue()
+        {
+            var results = new List<FunctionCacheGetResult<string, string>>();
+            var cache = new TestLocalCache<string, string>();
+            
+            Func<string, Task<string>> echo = new Echo();
+            
+            Func<string, Task<string>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k, v) => k == "1" || v == "2")
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToList();
+            
+            foreach (var key in keys)
+                await cachedEcho(key);
+
+            cache.Values.Keys.Should().BeEquivalentTo(keys.Except(new[] { "1", "2" }));
+        }
 
         [Fact]
         public async Task EnumerableKeySkipGet()
@@ -134,6 +161,30 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
         }
         
         [Fact]
+        public async Task EnumerableKeySkipSetBasedOnKeyAndValue()
+        {
+            var cache = new TestLocalCache<string, string>();
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> echo = new MultiEcho();
+            
+            Func<IEnumerable<string>, Task<IDictionary<string, string>>> cachedEcho;
+            using (_setupLock.Enter())
+            {
+                cachedEcho = echo
+                    .Cached<IEnumerable<string>, IDictionary<string, string>, string, string>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k, v) => k == "1" || v == "2")
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToArray();
+
+            await cachedEcho(keys);
+            
+            cache.Values.Keys.Should().BeEquivalentTo(keys.Except(new[] { "1", "2" }));
+        }
+        
+        [Fact]
         public async Task MultiParamKeySkipGet()
         {
             var results = new List<FunctionCacheGetResult<(string, string), string>>();
@@ -186,6 +237,33 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
 
             results.Should().ContainSingle();
             cache.Values.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task MultiParamKeySkipSetBasedOnKeyAndValue()
+        {
+            var results = new List<FunctionCacheGetResult<(string, string), string>>();
+            var cache = new TestLocalCache<(string, string), string>();
+            
+            Func<string, string, Task<string>> func = (k1, k2) => Task.FromResult(k1);
+            
+            Func<string, string, Task<string>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k1, k2, v) => k1 == "1" || v == "2")
+                    .OnResult(results.Add)
+                    .Build();
+            }
+
+            var keys = Enumerable.Range(0, 10).Select(i => i.ToString()).ToList();
+            
+            foreach (var key in keys)
+                await cachedFunc(key, "ignored");
+
+            cache.Values.Keys.Select(k => k.Item1).Should().BeEquivalentTo(keys.Except(new[] { "1", "2" }));
         }
 
         [Fact]
@@ -328,7 +406,33 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
                     cache.Values.Keys.Should().Contain(innerKeys.Select(i => (outerKey, i)).ToArray());
             }
         }
+        
+        [Fact]
+        public async Task MultiParamEnumerableKeySkipSetBasedOnKeyAndValue()
+        {
+            var cache = new TestLocalCache<(int, int), int>();
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> func = (k1, k2) =>
+            {
+                return Task.FromResult<IDictionary<int, int>>(k2.ToDictionary(k => k, k => k1 + k));
+            };
+            
+            Func<int, IEnumerable<int>, Task<IDictionary<int, int>>> cachedFunc;
+            using (_setupLock.Enter())
+            {
+                cachedFunc = func
+                    .Cached<int, IEnumerable<int>, IDictionary<int, int>, int, int>()
+                    .WithLocalCache(cache)
+                    .SkipCacheWhen((k1, k2, v) => k2 == 1 || v == 2)
+                    .Build();
+            }
 
+            var innerKeys = Enumerable.Range(0, 10).ToArray();
+
+            await cachedFunc(0, innerKeys);
+
+            cache.Values.Keys.Select(k => k.Item2).Should().BeEquivalentTo(innerKeys.Except(new[] { 1, 2 }));
+        }
 
         [Fact]
         public async Task MultipleSkipGetConditions()

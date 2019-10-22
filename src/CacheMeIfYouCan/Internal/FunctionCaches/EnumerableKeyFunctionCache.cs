@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
     {
         private readonly ICacheInternal<TK, TV> _cache;
         private readonly Func<TimeSpan> _timeToLiveFactory;
+        private readonly bool _catchDuplicateRequests;
         private readonly Func<TK, string> _keySerializer;
         private readonly Func<TK, TV> _defaultValueFactory;
         private readonly bool _continueOnException;
@@ -22,9 +23,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly KeyComparer<TK> _keyComparer;
         private readonly int _maxFetchBatchSize;
         private readonly BatchBehaviour _batchBehaviour;
+        private readonly Func<TK, bool> _skipCacheGetPredicate;
+        private readonly Func<TK, TV, bool> _skipCacheSetPredicate;
         private readonly IDuplicateTaskCatcherMulti<TK, TV> _fetchHandler;
-        private readonly Func<Key<TK>[], Key<TK>[]> _keysToGetFromCacheFunc;
-        private readonly Func<DuplicateTaskCatcherMultiResult<TK, TV>, bool> _setInCachePredicate;
         private int _pendingRequestsCount;
         private bool _disposed;
         
@@ -43,13 +44,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             int maxFetchBatchSize,
             BatchBehaviour batchBehaviour,
             Func<TK, bool> skipCacheGetPredicate,
-            Func<TK, bool> skipCacheSetPredicate,
+            Func<TK, TV, bool> skipCacheSetPredicate,
             Func<TK, TV> missingKeyValueFactory)
         {
             Name = functionName;
             Type = GetType().Name;
             _cache = cache;
             _timeToLiveFactory = timeToLiveFactory;
+            _catchDuplicateRequests = catchDuplicateRequests;
             _keySerializer = keySerializer;
             _defaultValueFactory = defaultValueFactory;
             _continueOnException = defaultValueFactory != null;
@@ -59,7 +61,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             _keyComparer = keyComparer;
             _maxFetchBatchSize = maxFetchBatchSize <= 0 ? Int32.MaxValue : maxFetchBatchSize;
             _batchBehaviour = batchBehaviour;
-
+            _skipCacheGetPredicate = skipCacheGetPredicate;
+            _skipCacheSetPredicate = skipCacheSetPredicate;
+            
             var convertedFunc = missingKeyValueFactory == null
                 ? func
                 : ConvertToFuncThatFillsMissingKeys(func, missingKeyValueFactory, keyComparer);
@@ -68,16 +72,6 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 _fetchHandler = new DuplicateTaskCatcherMulti<TK, TV>(convertedFunc, keyComparer);
             else
                 _fetchHandler = new DisabledDuplicateTaskCatcherMulti<TK, TV>(convertedFunc, keyComparer);
-
-            if (skipCacheGetPredicate == null)
-                _keysToGetFromCacheFunc = keys => keys;
-            else
-                _keysToGetFromCacheFunc = keys => keys.Where(k => !skipCacheGetPredicate(k)).ToArray();
-
-            if (skipCacheSetPredicate == null)
-                _setInCachePredicate = kv => !kv.Duplicate;
-            else
-                _setInCachePredicate = kv => !kv.Duplicate && !skipCacheSetPredicate(kv.Key);
         }
 
         public string Name { get; }
@@ -120,7 +114,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     Key<TK>[] missingKeys = null;
                     if (_cache != null)
                     {
-                        var keysToGet = _keysToGetFromCacheFunc(keys);
+                        var keysToGet = FilterToKeysToGetFromCache(keys);
 
                         if (keysToGet.Any())
                         {
@@ -252,43 +246,23 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
 
-                var results = new List<FunctionCacheFetchResultInner<TK, TV>>();
+                List<FunctionCacheFetchResultInner<TK, TV>> results = null;
                 FunctionCacheFetchException<TK> exception = null;
 
                 try
                 {
-                    var fetched = await _fetchHandler.ExecuteAsync(batchKeys.Select(k => k.AsObject).ToArray(), token);
+                    var fetched = await _fetchHandler.ExecuteAsync(batchKeys.Select(k => k.AsObject).ToList(), token);
 
                     if (fetched != null && fetched.Any())
                     {
-                        var keysAndFetchedValues = new Dictionary<Key<TK>, DuplicateTaskCatcherMultiResult<TK, TV>>(_keyComparer);
-                        foreach (var key in batchKeys)
+                        results = ProcessFetchedValues(batchKeys, fetched, stopwatchStart, out var valuesToSetInCache);
+
+                        if (valuesToSetInCache != null && valuesToSetInCache.Any())
                         {
-                            if (fetched.TryGetValue(key, out var value))
-                                keysAndFetchedValues[key] = value;
-                        }
+                            var setValueTask = _cache.Set(valuesToSetInCache, _timeToLiveFactory());
 
-                        results.AddRange(keysAndFetchedValues
-                            .Select(f => new FunctionCacheFetchResultInner<TK, TV>(
-                                f.Key,
-                                f.Value.Value,
-                                true,
-                                f.Value.Duplicate,
-                                StopwatchHelper.GetDuration(stopwatchStart, f.Value.StopwatchTimestampCompleted))));
-
-                        if (_cache != null)
-                        {
-                            var valuesToSetInCache = keysAndFetchedValues
-                                .Where(kv => _setInCachePredicate(kv.Value))
-                                .ToDictionary(kv => kv.Key, kv => kv.Value.Value, _keyComparer);
-
-                            if (valuesToSetInCache.Any())
-                            {
-                                var setValueTask = _cache.Set(valuesToSetInCache, _timeToLiveFactory());
-
-                                if (!setValueTask.IsCompleted)
-                                    await setValueTask;
-                            }
+                            if (!setValueTask.IsCompleted)
+                                await setValueTask;
                         }
                     }
                 }
@@ -296,12 +270,22 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 {
                     var duration = StopwatchHelper.GetDuration(stopwatchStart);
 
-                    var fetchedKeys = new HashSet<Key<TK>>(results.Select(r => r.Key), _keyComparer);
+                    if (results == null)
+                    {
+                        results = new List<FunctionCacheFetchResultInner<TK, TV>>(batchKeys.Count);
+                        
+                        foreach (var key in batchKeys)
+                            results.Add(new FunctionCacheFetchResultInner<TK, TV>(key, default, false, false, duration));
+                    }
+                    else
+                    {
+                        var fetchedKeys = results.Select(r => r.Key);
 
-                    results.AddRange(batchKeys
-                        .Except(fetchedKeys)
-                        .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
-
+                        results.AddRange(batchKeys
+                            .Except(fetchedKeys, _keyComparer)
+                            .Select(k => new FunctionCacheFetchResultInner<TK, TV>(k, default, false, false, duration)));
+                    }
+                    
                     exception = new FunctionCacheFetchException<TK>(
                         Name,
                         batchKeys,
@@ -331,6 +315,100 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 }
 
                 return results;
+            }
+        }
+
+        private IList<Key<TK>> FilterToKeysToGetFromCache(Key<TK>[] keys)
+        {
+            if (_skipCacheGetPredicate == null)
+                return keys;
+
+            IList<Key<TK>> keysToGetIfAnyExcluded = null; // This will be null if no keys have been excluded
+            for (var index = 0; index < keys.Length; index++)
+            {
+                if (_skipCacheGetPredicate(keys[index]))
+                {
+                    if (keysToGetIfAnyExcluded == null)
+                        keysToGetIfAnyExcluded = new List<Key<TK>>(new ArraySegment<Key<TK>>(keys, 0, index));
+                }
+                else
+                {
+                    keysToGetIfAnyExcluded?.Add(keys[index]);
+                }
+            }
+
+            return keysToGetIfAnyExcluded ?? keys;
+        }
+
+        private List<FunctionCacheFetchResultInner<TK, TV>> ProcessFetchedValues(
+            IList<Key<TK>> keys,
+            IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>> values,
+            long stopwatchStart,
+            out Dictionary<Key<TK>, TV> valuesToSetInCache)
+        {
+            var results = new List<FunctionCacheFetchResultInner<TK, TV>>(values.Count);
+
+            var keysMap = keys.ToDictionary(k => k.AsObject, _keyComparer);
+
+            if (_cache == null)
+            {
+                valuesToSetInCache = null;
+                foreach (var kv in values)
+                    results.Add(ConvertValue(keysMap[kv.Key], kv.Value));
+            }
+            else if (_skipCacheSetPredicate == null)
+            {
+                valuesToSetInCache = new Dictionary<Key<TK>, TV>(values.Count, _keyComparer);
+
+                if (_catchDuplicateRequests)
+                {
+                    foreach (var kv in values)
+                    {
+                        var key = keysMap[kv.Key];
+                        
+                        if (!kv.Value.Duplicate)
+                            valuesToSetInCache[key] = kv.Value.Value;
+                        
+                        results.Add(ConvertValue(key, kv.Value));
+                    }
+                }
+                else
+                {
+                    foreach (var kv in values)
+                    {
+                        var key = keysMap[kv.Key];
+                        
+                        valuesToSetInCache[key] = kv.Value.Value;
+                        results.Add(ConvertValue(key, kv.Value));
+                    }
+                }
+            }
+            else
+            {
+                valuesToSetInCache = new Dictionary<Key<TK>, TV>(_keyComparer);
+
+                foreach (var kv in values)
+                {
+                    var key = keysMap[kv.Key];
+                    var value = kv.Value.Value;
+                    
+                    if (!kv.Value.Duplicate && !_skipCacheSetPredicate(kv.Key, value))
+                        valuesToSetInCache[key] = value;
+
+                    results.Add(ConvertValue(key, kv.Value));
+                }
+            }
+
+            return results;
+            
+            FunctionCacheFetchResultInner<TK, TV> ConvertValue(Key<TK> key, DuplicateTaskCatcherMultiResult<TK, TV> fetchedValue)
+            {
+                return new FunctionCacheFetchResultInner<TK, TV>(
+                    key,
+                    fetchedValue.Value,
+                    true,
+                    fetchedValue.Duplicate,
+                    StopwatchHelper.GetDuration(stopwatchStart, fetchedValue.StopwatchTimestampCompleted));
             }
         }
         

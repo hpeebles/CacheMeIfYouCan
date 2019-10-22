@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
         private readonly Action<FunctionCacheException<TK>> _onException;
         private readonly IDuplicateTaskCatcherSingle<TK, TV> _fetchHandler;
         private readonly Func<TK, bool> _skipCacheGetPredicate;
-        private readonly Func<TK, bool> _skipCacheSetPredicate;
+        private readonly Func<TK, TV, bool> _skipCacheSetPredicate;
         private int _pendingRequestsCount;
         private bool _disposed;
         
@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             Action<FunctionCacheException<TK>> onException,
             KeyComparer<TK> keyComparer,
             Func<TK, bool> skipCacheGetPredicate,
-            Func<TK, bool> skipCacheSetPredicate)
+            Func<TK, TV, bool> skipCacheSetPredicate)
         {
             Name = functionName;
             Type = GetType().Name;
@@ -175,17 +175,18 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             try
             {
                 var (fetched, duplicate) = await _fetchHandler.ExecuteAsync(key, token);
-
+                var value = fetched.Value;
+                
                 result = new FunctionCacheFetchResultInner<TK, TV>(
                     key,
-                    fetched.Value,
+                    value,
                     true,
                     duplicate,
                     StopwatchHelper.GetDuration(stopwatchStart, fetched.StopwatchTimestampCompleted));
 
-                if (_cache != null && !duplicate && (_skipCacheSetPredicate == null || !_skipCacheSetPredicate(key)))
+                if (_cache != null && !duplicate && (_skipCacheSetPredicate == null || !_skipCacheSetPredicate(key, value)))
                 {
-                    var setValueTask = _cache.Set(key, fetched.Value, _timeToLiveFactory(key, fetched.Value));
+                    var setValueTask = _cache.Set(key, value, _timeToLiveFactory(key, value));
 
                     if (!setValueTask.IsCompleted)
                         await setValueTask;

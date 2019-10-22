@@ -139,6 +139,11 @@ namespace CacheMeIfYouCan.Configuration
             return base.SkipCacheWhen(predicate, settings);
         }
         
+        public TConfig SkipCacheWhen(Func<TKOuter, TKInner, TV, bool> predicate)
+        {
+            return base.SkipCacheWhen((k, v) => predicate(k.Item1, k.Item2, v));
+        }
+        
         public TConfig OnlyStoreInLocalCacheWhen(Func<TKOuter, TKInner, TV, bool> predicate)
         {
             return base.OnlyStoreInLocalCacheWhen((t, v) => predicate(t.Item1, t.Item2, v));
@@ -436,6 +441,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
+        }
+        
+        public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKInner, TV, bool> predicate)
+        {
+            return base.SkipCacheWhen((k, v) => predicate(k.Item1.Item1, k.Item1.Item2, k.Item2, v));
         }
         
         public TConfig OnlyStoreInLocalCacheWhen(Func<TKOuter1, TKOuter2, TKInner, TV, bool> predicate)
@@ -748,6 +758,11 @@ namespace CacheMeIfYouCan.Configuration
         public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, bool> predicate, SkipCacheSettings settings = SkipCacheSettings.SkipGetAndSet)
         {
             return base.SkipCacheWhen(predicate.ConvertToSingleParamNoCanx(), settings);
+        }
+        
+        public TConfig SkipCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, TV, bool> predicate)
+        {
+            return base.SkipCacheWhen((k, v) => predicate(k.Item1.Item1, k.Item1.Item2, k.Item1.Item3, k.Item2, v));
         }
         
         public TConfig OnlyStoreInLocalCacheWhen(Func<TKOuter1, TKOuter2, TKOuter3, TKInner, TV, bool> predicate)

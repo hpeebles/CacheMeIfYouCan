@@ -45,6 +45,11 @@ namespace CacheMeIfYouCan.Configuration
             return base.SkipCacheWhen(predicate, settings);
         }
         
+        public new TConfig SkipCacheWhen(Func<TK, TV, bool> predicate)
+        {
+            return base.SkipCacheWhen(predicate);
+        }
+        
         public new TConfig OnlyStoreInLocalCacheWhen(Func<TK, TV, bool> predicate)
         {
             return base.OnlyStoreInLocalCacheWhen(predicate);
