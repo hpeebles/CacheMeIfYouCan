@@ -7,9 +7,9 @@ namespace CacheMeIfYouCan.Polly
     internal class LocalCachePollyWrapper<TK, TV> : ILocalCache<TK, TV>
     {
         private readonly ILocalCache<TK, TV> _cache;
-        private readonly Policy _policy;
+        private readonly ISyncPolicy _policy;
 
-        public LocalCachePollyWrapper(ILocalCache<TK, TV> cache, Policy policy)
+        public LocalCachePollyWrapper(ILocalCache<TK, TV> cache, ISyncPolicy policy)
         {
             _cache = cache;
             _policy = policy;

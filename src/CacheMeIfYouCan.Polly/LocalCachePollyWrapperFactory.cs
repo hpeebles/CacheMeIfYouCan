@@ -4,9 +4,9 @@ namespace CacheMeIfYouCan.Polly
 {
     internal class LocalCachePollyWrapperFactory : ILocalCacheWrapperFactory
     {
-        private readonly Policy _policy;
+        private readonly ISyncPolicy _policy;
 
-        public LocalCachePollyWrapperFactory(Policy policy)
+        public LocalCachePollyWrapperFactory(ISyncPolicy policy)
         {
             _policy = policy;
         }
@@ -19,9 +19,9 @@ namespace CacheMeIfYouCan.Polly
     
     internal class LocalCachePollyWrapperFactory<TK, TV> : ILocalCacheWrapperFactory<TK, TV>
     {
-        private readonly Policy _policy;
+        private readonly ISyncPolicy _policy;
 
-        public LocalCachePollyWrapperFactory(Policy policy)
+        public LocalCachePollyWrapperFactory(ISyncPolicy policy)
         {
             _policy = policy;
         }

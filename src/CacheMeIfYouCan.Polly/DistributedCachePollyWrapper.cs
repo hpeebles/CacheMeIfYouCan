@@ -8,9 +8,9 @@ namespace CacheMeIfYouCan.Polly
     internal class DistributedCachePollyWrapper<TK, TV> : IDistributedCache<TK, TV>
     {
         private readonly IDistributedCache<TK, TV> _cache;
-        private readonly Policy _policy;
+        private readonly IAsyncPolicy _policy;
 
-        public DistributedCachePollyWrapper(IDistributedCache<TK, TV> cache, Policy policy)
+        public DistributedCachePollyWrapper(IDistributedCache<TK, TV> cache, IAsyncPolicy policy)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _policy = policy ?? throw new ArgumentNullException(nameof(policy));

@@ -6,7 +6,7 @@
     <Description>Adds implementations of IByteSerializer and ISerializer based on protobuf-net</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="protobuf-net" Version="2.4.0" />
+    <PackageReference Include="protobuf-net" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />

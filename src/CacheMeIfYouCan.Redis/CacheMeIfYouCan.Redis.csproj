@@ -9,7 +9,7 @@
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'">
-    <PackageReference Include="StackExchange.Redis" Version="2.0.588" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="StackExchange.Redis" Version="1.2.6" />

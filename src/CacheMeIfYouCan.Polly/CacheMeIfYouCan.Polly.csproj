@@ -9,6 +9,6 @@
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Polly" Version="6.1.1" />
+    <PackageReference Include="Polly" Version="7.1.1" />
   </ItemGroup>
 </Project>

@@ -5,9 +5,9 @@ namespace CacheMeIfYouCan.Polly
 {
     internal class DistributedCachePollyWrapperFactory : IDistributedCacheWrapperFactory
     {
-        private readonly Policy _policy;
+        private readonly IAsyncPolicy _policy;
 
-        public DistributedCachePollyWrapperFactory(Policy policy)
+        public DistributedCachePollyWrapperFactory(IAsyncPolicy policy)
         {
             _policy = policy;
         }
@@ -22,9 +22,9 @@ namespace CacheMeIfYouCan.Polly
     
     internal class DistributedCachePollyWrapperFactory<TK, TV> : IDistributedCacheWrapperFactory<TK, TV>
     {
-        private readonly Policy _policy;
+        private readonly IAsyncPolicy _policy;
 
-        public DistributedCachePollyWrapperFactory(Policy policy)
+        public DistributedCachePollyWrapperFactory(IAsyncPolicy policy)
         {
             _policy = policy;
         }
