@@ -38,7 +38,7 @@ namespace CacheMeIfYouCan.Tests.CachedObject
 
             ticks.Value.Should().BeGreaterThan(0);
 
-            timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(1));
+            timer.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(0.99));
             
             ticks.Dispose();
         }
