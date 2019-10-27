@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Caches
             _cache.Set(key.AsString, new ValueWithExpiry<TV>(value, expiry), expiry);
         }
         
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var results = new List<GetFromCacheResult<TK, TV>>();
 
@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Caches
             return results;
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var expiry = DateTime.UtcNow + timeToLive;
             

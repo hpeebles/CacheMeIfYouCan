@@ -29,12 +29,12 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             await _cache.Set(key, value, timeToLive);
         }
 
-        public async ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             return await _cache.Get(keys);
         }
 
-        public async ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async ValueTask Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             await _cache.Set(values, timeToLive);
         }

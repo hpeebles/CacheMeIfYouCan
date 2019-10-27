@@ -22,25 +22,25 @@ namespace CacheMeIfYouCan.Tests.Cache
         [Fact]
         public async Task ChecksLocalThenDistributed()
         {
-            var distributedResults = new List<CacheGetResult>();
             var localResults = new List<CacheGetResult>();
+            var distributedResults = new List<CacheGetResult>();
 
             var key = Guid.NewGuid().ToString();
             
             ICache<string, string> cache;
             using (_setupLock.Enter())
             {
+                var local = new TestLocalCacheFactory()
+                    .OnGetResult(localResults.Add)
+                    .Build<string, string>("local");
+                
                 var distributed = new TestCacheFactory()
                     .OnGetResult(distributedResults.Add)
                     .Build<string, string>("distributed");
 
                 await distributed.Set(new Key<string>(key, key), key, TimeSpan.FromMinutes(1));
                 
-                var local = new TestLocalCacheFactory()
-                    .OnGetResult(localResults.Add)
-                    .Build<string, string>("local");
-
-                cache = new TwoTierCache<string, string>(distributed, local);
+                cache = new TwoTierCache<string, string>(local, distributed);
             }
 
             await cache.Get(key);

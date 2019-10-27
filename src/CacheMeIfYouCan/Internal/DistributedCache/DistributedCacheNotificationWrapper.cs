@@ -118,7 +118,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
         }
 
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -145,7 +145,9 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
                     var cacheGetResult = new CacheGetResult<TK, TV>(
                         CacheName,
                         CacheType,
-                        results,
+                        results == null
+                            ? null
+                            : results as IReadOnlyCollection<GetFromCacheResult<TK, TV>> ?? new List<GetFromCacheResult<TK, TV>>(results),
                         results == null || !results.Any()
                             ? keys
                             : keys.Except(results.Select(r => r.Key), _keyComparer).ToList(),
@@ -161,7 +163,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return results;
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();

@@ -95,9 +95,9 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var keys = keyObjs
                 .Distinct(_keyComparer)
                 .Select(k => new Key<TK>(k, _keySerializer))
-                .ToArray();
+                .ToList();
 
-            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keys.Length, _keyComparer);
+            var results = new Dictionary<Key<TK>, FunctionCacheGetResultInner<TK, TV>>(keys.Count, _keyComparer);
 
             IReadOnlyCollection<FunctionCacheGetResultInner<TK, TV>> readonlyResults = null;
             FunctionCacheGetException<TK> exception = null;
@@ -111,7 +111,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     
                     Interlocked.Increment(ref _pendingRequestsCount);
 
-                    Key<TK>[] missingKeys = null;
+                    List<Key<TK>> missingKeys = null;
                     if (_cache != null)
                     {
                         var keysToGet = FilterToKeysToGetFromCache(keys);
@@ -137,7 +137,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
                                 missingKeys = keys
                                     .Except(results.Keys, _keyComparer)
-                                    .ToArray();
+                                    .ToList();
                             }
                         }
                     }
@@ -163,7 +163,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                     }
                     
 #if NET45
-                    readonlyResults = results.Values.ToArray();
+                    readonlyResults = results.Values.ToList();
 #else
                     readonlyResults = results.Values;
 #endif
@@ -188,7 +188,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             
                     readonlyResults = keys
                         .Select(k => new FunctionCacheGetResultInner<TK, TV>(k, _defaultValueFactory(k), Outcome.Error, null))
-                        .ToArray();
+                        .ToList();
                 }
                 finally
                 {
@@ -213,17 +213,17 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             return readonlyResults;
         }
 
-        private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> Fetch(Key<TK>[] keys, CancellationToken token)
+        private async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> Fetch(IReadOnlyList<Key<TK>> keys, CancellationToken token)
         {
-            if (keys.Length <= _maxFetchBatchSize)
+            if (keys.Count <= _maxFetchBatchSize)
                 return await FetchBatch(keys);
 
             int batchSize;
             if (_batchBehaviour == BatchBehaviour.FillBatchesEvenly)
             {
-                var batchesCount = (keys.Length / _maxFetchBatchSize) + 1;
+                var batchesCount = (keys.Count / _maxFetchBatchSize) + 1;
 
-                batchSize = (keys.Length / batchesCount) + 1;
+                batchSize = (keys.Count / batchesCount) + 1;
             }
             else
             {
@@ -233,15 +233,15 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             var tasks = keys
                 .Batch(batchSize)
                 .Select(FetchBatch)
-                .ToArray();
+                .ToList();
 
             await Task.WhenAll(tasks);
 
             return tasks
                 .SelectMany(t => t.Result)
-                .ToArray();
+                .ToList();
             
-            async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> FetchBatch(IList<Key<TK>> batchKeys)
+            async Task<IList<FunctionCacheFetchResultInner<TK, TV>>> FetchBatch(IReadOnlyCollection<Key<TK>> batchKeys)
             {
                 var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
@@ -318,30 +318,33 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
         }
 
-        private IList<Key<TK>> FilterToKeysToGetFromCache(Key<TK>[] keys)
+        private IReadOnlyCollection<Key<TK>> FilterToKeysToGetFromCache(IReadOnlyCollection<Key<TK>> keys)
         {
             if (_skipCacheGetPredicate == null)
                 return keys;
 
-            IList<Key<TK>> keysToGetIfAnyExcluded = null; // This will be null if no keys have been excluded
-            for (var index = 0; index < keys.Length; index++)
+            List<Key<TK>> keysToGetIfAnyExcluded = null; // This will be null if no keys have been excluded
+            var index = 0;
+            foreach (var key in keys)
             {
-                if (_skipCacheGetPredicate(keys[index]))
+                if (_skipCacheGetPredicate(key))
                 {
                     if (keysToGetIfAnyExcluded == null)
-                        keysToGetIfAnyExcluded = new List<Key<TK>>(new ArraySegment<Key<TK>>(keys, 0, index));
+                        keysToGetIfAnyExcluded = keys.Take(index).ToList();
                 }
                 else
                 {
-                    keysToGetIfAnyExcluded?.Add(keys[index]);
+                    keysToGetIfAnyExcluded?.Add(key);
                 }
+                
+                index++;
             }
 
             return keysToGetIfAnyExcluded ?? keys;
         }
 
         private List<FunctionCacheFetchResultInner<TK, TV>> ProcessFetchedValues(
-            IList<Key<TK>> keys,
+            IReadOnlyCollection<Key<TK>> keys,
             IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>> values,
             long stopwatchStart,
             out Dictionary<Key<TK>, TV> valuesToSetInCache)
@@ -412,14 +415,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
         }
         
-        private static Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertToFuncThatFillsMissingKeys(
-            Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
+        private static Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> ConvertToFuncThatFillsMissingKeys(
+            Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             Func<TK, TV> missingKeyValueFactory,
             IEqualityComparer<TK> keyComparer)
         {
             return async (keys, token) =>
             {
-                var values = await func(keys, token) ?? new Dictionary<TK, TV>();
+                var values = await func(keys, token) ?? new Dictionary<TK, TV>(keyComparer);
 
                 IDictionary<TK, TV> valuesWithFills = null;
                 foreach (var key in keys)

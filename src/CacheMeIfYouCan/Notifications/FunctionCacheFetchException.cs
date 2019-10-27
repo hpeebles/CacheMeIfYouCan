@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Notifications
     {
         internal FunctionCacheFetchException(
             string functionName,
-            IList<Key<TK>> keys,
+            IReadOnlyCollection<Key<TK>> keys,
             string message,
             Exception exception)
             : base(functionName, keys, message, exception)

@@ -1,23 +1,22 @@
-using System;
 using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal static class ArrayExtensions
+    internal static class ReadOnlyListExtensions
     {
-        public static IEnumerable<IList<T>> Batch<T>(this T[] array, int batchSize)
+        public static IEnumerable<IReadOnlyList<T>> Batch<T>(this IReadOnlyList<T> list, int batchSize)
         {
-            var remaining = array.Length;
+            var remaining = list.Count;
             var offset = 0;
             do
             {
                 if (remaining < batchSize)
                 {
-                    yield return new ArraySegment<T>(array, offset, remaining);
+                    yield return new ReadOnlyListSegment<T>(list, offset, remaining);
                     break;
                 }
 
-                yield return new ArraySegment<T>(array, offset, batchSize);
+                yield return new ReadOnlyListSegment<T>(list, offset, batchSize);
 
                 offset += batchSize;
                 remaining -= batchSize;

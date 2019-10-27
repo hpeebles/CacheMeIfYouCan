@@ -28,12 +28,12 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             return new ValueTask();
         }
 
-        public ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             return new ValueTask<IList<GetFromCacheResult<TK, TV>>>(_cache.Get(keys));
         }
 
-        public ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public ValueTask Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             _cache.Set(values, timeToLive);
             

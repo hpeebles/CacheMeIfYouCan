@@ -27,9 +27,9 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public Task Set(Key<TK> key, TV value, TimeSpan timeToLive) => _wrapped.Set(key, value, timeToLive);
 
-        public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys) => _wrapped.Get(keys);
+        public Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys) => _wrapped.Get(keys);
 
-        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive) => _wrapped.Set(values, timeToLive);
+        public Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive) => _wrapped.Set(values, timeToLive);
 
         public Task<bool> Remove(Key<TK> key) => _wrapped.Remove(key);
 

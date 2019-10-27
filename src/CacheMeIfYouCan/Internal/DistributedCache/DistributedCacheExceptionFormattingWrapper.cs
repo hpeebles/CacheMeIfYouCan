@@ -60,7 +60,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
         }
 
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             }
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             try
             {

@@ -26,9 +26,9 @@ namespace CacheMeIfYouCan.Internal.LocalCache
 
         public void Set(Key<TK> key, TV value, TimeSpan timeToLive) => _wrapped.Set(key, value, timeToLive);
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys) => _wrapped.Get(keys);
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys) => _wrapped.Get(keys);
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive) => _wrapped.Set(values, timeToLive);
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive) => _wrapped.Set(values, timeToLive);
 
         public bool Remove(Key<TK> key) => _wrapped.Remove(key);
 

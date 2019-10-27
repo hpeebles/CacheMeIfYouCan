@@ -78,7 +78,7 @@ namespace CacheMeIfYouCan.Caches
             _ttlsPendingProcessing.Add((expiryTicks, new[] { key.AsObject }));
         }
         
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var currentTimestamp = Timestamp.Now;
 
@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan.Caches
             return results;
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var expiryTicks = Timestamp.Now + timeToLive.Ticks;
             

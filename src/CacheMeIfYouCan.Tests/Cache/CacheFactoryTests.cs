@@ -42,10 +42,10 @@ namespace CacheMeIfYouCan.Tests.Cache
             results.Count.Should().Be(2);
             results[0].Success.Should().BeTrue();
             results[0].Misses.Should().ContainSingle();
-            results[0].Misses[0].Should().Be(key);
+            results[0].Misses.First().Should().Be(key);
             results[1].Success.Should().BeTrue();
             results[1].Hits.Should().ContainSingle();
-            results[1].Hits[0].Should().Be(key);
+            results[1].Hits.First().Should().Be(key);
         }
         
         [Fact]
@@ -68,7 +68,7 @@ namespace CacheMeIfYouCan.Tests.Cache
             results.Should().ContainSingle();
             results[0].Success.Should().BeTrue();
             results[0].Keys.Should().ContainSingle();
-            results[0].Keys[0].Should().Be(key);
+            results[0].Keys.First().Should().Be(key);
         }
         
         [Fact]

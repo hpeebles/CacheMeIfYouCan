@@ -242,7 +242,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
 
         private async Task<IList<FunctionCacheFetchResultInner<(TK1, TK2), TV>>> Fetch(
             TK1 outerKey,
-            Key<(TK1, TK2)>[] innerKeys,
+            IReadOnlyList<Key<(TK1, TK2)>> innerKeys,
             CancellationToken token)
         {
             if (_maxFetchBatchSizeFunc == null)
@@ -253,14 +253,14 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (batchSize <= 0)
                 batchSize = Int32.MaxValue;
 
-            if (innerKeys.Length <= batchSize)
+            if (innerKeys.Count <= batchSize)
                 return await FetchBatch(innerKeys);
 
             if (_batchBehaviour == BatchBehaviour.FillBatchesEvenly)
             {
-                var batchesCount = (innerKeys.Length / batchSize) + 1;
+                var batchesCount = (innerKeys.Count / batchSize) + 1;
 
-                batchSize = (innerKeys.Length / batchesCount) + 1;
+                batchSize = (innerKeys.Count / batchesCount) + 1;
             }
             
             var tasks = innerKeys
@@ -275,7 +275,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 .ToArray();
             
             async Task<IList<FunctionCacheFetchResultInner<(TK1, TK2), TV>>> FetchBatch(
-                IList<Key<(TK1, TK2)>> batchInnerKeys)
+                IReadOnlyCollection<Key<(TK1, TK2)>> batchInnerKeys)
             {
                 var start = DateTime.UtcNow;
                 var stopwatchStart = Stopwatch.GetTimestamp();
@@ -287,7 +287,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 {
                     var fetched = await _fetchHandler.ExecuteAsync(
                         outerKey,
-                        batchInnerKeys.Select(k => k.AsObject.Item2).ToArray(),
+                        batchInnerKeys.Select(k => k.AsObject.Item2).ToList(),
                         token);
 
                     if (fetched != null && fetched.Any())
@@ -369,7 +369,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             }
         }
         
-        private IList<Key<(TK1, TK2)>> FilterToKeysToGetFromCache(TK1 outerKey, Key<(TK1, TK2)>[] keys)
+        private IReadOnlyCollection<Key<(TK1, TK2)>> FilterToKeysToGetFromCache(TK1 outerKey, Key<(TK1, TK2)>[] keys)
         {
             if (_skipCacheGetPredicateOuterKeyOnly != null && _skipCacheGetPredicateOuterKeyOnly(outerKey))
                 return _emptyKeyArray;
@@ -377,7 +377,7 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
             if (_skipCacheGetPredicate == null)
                 return keys;
 
-            IList<Key<(TK1, TK2)>> keysToGetIfAnyExcluded = null; // This will be null if no keys have been excluded
+            List<Key<(TK1, TK2)>> keysToGetIfAnyExcluded = null; // This will be null if no keys have been excluded
             for (var index = 0; index < keys.Length; index++)
             {
                 var (k1, k2) = keys[index].AsObject;
@@ -392,12 +392,12 @@ namespace CacheMeIfYouCan.Internal.FunctionCaches
                 }
             }
 
-            return keysToGetIfAnyExcluded ?? keys;
+            return (IReadOnlyCollection<Key<(TK1, TK2)>>)keysToGetIfAnyExcluded ?? keys;
         }
 
         private List<FunctionCacheFetchResultInner<(TK1, TK2), TV>> ProcessFetchedValues(
             TK1 outerKey,
-            IList<Key<(TK1, TK2)>> innerKeys,
+            IReadOnlyCollection<Key<(TK1, TK2)>> innerKeys,
             IDictionary<TK2, DuplicateTaskCatcherMultiResult<TK2, TV>> values,
             long stopwatchStart,
             out Dictionary<Key<(TK1, TK2)>, TV> valuesToSetInCache)

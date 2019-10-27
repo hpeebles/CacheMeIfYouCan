@@ -44,12 +44,12 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             await Execute(() => _cache.Set(key, value, timeToLive));
         }
 
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             return await Execute(() => _cache.Get(keys));
         }
 
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             await Execute(() => _cache.Set(values, timeToLive));
         }

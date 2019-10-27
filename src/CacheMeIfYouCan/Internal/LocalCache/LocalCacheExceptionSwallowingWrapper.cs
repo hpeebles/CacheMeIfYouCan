@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             { }
         }
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             }
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             try
             {

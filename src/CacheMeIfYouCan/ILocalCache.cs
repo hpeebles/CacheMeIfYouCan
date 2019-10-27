@@ -51,14 +51,14 @@ namespace CacheMeIfYouCan
         /// <param name="keys">The keys to lookup in the cache</param>
         /// <returns>The items found in the cache along with their meta data</returns>
         /// <remarks>When implementing this, only return those items that are found in the cache, if none are found, return an empty list</remarks>
-        IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys);
+        IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys);
         
         /// <summary>
         /// Sets a collection of values in the cache
         /// </summary>
         /// <param name="values">The collection of key/value pairs to store in the cache</param>
         /// <param name="timeToLive">The time to live for each newly stored keys</param>
-        void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);
+        void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive);
         
         /// <summary>
         /// Removes a single key from the cache

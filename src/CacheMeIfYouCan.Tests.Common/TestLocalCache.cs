@@ -37,7 +37,7 @@ namespace CacheMeIfYouCan.Tests.Common
             Set(new[] { new KeyValuePair<Key<TK>, TV>(key, value) }, timeToLive);
         }
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             if (_delay.HasValue)
                 Task.Delay(_delay.Value).Wait();
@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Tests.Common
             return results;
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             if (_delay.HasValue)
                 Task.Delay(_delay.Value).Wait();

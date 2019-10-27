@@ -13,19 +13,19 @@ namespace CacheMeIfYouCan
     /// <typeparam name="TV">The type of the cache values</typeparam>
     public sealed class TwoTierCache<TK, TV> : ICache<TK, TV>
     {
-        private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly ILocalCache<TK, TV> _localCache;
+        private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly IEqualityComparer<TK> _keyComparer;
         private readonly Func<TK, string> _keySerializer;
 
         public TwoTierCache(
-            IDistributedCache<TK, TV> distributedCache,
             ILocalCache<TK, TV> localCache,
+            IDistributedCache<TK, TV> distributedCache,
             IEqualityComparer<TK> keyComparer = null,
             Func<TK, string> keySerializer = null)
         {
-            _distributedCache = distributedCache;
             _localCache = localCache;
+            _distributedCache = distributedCache;
             _keyComparer = keyComparer ?? KeyComparerResolver.GetInner<TK>();
 
             if (keySerializer != null)
@@ -73,7 +73,7 @@ namespace CacheMeIfYouCan
 
             var convertedKeys = keys
                 .Select(k => new Key<TK>(k, _keySerializer))
-                .ToArray();
+                .ToList();
             
             var fromLocal = _localCache.Get(convertedKeys);
 
@@ -84,8 +84,8 @@ namespace CacheMeIfYouCan
             }
             
             var remaining = convertedKeys
-                .Where(k => results.ContainsKey(k))
-                .ToArray();
+                .Where(k => !results.ContainsKey(k))
+                .ToList();
 
             if (remaining.Any())
             {

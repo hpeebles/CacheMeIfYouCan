@@ -13,14 +13,14 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal class DuplicateTaskCatcherMulti<TK, TV> : IDuplicateTaskCatcherMulti<TK, TV>
     {
-        private readonly Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
+        private readonly Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
         private readonly ArrayPool<TK> _arrayPool;
         private const int ArrayPoolCutOffSize = 100;
 
         public DuplicateTaskCatcherMulti(
-            Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
+            Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             IEqualityComparer<TK> comparer)
         {
             _func = func;
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
         }
 
         public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(
-            ICollection<TK> keys,
+            IReadOnlyCollection<TK> keys,
             CancellationToken token = default)
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();
@@ -125,9 +125,11 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 
         private class ResultsMulti
         {
+            private static readonly IDictionary<TK, TV> EmptyResults = new Dictionary<TK, TV>();
+            
             public ResultsMulti(IDictionary<TK, TV> results)
             {
-                Results = results ?? new Dictionary<TK, TV>();
+                Results = results ?? EmptyResults;
                 StopwatchTimestampCompleted = Stopwatch.GetTimestamp();
             }
             

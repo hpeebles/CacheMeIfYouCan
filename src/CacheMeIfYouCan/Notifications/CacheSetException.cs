@@ -6,24 +6,24 @@ namespace CacheMeIfYouCan.Notifications
 {
     public sealed class CacheSetException<TK, TV> : CacheException<TK>
     {
-        private readonly Lazy<IList<Key<TK>>> _keys;
+        private readonly Lazy<IReadOnlyCollection<Key<TK>>> _keys;
 
         internal CacheSetException(
             string cacheName,
             string cacheType,
-            ICollection<KeyValuePair<Key<TK>, TV>> values,
+            IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values,
             TimeSpan timeToLive,
             string message,
             Exception exception)
-            : base(cacheName, cacheType, new Lazy<IList<string>>(() => values.Select(kv => kv.Key.AsStringSafe).ToArray()), message, exception)
+            : base(cacheName, cacheType, new Lazy<IReadOnlyCollection<string>>(() => values.Select(kv => kv.Key.AsStringSafe).ToList()), message, exception)
         {
             Values = values;
             TimeToLive = timeToLive;
-            _keys = new Lazy<IList<Key<TK>>>(() => values.Select(kv => kv.Key).ToArray());
+            _keys = new Lazy<IReadOnlyCollection<Key<TK>>>(() => values.Select(kv => kv.Key).ToList());
         }
 
-        public ICollection<KeyValuePair<Key<TK>, TV>> Values { get; }
+        public IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> Values { get; }
         public TimeSpan TimeToLive { get; }
-        public override ICollection<Key<TK>> Keys => _keys.Value;
+        public override IReadOnlyCollection<Key<TK>> Keys => _keys.Value;
     }
 }

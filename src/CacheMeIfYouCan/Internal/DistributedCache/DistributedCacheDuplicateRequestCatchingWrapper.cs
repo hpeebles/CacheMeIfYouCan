@@ -45,16 +45,16 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return _cache.Set(key, value, timeToLive);
         }
 
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var results = await _getHandlerMulti.ExecuteAsync(keys, CancellationToken.None);
 
             return results
                 .Select(kv => kv.Value.Value.WithStatusCode(kv.Value.Duplicate ? DuplicateStatusCode : 0))
-                .ToArray();
+                .ToList();
         }
 
-        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             return _cache.Set(values, timeToLive);
         }
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
             return _cache.Remove(key);
         }
 
-        private async Task<IDictionary<Key<TK>, GetFromCacheResult<TK, TV>>> GetMultiImpl(ICollection<Key<TK>> keys)
+        private async Task<IDictionary<Key<TK>, GetFromCacheResult<TK, TV>>> GetMultiImpl(IReadOnlyCollection<Key<TK>> keys)
         {
             var results = await _cache.Get(keys);
 

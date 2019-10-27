@@ -8,24 +8,24 @@ namespace CacheMeIfYouCan.Notifications
     {
         internal FunctionCacheException(
             string functionName,
-            IList<Key<TK>> keys,
+            IReadOnlyCollection<Key<TK>> keys,
             string message,
             Exception exception)
-            : base(functionName, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), message, exception)
+            : base(functionName, new Lazy<IReadOnlyCollection<string>>(() => keys.Select(k => k.AsStringSafe).ToList()), message, exception)
         {
             Keys = keys;
         }
         
-        public new IList<Key<TK>> Keys { get; }
+        public new IReadOnlyCollection<Key<TK>> Keys { get; }
     }
     
     public abstract class FunctionCacheException : Exception
     {
-        private readonly Lazy<IList<string>> _keys;
+        private readonly Lazy<IReadOnlyCollection<string>> _keys;
 
         internal FunctionCacheException(
             string functionName,
-            Lazy<IList<string>> keys,
+            Lazy<IReadOnlyCollection<string>> keys,
             string message,
             Exception exception)
             : base(message, exception)
@@ -35,6 +35,6 @@ namespace CacheMeIfYouCan.Notifications
         }
 
         public string FunctionName { get; }
-        public IList<string> Keys => _keys.Value;
+        public IReadOnlyCollection<string> Keys => _keys.Value;
     }
 }

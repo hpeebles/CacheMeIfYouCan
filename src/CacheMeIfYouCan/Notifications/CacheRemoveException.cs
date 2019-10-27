@@ -14,13 +14,13 @@ namespace CacheMeIfYouCan.Notifications
             : base(
                 cacheName,
                 cacheType,
-                new Lazy<IList<string>>(() => new[] { key.AsStringSafe }),
+                new Lazy<IReadOnlyCollection<string>>(() => new[] { key.AsStringSafe }),
                 message,
                 exception)
         {
             Keys = new[] { key };
         }
 
-        public override ICollection<Key<TK>> Keys { get; }
+        public override IReadOnlyCollection<Key<TK>> Keys { get; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Notifications;
@@ -44,7 +45,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             results.Should().ContainSingle();
             results[0].Misses.Should().ContainSingle();
-            Assert.Equal(key, results[0].Misses[0]);
+            Assert.Equal(key, results[0].Misses.First());
         }
         
         [Fact]
@@ -72,7 +73,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
 
             results.Should().ContainSingle();
             results[0].Misses.Should().ContainSingle();
-            Assert.Equal(key, results[0].Misses[0]);
+            Assert.Equal(key, results[0].Misses.First());
         }
 
         [Fact]
@@ -131,7 +132,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             expectedWithResults.Should().ContainSingle();
             expectedWithResults[0].Misses.Should().ContainSingle();
-            Assert.Equal(key, expectedWithResults[0].Misses[0]);
+            Assert.Equal(key, expectedWithResults[0].Misses.First());
             Assert.Empty(expectedWithoutResults);
         }
 
@@ -165,7 +166,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             shouldBePopulated.Should().ContainSingle();
             shouldBePopulated[0].Misses.Should().ContainSingle();
-            Assert.Equal(key, shouldBePopulated[0].Misses[0]);
+            Assert.Equal(key, shouldBePopulated[0].Misses.First());
             Assert.Empty(shouldBeEmpty);
         }
         
@@ -199,7 +200,7 @@ namespace CacheMeIfYouCan.Tests.Proxy
             
             shouldBePopulated.Should().ContainSingle();
             shouldBePopulated[0].Misses.Should().ContainSingle();
-            Assert.Equal(key, shouldBePopulated[0].Misses[0]);
+            Assert.Equal(key, shouldBePopulated[0].Misses.First());
             Assert.Empty(shouldBeEmpty);
         }
     }

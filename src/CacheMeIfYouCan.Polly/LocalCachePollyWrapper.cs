@@ -32,12 +32,12 @@ namespace CacheMeIfYouCan.Polly
             _policy.Execute(() => _cache.Set(key, value, timeToLive));
         }
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             return _policy.Execute(() => _cache.Get(keys));
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             _policy.Execute(() => _cache.Set(values, timeToLive));
         }

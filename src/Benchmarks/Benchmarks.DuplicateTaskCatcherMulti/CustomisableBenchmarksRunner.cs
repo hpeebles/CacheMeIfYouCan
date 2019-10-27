@@ -46,7 +46,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
                 .Select(_ => Guid.NewGuid().ToString())
                 .ToArray();
 
-            async Task<IDictionary<string, string>> Func(ICollection<string> keys, CancellationToken token)
+            async Task<IDictionary<string, string>> Func(IReadOnlyCollection<string> keys, CancellationToken token)
             {
                 await Task.Delay(_delay);
                 

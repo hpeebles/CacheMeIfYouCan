@@ -14,13 +14,13 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
     // This is exactly the same the version now in use
     internal class DuplicateTaskCatcherMulti_1<TK, TV>
     {
-        private readonly Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
+        private readonly Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _comparer;
         private readonly ConcurrentDictionary<TK, Task<ResultsMulti>> _tasks;
         private readonly ArrayPool<TK> _arrayPool;
         private const int ArrayPoolCutOffSize = 100;
 
-        public DuplicateTaskCatcherMulti_1(Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
+        public DuplicateTaskCatcherMulti_1(Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func, IEqualityComparer<TK> comparer)
         {
             _func = func;
             _comparer = comparer;
@@ -29,7 +29,7 @@ namespace Benchmarks.DuplicateTaskCatcherMulti
         }
 
         public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(
-            ICollection<TK> keys,
+            IReadOnlyCollection<TK> keys,
             CancellationToken token)
         {
             var tcs = new TaskCompletionSource<ResultsMulti>();

@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             _count = count;
         }
 
-        public IEnumerable<T> Trim<T>(ICollection<T> input)
+        public IEnumerable<T> Trim<T>(IReadOnlyCollection<T> input)
         {
             return input.Count <= _count ? input : input.Take(_count);
         }

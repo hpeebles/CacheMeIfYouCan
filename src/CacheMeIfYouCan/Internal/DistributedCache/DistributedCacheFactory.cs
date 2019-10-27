@@ -529,7 +529,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
 
         public async Task<IDictionary<TK, TV>> Get(ICollection<TK> keys)
         {
-            var fromCache = await _cache.Get(keys.Select(BuildKey).ToArray());
+            var fromCache = await _cache.Get(keys.Select(BuildKey).ToList());
 
             return fromCache.ToDictionary(r => r.Key.AsObject, r => r.Value);
         }
@@ -538,7 +538,7 @@ namespace CacheMeIfYouCan.Internal.DistributedCache
         {
             var forCache = values
                 .Select(kv => new KeyValuePair<Key<TK>, TV>(BuildKey(kv.Key), kv.Value))
-                .ToArray();
+                .ToList();
             
             await _cache.Set(forCache, timeToLive);
         }

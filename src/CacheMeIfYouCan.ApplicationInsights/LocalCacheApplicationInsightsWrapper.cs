@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             Execute(() => _cache.Set(key, value, timeToLive), builder.ToString());
         }
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var builder = new StringBuilder();
             builder.AppendLine($"Get {keys.Count} key(s)");
@@ -55,7 +55,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             return Execute(() => _cache.Get(keys), builder.ToString());
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var builder = new StringBuilder();
             builder.AppendLine($"Set {values.Count} key(s). TTL {timeToLive}");

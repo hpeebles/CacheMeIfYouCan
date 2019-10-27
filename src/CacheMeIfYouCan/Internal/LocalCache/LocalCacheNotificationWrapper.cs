@@ -116,7 +116,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             }
         }
 
-        public IList<GetFromCacheResult<TK, TV>> Get(ICollection<Key<TK>> keys)
+        public IList<GetFromCacheResult<TK, TV>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();
@@ -143,7 +143,9 @@ namespace CacheMeIfYouCan.Internal.LocalCache
                     var cacheGetResult = new CacheGetResult<TK, TV>(
                         CacheName,
                         CacheType,
-                        results,
+                        results == null
+                            ? null
+                            : results as IReadOnlyCollection<GetFromCacheResult<TK, TV>> ?? new List<GetFromCacheResult<TK, TV>>(results),
                         results == null || !results.Any()
                             ? keys
                             : keys.Except(results.Select(r => r.Key), _keyComparer).ToList(),
@@ -159,7 +161,7 @@ namespace CacheMeIfYouCan.Internal.LocalCache
             return results;
         }
 
-        public void Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public void Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var start = DateTime.UtcNow;
             var stopwatchStart = Stopwatch.GetTimestamp();

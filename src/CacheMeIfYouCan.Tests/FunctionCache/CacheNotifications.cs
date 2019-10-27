@@ -44,14 +44,14 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             results[0].Hits.Should().BeEmpty();
             results[0].MissesCount.Should().Be(1);
             results[0].Misses.Should().ContainSingle();
-            results[0].Misses[0].Should().Be("123");
+            results[0].Misses.First().Should().Be("123");
             results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
             
             await cachedEcho("123");
             results.Count.Should().Be(2);
             results[1].HitsCount.Should().Be(1);
             results[1].Hits.Should().ContainSingle();
-            results[1].Hits[0].Should().Be("123");
+            results[1].Hits.First().Should().Be("123");
             results[1].MissesCount.Should().Be(0);
             results[1].Misses.Should().BeEmpty();
         }
@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Tests.FunctionCache
             await cachedEcho("123");
             results.Should().ContainSingle();
             results[0].Keys.Should().ContainSingle();
-            results[0].Keys[0].Should().Be("123");
+            results[0].Keys.First().Should().Be("123");
             results[0].Start.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
             
             await cachedEcho("123");

@@ -8,7 +8,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 
 namespace CacheMeIfYouCan.ApplicationInsights
 {
-    internal class DistributedCacheApplicationInsightsWrapper<TK, TV> : IDistributedCache<TK, TV>
+    internal sealed class DistributedCacheApplicationInsightsWrapper<TK, TV> : IDistributedCache<TK, TV>
     {
         private readonly IDistributedCache<TK, TV> _cache;
         private readonly string _host;
@@ -45,7 +45,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             return Execute(() => _cache.Set(key, value, timeToLive), builder.ToString());
         }
 
-        public Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var builder = new StringBuilder();
             builder.AppendLine($"Get {keys.Count} key(s)");
@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.ApplicationInsights
             return Execute(() => _cache.Get(keys), builder.ToString());
         }
 
-        public Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var builder = new StringBuilder();
             builder.AppendLine($"Set {values.Count} key(s). TTL {timeToLive}");

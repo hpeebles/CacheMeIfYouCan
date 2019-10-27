@@ -9,14 +9,14 @@ namespace CacheMeIfYouCan.Notifications
         internal CacheGetException(
             string cacheName,
             string cacheType,
-            ICollection<Key<TK>> keys,
+            IReadOnlyCollection<Key<TK>> keys,
             string message,
             Exception exception)
-            : base(cacheName, cacheType, new Lazy<IList<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), message, exception)
+            : base(cacheName, cacheType, new Lazy<IReadOnlyCollection<string>>(() => keys.Select(k => k.AsStringSafe).ToArray()), message, exception)
         {
             Keys = keys;
         }
 
-        public override ICollection<Key<TK>> Keys { get; }
+        public override IReadOnlyCollection<Key<TK>> Keys { get; }
     }
 }

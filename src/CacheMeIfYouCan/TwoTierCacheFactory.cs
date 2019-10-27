@@ -6,22 +6,22 @@ namespace CacheMeIfYouCan
     /// </summary>
     public sealed class TwoTierCacheFactory
     {
-        private readonly IDistributedCacheFactory _distributedCacheFactory;
         private readonly ILocalCacheFactory _localCacheFactory;
+        private readonly IDistributedCacheFactory _distributedCacheFactory;
 
         public TwoTierCacheFactory(
-            IDistributedCacheFactory distributedCacheFactory,
-            ILocalCacheFactory localCacheFactory)
+            ILocalCacheFactory localCacheFactory,
+            IDistributedCacheFactory distributedCacheFactory)
         {
-            _distributedCacheFactory = distributedCacheFactory;
             _localCacheFactory = localCacheFactory;
+            _distributedCacheFactory = distributedCacheFactory;
         }
 
         public ICache<TK, TV> Build<TK, TV>(string cacheName)
         {
             return new TwoTierCache<TK, TV>(
-                _distributedCacheFactory.Build<TK, TV>(cacheName),
-                _localCacheFactory.Build<TK, TV>(cacheName));
+                _localCacheFactory.Build<TK, TV>(cacheName),
+                _distributedCacheFactory.Build<TK, TV>(cacheName));
         }
     }
 }

@@ -8,23 +8,23 @@ namespace CacheMeIfYouCan.Notifications
         internal CacheException(
             string cacheName,
             string cacheType,
-            Lazy<IList<string>> keysAsStrings,
+            Lazy<IReadOnlyCollection<string>> keysAsStrings,
             string message,
             Exception exception)
             : base(cacheName, cacheType, keysAsStrings, message, exception)
         { }
         
-        public new abstract ICollection<Key<TK>> Keys { get; }
+        public new abstract IReadOnlyCollection<Key<TK>> Keys { get; }
     }
     
     public abstract class CacheException : Exception
     {
-        private readonly Lazy<IList<string>> _keys;
+        private readonly Lazy<IReadOnlyCollection<string>> _keys;
 
         internal CacheException(
             string cacheName,
             string cacheType,
-            Lazy<IList<string>> keys,
+            Lazy<IReadOnlyCollection<string>> keys,
             string message,
             Exception exception)
             : base(message, exception)
@@ -36,6 +36,6 @@ namespace CacheMeIfYouCan.Notifications
 
         public string CacheName { get; }
         public string CacheType { get; }
-        public IList<string> Keys => _keys.Value;
+        public IReadOnlyCollection<string> Keys => _keys.Value;
     }
 }

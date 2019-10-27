@@ -9,13 +9,13 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
 {
     internal class DisabledDuplicateTaskCatcherMulti<TK, TV> : IDuplicateTaskCatcherMulti<TK, TV>
     {
-        private readonly Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
+        private readonly Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> _func;
         private readonly IEqualityComparer<TK> _keyComparer;
         private static readonly IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>> EmptyDictionary =
             new ReadOnlyDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>(new Dictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>());
 
         public DisabledDuplicateTaskCatcherMulti(
-            Func<ICollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
+            Func<IReadOnlyCollection<TK>, CancellationToken, Task<IDictionary<TK, TV>>> func,
             IEqualityComparer<TK> keyComparer)
         {
             _func = func;
@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Internal.DuplicateTaskCatcher
         }
 
         public async Task<IDictionary<TK, DuplicateTaskCatcherMultiResult<TK, TV>>> ExecuteAsync(
-            ICollection<TK> keys,
+            IReadOnlyCollection<TK> keys,
             CancellationToken token = default)
         {
             var values = await _func(keys, token);

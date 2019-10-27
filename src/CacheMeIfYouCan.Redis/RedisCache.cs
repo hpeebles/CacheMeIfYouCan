@@ -109,7 +109,7 @@ namespace CacheMeIfYouCan.Redis
         }
 
         // Must get keys separately since multi key operations will fail if running Redis in cluster mode
-        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async Task<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var redisDb = GetDatabase();
 
@@ -138,7 +138,7 @@ namespace CacheMeIfYouCan.Redis
         }
 
         // Must set keys separately since multi key operations will fail if running Redis in cluster mode
-        public async Task Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async Task Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
             var redisDb = GetDatabase();
             

@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly IDistributedCache<TK, TV> _distributedCache;
         private readonly KeyComparer<TK> _keyComparer;
         private readonly Func<TimeSpan, TimeSpan> _getLocalCacheTimeToLive;
-        private readonly Func<TK, TV, bool> onlyStoreInLocalCacheWhenPredicate;
+        private readonly Func<TK, TV, bool> _onlyStoreInLocalCacheWhenPredicate;
 
         public TwoTierCache(
             ILocalCache<TK, TV> localCache,
@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Internal
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
-            this.onlyStoreInLocalCacheWhenPredicate = onlyStoreInLocalCacheWhenPredicate;
+            _onlyStoreInLocalCacheWhenPredicate = onlyStoreInLocalCacheWhenPredicate;
 
             if (localCacheTimeToLiveOverride != null)
             {
@@ -55,8 +55,8 @@ namespace CacheMeIfYouCan.Internal
             var fromDistributedCache = await _distributedCache.Get(key);
 
             if (fromDistributedCache.Success &&
-                (onlyStoreInLocalCacheWhenPredicate == null ||
-                 onlyStoreInLocalCacheWhenPredicate(fromDistributedCache.Key, fromDistributedCache.Value)))
+                (_onlyStoreInLocalCacheWhenPredicate == null ||
+                 _onlyStoreInLocalCacheWhenPredicate(fromDistributedCache.Key, fromDistributedCache.Value)))
             {
                 _localCache.Set(
                     key,
@@ -69,13 +69,13 @@ namespace CacheMeIfYouCan.Internal
 
         public async ValueTask Set(Key<TK> key, TV value, TimeSpan timeToLive)
         {
-            if (onlyStoreInLocalCacheWhenPredicate == null || onlyStoreInLocalCacheWhenPredicate(key, value))
+            if (_onlyStoreInLocalCacheWhenPredicate == null || _onlyStoreInLocalCacheWhenPredicate(key, value))
                 _localCache.Set(key, value, _getLocalCacheTimeToLive(timeToLive));
 
             await _distributedCache.Set(key, value, timeToLive);
         }
 
-        public async ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(ICollection<Key<TK>> keys)
+        public async ValueTask<IList<GetFromCacheResult<TK, TV>>> Get(IReadOnlyCollection<Key<TK>> keys)
         {
             var fromLocalCache = _localCache.Get(keys) ?? new GetFromCacheResult<TK, TV>[0];
             
@@ -86,21 +86,21 @@ namespace CacheMeIfYouCan.Internal
                 ? keys
                 : keys
                     .Except(fromLocalCache.Select(c => c.Key), _keyComparer)
-                    .ToArray();
+                    .ToList();
 
             if (!remaining.Any())
                 return fromLocalCache;
             
             var fromDistributedCache = await _distributedCache.Get(remaining);
             
-            if (onlyStoreInLocalCacheWhenPredicate == null)
+            if (_onlyStoreInLocalCacheWhenPredicate == null)
             {
                 foreach (var result in fromDistributedCache)
                    _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
             }
             else
             {
-                foreach (var result in fromDistributedCache.Where(r => onlyStoreInLocalCacheWhenPredicate(r.Key, r.Value)))
+                foreach (var result in fromDistributedCache.Where(r => _onlyStoreInLocalCacheWhenPredicate(r.Key, r.Value)))
                     _localCache.Set(result.Key, result.Value, _getLocalCacheTimeToLive(result.TimeToLive));
             }
 
@@ -109,17 +109,17 @@ namespace CacheMeIfYouCan.Internal
                 .ToArray();
         }
 
-        public async ValueTask Set(ICollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
+        public async ValueTask Set(IReadOnlyCollection<KeyValuePair<Key<TK>, TV>> values, TimeSpan timeToLive)
         {
-            if (onlyStoreInLocalCacheWhenPredicate == null)
+            if (_onlyStoreInLocalCacheWhenPredicate == null)
             {
                 _localCache.Set(values, _getLocalCacheTimeToLive(timeToLive));
             }
             else
             {
                 var toStoreInLocalCache = values
-                    .Where(kv => onlyStoreInLocalCacheWhenPredicate(kv.Key, kv.Value))
-                    .ToArray();
+                    .Where(kv => _onlyStoreInLocalCacheWhenPredicate(kv.Key, kv.Value))
+                    .ToList();
                 
                 if (toStoreInLocalCache.Any())
                     _localCache.Set(toStoreInLocalCache, _getLocalCacheTimeToLive(timeToLive));
