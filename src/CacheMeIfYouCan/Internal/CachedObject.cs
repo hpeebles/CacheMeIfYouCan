@@ -147,6 +147,7 @@ namespace CacheMeIfYouCan.Internal
         
             _state = CachedObjectState.Disposed;
             CachedObjectInitializer.Remove(this);
+            _updateScheduler.Dispose();
             _cts.Cancel();
             _cts.Dispose();
         }
