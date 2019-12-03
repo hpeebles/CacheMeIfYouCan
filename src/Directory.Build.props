@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <Version>0.0.1</Version>
     <PackageProjectUrl>https://github.com/hpeebles/CacheMeIfYouCan</PackageProjectUrl>
     <Authors>hpeebles</Authors>
     <RepositoryType>git</RepositoryType>
