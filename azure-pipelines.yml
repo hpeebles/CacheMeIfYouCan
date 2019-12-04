@@ -1,0 +1,44 @@
+name: $(majorVersion).$(minorVersion).$(Rev:r)
+
+trigger:
+- v0.2
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  pathToMainProject: 'src/CacheMeIfYouCan/CacheMeIfYouCan.csproj'
+  pathToTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(pathToMainProject)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test netcoreapp3.0'
+  inputs:
+    command: 'test'
+    arguments: '$(pathToTestProject) --framework netcoreapp3.0'
+
+- task: DotNetCoreCLI@2
+  displayName: "dotnet pack"
+  inputs:
+    command: 'pack'
+    arguments: '--configuration $(buildConfiguration)'
+    packagesToPack: '$(pathToMainProject)'
+    nobuild: true
+    versioningScheme: 'byBuildNumber'
+
+- task: NuGetCommand@2
+  displayName: 'nuget push'
+  inputs:
+    command: 'push'
+    feedsToUse: 'select'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: 'Default'
