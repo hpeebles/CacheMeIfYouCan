@@ -11,10 +11,15 @@ namespace CacheMeIfYouCan.Tests
 {
     public class LocalCacheTests
     {
-        [Fact]
-        public void Concurrent_Set_TryGet_AllItemsReturnedSuccessfully()
+        private const string MemoryCache = nameof(MemoryCache);
+        private const string DictionaryCache = nameof(DictionaryCache);
+        
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Concurrent_Set_TryGet_AllItemsReturnedSuccessfully(string cacheName)
         {
-            var cache = new MemoryCache<int, int>(k => k.ToString());
+            var cache = BuildCache(cacheName);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -22,11 +27,12 @@ namespace CacheMeIfYouCan.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var key = (10 * i) + j;
+                        var key = 2 * ((10 * i) + j);
                         
                         cache.Set(key, key, TimeSpan.FromSeconds(1));
                         cache.TryGet(key, out var value).Should().BeTrue();
                         value.Should().Be(key);
+                        cache.TryGet(key + 1, out _).Should().BeFalse();
                         Thread.Yield();
                     }
                 }))
@@ -36,11 +42,13 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
-        [InlineData(50)]
-        [InlineData(1000)]
-        public void WithTimeToLive_DataExpiredCorrectly(int timeToLiveMs)
+        [InlineData(MemoryCache, 50)]
+        [InlineData(MemoryCache, 1000)]
+        [InlineData(DictionaryCache, 50)]
+        [InlineData(DictionaryCache, 1000)]
+        public void WithTimeToLive_DataExpiredCorrectly(string cacheName, int timeToLiveMs)
         {
-            var cache = new MemoryCache<int, int>(k => k.ToString());
+            var cache = BuildCache(cacheName);
             
             cache.Set(1, 1, TimeSpan.FromMilliseconds(timeToLiveMs));
             cache.TryGet(1, out _).Should().BeTrue();
@@ -50,10 +58,12 @@ namespace CacheMeIfYouCan.Tests
             cache.TryGet(1, out _).Should().BeFalse();
         }
         
-        [Fact]
-        public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully()
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully(string cacheName)
         {
-            var cache = new MemoryCache<int, int>(k => k.ToString());
+            var cache = BuildCache(cacheName);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -72,6 +82,16 @@ namespace CacheMeIfYouCan.Tests
                 .ToArray();
 
             Task.WaitAll(tasks);
+        }
+
+        private static ILocalCache<int, int> BuildCache(string cacheName)
+        {
+            return cacheName switch
+            {
+                MemoryCache => (ILocalCache<int, int>) new MemoryCache<int, int>(k => k.ToString()),
+                DictionaryCache => new DictionaryCache<int, int>(),
+                _ => throw new Exception($"No! Stop being silly! {cacheName} is not valid cache name")
+            };
         }
     }
 }
