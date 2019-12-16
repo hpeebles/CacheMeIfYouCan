@@ -31,6 +31,12 @@ namespace CacheMeIfYouCan
             return this;
         }
 
+        public CachedFunctionConfigurationManager<TKey, TValue> WithDistributedCache(IDistributedCache<TKey, TValue> cache)
+        {
+            _config.DistributedCache = cache;
+            return this;
+        }
+
         public Func<TKey, Task<TValue>> Build()
         {
             var cachedFunction = new CachedFunctionWithSingleKey<TKey, TValue>(_config);

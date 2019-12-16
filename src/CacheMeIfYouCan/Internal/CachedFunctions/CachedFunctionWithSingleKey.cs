@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
@@ -8,28 +7,36 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
     {
         private readonly Func<TKey, Task<TValue>> _originalFunction;
         private readonly Func<TKey, TimeSpan> _timeToLiveFactory;
-        private readonly IEqualityComparer<TKey> _keyComparer;
-        private readonly ILocalCache<TKey, TValue> _cache;
+        private readonly ICache<TKey, TValue> _cache;
 
         public CachedFunctionWithSingleKey(CachedFunctionConfiguration<TKey, TValue> config)
         {
             _originalFunction = config.OriginalFunction;
             _timeToLiveFactory = config.TimeToLiveFactory;
-            _keyComparer = config.KeyComparer;
-            _cache = config.LocalCache;
+            _cache = CacheBuilder.Build(config.LocalCache, config.DistributedCache, config.KeyComparer);
         }
 
         public async Task<TValue> Get(TKey key)
         {
-            if (_cache.TryGet(key, out var value))
-                return value;
+            var tryGetTask = _cache.TryGet(key);
 
-            value = await _originalFunction(key).ConfigureAwait(false);
+            if (!tryGetTask.IsCompleted)
+                await tryGetTask.ConfigureAwait(false);
+            
+            if (tryGetTask.Result.Success)
+                return tryGetTask.Result.Value;
+
+            var value = await _originalFunction(key).ConfigureAwait(false);
 
             var timeToLive = _timeToLiveFactory(key);
-            
+
             if (timeToLive > TimeSpan.Zero)
-                _cache.Set(key, value, timeToLive);
+            {
+                var setTask = _cache.Set(key, value, timeToLive);
+
+                if (!setTask.IsCompleted)
+                    await setTask.ConfigureAwait(false);
+            }
 
             return value;
         }
