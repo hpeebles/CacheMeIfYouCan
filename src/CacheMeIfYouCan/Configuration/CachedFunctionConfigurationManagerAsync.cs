@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration
@@ -7,14 +8,14 @@ namespace CacheMeIfYouCan.Configuration
         : CachedFunctionConfigurationManagerBase<TKey, TValue, CachedFunctionConfigurationManagerAsync<TKey, TValue>>
     {
         public CachedFunctionConfigurationManagerAsync(Func<TKey, Task<TValue>> originalFunc)
-            : base(originalFunc)
+            : base((key, _) => originalFunc(key))
         { }
 
         public Func<TKey, Task<TValue>> Build()
         {
             var cachedFunction = BuildCachedFunction();
 
-            return cachedFunction.Get;
+            return key => cachedFunction.Get(key, CancellationToken.None);
         }
     }
 }

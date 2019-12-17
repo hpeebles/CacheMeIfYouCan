@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
     internal sealed class CachedFunctionWithSingleKey<TKey, TValue>
     {
-        private readonly Func<TKey, Task<TValue>> _originalFunction;
+        private readonly Func<TKey, CancellationToken, Task<TValue>> _originalFunction;
         private readonly Func<TKey, TimeSpan> _timeToLiveFactory;
         private readonly ICache<TKey, TValue> _cache;
 
@@ -16,8 +17,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             _cache = CacheBuilder.Build(config.LocalCache, config.DistributedCache, config.KeyComparer);
         }
 
-        public async Task<TValue> Get(TKey key)
+        public async Task<TValue> Get(TKey key, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var tryGetTask = _cache.TryGet(key);
 
             if (!tryGetTask.IsCompleted)
@@ -26,7 +29,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             if (tryGetTask.Result.Success)
                 return tryGetTask.Result.Value;
 
-            var value = await _originalFunction(key).ConfigureAwait(false);
+            var value = await _originalFunction(key, cancellationToken).ConfigureAwait(false);
 
             var timeToLive = _timeToLiveFactory(key);
 

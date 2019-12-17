@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.LocalCaches;
 using FluentAssertions;
@@ -55,6 +56,35 @@ namespace CacheMeIfYouCan.Tests
 
                 Task.WaitAll(tasks);
             }
+        }
+
+        [Theory]
+        [InlineData(100, true)]
+        [InlineData(500, false)]
+        public async Task WithCancellationToken_ThrowsIfCancelled(int cancelAfter, bool shouldThrow)
+        {
+            var delay = TimeSpan.FromMilliseconds(200);
+            
+            Func<int, CancellationToken, Task<int>> originalFunction = async (i, cancellationToken) =>
+            {
+                await Task.Delay(delay, cancellationToken);
+                return i;
+            };
+
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(new MemoryCache<int, int>(i => i.ToString()))
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
+                .Build();
+
+            var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
+            
+            Func<Task<int>> func = () => cachedFunction(1, cancellationTokenSource.Token);
+
+            if (shouldThrow)
+                await func.Should().ThrowAsync<OperationCanceledException>();
+            else
+                await func.Should().NotThrowAsync();
         }
     }
 }

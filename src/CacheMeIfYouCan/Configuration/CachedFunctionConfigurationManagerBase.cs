@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
@@ -10,7 +11,7 @@ namespace CacheMeIfYouCan.Configuration
     {
         private readonly CachedFunctionConfiguration<TKey, TValue> _config;
 
-        internal CachedFunctionConfigurationManagerBase(Func<TKey, Task<TValue>> originalFunc)
+        internal CachedFunctionConfigurationManagerBase(Func<TKey, CancellationToken, Task<TValue>> originalFunc)
         {
             _config = new CachedFunctionConfiguration<TKey, TValue>(originalFunc);
         }
