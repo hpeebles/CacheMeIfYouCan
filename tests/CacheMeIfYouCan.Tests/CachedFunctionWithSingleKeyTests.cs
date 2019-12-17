@@ -129,19 +129,18 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLiveFactory(key => TimeSpan.FromMilliseconds(key))
                 .Build();
 
-            var tasks = new[] { 100, 250, 500 }.Select(CheckTimeToLiveForKey).ToArray();
+            foreach (var key in new[] { 250, 500, 1000 })
+                CheckTimeToLiveForKey(key);
 
-            Task.WaitAll(tasks);
-
-            async Task CheckTimeToLiveForKey(int key)
+            void CheckTimeToLiveForKey(int key)
             {
                 cachedFunction(key);
 
-                await Task.Delay(TimeSpan.FromMilliseconds(key / 2));
+                Thread.Sleep(TimeSpan.FromMilliseconds(key / 2));
 
                 cache.TryGet(key, out _).Should().BeTrue();
 
-                await Task.Delay(TimeSpan.FromMilliseconds(key));
+                Thread.Sleep(TimeSpan.FromMilliseconds(key));
 
                 cache.TryGet(key, out _).Should().BeFalse();
             }
