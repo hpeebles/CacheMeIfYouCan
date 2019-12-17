@@ -9,16 +9,25 @@ namespace CacheMeIfYouCan.Tests
     {
         private readonly ILocalCache<TKey, TValue> _innerCache = new MemoryCache<TKey, TValue>(k => k.ToString());
 
-        public int TryGetExecutionCount = 0;
-        public int SetExecutionCount = 0;
-        public int GetManyExecutionCount = 0;
-        public int SetManyExecutionCount = 0;
+        public int TryGetExecutionCount;
+        public int SetExecutionCount;
+        public int GetManyExecutionCount;
+        public int SetManyExecutionCount;
+        public int HitsCount;
+        public int MissesCount;
         
         public bool TryGet(TKey key, out TValue value)
         {
             Interlocked.Increment(ref TryGetExecutionCount);
 
-            return _innerCache.TryGet(key, out value);
+            if (_innerCache.TryGet(key, out value))
+            {
+                Interlocked.Increment(ref HitsCount);
+                return true;
+            }
+
+            Interlocked.Increment(ref MissesCount);
+            return false;
         }
 
         public void Set(TKey key, TValue value, TimeSpan timeToLive)
@@ -32,7 +41,15 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
-            return _innerCache.GetMany(keys);
+            var values = _innerCache.GetMany(keys);
+            
+            var hits = values.Count;
+            var misses = keys.Count - values.Count;
+
+            if (hits > 0) Interlocked.Add(ref HitsCount, hits);
+            if (misses > 0) Interlocked.Add(ref MissesCount, misses);
+
+            return values;
         }
 
         public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)

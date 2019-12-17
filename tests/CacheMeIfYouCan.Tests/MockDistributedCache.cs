@@ -11,18 +11,25 @@ namespace CacheMeIfYouCan.Tests
     {
         private readonly ILocalCache<TKey, (TValue, DateTime)> _innerCache = new MemoryCache<TKey, (TValue, DateTime)>(k => k.ToString());
         
-        public int TryGetExecutionCount = 0;
-        public int SetExecutionCount = 0;
-        public int GetManyExecutionCount = 0;
-        public int SetManyExecutionCount = 0;
+        public int TryGetExecutionCount;
+        public int SetExecutionCount;
+        public int GetManyExecutionCount;
+        public int SetManyExecutionCount;
+        public int HitsCount;
+        public int MissesCount;
 
         public Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
             Interlocked.Increment(ref TryGetExecutionCount);
 
-            return _innerCache.TryGet(key, out var value)
-                ? Task.FromResult((true, new ValueAndTimeToLive<TValue>(value.Item1, value.Item2 - DateTime.UtcNow)))
-                : Task.FromResult((false, new ValueAndTimeToLive<TValue>()));
+            if (_innerCache.TryGet(key, out var value))
+            {
+                Interlocked.Increment(ref HitsCount);
+                return Task.FromResult((true, new ValueAndTimeToLive<TValue>(value.Item1, value.Item2 - DateTime.UtcNow)));
+            }
+            
+            Interlocked.Increment(ref MissesCount);
+            return Task.FromResult((false, new ValueAndTimeToLive<TValue>()));
         }
 
         public Task Set(TKey key, TValue value, TimeSpan timeToLive)
@@ -42,6 +49,12 @@ namespace CacheMeIfYouCan.Tests
                 .GetMany(keys)
                 .ToDictionary(kv => kv.Key, kv => new ValueAndTimeToLive<TValue>(kv.Value.Item1, kv.Value.Item2 - DateTime.UtcNow));
 
+            var hits = values.Count;
+            var misses = keys.Count - values.Count;
+
+            if (hits > 0) Interlocked.Add(ref HitsCount, hits);
+            if (misses > 0) Interlocked.Add(ref MissesCount, misses);
+                
             return Task.FromResult<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>>(values);
         }
 

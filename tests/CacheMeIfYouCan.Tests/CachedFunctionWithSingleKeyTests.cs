@@ -86,5 +86,65 @@ namespace CacheMeIfYouCan.Tests
             else
                 await func.Should().NotThrowAsync();
         }
+
+        [Theory]
+        [InlineData(100)]
+        [InlineData(250)]
+        [InlineData(1000)]
+        public void WithTimeToLive_SetsTimeToLiveCorrectly(int timeToLiveMs)
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var cache = new MockLocalCache<int, int>();
+            
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromMilliseconds(timeToLiveMs))
+                .Build();
+
+            cachedFunction(1);
+            
+            Thread.Sleep(timeToLiveMs / 2);
+            
+            cachedFunction(1);
+            cache.HitsCount.Should().Be(1);
+            
+            Thread.Sleep(timeToLiveMs);
+
+            cachedFunction(1);
+            cache.HitsCount.Should().Be(1);
+        }
+        
+        [Fact]
+        public void WithTimeToLiveFactory_SetsTimeToLiveCorrectly()
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var cache = new MockLocalCache<int, int>();
+            
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLiveFactory(key => TimeSpan.FromMilliseconds(key))
+                .Build();
+
+            var tasks = new[] { 100, 250, 500 }.Select(CheckTimeToLiveForKey).ToArray();
+
+            Task.WaitAll(tasks);
+
+            async Task CheckTimeToLiveForKey(int key)
+            {
+                cachedFunction(key);
+
+                await Task.Delay(TimeSpan.FromMilliseconds(key / 2));
+
+                cache.TryGet(key, out _).Should().BeTrue();
+
+                await Task.Delay(TimeSpan.FromMilliseconds(key));
+
+                cache.TryGet(key, out _).Should().BeFalse();
+            }
+        }
     }
 }
