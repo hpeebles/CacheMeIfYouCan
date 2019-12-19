@@ -38,6 +38,25 @@ namespace CacheMeIfYouCan.Configuration
             _config.DistributedCache = cache;
             return (TConfig)this;
         }
+        
+        public TConfig SkipCacheWhen(
+            Func<TKey, bool> predicate,
+            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        {
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
+                _config.SkipCacheGetPredicate = _config.SkipCacheGetPredicate.Or(predicate);
+
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
+                _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or((key, value) => predicate(key));
+
+            return (TConfig)this;
+        }
+
+        public TConfig SkipCacheWhen(Func<TKey, TValue, bool> predicate)
+        {
+            _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or(predicate);
+            return (TConfig)this;
+        }
 
         private protected CachedFunctionWithSingleKey<TKey, TValue> BuildCachedFunction()
         {
