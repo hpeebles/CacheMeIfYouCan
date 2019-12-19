@@ -38,6 +38,12 @@ namespace CacheMeIfYouCan.Configuration
             _config.DistributedCache = cache;
             return (TConfig)this;
         }
+
+        public TConfig DisableCaching(bool disableCaching = true)
+        {
+            _config.DisableCaching = disableCaching;
+            return (TConfig)this;
+        }
         
         public TConfig SkipCacheWhen(
             Func<TKey, bool> predicate,

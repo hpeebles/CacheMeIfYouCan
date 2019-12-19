@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Tests
             debugInfo.KeysToRecycle.Should().BeEmpty();
             debugInfo.ValuesToRecycle.Should().HaveCount(1);
             
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Thread.Sleep(TimeSpan.FromSeconds(3));
 
             debugInfo = cache.GetDebugInfo();
 

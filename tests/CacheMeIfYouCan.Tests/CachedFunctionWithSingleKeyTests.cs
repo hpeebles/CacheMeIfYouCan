@@ -147,6 +147,36 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DisableCaching_WorksAsExpected(bool disableCaching)
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var cache = new MockLocalCache<int, int>();
+
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
+                .DisableCaching(disableCaching)
+                .Build();
+
+            cachedFunction(1);
+
+            if (disableCaching)
+            {
+                cache.TryGetExecutionCount.Should().Be(0);
+                cache.SetExecutionCount.Should().Be(0);
+            }
+            else
+            {
+                cache.TryGetExecutionCount.Should().Be(1);
+                cache.SetExecutionCount.Should().Be(1);
+            }
+        }
+        
+        [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
         public void SkipCacheGet_SkipCacheSet_WorksForAllCombinations(bool flag1, bool flag2, bool flag3, bool flag4)
         {

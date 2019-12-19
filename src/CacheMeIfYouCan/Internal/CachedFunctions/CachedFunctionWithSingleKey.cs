@@ -18,14 +18,16 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             _timeToLiveFactory = config.TimeToLiveFactory;
             _skipCacheGetPredicate = config.SkipCacheGetPredicate;
             _skipCacheSetPredicate = config.SkipCacheSetPredicate;
-            _cache = CacheBuilder.Build(config.LocalCache, config.DistributedCache, config.KeyComparer);
+            
+            if (!config.DisableCaching)
+                _cache = CacheBuilder.Build(config.LocalCache, config.DistributedCache, config.KeyComparer);
         }
 
         public async Task<TValue> Get(TKey key, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key))
+            if (_cache != null && (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key)))
             {
                 var tryGetTask = _cache.TryGet(key);
 
@@ -38,7 +40,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             var value = await _originalFunction(key, cancellationToken).ConfigureAwait(false);
 
-            if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
+            if (_cache != null && (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value)))
             {
                 var timeToLive = _timeToLiveFactory(key);
 
