@@ -15,19 +15,26 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         public CachedFunctionWithSingleKey(CachedFunctionConfiguration<TKey, TValue> config)
         {
             _originalFunction = config.OriginalFunction;
-            _timeToLiveFactory = config.TimeToLiveFactory;
-            _skipCacheGetPredicate = config.SkipCacheGetPredicate;
-            _skipCacheSetPredicate = config.SkipCacheSetPredicate;
-            
-            if (!config.DisableCaching)
-                _cache = CacheBuilder.Build(config.LocalCache, config.DistributedCache, config.KeyComparer);
+
+            if (config.DisableCaching)
+            {
+                _timeToLiveFactory = key => TimeSpan.Zero;
+                _cache = NullCache<TKey, TValue>.Instance;
+            }
+            else
+            {
+                _timeToLiveFactory = config.TimeToLiveFactory;
+                _skipCacheGetPredicate = config.SkipCacheGetPredicate;
+                _skipCacheSetPredicate = config.SkipCacheSetPredicate;
+                _cache = CacheBuilder.Build(config);
+            }
         }
 
         public async Task<TValue> Get(TKey key, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            if (_cache != null && (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key)))
+            if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key))
             {
                 var tryGetTask = _cache.TryGet(key);
 
@@ -40,7 +47,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             var value = await _originalFunction(key, cancellationToken).ConfigureAwait(false);
 
-            if (_cache != null && (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value)))
+            if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
             {
                 var timeToLive = _timeToLiveFactory(key);
 

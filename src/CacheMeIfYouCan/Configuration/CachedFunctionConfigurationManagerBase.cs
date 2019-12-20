@@ -64,6 +64,44 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
+        public TConfig SkipLocalCacheWhen(
+            Func<TKey, bool> predicate,
+            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        {
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
+                _config.SkipLocalCacheGetPredicate = _config.SkipLocalCacheGetPredicate.Or(predicate);
+
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
+                _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or((key, value) => predicate(key));
+
+            return (TConfig)this;
+        }
+
+        public TConfig SkipLocalCacheWhen(Func<TKey, TValue, bool> predicate)
+        {
+            _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or(predicate);
+            return (TConfig)this;
+        }
+        
+        public TConfig SkipDistributedCacheWhen(
+            Func<TKey, bool> predicate,
+            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        {
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
+                _config.SkipDistributedCacheGetPredicate = _config.SkipDistributedCacheGetPredicate.Or(predicate);
+
+            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
+                _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or((key, value) => predicate(key));
+
+            return (TConfig)this;
+        }
+
+        public TConfig SkipDistributedCacheWhen(Func<TKey, TValue, bool> predicate)
+        {
+            _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or(predicate);
+            return (TConfig)this;
+        }
+
         private protected CachedFunctionWithSingleKey<TKey, TValue> BuildCachedFunction()
         {
             return new CachedFunctionWithSingleKey<TKey, TValue>(_config);

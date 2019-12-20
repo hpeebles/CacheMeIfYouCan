@@ -229,5 +229,92 @@ namespace CacheMeIfYouCan.Tests
                 previousSetExecutionCount = currentSetExecutionCount;
             }
         }
+
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 8, MemberType = typeof(BoolGenerator))]
+        public void SkipLocalCacheWhen_SkipDistributedCacheWhen_WorkAsExpected(
+            bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6, bool flag7, bool flag8)
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var localCache = new MockLocalCache<int, int>();
+            var distributedCache = new MockDistributedCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(localCache)
+                .WithDistributedCache(distributedCache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+            
+            if (flag1)
+                config.SkipLocalCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag2)
+                config.SkipLocalCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag3)
+                config.SkipLocalCacheWhen(key => key % 5 == 0);
+            
+            if (flag4)
+                config.SkipLocalCacheWhen((key, value) => key % 7 == 0);
+            
+            if (flag5)
+                config.SkipDistributedCacheWhen(key => key % 11 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag6)
+                config.SkipDistributedCacheWhen(key => key % 13 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag7)
+                config.SkipDistributedCacheWhen(key => key % 17 == 0);
+            
+            if (flag8)
+                config.SkipDistributedCacheWhen((key, value) => key % 19 == 0);
+            
+            var cachedFunction = config.Build();
+            
+            var previousLocalTryGetExecutionCount = 0;
+            var previousLocalSetExecutionCount = 0;
+            var previousDistributedTryGetExecutionCount = 0;
+            var previousDistributedSetExecutionCount = 0;
+            for (var i = 0; i < 100; i++)
+            {
+                cachedFunction(i);
+
+                var currentLocalTryGetExecutionCount = localCache.TryGetExecutionCount;
+                var currentLocalSetExecutionCount = localCache.SetExecutionCount;
+                var currentDistributedTryGetExecutionCount = distributedCache.TryGetExecutionCount;
+                var currentDistributedSetExecutionCount = distributedCache.SetExecutionCount;
+
+                var skipLocalGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
+                var skipLocalSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                var skipDistributedGet = flag5 && i % 11 == 0 || flag7 && i % 17 == 0;
+                var skipDistributedSet = flag6 && i % 13 == 0 || flag7 && i % 17 == 0 || flag8 && i % 19 == 0;
+                
+                if (skipLocalGet)
+                    currentLocalTryGetExecutionCount.Should().Be(previousLocalTryGetExecutionCount);
+                else
+                    currentLocalTryGetExecutionCount.Should().Be(previousLocalTryGetExecutionCount + 1);
+
+                if (skipLocalSet)
+                    currentLocalSetExecutionCount.Should().Be(previousLocalSetExecutionCount);
+                else
+                    currentLocalSetExecutionCount.Should().Be(previousLocalSetExecutionCount + 1);
+
+                if (skipDistributedGet)
+                    currentDistributedTryGetExecutionCount.Should().Be(previousDistributedTryGetExecutionCount);
+                else
+                    currentDistributedTryGetExecutionCount.Should().Be(previousDistributedTryGetExecutionCount + 1);
+
+                if (skipDistributedSet)
+                    currentDistributedSetExecutionCount.Should().Be(previousDistributedSetExecutionCount);
+                else
+                    currentDistributedSetExecutionCount.Should().Be(previousDistributedSetExecutionCount + 1);
+                
+                previousLocalTryGetExecutionCount = currentLocalTryGetExecutionCount;
+                previousLocalSetExecutionCount = currentLocalSetExecutionCount;
+                previousDistributedTryGetExecutionCount = currentDistributedTryGetExecutionCount;
+                previousDistributedSetExecutionCount = currentDistributedSetExecutionCount;
+            }
+        }
     }
 }
