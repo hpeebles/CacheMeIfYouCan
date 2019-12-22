@@ -4,17 +4,13 @@ using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 
-namespace CacheMeIfYouCan.Configuration
+namespace CacheMeIfYouCan.Configuration.SingleKey
 {
     public abstract class CachedFunctionConfigurationManagerBase<TKey, TValue, TConfig>
         where TConfig : CachedFunctionConfigurationManagerBase<TKey, TValue, TConfig>
     {
-        private readonly CachedFunctionConfiguration<TKey, TValue> _config;
-
-        internal CachedFunctionConfigurationManagerBase(Func<TKey, CancellationToken, Task<TValue>> originalFunc)
-        {
-            _config = new CachedFunctionConfiguration<TKey, TValue>(originalFunc);
-        }
+        private readonly CachedFunctionWithSingleKeyConfiguration<TKey, TValue> _config =
+            new CachedFunctionWithSingleKeyConfiguration<TKey, TValue>();
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
@@ -102,9 +98,10 @@ namespace CacheMeIfYouCan.Configuration
             return (TConfig)this;
         }
 
-        private protected CachedFunctionWithSingleKey<TKey, TValue> BuildCachedFunction()
+        private protected CachedFunctionWithSingleKey<TKey, TValue> BuildCachedFunction(
+            Func<TKey, CancellationToken, Task<TValue>> originalFunction)
         {
-            return new CachedFunctionWithSingleKey<TKey, TValue>(_config);
+            return new CachedFunctionWithSingleKey<TKey, TValue>(originalFunction, _config);
         }
     }
 }

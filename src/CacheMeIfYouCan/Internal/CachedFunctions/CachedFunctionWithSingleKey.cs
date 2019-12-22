@@ -12,9 +12,11 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly ICache<TKey, TValue> _cache;
 
-        public CachedFunctionWithSingleKey(CachedFunctionConfiguration<TKey, TValue> config)
+        public CachedFunctionWithSingleKey(
+            Func<TKey, CancellationToken, Task<TValue>> originalFunction,
+            CachedFunctionWithSingleKeyConfiguration<TKey, TValue> config)
         {
-            _originalFunction = config.OriginalFunction;
+            _originalFunction = originalFunction;
 
             if (config.DisableCaching)
             {

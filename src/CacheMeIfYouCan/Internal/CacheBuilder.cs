@@ -1,9 +1,11 @@
-﻿namespace CacheMeIfYouCan.Internal
+﻿using CacheMeIfYouCan.Internal.CachedFunctions;
+
+namespace CacheMeIfYouCan.Internal
 {
     internal static class CacheBuilder
     {
         public static ICache<TKey, TValue> Build<TKey, TValue>(
-            CachedFunctionConfiguration<TKey, TValue> config)
+            CachedFunctionConfigurationBase<TKey, TValue> config)
         {
             if (config.DisableCaching)
                 return NullCache<TKey, TValue>.Instance;

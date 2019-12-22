@@ -15,7 +15,6 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<TKey, TValue, bool> _skipLocalCacheSetPredicate;
         private readonly Func<TKey, bool> _skipDistributedCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipDistributedCacheSetPredicate;
-        private static readonly IReadOnlyCollection<KeyValuePair<TKey, TValue>> EmptyResults = new List<KeyValuePair<TKey, TValue>>();
 
         public TwoTierCache(
             ILocalCache<TKey, TValue> localCache,
@@ -28,7 +27,7 @@ namespace CacheMeIfYouCan.Internal
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
-            _keyComparer = keyComparer;
+            _keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
             _skipLocalCacheGetPredicate = skipLocalCacheGetPredicate;
             _skipLocalCacheSetPredicate = skipLocalCacheSetPredicate;
             _skipDistributedCacheGetPredicate = skipDistributedCacheGetPredicate;
@@ -79,11 +78,11 @@ namespace CacheMeIfYouCan.Internal
         {
             var fromLocalCache = GetFromLocalCache();
 
-            var resultsDictionary = fromLocalCache is null
+            var resultsDictionary = fromLocalCache is null || fromLocalCache.Count == 0
                 ? new Dictionary<TKey, TValue>(_keyComparer)
                 : fromLocalCache.ToDictionary(kv => kv.Key, kv => kv.Value, _keyComparer);
 
-            var missingKeys = GetMissingKeys();
+            var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(keys, resultsDictionary);
 
             if (missingKeys == null)
                 return new ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>>(resultsDictionary);
@@ -100,48 +99,13 @@ namespace CacheMeIfYouCan.Internal
                 try
                 {
                     return filteredKeys.Count == 0
-                        ? EmptyResults
+                        ? null
                         : _localCache.GetMany(filteredKeys);
                 }
                 finally
                 {
                     CacheKeysFilter<TKey>.ReturnPooledArray(pooledArray);
                 }
-            }
-
-            IReadOnlyCollection<TKey> GetMissingKeys()
-            {
-                if (resultsDictionary.Count == 0)
-                    return keys;
-                
-                List<TKey> missingKeysList;
-                if (resultsDictionary.Count < keys.Count)
-                {
-                    missingKeysList = new List<TKey>(keys.Count - resultsDictionary.Count);
-                    foreach (var key in keys)
-                    {
-                        if (resultsDictionary.ContainsKey(key))
-                            continue;
-             
-                        missingKeysList.Add(key);
-                    }
-                
-                    return missingKeysList;
-                }
-
-                missingKeysList = null;
-                foreach (var key in keys)
-                {
-                    if (resultsDictionary.ContainsKey(key))
-                        continue;
-                
-                    if (missingKeysList == null)
-                        missingKeysList = new List<TKey>();
-
-                    missingKeysList.Add(key);
-                }
-            
-                return missingKeysList;
             }
             
             async ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetFromDistributedCache()
@@ -160,7 +124,7 @@ namespace CacheMeIfYouCan.Internal
                     try
                     {
                         if (filteredKeys.Count == 0)
-                            return default;
+                            return null;
 
                         fromDistributedCache = await _distributedCache
                             .GetMany(filteredKeys)
@@ -196,7 +160,7 @@ namespace CacheMeIfYouCan.Internal
                 }
                 else
                 {
-                    var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(values, _skipDistributedCacheSetPredicate, out var pooledArray);
+                    var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(values, _skipLocalCacheSetPredicate, out var pooledArray);
 
                     try
                     {
