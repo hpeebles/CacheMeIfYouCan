@@ -20,10 +20,10 @@ steps:
     projects: '$(pathToMainProject)'
 
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet test netcoreapp3.0'
+  displayName: 'dotnet test netcoreapp3.1'
   inputs:
     command: 'test'
-    arguments: '$(pathToTestProject) --framework netcoreapp3.0'
+    arguments: '$(pathToTestProject) --framework netcoreapp3.1'
 
 - task: DotNetCoreCLI@2
   displayName: "dotnet pack"
