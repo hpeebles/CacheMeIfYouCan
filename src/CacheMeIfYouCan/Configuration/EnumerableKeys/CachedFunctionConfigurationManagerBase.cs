@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -122,46 +120,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 
         private protected Func<IReadOnlyCollection<TKey>, TRequest> GetRequestConverter()
         {
-            return _requestConverter ?? GetDefaultRequestConverter();
-
-            Func<IReadOnlyCollection<TKey>, TRequest> GetDefaultRequestConverter()
-            {
-                IRequestConverter<TKey, TRequest> converter;
-                if (typeof(TRequest).IsAssignableFrom(typeof(IReadOnlyCollection<TKey>)))
-                    converter = Unsafe.As<IRequestConverter<TKey, TRequest>>(new IReadOnlyCollectionConverter<TKey>());
-                else if (typeof(TRequest).IsAssignableFrom(typeof(List<TKey>)))
-                    converter = Unsafe.As<IRequestConverter<TKey, TRequest>>(new ListConverter<TKey>());
-                else if (typeof(TRequest).IsAssignableFrom(typeof(TKey[])))
-                    converter = Unsafe.As<IRequestConverter<TKey, TRequest>>(new ArrayConverter<TKey>());
-                else if (typeof(TRequest).IsAssignableFrom(typeof(HashSet<TKey>)))
-                    converter = Unsafe.As<IRequestConverter<TKey, TRequest>>(new HashSetConverter<TKey>(_config.KeyComparer));
-                else
-                    throw new Exception($"No request converter defined for type '{typeof(TRequest)}'");
-
-                return converter.Convert;
-            }
+            return _requestConverter ?? DefaultRequestConverterResolver.Get<TKey, TRequest>(_config.KeyComparer);
         }
         
         private protected Func<Dictionary<TKey, TValue>, TResponse> GetResponseConverter()
         {
-            return _responseConverter ?? GetDefaultResponseConverter();
-
-            Func<Dictionary<TKey, TValue>, TResponse> GetDefaultResponseConverter()
-            {
-                IResponseConverter<TKey, TValue, TResponse> converter;
-                if (typeof(TResponse).IsAssignableFrom(typeof(Dictionary<TKey, TValue>)))
-                    converter = Unsafe.As<IResponseConverter<TKey, TValue, TResponse>>(new DictionaryConverter<TKey, TValue>());
-                else if (typeof(TResponse).IsAssignableFrom(typeof(ConcurrentDictionary<TKey, TValue>)))
-                    converter = Unsafe.As<IResponseConverter<TKey, TValue, TResponse>>(new ConcurrentDictionaryConverter<TKey, TValue>());
-                else if (typeof(TResponse).IsAssignableFrom(typeof(List<KeyValuePair<TKey, TValue>>)))
-                    converter = Unsafe.As<IResponseConverter<TKey, TValue, TResponse>>(new ListKeyValuePairConverter<TKey, TValue>());
-                else if (typeof(TResponse).IsAssignableFrom(typeof(KeyValuePair<TKey, TValue>[])))
-                    converter = Unsafe.As<IResponseConverter<TKey, TValue, TResponse>>(new ArrayKeyValuePairConverter<TKey, TValue>());
-                else
-                    throw new Exception($"No response converter defined for type '{typeof(TResponse)}'");
-
-                return converter.Convert;
-            }
+            return _responseConverter ?? DefaultResponseConverterResolver.Get<TKey, TValue, TResponse>(_config.KeyComparer);
         }
 
         private protected CachedFunctionWithEnumerableKeys<TKey, TValue> BuildCachedFunction(

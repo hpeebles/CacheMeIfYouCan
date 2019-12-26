@@ -7,11 +7,11 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public sealed class CachedFunctionConfigurationManagerAsync<TKey, TValue>
         : CachedFunctionConfigurationManagerBase<TKey, TValue, CachedFunctionConfigurationManagerAsync<TKey, TValue>>
     {
-        private readonly Func<TKey, Task<TValue>> _originalFunc;
+        private readonly Func<TKey, Task<TValue>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsync(Func<TKey, Task<TValue>> originalFunc)
+        public CachedFunctionConfigurationManagerAsync(Func<TKey, Task<TValue>> originalFunction)
         {
-            _originalFunc = originalFunc;
+            _originalFunction = originalFunction;
         }
 
         public Func<TKey, Task<TValue>> Build()
@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 
         private Func<TKey, CancellationToken, Task<TValue>> ConvertFunction()
         {
-            return (keys, _) => _originalFunc(keys);
+            return (keys, _) => _originalFunction(keys);
         }
     }
 }

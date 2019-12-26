@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CacheMeIfYouCan.LocalCaches;
 
@@ -57,6 +58,51 @@ namespace CacheMeIfYouCan.Tests
             Interlocked.Increment(ref SetManyExecutionCount);
             
             _innerCache.SetMany(values, timeToLive);
+        }
+    }
+    
+    public class MockLocalCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
+    {
+        private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache = new MemoryCache<TOuterKey, TInnerKey, TValue>(k => k.ToString(), k => k.ToString());
+
+        public int GetManyExecutionCount;
+        public int SetMany1ExecutionCount;
+        public int SetMany2ExecutionCount;
+        public int HitsCount;
+        public int MissesCount;
+
+        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(
+            TOuterKey outerKey,
+            IReadOnlyCollection<TInnerKey> innerKeys)
+        {
+            Interlocked.Increment(ref GetManyExecutionCount);
+
+            var values = _innerCache.GetMany(outerKey, innerKeys);
+            
+            var hits = values.Count;
+            var misses = innerKeys.Count - values.Count;
+
+            if (hits > 0) Interlocked.Add(ref HitsCount, hits);
+            if (misses > 0) Interlocked.Add(ref MissesCount, misses);
+
+            return values;
+        }
+
+        public void SetMany(
+            TOuterKey outerKey,
+            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            TimeSpan timeToLive)
+        {
+            Interlocked.Increment(ref SetMany1ExecutionCount);
+            
+            _innerCache.SetMany(outerKey, values, timeToLive);
+        }
+
+        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        {
+            Interlocked.Increment(ref SetMany2ExecutionCount);
+            
+            _innerCache.SetMany(outerKey, values);
         }
     }
 }

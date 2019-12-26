@@ -14,4 +14,11 @@ namespace CacheMeIfYouCan
 
         Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
     }
+    
+    public interface IDistributedCache<in TOuterKey, TInnerKey, TValue>
+    {
+        Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys);
+        
+        Task SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+    }
 }

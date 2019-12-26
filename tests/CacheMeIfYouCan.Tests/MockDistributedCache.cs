@@ -67,4 +67,40 @@ namespace CacheMeIfYouCan.Tests
             return Task.CompletedTask;
         }
     }
+    
+    public class MockDistributedCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>
+    {
+        private readonly ILocalCache<TOuterKey, TInnerKey, (TValue, DateTime)> _innerCache = new MemoryCache<TOuterKey, TInnerKey, (TValue, DateTime)>(k => k.ToString(), k => k.ToString());
+
+        public int GetManyExecutionCount;
+        public int SetManyExecutionCount;
+        public int HitsCount;
+        public int MissesCount;
+
+        public Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
+        {
+            Interlocked.Increment(ref GetManyExecutionCount);
+
+            var values = _innerCache
+                .GetMany(outerKey, innerKeys)
+                .ToDictionary(kv => kv.Key, kv => new ValueAndTimeToLive<TValue>(kv.Value.Item1, kv.Value.Item2 - DateTime.UtcNow));
+            
+            var hits = values.Count;
+            var misses = innerKeys.Count - values.Count;
+
+            if (hits > 0) Interlocked.Add(ref HitsCount, hits);
+            if (misses > 0) Interlocked.Add(ref MissesCount, misses);
+
+            return Task.FromResult<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>>(values);
+        }
+
+        public Task SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
+        {
+            Interlocked.Increment(ref SetManyExecutionCount);
+            
+            _innerCache.SetMany(outerKey, values.ToDictionary(kv => kv.Key, kv => (kv.Value, DateTime.UtcNow + timeToLive)), timeToLive);
+
+            return Task.CompletedTask;
+        }
+    }
 }

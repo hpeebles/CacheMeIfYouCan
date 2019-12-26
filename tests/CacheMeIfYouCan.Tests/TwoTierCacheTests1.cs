@@ -7,7 +7,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class TwoTierCacheTests
+    public class TwoTierCacheTests1
     {
         [Fact]
         public void TryGet_ChecksLocalCacheThenDistributedCache()
@@ -118,6 +118,7 @@ namespace CacheMeIfYouCan.Tests
             values1.Select(kv => kv.Key).Should().BeEquivalentTo(Enumerable.Range(0, 50));
 
             localCache.GetManyExecutionCount.Should().Be(1);
+            localCache.SetExecutionCount.Should().Be(50);
             distributedCache.GetManyExecutionCount.Should().Be(1);
 
             var values2 = twoTierCache.GetMany(Enumerable.Range(0, 50).ToList()).Result;

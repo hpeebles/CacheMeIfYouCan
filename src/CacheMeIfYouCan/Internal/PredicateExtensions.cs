@@ -25,5 +25,16 @@ namespace CacheMeIfYouCan.Internal
 
             return (x, y) => left(x, y) || right(x, y);
         }
+        
+        public static Func<T1, T2, T3, bool> Or<T1, T2, T3>(this Func<T1, T2, T3, bool> left, Func<T1, T2, T3, bool> right)
+        {
+            if (left == null)
+                return right;
+
+            if (right == null)
+                return left;
+
+            return (x, y, z) => left(x, y, z) || right(x, y, z);
+        }
     }
 }

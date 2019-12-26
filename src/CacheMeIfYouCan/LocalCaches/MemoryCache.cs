@@ -57,4 +57,57 @@ namespace CacheMeIfYouCan.LocalCaches
                 _memoryCache.Set(_keySerializer(kv.Key), kv.Value, expirationDate);
         }
     }
+    
+    public sealed class MemoryCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
+    {
+        private readonly MemoryCache _memoryCache;
+        private readonly Func<TOuterKey, string> _outerKeySerializer;
+        private readonly Func<TInnerKey, string> _innerKeySerializer;
+
+        public MemoryCache(Func<TOuterKey, string> outerKeySerializer, Func<TInnerKey, string> innerKeySerializer)
+        {
+            _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
+            _outerKeySerializer = outerKeySerializer;
+            _innerKeySerializer = innerKeySerializer;
+        }
+        
+        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
+        {
+            var outerKeyString = _outerKeySerializer(outerKey);
+            
+            var values = new List<KeyValuePair<TInnerKey, TValue>>();
+
+            foreach (var key in innerKeys)
+            {
+                var fromCache = _memoryCache.Get(outerKeyString + _innerKeySerializer(key));
+
+                if (fromCache != null)
+                    values.Add(new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache)); 
+            }
+
+            return values;
+        }
+
+        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
+        {
+            var outerKeyString = _outerKeySerializer(outerKey);
+
+            var expirationDate = DateTimeOffset.UtcNow.Add(timeToLive);
+            
+            foreach (var kv in values)
+                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value, expirationDate);
+        }
+
+        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        {
+            var outerKeyString = _outerKeySerializer(outerKey);
+
+            foreach (var kv in values)
+            {
+                var expirationDate = DateTimeOffset.UtcNow.Add(kv.Value.TimeToLive);
+
+                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value.Value, expirationDate);
+            }
+        }
+    }
 }

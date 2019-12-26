@@ -14,4 +14,11 @@ namespace CacheMeIfYouCan.Internal
 
         ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
     }
+
+    internal interface ICache<in TOuterKey, TInnerKey, TValue>
+    {
+        ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys);
+
+        ValueTask SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+    }
 }

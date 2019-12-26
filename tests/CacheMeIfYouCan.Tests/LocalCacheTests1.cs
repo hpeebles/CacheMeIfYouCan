@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class LocalCacheTests
+    public class LocalCacheTests1
     {
         private const string MemoryCache = nameof(MemoryCache);
         private const string DictionaryCache = nameof(DictionaryCache);

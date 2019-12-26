@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,12 +10,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly Func<TRequest, CancellationToken, Task<TResponse>> _originalFunc;
+        private readonly Func<TRequest, CancellationToken, Task<TResponse>> _originalFunction;
 
         public CachedFunctionConfigurationManagerAsyncCanx(
-            Func<TRequest, CancellationToken, Task<TResponse>> originalFunc)
+            Func<TRequest, CancellationToken, Task<TResponse>> originalFunction)
         {
-            _originalFunc = originalFunc;
+            _originalFunction = originalFunction;
         }
 
         public Func<TRequest, CancellationToken, Task<TResponse>> Build()
@@ -58,7 +57,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
                 if (!(keys is TRequest typedRequest))
                     typedRequest = requestConverter(keys);
 
-                var task = _originalFunc(typedRequest, cancellationToken);
+                var task = _originalFunction(typedRequest, cancellationToken);
 
                 if (task.IsCompleted)
                     await task.ConfigureAwait(false);

@@ -10,11 +10,11 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly Func<TRequest, TResponse> _originalFunc;
+        private readonly Func<TRequest, TResponse> _originalFunction;
 
-        public CachedFunctionConfigurationManagerSync(Func<TRequest, TResponse> originalFunc)
+        public CachedFunctionConfigurationManagerSync(Func<TRequest, TResponse> originalFunction)
         {
-            _originalFunc = originalFunc;
+            _originalFunction = originalFunction;
         }
 
         public Func<TRequest, TResponse> Build()
@@ -56,7 +56,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
                 if (!(keys is TRequest typedRequest))
                     typedRequest = requestConverter(keys);
 
-                return Task.FromResult((IEnumerable<KeyValuePair<TKey, TValue>>)_originalFunc(typedRequest));
+                return Task.FromResult((IEnumerable<KeyValuePair<TKey, TValue>>)_originalFunction(typedRequest));
             }
         }
     }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Configuration.EnumerableKeys;
+using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
 using CacheMeIfYouCan.Configuration.SingleKey;
 
 namespace CacheMeIfYouCan
@@ -88,6 +88,50 @@ namespace CacheMeIfYouCan
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSyncCanx<TKey, TValue, TRequest, TResponse>(originalFunction);
+        }
+
+        public static CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>
+            ConfigureFor<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(Func<TOuterKey, TInnerRequest, Task<TResponse>> originalFunction)
+            where TInnerRequest : IEnumerable<TInnerKey>
+            where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+        {
+            if (originalFunction == null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>
+            ConfigureFor<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>> originalFunction)
+            where TInnerRequest : IEnumerable<TInnerKey>
+            where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+        {
+            if (originalFunction == null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerSync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>
+            ConfigureFor<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(Func<TOuterKey, TInnerRequest, TResponse> originalFunction)
+            where TInnerRequest : IEnumerable<TInnerKey>
+            where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+        {
+            if (originalFunction == null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerSync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>
+            ConfigureFor<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(Func<TOuterKey, TInnerRequest, CancellationToken, TResponse> originalFunction)
+            where TInnerRequest : IEnumerable<TInnerKey>
+            where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+        {
+            if (originalFunction == null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
         }
     }
 }

@@ -13,4 +13,13 @@ namespace CacheMeIfYouCan
 
         void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
     }
+
+    public interface ILocalCache<in TOuterKey, TInnerKey, TValue>
+    {
+        IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys);
+        
+        void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+
+        void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
+    }
 }

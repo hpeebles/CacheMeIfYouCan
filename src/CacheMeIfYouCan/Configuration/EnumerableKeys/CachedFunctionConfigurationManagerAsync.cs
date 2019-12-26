@@ -10,11 +10,11 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly Func<TRequest, Task<TResponse>> _originalFunc;
+        private readonly Func<TRequest, Task<TResponse>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsync(Func<TRequest, Task<TResponse>> originalFunc)
+        public CachedFunctionConfigurationManagerAsync(Func<TRequest, Task<TResponse>> originalFunction)
         {
-            _originalFunc = originalFunc;
+            _originalFunction = originalFunction;
         }
 
         public Func<TRequest, Task<TResponse>> Build()
@@ -56,7 +56,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
                 if (!(keys is TRequest typedRequest))
                     typedRequest = requestConverter(keys);
 
-                var task = _originalFunc(typedRequest);
+                var task = _originalFunction(typedRequest);
 
                 if (task.IsCompleted)
                     await task.ConfigureAwait(false);
