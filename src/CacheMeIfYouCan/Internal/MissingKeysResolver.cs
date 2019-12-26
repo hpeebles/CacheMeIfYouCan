@@ -32,7 +32,7 @@ namespace CacheMeIfYouCan.Internal
                 if (dictionary.ContainsKey(key))
                     continue;
                 
-                if (missingKeysList == null)
+                if (missingKeysList is null)
                     missingKeysList = new List<TKey>();
 
                 missingKeysList.Add(key);

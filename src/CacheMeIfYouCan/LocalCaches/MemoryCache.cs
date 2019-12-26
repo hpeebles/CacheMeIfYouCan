@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.LocalCaches
         {
             var fromCache = _memoryCache.Get(_keySerializer(key));
 
-            if (fromCache == null)
+            if (fromCache is null)
             {
                 value = default;
                 return false;

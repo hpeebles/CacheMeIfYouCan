@@ -83,7 +83,7 @@ namespace CacheMeIfYouCan.Internal
 
             var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(keys, resultsDictionary);
 
-            if (missingKeys == null)
+            if (missingKeys is null)
                 return new ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>>(resultsDictionary);
             
             return GetFromDistributedCache();
@@ -255,7 +255,7 @@ namespace CacheMeIfYouCan.Internal
 
             var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeys, resultsDictionary);
 
-            if (missingKeys == null)
+            if (missingKeys is null)
                 return new ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>>(resultsDictionary);
             
             return GetFromDistributedCache();

@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan
         public static CachedFunctionConfigurationManagerAsync<TKey, TValue> ConfigureFor<TKey, TValue>(
             Func<TKey, Task<TValue>> originalFunction)
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsync<TKey, TValue>(originalFunction);
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan
         public static CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue> ConfigureFor<TKey, TValue>(
             Func<TKey, CancellationToken, Task<TValue>> originalFunction)
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue>(originalFunction);
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan
         public static CachedFunctionConfigurationManagerSync<TKey, TValue> ConfigureFor<TKey, TValue>(
             Func<TKey, TValue> originalFunction)
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSync<TKey, TValue>(originalFunction);
@@ -40,7 +40,7 @@ namespace CacheMeIfYouCan
         public static CachedFunctionConfigurationManagerSyncCanx<TKey, TValue> ConfigureFor<TKey, TValue>(
             Func<TKey, CancellationToken, TValue> originalFunction)
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSyncCanx<TKey, TValue>(originalFunction);
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsync<TKey, TValue, TRequest, TResponse>(originalFunction);
@@ -62,7 +62,7 @@ namespace CacheMeIfYouCan
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue, TRequest, TResponse>(originalFunction);
@@ -73,7 +73,7 @@ namespace CacheMeIfYouCan
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSync<TKey, TValue, TRequest, TResponse>(originalFunction);
@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSyncCanx<TKey, TValue, TRequest, TResponse>(originalFunction);
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
@@ -106,7 +106,7 @@ namespace CacheMeIfYouCan
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
@@ -117,7 +117,7 @@ namespace CacheMeIfYouCan
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
@@ -128,7 +128,7 @@ namespace CacheMeIfYouCan
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
-            if (originalFunction == null)
+            if (originalFunction is null)
                 throw new ArgumentNullException(nameof(originalFunction));
             
             return new CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(originalFunction);
