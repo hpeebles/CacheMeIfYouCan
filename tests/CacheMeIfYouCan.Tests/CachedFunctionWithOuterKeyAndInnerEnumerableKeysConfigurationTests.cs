@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = async (outerKey, innerKeys) =>
             {
-                await Task.Delay(delay);
+                await Task.Delay(delay).ConfigureAwait(false);
                 return innerKeys.ToDictionary(k => k, k => outerKey + k);
             };
 
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Tests
                         for (var i = 0; i < 5; i++)
                         {
                             var innerKeys = Enumerable.Range(i, 10).ToList();
-                            var values = await cachedFunction(0, innerKeys);
+                            var values = await cachedFunction(0, innerKeys).ConfigureAwait(false);
                             values.Select(kv => kv.Key).Should().BeEquivalentTo(innerKeys);
                         }
                     })
@@ -222,7 +222,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = async (outerKey, innerKeys, cancellationToken) =>
             {
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 return innerKeys.ToDictionary(k => k, k => outerKey + k);
             };
 
@@ -237,9 +237,9 @@ namespace CacheMeIfYouCan.Tests
             Func<Task<Dictionary<int, int>>> func = () => cachedFunction(0, new[] { 1 }, cancellationTokenSource.Token);
 
             if (shouldThrow)
-                await func.Should().ThrowAsync<OperationCanceledException>();
+                await func.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
             else
-                await func.Should().NotThrowAsync();
+                await func.Should().NotThrowAsync().ConfigureAwait(false);
         }
 
         [Theory]

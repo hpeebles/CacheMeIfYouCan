@@ -241,9 +241,9 @@ namespace CacheMeIfYouCan.Tests
             Func<Task<Dictionary<int, int>>> func = () => cachedFunction(new[] { 1 }, cancellationTokenSource.Token);
 
             if (shouldThrow)
-                await func.Should().ThrowAsync<OperationCanceledException>();
+                await func.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
             else
-                await func.Should().NotThrowAsync();
+                await func.Should().NotThrowAsync().ConfigureAwait(false);
         }
 
         [Theory]

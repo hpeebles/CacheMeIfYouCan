@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<int, Task<int>> originalFunction = async i =>
             {
-                await Task.Delay(delay);
+                await Task.Delay(delay).ConfigureAwait(false);
                 return i;
             };
 
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Tests
                     {
                         for (var i = 0; i < 5; i++)
                         {
-                            var value = await cachedFunction(i);
+                            var value = await cachedFunction(i).ConfigureAwait(false);
                             value.Should().Be(i);
                         }
                     })
@@ -67,7 +67,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<int, CancellationToken, Task<int>> originalFunction = async (i, cancellationToken) =>
             {
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 return i;
             };
 
@@ -82,9 +82,9 @@ namespace CacheMeIfYouCan.Tests
             Func<Task<int>> func = () => cachedFunction(1, cancellationTokenSource.Token);
 
             if (shouldThrow)
-                await func.Should().ThrowAsync<OperationCanceledException>();
+                await func.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
             else
-                await func.Should().NotThrowAsync();
+                await func.Should().NotThrowAsync().ConfigureAwait(false);
         }
 
         [Theory]
