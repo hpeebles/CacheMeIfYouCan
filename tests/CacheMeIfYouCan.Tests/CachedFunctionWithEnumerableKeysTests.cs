@@ -99,11 +99,17 @@ namespace CacheMeIfYouCan.Tests
                     .WithLocalCache(new MockLocalCache<int, int>())
                     .Build();
                 
-                var results = cachedFunction(converter(Enumerable.Range(0, 100)));
+                var results1 = cachedFunction(converter(Enumerable.Range(0, 100)));
 
-                results.Should().HaveCount(100);
-                results.Should().Match(values => values.All(kv => kv.Key == kv.Value));
-                results.Select(kv => kv.Key).OrderBy(k => k).Should().BeEquivalentTo(Enumerable.Range(0, 100));
+                results1.Should().HaveCount(100);
+                results1.Should().Match(values => values.All(kv => kv.Key == kv.Value));
+                results1.Select(kv => kv.Key).OrderBy(k => k).Should().BeEquivalentTo(Enumerable.Range(0, 100));
+
+                var results2 = cachedFunction(converter(Enumerable.Range(50, 100)));
+                
+                results2.Should().HaveCount(100);
+                results2.Should().Match(values => values.All(kv => kv.Key == kv.Value));
+                results2.Select(kv => kv.Key).OrderBy(k => k).Should().BeEquivalentTo(Enumerable.Range(50, 100));
             }
         }
         
