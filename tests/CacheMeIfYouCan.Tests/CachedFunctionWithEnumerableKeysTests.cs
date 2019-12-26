@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Tests
             
             Func<IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = async keys =>
             {
-                await Task.Delay(delay);
+                await Task.Delay(delay).ConfigureAwait(false);
                 return keys.ToDictionary(k => k);
             };
 
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Tests
                         for (var i = 0; i < 5; i++)
                         {
                             var keys = Enumerable.Range(i, 10).ToList();
-                            var values = await cachedFunction(keys);
+                            var values = await cachedFunction(keys).ConfigureAwait(false);
                             values.Select(kv => kv.Key).Should().BeEquivalentTo(keys);
                         }
                     })
