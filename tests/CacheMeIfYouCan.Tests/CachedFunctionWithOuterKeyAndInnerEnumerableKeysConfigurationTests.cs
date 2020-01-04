@@ -579,5 +579,48 @@ namespace CacheMeIfYouCan.Tests
                 valuesInDistributedCache.ContainsKey((outerKey, innerKey)).Should().Be(!shouldHaveSkippedDistributedCache);
             }
         }
+
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void WithTimeToLiveFactory_KeysPassedIntoFunctionAreOnlyThoseThatWontSkipCaching(bool flag1, bool flag2)
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => outerKey + k);
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithLocalCache(cache)
+                .SkipCacheWhen(x => true, SkipCacheWhen.SkipCacheGet)
+                .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
+
+            if (flag1)
+                config.SkipCacheWhen(outerKey => outerKey % 2 == 0);
+
+            if (flag2)
+                config.SkipCacheWhen((outerKey, innerKey) => innerKey % 2 == 0);
+
+            var cachedFunction = config.Build();
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+                cachedFunction(outerKey, Enumerable.Range(0, 100));
+
+            TimeSpan ValidateTimeToLiveFactoryKeys(int outerKey, IReadOnlyCollection<int> innerKeys)
+            {
+                if (flag1)
+                    outerKey.Should().Match(k => k % 2 > 0);
+
+                var expectedInnerKeys = flag2
+                    ? Enumerable.Range(0, 50).Select(i => (2 * i) + 1)
+                    : Enumerable.Range(0, 100);
+
+                innerKeys.Should().BeEquivalentTo(expectedInnerKeys);
+                
+                return TimeSpan.FromSeconds(1);
+            }
+        }
     }
 }

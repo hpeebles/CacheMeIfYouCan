@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -120,15 +121,16 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 if (!(_skipCacheSetPredicateOuterKeyOnly is null) && _skipCacheSetPredicateOuterKeyOnly(outerKey))
                     return default;
-                
-                var timeToLive = _timeToLiveFactory(outerKey, innerKeysCollection);
 
-                if (timeToLive == TimeSpan.Zero)
-                    return default;
-                
                 if (_skipCacheSetPredicate is null)
-                    return _cache.SetMany(outerKey, valuesFromFuncCollection, timeToLive);
-                
+                {
+                    var timeToLive = _timeToLiveFactory(outerKey, innerKeysCollection);
+
+                    return timeToLive == TimeSpan.Zero
+                        ? default
+                        : _cache.SetMany(outerKey, valuesFromFuncCollection, timeToLive);
+                }
+
                 var filteredValues = CacheValuesFilter<TOuterKey, TInnerKey, TValue>.Filter(
                     outerKey,
                     valuesFromFuncCollection,
@@ -138,7 +140,17 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 try
                 {
                     if (filteredValues.Count > 0)
-                        _cache.SetMany(outerKey, filteredValues, timeToLive);
+                    {
+                        var filteredKeys = filteredValues.Count == missingKeys.Count
+                            ? missingKeys
+                            : new ReadOnlyCollectionKeyValuePairKeys<TInnerKey, TValue>(filteredValues);
+                        
+                        var timeToLive = _timeToLiveFactory(outerKey, filteredKeys);
+
+                        return timeToLive == TimeSpan.Zero
+                            ? default
+                            : _cache.SetMany(outerKey, filteredValues, timeToLive);
+                    }
                 }
                 finally
                 {

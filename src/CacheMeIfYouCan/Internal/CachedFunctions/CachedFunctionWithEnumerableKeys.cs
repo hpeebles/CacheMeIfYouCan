@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -106,20 +107,31 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             ValueTask SetInCache()
             {
-                var timeToLive = _timeToLiveFactory(keysCollection);
-
-                if (timeToLive == TimeSpan.Zero)
-                    return default;
-                
                 if (_skipCacheSetPredicate is null)
-                    return _cache.SetMany(valuesFromFuncCollection, timeToLive);
-                
+                {
+                    var timeToLive = _timeToLiveFactory(missingKeys);
+
+                    return timeToLive == TimeSpan.Zero
+                        ? default
+                        : _cache.SetMany(valuesFromFuncCollection, timeToLive);
+                }
+
                 var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(valuesFromFuncCollection, _skipCacheSetPredicate, out var pooledArray);
 
                 try
                 {
                     if (filteredValues.Count > 0)
-                        _cache.SetMany(filteredValues, timeToLive);
+                    {
+                        var filteredKeys = filteredValues.Count == missingKeys.Count
+                            ? missingKeys
+                            : new ReadOnlyCollectionKeyValuePairKeys<TKey, TValue>(filteredValues);
+                        
+                        var timeToLive = _timeToLiveFactory(filteredKeys);
+
+                        return timeToLive == TimeSpan.Zero
+                            ? default
+                            : _cache.SetMany(filteredValues, timeToLive);
+                    }
                 }
                 finally
                 {

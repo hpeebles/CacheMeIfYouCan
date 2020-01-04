@@ -406,9 +406,9 @@ namespace CacheMeIfYouCan.Tests
         public void SkipLocalCacheWhen_SkipDistributedCacheWhen_WorkAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6, bool flag7, bool flag8)
         {
-            Func<IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = keys =>
+            Func<IEnumerable<int>, Dictionary<int, int>> originalFunction = keys =>
             {
-                return Task.FromResult(keys.ToDictionary(k => k));
+                return keys.ToDictionary(k => k);
             };
 
             var localCache = new MockLocalCache<int, int>();
@@ -490,6 +490,48 @@ namespace CacheMeIfYouCan.Tests
                 previousLocalSetManyExecutionCount = currentLocalSetManyExecutionCount;
                 previousDistributedGetManyExecutionCount = currentDistributedGetManyExecutionCount;
                 previousDistributedSetManyExecutionCount = currentDistributedSetManyExecutionCount;
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void WithTimeToLiveFactory_KeysPassedIntoFunctionAreOnlyThoseThatWontSkipCaching(bool flag1, bool flag2)
+        {
+            Func<IEnumerable<int>, Dictionary<int, int>> originalFunction = keys =>
+            {
+                return keys.ToDictionary(k => k);
+            };
+
+            var cache = new MockLocalCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithLocalCache(cache)
+                .SkipCacheWhen(x => true, SkipCacheWhen.SkipCacheGet)
+                .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
+
+            if (flag1)
+                config.SkipCacheWhen(key => true);
+
+            if (flag2)
+                config.SkipCacheWhen(key => key % 2 == 0);
+
+            var cachedFunction = config.Build();
+
+            cachedFunction(Enumerable.Range(0, 100));
+
+            TimeSpan ValidateTimeToLiveFactoryKeys(IReadOnlyCollection<int> keys)
+            {
+                if (flag1)
+                    throw new Exception();
+
+                var expectedKeys = flag2
+                    ? Enumerable.Range(0, 50).Select(i => (2 * i) + 1)
+                    : Enumerable.Range(0, 100);
+
+                keys.Should().BeEquivalentTo(expectedKeys);
+                
+                return TimeSpan.FromSeconds(1);
             }
         }
     }

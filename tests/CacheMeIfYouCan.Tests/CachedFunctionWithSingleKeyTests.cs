@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -314,6 +315,36 @@ namespace CacheMeIfYouCan.Tests
                 previousLocalSetExecutionCount = currentLocalSetExecutionCount;
                 previousDistributedTryGetExecutionCount = currentDistributedTryGetExecutionCount;
                 previousDistributedSetExecutionCount = currentDistributedSetExecutionCount;
+            }
+        }
+
+        [Fact]
+        public void WithTimeToLiveFactory_NotCalledIfKeyWillSkipCaching()
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var timeToLiveFactoryExecutionCount = 0;
+            
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(new MockLocalCache<int, int>())
+                .SkipCacheWhen(k => k % 2 == 0)
+                .WithTimeToLiveFactory(TimeToLiveFactory)
+                .Build();
+
+            for (var i = 0; i < 100; i++)
+                cachedFunction(i);
+
+            timeToLiveFactoryExecutionCount.Should().Be(50);
+            
+            TimeSpan TimeToLiveFactory(int key)
+            {
+                Interlocked.Increment(ref timeToLiveFactoryExecutionCount);
+
+                if (key % 2 == 0)
+                    throw new Exception();
+                
+                return TimeSpan.FromSeconds(1);
             }
         }
     }

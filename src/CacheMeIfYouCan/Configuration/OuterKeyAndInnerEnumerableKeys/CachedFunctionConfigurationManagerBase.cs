@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig WithTimeToLiveFactory(Func<TOuterKey, IEnumerable<TInnerKey>, TimeSpan> timeToLiveFactory)
+        public TConfig WithTimeToLiveFactory(Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
