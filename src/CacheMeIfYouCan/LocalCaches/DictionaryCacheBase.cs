@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.LocalCaches
     public abstract class DictionaryCacheBase<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, ValueAndExpiry> _values;
-        private readonly SortedDictionary<int, LinkedList<KeyAndExpiry>> _keysByExpiryDateSeconds;
+        private readonly SortedDictionary<int, SinglyLinkedList<KeyAndExpiry>> _keysByExpiryDateSeconds;
         private readonly ObjectPool<ValueAndExpiry> _valueAndExpiryPool;
         private readonly ObjectPool<KeyAndExpiry> _keyAndExpiryPool;
         private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryDictionaryReader;
@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.LocalCaches
         protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
-            _keysByExpiryDateSeconds = new SortedDictionary<int, LinkedList<KeyAndExpiry>>();
+            _keysByExpiryDateSeconds = new SortedDictionary<int, SinglyLinkedList<KeyAndExpiry>>();
             _valueAndExpiryPool = new ObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
             _keyAndExpiryPool = new ObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
             
@@ -142,11 +142,11 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 if (!_keysByExpiryDateSeconds.TryGetValue(expiryTimestampSeconds, out var keysWithSimilarExpiry))
                 {
-                    keysWithSimilarExpiry = new LinkedList<KeyAndExpiry>();
+                    keysWithSimilarExpiry = new SinglyLinkedList<KeyAndExpiry>();
                     _keysByExpiryDateSeconds.Add(expiryTimestampSeconds, keysWithSimilarExpiry);
                 }
                 
-                keysWithSimilarExpiry.AddLast(keyAndExpiry);
+                keysWithSimilarExpiry.Append(keyAndExpiry);
             }
 
             while (_keysByExpiryDateSeconds.Count > 0)
