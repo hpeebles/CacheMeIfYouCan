@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.LocalCaches
 {
@@ -12,22 +13,21 @@ namespace CacheMeIfYouCan.LocalCaches
     {
         private readonly ConcurrentDictionary<TKey, ValueAndExpiry> _values;
         private readonly SortedDictionary<int, LinkedList<KeyAndExpiry>> _keysByExpiryDateSeconds;
-        private readonly ConcurrentQueue<ValueAndExpiry> _valuesToRecycle;
-        private readonly ConcurrentQueue<KeyAndExpiry> _keysToRecycle;
+        private readonly ObjectPool<ValueAndExpiry> _valueAndExpiryPool;
+        private readonly ObjectPool<KeyAndExpiry> _keyAndExpiryPool;
         private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryDictionaryReader;
         private readonly ChannelWriter<KeyAndExpiry> _keysToBePutIntoExpiryDictionaryWriter;
         private readonly TimeSpan _keyExpiryProcessorInterval;
         private readonly Timer _keyExpiryProcessorTimer;
         private int _disposed;
         private static readonly DateTime UnixStartDate = new DateTime(1970, 1, 1);
-        private const int MaxItemsToRecycleQueueLength = 1000;
         
         protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
             _keysByExpiryDateSeconds = new SortedDictionary<int, LinkedList<KeyAndExpiry>>();
-            _valuesToRecycle = new ConcurrentQueue<ValueAndExpiry>();
-            _keysToRecycle = new ConcurrentQueue<KeyAndExpiry>();
+            _valueAndExpiryPool = new ObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
+            _keyAndExpiryPool = new ObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
             
             var keysToBePutIntoExpiryDictionary = Channel.CreateUnbounded<KeyAndExpiry>(new UnboundedChannelOptions
             {
@@ -49,9 +49,8 @@ namespace CacheMeIfYouCan.LocalCaches
             return new DebugInfo
             {
                 Values = _values,
-                KeysByExpiryDateSeconds = _keysByExpiryDateSeconds,
-                ValuesToRecycle = _valuesToRecycle,
-                KeysToRecycle = _keysToRecycle
+                ValueAndExpiryPool = _valueAndExpiryPool,
+                KeyAndExpiryPool = _keyAndExpiryPool
             };
         }
 
@@ -84,8 +83,7 @@ namespace CacheMeIfYouCan.LocalCaches
 
         protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive)
         {
-            if (!_valuesToRecycle.TryDequeue(out var valueAndExpiry))
-                valueAndExpiry = new ValueAndExpiry();
+            var valueAndExpiry = _valueAndExpiryPool.Rent();
 
             Interlocked.Increment(ref valueAndExpiry.Version);
             
@@ -104,7 +102,7 @@ namespace CacheMeIfYouCan.LocalCaches
                 {
                     if (_values.TryUpdate(key, valueAndExpiry, existingValueAndExpiry))
                     {
-                        QueueItemForReuse(_valuesToRecycle, existingValueAndExpiry);
+                        _valueAndExpiryPool.Return(existingValueAndExpiry);
                         break;
                     }
                 }
@@ -114,8 +112,7 @@ namespace CacheMeIfYouCan.LocalCaches
                 }
             }
 
-            if (!_keysToRecycle.TryDequeue(out var keyAndExpiry))
-                keyAndExpiry = new KeyAndExpiry();
+            var keyAndExpiry = _keyAndExpiryPool.Rent();
 
             keyAndExpiry.Key = key;
             keyAndExpiry.ExpiryTicks = expiryTicks;
@@ -158,7 +155,7 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 if (next.Key >= timestampSecondsNow)
                     break;
-                
+
                 foreach (var keyAndExpiry in next.Value)
                     RemoveExpiredKey(keyAndExpiry);
 
@@ -176,10 +173,10 @@ namespace CacheMeIfYouCan.LocalCaches
                 var kvp = new KeyValuePair<TKey, ValueAndExpiry>(keyAndExpiry.Key, valueAndExpiry);
 
                 if (((ICollection<KeyValuePair<TKey, ValueAndExpiry>>) _values).Remove(kvp))
-                    QueueItemForReuse(_valuesToRecycle, valueAndExpiry);
+                    _valueAndExpiryPool.Return(valueAndExpiry);
             }
 
-            QueueItemForReuse(_keysToRecycle, keyAndExpiry);
+            _keyAndExpiryPool.Return(keyAndExpiry);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -187,15 +184,6 @@ namespace CacheMeIfYouCan.LocalCaches
         {
             if (_disposed == 1)
                 throw new ObjectDisposedException(nameof(DictionaryCache<TKey, TValue>));
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void QueueItemForReuse<T>(ConcurrentQueue<T> queue, T item)
-        {
-            if (queue.Count >= MaxItemsToRecycleQueueLength)
-                return;
-            
-            queue.Enqueue(item);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -220,9 +208,8 @@ namespace CacheMeIfYouCan.LocalCaches
         internal class DebugInfo
         {
             public ConcurrentDictionary<TKey, ValueAndExpiry> Values;
-            public SortedDictionary<int, LinkedList<KeyAndExpiry>> KeysByExpiryDateSeconds;
-            public ConcurrentQueue<ValueAndExpiry> ValuesToRecycle;
-            public ConcurrentQueue<KeyAndExpiry> KeysToRecycle;
+            public ObjectPool<ValueAndExpiry> ValueAndExpiryPool;
+            public ObjectPool<KeyAndExpiry> KeyAndExpiryPool;
         }
     }
 }

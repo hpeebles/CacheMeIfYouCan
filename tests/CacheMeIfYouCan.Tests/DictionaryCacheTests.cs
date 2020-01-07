@@ -24,8 +24,8 @@ namespace CacheMeIfYouCan.Tests
             var debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().BeEmpty();
-            debugInfo.KeysToRecycle.Should().HaveCount(100);
-            debugInfo.ValuesToRecycle.Should().HaveCount(100);
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().HaveCount(100);
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().HaveCount(100);
         }
         
         [Fact]
@@ -39,16 +39,16 @@ namespace CacheMeIfYouCan.Tests
             var debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().HaveCount(1);
-            debugInfo.KeysToRecycle.Should().BeEmpty();
-            debugInfo.ValuesToRecycle.Should().HaveCount(1);
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().BeEmpty();
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().HaveCount(1);
             
             Thread.Sleep(TimeSpan.FromSeconds(3));
 
             debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().BeEmpty();
-            debugInfo.KeysToRecycle.Should().HaveCount(2);
-            debugInfo.ValuesToRecycle.Should().HaveCount(2);
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().HaveCount(2);
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().HaveCount(2);
         }
 
         [Fact]
@@ -64,8 +64,8 @@ namespace CacheMeIfYouCan.Tests
             var debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().BeEmpty();
-            debugInfo.KeysToRecycle.Should().HaveCount(100);
-            debugInfo.ValuesToRecycle.Should().HaveCount(100);
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().HaveCount(100);
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().HaveCount(100);
             
             for (var i = 0; i < 100; i++)
                 cache.Set(i, i, TimeSpan.FromSeconds(1));
@@ -73,8 +73,8 @@ namespace CacheMeIfYouCan.Tests
             debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().HaveCount(100);
-            debugInfo.KeysToRecycle.Should().BeEmpty();
-            debugInfo.ValuesToRecycle.Should().BeEmpty();
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().BeEmpty();
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().BeEmpty();
         }
         
         [Fact]
@@ -92,8 +92,8 @@ namespace CacheMeIfYouCan.Tests
             var debugInfo = cache.GetDebugInfo();
 
             debugInfo.Values.Should().BeEmpty();
-            debugInfo.KeysToRecycle.Should().HaveCount(maxItemsInRecycleQueues);
-            debugInfo.ValuesToRecycle.Should().HaveCount(maxItemsInRecycleQueues);
+            debugInfo.KeyAndExpiryPool.PeekAll().Should().HaveCount(maxItemsInRecycleQueues);
+            debugInfo.ValueAndExpiryPool.PeekAll().Should().HaveCount(maxItemsInRecycleQueues);
         }
     }
 }
