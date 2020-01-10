@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "CacheMeI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "..\tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +20,10 @@ Global
 		{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42055B9A-138C-4114-AD06-6BAA3ABBC659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42055B9A-138C-4114-AD06-6BAA3ABBC659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42055B9A-138C-4114-AD06-6BAA3ABBC659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42055B9A-138C-4114-AD06-6BAA3ABBC659}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
