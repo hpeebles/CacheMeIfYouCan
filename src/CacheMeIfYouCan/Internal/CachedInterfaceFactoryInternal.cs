@@ -72,7 +72,9 @@ namespace CacheMeIfYouCan.Internal
                 var methodInfo = allInterfaceMethods[index];
 
                 var configManagerType = GetConfigManagerType(methodInfo);
-                var configManagerTypeCtor = configManagerType.GetConstructors().Single();
+                var configManagerTypeCtor = configManagerType
+                    .GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Single();
                 
                 ctorGen.DeclareLocal(configManagerType);
                 
