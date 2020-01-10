@@ -64,6 +64,12 @@ namespace CacheMeIfYouCan.LocalCaches
                     return false;
                 }
 
+                // Due to valueAndExpiry references being recycled immediately after they are removed from the
+                // dictionary we need to always check that the version number of each valueAndExpiry is the same before
+                // and after reading the value.
+                // The version number is incremented before updating the value, so if the version is the same before and
+                // after reading the value, then the value is still valid, if the version number has changed, then that
+                // value has been removed from the dictionary and reused, so restart the loop and try again.
                 var version = valueAndExpiry.Version;
 
                 if (valueAndExpiry.ExpiryTicks > DateTime.UtcNow.Ticks)
