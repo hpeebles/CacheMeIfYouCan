@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     {
         private readonly Func<TKey, TValue> _originalFunction;
 
-        public CachedFunctionConfigurationManagerSync(Func<TKey, TValue> originalFunction)
+        internal CachedFunctionConfigurationManagerSync(Func<TKey, TValue> originalFunction)
         {
             _originalFunction = originalFunction;
         }

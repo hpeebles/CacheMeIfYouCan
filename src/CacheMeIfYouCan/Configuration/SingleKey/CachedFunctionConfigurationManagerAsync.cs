@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     {
         private readonly Func<TKey, Task<TValue>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsync(Func<TKey, Task<TValue>> originalFunction)
+        internal CachedFunctionConfigurationManagerAsync(Func<TKey, Task<TValue>> originalFunction)
         {
             _originalFunction = originalFunction;
         }

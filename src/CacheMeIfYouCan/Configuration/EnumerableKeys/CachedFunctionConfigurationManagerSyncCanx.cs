@@ -12,7 +12,8 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
     {
         private readonly Func<TRequest, CancellationToken, TResponse> _originalFunction;
 
-        public CachedFunctionConfigurationManagerSyncCanx(Func<TRequest, CancellationToken, TResponse> originalFunction)
+        internal CachedFunctionConfigurationManagerSyncCanx(
+            Func<TRequest, CancellationToken, TResponse> originalFunction)
         {
             _originalFunction = originalFunction;
         }

@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
     {
         private readonly Func<TRequest, CancellationToken, Task<TResponse>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsyncCanx(
+        internal CachedFunctionConfigurationManagerAsyncCanx(
             Func<TRequest, CancellationToken, Task<TResponse>> originalFunction)
         {
             _originalFunction = originalFunction;

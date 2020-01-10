@@ -12,7 +12,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
     {
         private readonly Func<TOuterKey, TInnerRequest, Task<TResponse>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsync(Func<TOuterKey, TInnerRequest, Task<TResponse>> originalFunction)
+        internal CachedFunctionConfigurationManagerAsync(
+            Func<TOuterKey, TInnerRequest, Task<TResponse>> originalFunction)
         {
             _originalFunction = originalFunction;
         }

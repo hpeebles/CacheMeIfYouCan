@@ -9,7 +9,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     {
         private readonly Func<TKey, CancellationToken, Task<TValue>> _originalFunction;
 
-        public CachedFunctionConfigurationManagerAsyncCanx(Func<TKey, CancellationToken, Task<TValue>> originalFunction)
+        internal CachedFunctionConfigurationManagerAsyncCanx(
+            Func<TKey, CancellationToken, Task<TValue>> originalFunction)
         {
             _originalFunction = originalFunction;
         }
