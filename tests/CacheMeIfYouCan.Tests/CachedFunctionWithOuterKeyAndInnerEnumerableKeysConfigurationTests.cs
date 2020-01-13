@@ -507,7 +507,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 6, MemberType = typeof(BoolGenerator))]
-        public void SkipCacheSet_SkipDistributedCacheSet_WorkAsExpected(
+        public void SkipLocalCacheSet_SkipDistributedCacheSet_WorkAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6)
         {
             Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
@@ -577,6 +577,208 @@ namespace CacheMeIfYouCan.Tests
 
                 valuesInLocalCache.ContainsKey((outerKey, innerKey)).Should().Be(!shouldHaveSkippedLocalCache);
                 valuesInDistributedCache.ContainsKey((outerKey, innerKey)).Should().Be(!shouldHaveSkippedDistributedCache);
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void SkipLocalCacheGet_ForSingleTierCache_WorksTheSameAsUsingSkipCacheGet(bool flag1, bool flag2)
+        {
+            // Func always returns 1
+            // Cache always returns 2
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (flag1)
+                config.SkipLocalCacheWhen(outerKey => outerKey % 2 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag2)
+                config.SkipLocalCacheWhen((outerKey, innerKey) => innerKey % 3 == 0, SkipCacheWhen.SkipCacheGet);
+            
+            var cachedFunction = config.Build();
+
+            // Fill cache with 2's
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1));
+
+            var results = new Dictionary<(int OuterKey, int InnerKey), int>();
+            
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+            {
+                foreach (var (innerKey, value) in cachedFunction(outerKey, Enumerable.Range(10 * innerKeyBatch, 10)))
+                    results[(outerKey, innerKey)] = value;
+            }
+            
+            foreach (var ((outerKey, innerKey), value) in results)
+            {
+                var shouldHaveSkippedCache = flag1 && outerKey % 2 == 0 || flag2 && innerKey % 3 == 0;
+                
+                value.Should().Be(shouldHaveSkippedCache ? 1 : 2);
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 3, MemberType = typeof(BoolGenerator))]
+        public void SkipLocalCacheSet_ForSingleTierCache_WorksTheSameAsUsingSkipCacheSet(
+            bool flag1, bool flag2, bool flag3)
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(100));
+
+            if (flag1)
+                config.SkipLocalCacheWhen(outerKey => outerKey % 2 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag2)
+                config.SkipLocalCacheWhen((outerKey, innerKey) => innerKey % 3 == 0, SkipCacheWhen.SkipCacheSet);
+            
+            if (flag3)
+                config.SkipLocalCacheWhen((outerKey, innerKey, value) => innerKey % 5 == 0);
+            
+            var cachedFunction = config.Build();
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+            {
+                cachedFunction(outerKey, Enumerable.Range(10 * innerKeyBatch, 10));
+            }
+            
+            var valuesInCache = new Dictionary<(int, int), int>();
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            {
+                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()))
+                    valuesInCache[(outerKey, innerKey)] = value;
+            }
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKey = 0; innerKey < 100; innerKey++)
+            {
+                var shouldHaveSkippedCache =
+                    flag1 && outerKey % 2 == 0 ||
+                    flag2 && innerKey % 3 == 0 ||
+                    flag3 && innerKey % 5 == 0;
+
+                valuesInCache.ContainsKey((outerKey, innerKey)).Should().Be(!shouldHaveSkippedCache);
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void SkipDistributedCacheGet_ForSingleTierCache_WorksTheSameAsUsingSkipCacheGet(bool flag1, bool flag2)
+        {
+            // Func always returns 1
+            // Cache always returns 2
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockDistributedCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithDistributedCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (flag1)
+                config.SkipDistributedCacheWhen(outerKey => outerKey % 2 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag2)
+                config.SkipDistributedCacheWhen((outerKey, innerKey) => innerKey % 3 == 0, SkipCacheWhen.SkipCacheGet);
+            
+            var cachedFunction = config.Build();
+
+            // Fill cache with 2's
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1)).Wait();
+
+            var results = new Dictionary<(int OuterKey, int InnerKey), int>();
+            
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+            {
+                foreach (var (innerKey, value) in cachedFunction(outerKey, Enumerable.Range(10 * innerKeyBatch, 10)))
+                    results[(outerKey, innerKey)] = value;
+            }
+            
+            foreach (var ((outerKey, innerKey), value) in results)
+            {
+                var shouldHaveSkippedCache = flag1 && outerKey % 2 == 0 || flag2 && innerKey % 3 == 0;
+                
+                value.Should().Be(shouldHaveSkippedCache ? 1 : 2);
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 3, MemberType = typeof(BoolGenerator))]
+        public void SkipDistributedCacheSet_ForSingleTierCache_WorksTheSameAsUsingSkipCacheSet(
+            bool flag1, bool flag2, bool flag3)
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockDistributedCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithDistributedCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(100));
+
+            if (flag1)
+                config.SkipDistributedCacheWhen(outerKey => outerKey % 2 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag2)
+                config.SkipDistributedCacheWhen((outerKey, innerKey) => innerKey % 3 == 0, SkipCacheWhen.SkipCacheSet);
+            
+            if (flag3)
+                config.SkipDistributedCacheWhen((outerKey, innerKey, value) => innerKey % 5 == 0);
+            
+            var cachedFunction = config.Build();
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+            {
+                cachedFunction(outerKey, Enumerable.Range(10 * innerKeyBatch, 10));
+            }
+            
+            var valuesInCache = new Dictionary<(int, int), int>();
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            {
+                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()).Result)
+                    valuesInCache[(outerKey, innerKey)] = value;
+            }
+
+            for (var outerKey = 0; outerKey < 10; outerKey++)
+            for (var innerKey = 0; innerKey < 100; innerKey++)
+            {
+                var shouldHaveSkippedCache =
+                    flag1 && outerKey % 2 == 0 ||
+                    flag2 && innerKey % 3 == 0 ||
+                    flag3 && innerKey % 5 == 0;
+
+                valuesInCache.ContainsKey((outerKey, innerKey)).Should().Be(!shouldHaveSkippedCache);
             }
         }
 

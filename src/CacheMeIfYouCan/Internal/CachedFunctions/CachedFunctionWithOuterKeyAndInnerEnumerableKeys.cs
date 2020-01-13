@@ -34,11 +34,18 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 _timeToLiveFactory = config.TimeToLiveFactory;
                 _keyComparer = config.KeyComparer ?? EqualityComparer<TInnerKey>.Default;
-                _skipCacheGetPredicateOuterKeyOnly = config.SkipCacheGetPredicateOuterKeyOnly;
-                _skipCacheGetPredicate = config.SkipCacheGetPredicate;
-                _skipCacheSetPredicateOuterKeyOnly = config.SkipCacheSetPredicateOuterKeyOnly;
-                _skipCacheSetPredicate = config.SkipCacheSetPredicate;
-                _cache = CacheBuilder.Build(config);
+                
+                _cache = CacheBuilder.Build(
+                    config,
+                    out var additionalSkipCacheGetPredicateOuterKeyOnly,
+                    out var additionalSkipCacheGetPredicate,
+                    out var additionalSkipCacheSetPredicateOuterKeyOnly,
+                    out var additionalSkipCacheSetPredicate);
+                
+                _skipCacheGetPredicateOuterKeyOnly = config.SkipCacheGetPredicateOuterKeyOnly.Or(additionalSkipCacheGetPredicateOuterKeyOnly);
+                _skipCacheGetPredicate = config.SkipCacheGetPredicate.Or(additionalSkipCacheGetPredicate);
+                _skipCacheSetPredicateOuterKeyOnly = config.SkipCacheSetPredicateOuterKeyOnly.Or(additionalSkipCacheSetPredicateOuterKeyOnly);
+                _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
             }
         }
 

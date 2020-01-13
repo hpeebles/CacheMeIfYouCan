@@ -32,9 +32,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 _timeToLiveFactory = config.TimeToLiveFactory;
                 _keyComparer = config.KeyComparer ?? EqualityComparer<TKey>.Default;
-                _skipCacheGetPredicate = config.SkipCacheGetPredicate;
-                _skipCacheSetPredicate = config.SkipCacheSetPredicate;
-                _cache = CacheBuilder.Build(config);
+                
+                _cache = CacheBuilder.Build(
+                    config,
+                    out var additionalSkipCacheGetPredicate,
+                    out var additionalSkipCacheSetPredicate);
+                
+                _skipCacheGetPredicate = config.SkipCacheGetPredicate.Or(additionalSkipCacheGetPredicate);
+                _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
             }
         }
 

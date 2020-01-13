@@ -317,6 +317,118 @@ namespace CacheMeIfYouCan.Tests
                 previousDistributedSetExecutionCount = currentDistributedSetExecutionCount;
             }
         }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
+        public void SkipLocalCacheWhen_ForSingleTierCache_WorksTheSameAsUsingSkipCacheWhen(
+            bool flag1, bool flag2, bool flag3, bool flag4)
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var cache = new MockLocalCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (flag1)
+                config.SkipLocalCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag2)
+                config.SkipLocalCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag3)
+                config.SkipLocalCacheWhen(key => key % 5 == 0);
+            
+            if (flag4)
+                config.SkipLocalCacheWhen((key, value) => key % 7 == 0);
+
+            var cachedFunction = config.Build();
+
+            var previousTryGetExecutionCount = 0;
+            var previousSetExecutionCount = 0;
+            for (var i = 0; i < 100; i++)
+            {
+                cachedFunction(i);
+
+                var currentTryGetExecutionCount = cache.TryGetExecutionCount;
+                var currentSetExecutionCount = cache.SetExecutionCount;
+
+                var skipGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
+                var skipSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                
+                if (skipGet)
+                    currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount);
+                else
+                    currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount + 1);
+
+                if (skipSet)
+                    currentSetExecutionCount.Should().Be(previousSetExecutionCount);
+                else
+                    currentSetExecutionCount.Should().Be(previousSetExecutionCount + 1);
+
+                previousTryGetExecutionCount = currentTryGetExecutionCount;
+                previousSetExecutionCount = currentSetExecutionCount;
+            }
+        }
+        
+        
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
+        public void SkipDistributedCacheWhen_ForSingleTierCache_WorksTheSameAsUsingSkipCacheWhen(
+            bool flag1, bool flag2, bool flag3, bool flag4)
+        {
+            Func<int, int> originalFunction = key => key;
+
+            var cache = new MockDistributedCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithDistributedCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (flag1)
+                config.SkipDistributedCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+
+            if (flag2)
+                config.SkipDistributedCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+
+            if (flag3)
+                config.SkipDistributedCacheWhen(key => key % 5 == 0);
+            
+            if (flag4)
+                config.SkipDistributedCacheWhen((key, value) => key % 7 == 0);
+
+            var cachedFunction = config.Build();
+
+            var previousTryGetExecutionCount = 0;
+            var previousSetExecutionCount = 0;
+            for (var i = 0; i < 100; i++)
+            {
+                cachedFunction(i);
+
+                var currentTryGetExecutionCount = cache.TryGetExecutionCount;
+                var currentSetExecutionCount = cache.SetExecutionCount;
+
+                var skipGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
+                var skipSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                
+                if (skipGet)
+                    currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount);
+                else
+                    currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount + 1);
+
+                if (skipSet)
+                    currentSetExecutionCount.Should().Be(previousSetExecutionCount);
+                else
+                    currentSetExecutionCount.Should().Be(previousSetExecutionCount + 1);
+
+                previousTryGetExecutionCount = currentTryGetExecutionCount;
+                previousSetExecutionCount = currentSetExecutionCount;
+            }
+        }
 
         [Fact]
         public void WithTimeToLiveFactory_NotCalledIfKeyWillSkipCaching()
