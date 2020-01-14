@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration.EnumerableKeys;
 using CacheMeIfYouCan.Configuration.SingleKey;
 using CacheMeIfYouCan.Internal;
 
@@ -22,33 +23,73 @@ namespace CacheMeIfYouCan.Configuration
             _functionCacheConfigActions = new Dictionary<MethodInfo, object>();
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TK, TV>(
-            Expression<Func<T, Func<TK, Task<TV>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsync<TK, TV>> configurationAction)
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
+            Expression<Func<T, Func<TKey, Task<TValue>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsync<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TK, TV>(
-            Expression<Func<T, Func<TK, TV>>> expression,
-            Action<CachedFunctionConfigurationManagerSync<TK, TV>> configurationAction)
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
+            Expression<Func<T, Func<TKey, TValue>>> expression,
+            Action<CachedFunctionConfigurationManagerSync<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TK, TV>(
-            Expression<Func<T, Func<TK, CancellationToken, Task<TV>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsyncCanx<TK, TV>> configurationAction)
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
+            Expression<Func<T, Func<TKey, CancellationToken, Task<TValue>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TK, TV>(
-            Expression<Func<T, Func<TK, CancellationToken, TV>>> expression,
-            Action<CachedFunctionConfigurationManagerSyncCanx<TK, TV>> configurationAction)
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
+            Expression<Func<T, Func<TKey, CancellationToken, TValue>>> expression,
+            Action<CachedFunctionConfigurationManagerSyncCanx<TKey, TValue>> configurationAction)
+        {
+            AddConfigAction(expression, configurationAction);
+            return this;
+        }
+        
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+            Expression<Func<T, Func<TRequest, Task<TResponse>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsync<TKey, TValue, TRequest, TResponse>> configurationAction)
+            where TRequest : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            AddConfigAction(expression, configurationAction);
+            return this;
+        }
+        
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+            Expression<Func<T, Func<TRequest, TResponse>>> expression,
+            Action<CachedFunctionConfigurationManagerSync<TKey, TValue, TRequest, TResponse>> configurationAction)
+            where TRequest : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            AddConfigAction(expression, configurationAction);
+            return this;
+        }
+
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+            Expression<Func<T, Func<TRequest, CancellationToken, Task<TResponse>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue, TRequest, TResponse>> configurationAction)
+            where TRequest : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            AddConfigAction(expression, configurationAction);
+            return this;
+        }
+        
+        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+            Expression<Func<T, Func<TRequest, CancellationToken, TResponse>>> expression,
+            Action<CachedFunctionConfigurationManagerSyncCanx<TKey, TValue, TRequest, TResponse>> configurationAction)
+            where TRequest : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             AddConfigAction(expression, configurationAction);
             return this;

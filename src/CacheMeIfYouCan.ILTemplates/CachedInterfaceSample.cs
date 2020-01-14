@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.SingleKey;
 using CacheMeIfYouCan.Internal;
-using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.ILTemplates
 {
@@ -15,6 +14,10 @@ namespace CacheMeIfYouCan.ILTemplates
         private readonly Func<string, string> _singleKeySync1;
         private readonly Func<string, CancellationToken, Task<string>> _singleKeyAsyncCanx2;
         private readonly Func<string, CancellationToken, string> _singleKeySyncCanx3;
+        private readonly Func<IEnumerable<string>, Task<Dictionary<string, string>>> _enumerableKeyAsync4;
+        private readonly Func<IEnumerable<string>, Dictionary<string, string>> _enumerableKeySync5;
+        private readonly Func<IEnumerable<string>, CancellationToken, Task<Dictionary<string, string>>> _enumerableKeyAsyncCanx6;
+        private readonly Func<IEnumerable<string>, CancellationToken, Dictionary<string, string>> _enumerableKeySyncCanx7;
         
         public CachedInterfaceSample(ISampleInterface originalImpl, Dictionary<MethodInfo, object> config)
         {
@@ -39,11 +42,35 @@ namespace CacheMeIfYouCan.ILTemplates
             var singleKeySyncCanx3ConfigAction = (Action<CachedFunctionConfigurationManagerSyncCanx<string, string>>)config[methods[3]];
             singleKeySyncCanx3ConfigAction(singleKeySyncCanx3ConfigManager);
             _singleKeySyncCanx3 = singleKeySyncCanx3ConfigManager.Build();
+            
+            var enumerableKeyAsync4ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeyAsync);
+            var enumerableKeyAsync4ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[4]];
+            enumerableKeyAsync4ConfigAction(enumerableKeyAsync4ConfigManager);
+            _enumerableKeyAsync4 = enumerableKeyAsync4ConfigManager.Build();
+            
+            var enumerableKeySync5ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeySync);
+            var enumerableKeySync5ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[5]];
+            enumerableKeySync5ConfigAction(enumerableKeySync5ConfigManager);
+            _enumerableKeySync5 = enumerableKeySync5ConfigManager.Build();
+            
+            var enumerableKeyAsyncCanx6ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeyAsyncCanx);
+            var enumerableKeyAsyncCanx6ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[6]];
+            enumerableKeyAsyncCanx6ConfigAction(enumerableKeyAsyncCanx6ConfigManager);
+            _enumerableKeyAsyncCanx6 = enumerableKeyAsyncCanx6ConfigManager.Build();
+            
+            var enumerableKeySyncCanx7ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeySyncCanx);
+            var enumerableKeySyncCanx7ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[7]];
+            enumerableKeySyncCanx7ConfigAction(enumerableKeySyncCanx7ConfigManager);
+            _enumerableKeySyncCanx7 = enumerableKeySyncCanx7ConfigManager.Build();
         }
         
         public Task<string> SingleKeyAsync(string key) => _singleKeyAsync0(key);
         public string SingleKeySync(string key) => _singleKeySync1(key);
         public Task<string> SingleKeyAsyncCanx(string key, CancellationToken cancellationToken) => _singleKeyAsyncCanx2(key, cancellationToken);
         public string SingleKeySyncCanx(string key, CancellationToken cancellationToken) => _singleKeySyncCanx3(key, cancellationToken);
+        public Task<Dictionary<string, string>> EnumerableKeyAsync(IEnumerable<string> keys) => _enumerableKeyAsync4(keys);
+        public Dictionary<string, string> EnumerableKeySync(IEnumerable<string> keys) => _enumerableKeySync5(keys);
+        public Task<Dictionary<string, string>> EnumerableKeyAsyncCanx(IEnumerable<string> keys, CancellationToken cancellationToken) => _enumerableKeyAsyncCanx6(keys, cancellationToken);
+        public Dictionary<string, string> EnumerableKeySyncCanx(IEnumerable<string> keys, CancellationToken cancellationToken) => _enumerableKeySyncCanx7(keys, cancellationToken);
     }
 }

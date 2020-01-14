@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration.EnumerableKeys;
 using CacheMeIfYouCan.Configuration.SingleKey;
 
 namespace CacheMeIfYouCan.Internal
@@ -147,19 +148,76 @@ namespace CacheMeIfYouCan.Internal
             
             var isAsync = returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>);
             var supportsCancellation = parameterTypes.Last() == typeof(CancellationToken);
-            
+            var lastKeyParameterType = supportsCancellation
+                ? parameterTypes[parameterTypes.Length - 2]
+                : parameterTypes.Last();
+
             var returnTypeInner = isAsync ? returnType.GenericTypeArguments.Single() : returnType;
+
+            Type genericType;
+            if (IsEnumerableKey(lastKeyParameterType, returnTypeInner, out var keyType, out var valueType))
+            {
+                if (isAsync)
+                {
+                    genericType = supportsCancellation
+                        ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,,,>)
+                        : typeof(CachedFunctionConfigurationManagerAsync<,,,>);
+                }
+                else
+                {
+                    genericType = supportsCancellation
+                        ? typeof(CachedFunctionConfigurationManagerSyncCanx<,,,>)
+                        : typeof(CachedFunctionConfigurationManagerSync<,,,>);
+                }
+
+                return genericType.MakeGenericType(keyType, valueType, parameterTypes[0], returnTypeInner);
+            }
             
             if (isAsync)
             {
-                return supportsCancellation
-                    ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,>).MakeGenericType(parameterTypes[0], returnTypeInner)
-                    : typeof(CachedFunctionConfigurationManagerAsync<,>).MakeGenericType(parameterTypes[0], returnTypeInner);
+                genericType = supportsCancellation
+                    ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,>)
+                    : typeof(CachedFunctionConfigurationManagerAsync<,>);
+            }
+            else
+            {
+                genericType = supportsCancellation
+                    ? typeof(CachedFunctionConfigurationManagerSyncCanx<,>)
+                    : typeof(CachedFunctionConfigurationManagerSync<,>);
             }
             
-            return supportsCancellation
-                ? typeof(CachedFunctionConfigurationManagerSyncCanx<,>).MakeGenericType(parameterTypes[0], returnTypeInner)
-                : typeof(CachedFunctionConfigurationManagerSync<,>).MakeGenericType(parameterTypes[0], returnTypeInner);
+            return genericType.MakeGenericType(parameterTypes[0], returnTypeInner);
+        }
+
+        private static bool IsEnumerableKey(Type parameterType, Type returnType, out Type keyType, out Type valueType)
+        {
+            var returnTypePossibleKeyAndValueTypes = returnType
+                .GetInterfaces()
+                .Prepend(returnType)
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                .Select(i => i.GenericTypeArguments[0])
+                .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                .ToDictionary(t => t.GenericTypeArguments[0], t => t.GenericTypeArguments[1]);
+
+            if (returnTypePossibleKeyAndValueTypes.Any())
+            {
+                foreach (var possibleKeyType in parameterType
+                    .GetInterfaces()
+                    .Prepend(parameterType)
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    .Select(i => i.GenericTypeArguments[0]))
+                {
+                    if (returnTypePossibleKeyAndValueTypes.TryGetValue(possibleKeyType, out valueType))
+                    {
+                        keyType = possibleKeyType;
+                        return true;
+                    }
+                }
+            }
+
+            keyType = null;
+            valueType = null;
+            return false;
         }
 
         private static Type BuildFieldType(MethodInfo methodInfo)
