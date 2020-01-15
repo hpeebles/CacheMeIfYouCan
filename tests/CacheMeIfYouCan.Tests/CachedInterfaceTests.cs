@@ -99,6 +99,22 @@ namespace CacheMeIfYouCan.Tests
             cachedInterface.GetSyncCanx(0, new[] { 4 }, CancellationToken.None).Single().Should().Be(new KeyValuePair<int, int>(4, 4));
             cache4.GetMany(0, new[] { 4 }).Should().BeEquivalentTo(new KeyValuePair<int, int>(4, 4));
         }
+
+        [Fact]
+        public void IfAnyMethodsNotConfigured_ThrowsException()
+        {
+            var originalImpl = new DummySingleKeyInterfaceImpl();
+
+            var cache = new MockLocalCache<int, int>();
+            
+            Action action = () => CachedInterfaceFactory.For<IDummySingleKeyInterface>(originalImpl)
+                .Configure<int, int>(x => x.GetAsync, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache))
+                .Configure<int, int>(x => x.GetSync, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache))
+                .Configure<int, int>(x => x.GetAsyncCanx, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache))
+                .Build();
+            
+            action.Should().Throw<Exception>().Where(ex => ex.Message.Contains(nameof(IDummySingleKeyInterface.GetSyncCanx)));
+        }
     }
 
     public interface IDummySingleKeyInterface

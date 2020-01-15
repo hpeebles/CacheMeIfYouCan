@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
-using System.Threading.Tasks;
-using CacheMeIfYouCan.Configuration.EnumerableKeys;
-using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
-using CacheMeIfYouCan.Configuration.SingleKey;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -31,12 +26,12 @@ namespace CacheMeIfYouCan.Internal
             if (!interfaceType.IsInterface)
                 throw new InvalidOperationException("<T> must be an interface");
             
-            var newType = CreateType(interfaceType);
+            var newType = CreateType(interfaceType, configActions);
 
             return (T)Activator.CreateInstance(newType, originalImpl, configActions);
         }
 
-        private static Type CreateType(Type interfaceType)
+        private static Type CreateType(Type interfaceType, Dictionary<MethodInfo, object> configActions)
         {
             var typeName = GetProxyName(interfaceType);
 
@@ -73,7 +68,10 @@ namespace CacheMeIfYouCan.Internal
             {
                 var methodInfo = allInterfaceMethods[index];
 
-                var configManagerType = GetConfigManagerType(methodInfo);
+                if (!configActions.TryGetValue(methodInfo, out var configAction))
+                    throw new Exception($"{interfaceType.Name}.{methodInfo.Name} has not been configured");
+                
+                var configManagerType = configAction.GetType().GenericTypeArguments[0];
                 var configManagerTypeCtor = configManagerType
                     .GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Single();
@@ -140,119 +138,6 @@ namespace CacheMeIfYouCan.Internal
             ctorGen.Emit(OpCodes.Ret);
             
             return typeBuilder.CreateTypeInfo();
-        }
-
-        private static Type GetConfigManagerType(MethodInfo methodInfo)
-        {
-            var parameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-            var returnType = methodInfo.ReturnType;
-            
-            var isAsync = returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>);
-            var supportsCancellation = parameterTypes.Last() == typeof(CancellationToken);
-
-            if ((supportsCancellation && parameterTypes.Length == 1))
-                throw NotSupportedException();
-
-            var keyParameterTypes = supportsCancellation
-                ? parameterTypes.Take(parameterTypes.Length - 1).ToArray()
-                : parameterTypes;
-
-            var lastKeyParameterType = keyParameterTypes.Last();
-
-            var returnTypeInner = isAsync ? returnType.GenericTypeArguments.Single() : returnType;
-
-            Type genericType;
-            if (IsEnumerableKey(lastKeyParameterType, returnTypeInner, out var keyType, out var valueType))
-            {
-                switch (keyParameterTypes.Length)
-                {
-                    case 1:
-                        if (isAsync)
-                        {
-                            genericType = supportsCancellation
-                                ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,,,>)
-                                : typeof(CachedFunctionConfigurationManagerAsync<,,,>);
-                        }
-                        else
-                        {
-                            genericType = supportsCancellation
-                                ? typeof(CachedFunctionConfigurationManagerSyncCanx<,,,>)
-                                : typeof(CachedFunctionConfigurationManagerSync<,,,>);
-                        }
-                        
-                        return genericType.MakeGenericType(keyType, valueType, keyParameterTypes[0], returnTypeInner);
-                    
-                    case 2:
-                        if (isAsync)
-                        {
-                            genericType = supportsCancellation
-                                ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,,,,>)
-                                : typeof(CachedFunctionConfigurationManagerAsync<,,,,>);
-                        }
-                        else
-                        {
-                            genericType = supportsCancellation
-                                ? typeof(CachedFunctionConfigurationManagerSyncCanx<,,,,>)
-                                : typeof(CachedFunctionConfigurationManagerSync<,,,,>);
-                        }
-                        
-                        return genericType.MakeGenericType(keyParameterTypes[0], keyType, valueType, keyParameterTypes[1], returnTypeInner);
-                    
-                    default:
-                        throw NotSupportedException();
-                }
-            }
-            
-            if (isAsync)
-            {
-                genericType = supportsCancellation
-                    ? typeof(CachedFunctionConfigurationManagerAsyncCanx<,>)
-                    : typeof(CachedFunctionConfigurationManagerAsync<,>);
-            }
-            else
-            {
-                genericType = supportsCancellation
-                    ? typeof(CachedFunctionConfigurationManagerSyncCanx<,>)
-                    : typeof(CachedFunctionConfigurationManagerSync<,>);
-            }
-            
-            return genericType.MakeGenericType(keyParameterTypes[0], returnTypeInner);
-
-            Exception NotSupportedException()
-            {
-                return new NotSupportedException("Interface method not supported - " + methodInfo.Name);
-            }
-        }
-
-        private static bool IsEnumerableKey(Type parameterType, Type returnType, out Type keyType, out Type valueType)
-        {
-            var returnTypePossibleKeyAndValueTypes = returnType
-                .GetInterfaces()
-                .Prepend(returnType)
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                .Select(i => i.GenericTypeArguments[0])
-                .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                .ToDictionary(t => t.GenericTypeArguments[0], t => t.GenericTypeArguments[1]);
-
-            if (returnTypePossibleKeyAndValueTypes.Any())
-            {
-                foreach (var possibleKeyType in parameterType
-                    .GetInterfaces()
-                    .Prepend(parameterType)
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                    .Select(i => i.GenericTypeArguments[0]))
-                {
-                    if (returnTypePossibleKeyAndValueTypes.TryGetValue(possibleKeyType, out valueType))
-                    {
-                        keyType = possibleKeyType;
-                        return true;
-                    }
-                }
-            }
-
-            keyType = null;
-            valueType = null;
-            return false;
         }
 
         private static Type BuildFieldType(MethodInfo methodInfo)
