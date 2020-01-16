@@ -824,5 +824,30 @@ namespace CacheMeIfYouCan.Tests
                 return TimeSpan.FromSeconds(1);
             }
         }
+
+        [Theory]
+        [InlineData(BatchBehaviour.FillBatchesEvenly, 8, 8, 9)]
+        [InlineData(BatchBehaviour.FillEachBatchBeforeStartingNext, 10, 10, 5)]
+        public void WithBatchedFetches_BatchesFetchesCorrectly(BatchBehaviour batchBehaviour, params int[] expectedBatchSizes)
+        {
+            var batchSizes = new List<int>();
+            
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                batchSizes.Add(innerKeys.Count());
+                return innerKeys.ToDictionary(k => k, k => outerKey + k);
+            };
+
+            var cachedFunction = CachedFunctionFactory
+                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .WithLocalCache(new MockLocalCache<int, int, int>())
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
+                .WithBatchedFetches(10, batchBehaviour)
+                .Build();
+
+            cachedFunction(0, Enumerable.Range(0, 25)).Keys.Should().BeEquivalentTo(Enumerable.Range(0, 25));
+
+            batchSizes.Should().BeEquivalentTo(expectedBatchSizes);
+        }
     }
 }

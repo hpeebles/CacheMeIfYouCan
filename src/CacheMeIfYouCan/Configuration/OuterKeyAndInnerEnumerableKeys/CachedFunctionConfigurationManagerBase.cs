@@ -151,6 +151,16 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig WithBatchedFetches(int maxBatchSize, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            if (maxBatchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxBatchSize));
+            
+            _config.MaxBatchSize = maxBatchSize;
+            _config.BatchBehaviour = batchBehaviour;
+            return (TConfig)this;
+        }
+
         public TConfig WithRequestConverter(Func<IReadOnlyCollection<TInnerKey>, TInnerRequest> requestConverter)
         {
             _requestConverter = requestConverter;

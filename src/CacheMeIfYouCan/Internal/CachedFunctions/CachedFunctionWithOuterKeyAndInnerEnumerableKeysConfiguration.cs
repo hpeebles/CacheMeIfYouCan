@@ -6,7 +6,6 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
     internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue>
     {
         public Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
-        
         public ILocalCache<TOuterKey, TInnerKey, TValue> LocalCache { get; set; }
         public IDistributedCache<TOuterKey, TInnerKey, TValue> DistributedCache { get; set; }
         public IEqualityComparer<TInnerKey> KeyComparer { get; set; }
@@ -23,5 +22,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         public Func<TOuterKey, TInnerKey, bool> SkipDistributedCacheGetPredicate { get; set; }
         public Func<TOuterKey, bool> SkipDistributedCacheSetPredicateOuterKeyOnly { get; set; }
         public Func<TOuterKey, TInnerKey, TValue, bool> SkipDistributedCacheSetPredicate { get; set; }
+        public int MaxBatchSize { get; set; } = Int32.MaxValue;
+        public BatchBehaviour BatchBehaviour { get; set; }
     }
 }

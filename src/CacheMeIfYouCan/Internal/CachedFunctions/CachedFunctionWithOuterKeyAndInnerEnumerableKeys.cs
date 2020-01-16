@@ -16,6 +16,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TOuterKey, TInnerKey, bool> _skipCacheGetPredicate;
         private readonly Func<TOuterKey, bool> _skipCacheSetPredicateOuterKeyOnly;
         private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipCacheSetPredicate;
+        private readonly int _maxBatchSize;
+        private readonly BatchBehaviour _batchBehaviour;
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
         private static readonly IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> EmptyValuesCollection = new List<KeyValuePair<TInnerKey, TValue>>();
 
@@ -47,6 +49,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 _skipCacheSetPredicateOuterKeyOnly = config.SkipCacheSetPredicateOuterKeyOnly.Or(additionalSkipCacheSetPredicateOuterKeyOnly);
                 _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
             }
+            
+            _maxBatchSize = config.MaxBatchSize;
+            _batchBehaviour = config.BatchBehaviour;
         }
 
         public async Task<Dictionary<TInnerKey, TValue>> GetMany(
@@ -73,28 +78,23 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (missingKeys is null)
                 return resultsDictionary;
-            
-            var getValuesFromFuncTask = _originalFunction(outerKey, missingKeys, cancellationToken);
 
-            if (!getValuesFromFuncTask.IsCompleted)
-                await getValuesFromFuncTask.ConfigureAwait(false);
+            if (missingKeys.Count < _maxBatchSize)
+            {
+                await GetValuesFromFunc(outerKey, missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
+            }
+            else
+            {
+                var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
+                
+                var tasks = new Task[batches.Count];
+                var resultsDictionaryLock = new object();
+                var index = 0;
+                foreach (var batch in batches)
+                    tasks[index++] = GetValuesFromFunc(outerKey, batch, cancellationToken, resultsDictionary, resultsDictionaryLock);
 
-            var valuesFromFunc = getValuesFromFuncTask.Result;
-
-            if (valuesFromFunc is null)
-                return resultsDictionary;
-
-            var valuesFromFuncCollection = valuesFromFunc.ToReadOnlyCollection();
-            if (valuesFromFuncCollection.Count == 0)
-                return default;
-
-            var setInCacheTask = SetInCache();
-
-            foreach (var kv in valuesFromFuncCollection)
-                resultsDictionary[kv.Key] = kv.Value;
-            
-            if (!setInCacheTask.IsCompleted)
-                await setInCacheTask.ConfigureAwait(false);
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
 
             return resultsDictionary;
             
@@ -123,7 +123,46 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
                 }
             }
+        }
 
+        private async Task GetValuesFromFunc(
+            TOuterKey outerKey,
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            CancellationToken cancellationToken,
+            Dictionary<TInnerKey, TValue> resultsDictionary,
+            object resultsDictionaryLock = null)
+        {
+            var getValuesFromFuncTask = _originalFunction(outerKey, innerKeys, cancellationToken);
+
+            if (!getValuesFromFuncTask.IsCompleted)
+                await getValuesFromFuncTask.ConfigureAwait(false);
+
+            var valuesFromFunc = getValuesFromFuncTask.Result;
+
+            if (valuesFromFunc is null)
+                return;
+
+            var valuesFromFuncCollection = valuesFromFunc.ToReadOnlyCollection();
+            if (valuesFromFuncCollection.Count == 0)
+                return;
+
+            var setInCacheTask = SetInCache();
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var lockTaken = false;
+            if (!(resultsDictionaryLock is null))
+                Monitor.TryEnter(resultsDictionaryLock, ref lockTaken);
+
+            foreach (var kv in valuesFromFuncCollection)
+                resultsDictionary[kv.Key] = kv.Value;
+
+            if (lockTaken)
+                Monitor.Exit(resultsDictionaryLock);
+
+            if (!setInCacheTask.IsCompleted)
+                await setInCacheTask.ConfigureAwait(false);
+            
             ValueTask SetInCache()
             {
                 if (!(_skipCacheSetPredicateOuterKeyOnly is null) && _skipCacheSetPredicateOuterKeyOnly(outerKey))
@@ -131,7 +170,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 if (_skipCacheSetPredicate is null)
                 {
-                    var timeToLive = _timeToLiveFactory(outerKey, innerKeysCollection);
+                    var timeToLive = _timeToLiveFactory(outerKey, innerKeys);
 
                     return timeToLive == TimeSpan.Zero
                         ? default
@@ -148,8 +187,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 {
                     if (filteredValues.Count > 0)
                     {
-                        var filteredKeys = filteredValues.Count == missingKeys.Count
-                            ? missingKeys
+                        var filteredKeys = filteredValues.Count == innerKeys.Count
+                            ? innerKeys
                             : new ReadOnlyCollectionKeyValuePairKeys<TInnerKey, TValue>(filteredValues);
                         
                         var timeToLive = _timeToLiveFactory(outerKey, filteredKeys);
