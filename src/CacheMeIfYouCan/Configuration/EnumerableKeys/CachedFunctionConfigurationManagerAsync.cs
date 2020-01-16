@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
-    public sealed class CachedFunctionConfigurationManagerAsync<TKey, TValue, TRequest, TResponse>
-        : CachedFunctionConfigurationManagerBase<TKey, TValue, TRequest, TResponse, CachedFunctionConfigurationManagerAsync<TKey, TValue, TRequest, TResponse>>
+    public sealed class CachedFunctionConfigurationManagerAsync<TRequest, TResponse, TKey, TValue>
+        : CachedFunctionConfigurationManagerBase<TRequest, TResponse, TKey, TValue, CachedFunctionConfigurationManagerAsync<TRequest, TResponse, TKey, TValue>>
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {

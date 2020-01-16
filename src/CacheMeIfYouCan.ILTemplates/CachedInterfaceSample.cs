@@ -43,23 +43,23 @@ namespace CacheMeIfYouCan.ILTemplates
             singleKeySyncCanx3ConfigAction(singleKeySyncCanx3ConfigManager);
             _singleKeySyncCanx3 = singleKeySyncCanx3ConfigManager.Build();
             
-            var enumerableKeyAsync4ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeyAsync);
-            var enumerableKeyAsync4ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[4]];
+            var enumerableKeyAsync4ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<IEnumerable<string>, Dictionary<string, string>, string, string>(originalImpl.EnumerableKeyAsync);
+            var enumerableKeyAsync4ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsync<IEnumerable<string>, Dictionary<string, string>, string, string>>)config[methods[4]];
             enumerableKeyAsync4ConfigAction(enumerableKeyAsync4ConfigManager);
             _enumerableKeyAsync4 = enumerableKeyAsync4ConfigManager.Build();
             
-            var enumerableKeySync5ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeySync);
-            var enumerableKeySync5ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[5]];
+            var enumerableKeySync5ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<IEnumerable<string>, Dictionary<string, string>, string, string>(originalImpl.EnumerableKeySync);
+            var enumerableKeySync5ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSync<IEnumerable<string>, Dictionary<string, string>, string, string>>)config[methods[5]];
             enumerableKeySync5ConfigAction(enumerableKeySync5ConfigManager);
             _enumerableKeySync5 = enumerableKeySync5ConfigManager.Build();
             
-            var enumerableKeyAsyncCanx6ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeyAsyncCanx);
-            var enumerableKeyAsyncCanx6ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[6]];
+            var enumerableKeyAsyncCanx6ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<IEnumerable<string>, Dictionary<string, string>, string, string>(originalImpl.EnumerableKeyAsyncCanx);
+            var enumerableKeyAsyncCanx6ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerAsyncCanx<IEnumerable<string>, Dictionary<string, string>, string, string>>)config[methods[6]];
             enumerableKeyAsyncCanx6ConfigAction(enumerableKeyAsyncCanx6ConfigManager);
             _enumerableKeyAsyncCanx6 = enumerableKeyAsyncCanx6ConfigManager.Build();
             
-            var enumerableKeySyncCanx7ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>(originalImpl.EnumerableKeySyncCanx);
-            var enumerableKeySyncCanx7ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<string, string, IEnumerable<string>, Dictionary<string, string>>>)config[methods[7]];
+            var enumerableKeySyncCanx7ConfigManager = new Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<IEnumerable<string>, Dictionary<string, string>, string, string>(originalImpl.EnumerableKeySyncCanx);
+            var enumerableKeySyncCanx7ConfigAction = (Action<Configuration.EnumerableKeys.CachedFunctionConfigurationManagerSyncCanx<IEnumerable<string>, Dictionary<string, string>, string, string>>)config[methods[7]];
             enumerableKeySyncCanx7ConfigAction(enumerableKeySyncCanx7ConfigManager);
             _enumerableKeySyncCanx7 = enumerableKeySyncCanx7ConfigManager.Build();
         }

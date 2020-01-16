@@ -56,9 +56,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TRequest, TResponse, TKey, TValue>(
             Expression<Func<T, Func<TRequest, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsync<TKey, TValue, TRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerAsync<TRequest, TResponse, TKey, TValue>> configurationAction)
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
@@ -66,9 +66,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TRequest, TResponse, TKey, TValue>(
             Expression<Func<T, Func<TRequest, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSync<TKey, TValue, TRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerSync<TRequest, TResponse, TKey, TValue>> configurationAction)
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
@@ -76,9 +76,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TRequest, TResponse, TKey, TValue>(
             Expression<Func<T, Func<TRequest, CancellationToken, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue, TRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerAsyncCanx<TRequest, TResponse, TKey, TValue>> configurationAction)
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
@@ -86,9 +86,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue, TRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TRequest, TResponse, TKey, TValue>(
             Expression<Func<T, Func<TRequest, CancellationToken, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSyncCanx<TKey, TValue, TRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerSyncCanx<TRequest, TResponse, TKey, TValue>> configurationAction)
             where TRequest : IEnumerable<TKey>
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
@@ -96,9 +96,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
             Expression<Func<T, Func<TOuterKey, TInnerRequest, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
@@ -106,9 +106,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
             Expression<Func<T, Func<TOuterKey, TInnerRequest, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSync<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerSync<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
@@ -116,9 +116,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
             Expression<Func<T, Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
@@ -126,9 +126,9 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>(
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
             Expression<Func<T, Func<TOuterKey, TInnerRequest, CancellationToken, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse>> configurationAction)
+            Action<CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
             where TInnerRequest : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {

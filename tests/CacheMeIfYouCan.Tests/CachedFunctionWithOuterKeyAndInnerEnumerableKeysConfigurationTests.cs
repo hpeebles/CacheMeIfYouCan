@@ -24,7 +24,7 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
@@ -93,7 +93,7 @@ namespace CacheMeIfYouCan.Tests
                 };
 
                 var cachedFunction = CachedFunctionFactory
-                    .ConfigureFor<int, int, int, T, Dictionary<int, int>>(originalFunction)
+                    .ConfigureFor<int, T, Dictionary<int, int>, int, int>(originalFunction)
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
                     .Build();
@@ -117,7 +117,7 @@ namespace CacheMeIfYouCan.Tests
             };
             
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, SortedSet<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, SortedSet<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
 
@@ -170,7 +170,7 @@ namespace CacheMeIfYouCan.Tests
                 };
 
                 var cachedFunction = CachedFunctionFactory
-                    .ConfigureFor<int, int, int, IEnumerable<int>, T>(originalFunction)
+                    .ConfigureFor<int, IEnumerable<int>, T, int, int>(originalFunction)
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
                     .Build();
@@ -193,7 +193,7 @@ namespace CacheMeIfYouCan.Tests
             };
             
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, SortedDictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, SortedDictionary<int, int>, int, int>(originalFunction)
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
 
@@ -227,7 +227,7 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
@@ -256,7 +256,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
             
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromMilliseconds(timeToLiveMs))
                 .Build();
@@ -285,7 +285,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
             
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLiveFactory(outerKey => TimeSpan.FromMilliseconds(outerKey))
                 .Build();
@@ -320,7 +320,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .DisableCaching(disableCaching)
@@ -354,7 +354,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -399,7 +399,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -457,7 +457,7 @@ namespace CacheMeIfYouCan.Tests
             var distributedCache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -519,7 +519,7 @@ namespace CacheMeIfYouCan.Tests
             var distributedCache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -594,7 +594,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -640,7 +640,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -695,7 +695,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -741,7 +741,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -794,7 +794,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(cache)
                 .SkipCacheWhen(x => true, SkipCacheWhen.SkipCacheGet)
                 .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
@@ -839,7 +839,7 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>>(originalFunction)
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithBatchedFetches(10, batchBehaviour)

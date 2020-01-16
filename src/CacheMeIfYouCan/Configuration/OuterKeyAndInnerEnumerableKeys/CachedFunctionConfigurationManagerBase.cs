@@ -9,8 +9,8 @@ using CacheMeIfYouCan.Internal.ResponseConverters;
 
 namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 {
-    public abstract class CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse, TConfig>
-        where TConfig : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKey, TValue, TInnerRequest, TResponse, TConfig>
+    public abstract class CachedFunctionConfigurationManagerBase<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue, TConfig>
+        where TConfig : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue, TConfig>
         where TInnerRequest : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
     {
