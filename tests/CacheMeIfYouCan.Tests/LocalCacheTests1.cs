@@ -9,6 +9,9 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
+    /// <summary>
+    /// Tests for <see cref="ILocalCache{TKey,TValue}" />
+    /// </summary>
     public class LocalCacheTests1
     {
         private const string MemoryCache = nameof(MemoryCache);
@@ -82,6 +85,22 @@ namespace CacheMeIfYouCan.Tests
                 .ToArray();
 
             Task.WaitAll(tasks);
+        }
+
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void TryRemove_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            for (var i = 0; i < 10; i++)
+            {
+                cache.Set(i, i, TimeSpan.FromSeconds(1));
+                cache.TryRemove(i, out var value).Should().BeTrue();
+                value.Should().Be(i);
+                cache.TryRemove(i, out _).Should().BeFalse();
+            }
         }
 
         private static ILocalCache<int, int> BuildCache(string cacheName)

@@ -8,7 +8,8 @@ using System.Threading.Channels;
 
 namespace CacheMeIfYouCan.LocalCaches
 {
-    public sealed class DictionaryCache<TKey, TValue> : DictionaryCacheBase<TKey, TValue>, ILocalCache<TKey, TValue>, IDisposable
+    public sealed class DictionaryCache<TKey, TValue> : DictionaryCacheBase<TKey, TValue>,
+        ILocalCache<TKey, TValue>, IDisposable
     {
         public DictionaryCache()
             : this(EqualityComparer<TKey>.Default)
@@ -58,9 +59,12 @@ namespace CacheMeIfYouCan.LocalCaches
             foreach (var value in values)
                 SetImpl(value.Key, value.Value, timeToLive);
         }
+
+        public bool TryRemove(TKey key, out TValue value) => RemoveImpl(key, out value);
     }
     
-    public sealed class DictionaryCache<TOuterKey, TInnerKey, TValue> : DictionaryCacheBase<TupleKey<TOuterKey, TInnerKey>, TValue>, ILocalCache<TOuterKey, TInnerKey, TValue>, IDisposable
+    public sealed class DictionaryCache<TOuterKey, TInnerKey, TValue> : DictionaryCacheBase<TupleKey<TOuterKey, TInnerKey>, TValue>,
+        ILocalCache<TOuterKey, TInnerKey, TValue>, IDisposable
     {
         private readonly IEqualityComparer<TOuterKey> _outerKeyComparer;
         private readonly IEqualityComparer<TInnerKey> _innerKeyComparer;
@@ -69,8 +73,12 @@ namespace CacheMeIfYouCan.LocalCaches
             : this(EqualityComparer<TOuterKey>.Default, EqualityComparer<TInnerKey>.Default)
         { }
         
-        public DictionaryCache(IEqualityComparer<TOuterKey> outerKeyComparer, IEqualityComparer<TInnerKey> innerKeyComparer)
-            : base(new TupleKeyComparer<TOuterKey, TInnerKey>(outerKeyComparer, innerKeyComparer), TimeSpan.FromSeconds(10))
+        public DictionaryCache(
+            IEqualityComparer<TOuterKey> outerKeyComparer,
+            IEqualityComparer<TInnerKey> innerKeyComparer)
+            : base(
+                new TupleKeyComparer<TOuterKey, TInnerKey>(outerKeyComparer, innerKeyComparer),
+                TimeSpan.FromSeconds(10))
         {
             _outerKeyComparer = outerKeyComparer;
             _innerKeyComparer = innerKeyComparer;
@@ -140,6 +148,19 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 SetImpl(key, value.Value.Value, value.Value.TimeToLive);
             }
+        }
+
+        public bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value)
+        {
+            var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
+            var innerKeyHashCode = _innerKeyComparer.GetHashCode(innerKey);
+
+            var key = new TupleKey<TOuterKey, TInnerKey>(
+                outerKey,
+                innerKey,
+                GetCombinedHashCode(outerKeyHashCode, innerKeyHashCode));
+
+            return RemoveImpl(key, out value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]        

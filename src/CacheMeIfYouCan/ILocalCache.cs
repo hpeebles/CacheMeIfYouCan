@@ -12,6 +12,8 @@ namespace CacheMeIfYouCan
         IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys);
 
         void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
+
+        bool TryRemove(TKey key, out TValue value);
     }
 
     public interface ILocalCache<in TOuterKey, TInnerKey, TValue>
@@ -21,5 +23,7 @@ namespace CacheMeIfYouCan
         void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
 
         void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
+
+        bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value);
     }
 }

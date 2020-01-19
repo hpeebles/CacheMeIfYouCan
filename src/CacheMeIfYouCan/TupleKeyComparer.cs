@@ -22,9 +22,6 @@ namespace CacheMeIfYouCan
                 _innerKeyComparer.Equals(x.InnerKey, y.InnerKey);
         }
 
-        public int GetHashCode(TupleKey<TOuterKey, TInnerKey> obj)
-        {
-            return obj.HashCode;
-        }
+        public int GetHashCode(TupleKey<TOuterKey, TInnerKey> obj) => obj.HashCode;
     }
 }

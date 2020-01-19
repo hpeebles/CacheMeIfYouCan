@@ -125,7 +125,20 @@ namespace CacheMeIfYouCan.LocalCaches
 
             _keysToBePutIntoExpiryDictionaryWriter.TryWrite(keyAndExpiry);
         }
-        
+
+        protected bool RemoveImpl(TKey key, out TValue value)
+        {
+            if (!_values.TryRemove(key, out var valueAndExpiry) ||
+                valueAndExpiry.ExpiryTicks < DateTime.UtcNow.Ticks)
+            {
+                value = default;
+                return false;
+            }
+
+            value = valueAndExpiry.Value;
+            return true;
+        }
+
         public void Dispose()
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)

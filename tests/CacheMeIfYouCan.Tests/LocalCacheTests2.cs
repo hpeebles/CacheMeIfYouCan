@@ -9,6 +9,9 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
+    /// <summary>
+    /// Tests for <see cref="ILocalCache{TOuterKey,TInnerKey,TValue}" />
+    /// </summary>
     public class LocalCacheTests2
     {
         private const string MemoryCache = nameof(MemoryCache);
@@ -55,6 +58,22 @@ namespace CacheMeIfYouCan.Tests
             Thread.Sleep(timeToLiveMs + 20);
 
             cache.GetMany(1, new[] { 1 }).Should().BeNullOrEmpty();
+        }
+        
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void TryRemove_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            for (var i = 0; i < 10; i++)
+            {
+                cache.SetMany(0, new[] { new KeyValuePair<int, int>(i, i) }, TimeSpan.FromSeconds(1));
+                cache.TryRemove(0, i, out var value).Should().BeTrue();
+                value.Should().Be(i);
+                cache.TryRemove(0, i, out _).Should().BeFalse();
+            }
         }
 
         private static ILocalCache<int, int, int> BuildCache(string cacheName)

@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Tests
         public int SetExecutionCount;
         public int GetManyExecutionCount;
         public int SetManyExecutionCount;
+        public int RemoveExecutionCount;
         public int HitsCount;
         public int MissesCount;
         
@@ -59,6 +60,13 @@ namespace CacheMeIfYouCan.Tests
             
             _innerCache.SetMany(values, timeToLive);
         }
+
+        public bool TryRemove(TKey key, out TValue value)
+        {
+            Interlocked.Increment(ref RemoveExecutionCount);
+
+            return _innerCache.TryRemove(key, out value);
+        }
     }
     
     public class MockLocalCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
@@ -68,6 +76,7 @@ namespace CacheMeIfYouCan.Tests
         public int GetManyExecutionCount;
         public int SetMany1ExecutionCount;
         public int SetMany2ExecutionCount;
+        public int RemoveExecutionCount;
         public int HitsCount;
         public int MissesCount;
 
@@ -103,6 +112,13 @@ namespace CacheMeIfYouCan.Tests
             Interlocked.Increment(ref SetMany2ExecutionCount);
             
             _innerCache.SetMany(outerKey, values);
+        }
+
+        public bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value)
+        {
+            Interlocked.Increment(ref RemoveExecutionCount);
+
+            return _innerCache.TryRemove(outerKey, innerKey, out value);
         }
     }
 }

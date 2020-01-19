@@ -56,6 +56,20 @@ namespace CacheMeIfYouCan.LocalCaches
             foreach (var kv in values)
                 _memoryCache.Set(_keySerializer(kv.Key), kv.Value, expirationDate);
         }
+
+        public bool TryRemove(TKey key, out TValue value)
+        {
+            var valueRemoved = _memoryCache.Remove(_keySerializer(key));
+
+            if (valueRemoved is TValue returnValue)
+            {
+                value = returnValue;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
     }
     
     public sealed class MemoryCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
@@ -108,6 +122,23 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value.Value, expirationDate);
             }
+        }
+
+        public bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value)
+        {
+            var outerKeyString = _outerKeySerializer(outerKey);
+            var innerKeyString = _innerKeySerializer(innerKey);
+
+            var valueRemoved = _memoryCache.Remove(outerKeyString + innerKeyString);
+
+            if (valueRemoved is TValue returnValue)
+            {
+                value = returnValue;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
     }
 }

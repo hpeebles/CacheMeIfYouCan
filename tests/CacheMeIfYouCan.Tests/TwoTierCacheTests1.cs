@@ -7,6 +7,9 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
+    /// <summary>
+    /// Tests for <see cref="TwoTierCache{TKey,TValue}"/>
+    /// </summary>
     public class TwoTierCacheTests1
     {
         [Fact]
