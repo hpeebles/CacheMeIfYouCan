@@ -329,7 +329,7 @@ namespace CacheMeIfYouCan.Internal
 
                 if (fromDistributedCache != null && fromDistributedCache.Count > 0)
                 {
-                    _localCache.SetMany(outerKey, fromDistributedCache);
+                    _localCache.SetManyWithVaryingTimesToLive(outerKey, fromDistributedCache);
 
                     foreach (var kv in fromDistributedCache)
                         resultsDictionary[kv.Key] = kv.Value.Value;

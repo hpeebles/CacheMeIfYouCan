@@ -112,7 +112,7 @@ namespace CacheMeIfYouCan.LocalCaches
                 _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value, expirationDate);
         }
 
-        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 

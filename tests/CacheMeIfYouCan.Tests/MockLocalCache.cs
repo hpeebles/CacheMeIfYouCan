@@ -17,11 +17,18 @@ namespace CacheMeIfYouCan.Tests
         public int RemoveExecutionCount;
         public int HitsCount;
         public int MissesCount;
+        private bool _throwExceptionOnNextAction;
         
         public bool TryGet(TKey key, out TValue value)
         {
             Interlocked.Increment(ref TryGetExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             if (_innerCache.TryGet(key, out value))
             {
                 Interlocked.Increment(ref HitsCount);
@@ -36,12 +43,24 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
             _innerCache.Set(key, value, timeToLive);
         }
 
         public IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
+
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
 
             var values = _innerCache.GetMany(keys);
             
@@ -58,6 +77,12 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
             _innerCache.SetMany(values, timeToLive);
         }
 
@@ -65,8 +90,16 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref RemoveExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
             return _innerCache.TryRemove(key, out value);
         }
+
+        public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
     }
     
     public class MockLocalCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
@@ -79,12 +112,19 @@ namespace CacheMeIfYouCan.Tests
         public int RemoveExecutionCount;
         public int HitsCount;
         public int MissesCount;
+        private bool _throwExceptionOnNextAction;
 
         public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
+
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
 
             var values = _innerCache.GetMany(outerKey, innerKeys);
             
@@ -104,21 +144,41 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetMany1ExecutionCount);
             
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
             _innerCache.SetMany(outerKey, values, timeToLive);
         }
 
-        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             Interlocked.Increment(ref SetMany2ExecutionCount);
             
-            _innerCache.SetMany(outerKey, values);
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
+            _innerCache.SetManyWithVaryingTimesToLive(outerKey, values);
         }
 
         public bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value)
         {
             Interlocked.Increment(ref RemoveExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+
             return _innerCache.TryRemove(outerKey, innerKey, out value);
         }
+
+        public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
     }
 }

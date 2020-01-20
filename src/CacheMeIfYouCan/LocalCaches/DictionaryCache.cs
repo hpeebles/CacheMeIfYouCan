@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Channels;
 
 namespace CacheMeIfYouCan.LocalCaches
 {
@@ -129,7 +125,7 @@ namespace CacheMeIfYouCan.LocalCaches
             }
         }
 
-        public void SetMany(
+        public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
             IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
