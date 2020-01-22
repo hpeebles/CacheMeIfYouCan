@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Internal
             
             var implementedInterfaces = interfaceType.GetTypeInfo().ImplementedInterfaces?.ToList();
 
-            if (implementedInterfaces == null || !implementedInterfaces.Any())
+            if (implementedInterfaces is null || !implementedInterfaces.Any())
                 return interfaceType.GetMethods();
 
             return interfaceType.GetMethods()

@@ -48,6 +48,18 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             _config.DisableCaching = disableCaching;
             return (TConfig)this;
         }
+
+        public TConfig FillMissingKeys(TValue value)
+        {
+            _config.FillMissingKeysConstantValue = (true, value);
+            return (TConfig)this;
+        }
+
+        public TConfig FillMissingKeys(Func<TKey, TValue> valueFactory)
+        {
+            _config.FillMissingKeysValueFactory = valueFactory;
+            return (TConfig)this;
+        }
         
         public TConfig SkipCacheWhen(
             Func<TKey, bool> predicate,

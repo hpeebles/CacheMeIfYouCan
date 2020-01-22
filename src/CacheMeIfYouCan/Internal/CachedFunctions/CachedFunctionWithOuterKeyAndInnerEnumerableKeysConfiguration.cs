@@ -10,6 +10,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         public IDistributedCache<TOuterKey, TInnerKey, TValue> DistributedCache { get; set; }
         public IEqualityComparer<TInnerKey> KeyComparer { get; set; }
         public bool DisableCaching { get; set; }
+        public (bool IsSet, TValue Value) FillMissingKeysConstantValue { get; set; }
+        public Func<TOuterKey, TInnerKey, TValue> FillMissingKeysValueFactory { get; set; }
         public Func<TOuterKey, bool> SkipCacheGetPredicateOuterKeyOnly { get; set; }
         public Func<TOuterKey, TInnerKey, bool> SkipCacheGetPredicate { get; set; }
         public Func<TOuterKey, bool> SkipCacheSetPredicateOuterKeyOnly { get; set; }

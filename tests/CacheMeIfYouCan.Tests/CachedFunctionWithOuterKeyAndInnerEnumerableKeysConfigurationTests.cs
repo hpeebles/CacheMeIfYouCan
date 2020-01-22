@@ -341,6 +341,98 @@ namespace CacheMeIfYouCan.Tests
         }
         
         [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void FillMissingKeysWithConstantValue_WorksAsExpected(bool fillMissingKeys)
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.Where(k => k % 2 == 0).ToDictionary(k => k);
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (fillMissingKeys)
+                config.FillMissingKeys(-1);
+
+            var cachedFunction = config.Build();
+
+            var values = cachedFunction(1, Enumerable.Range(0, 10));
+
+            foreach (var key in Enumerable.Range(0, 10))
+            {
+                if (key % 2 == 0)
+                {
+                    values[key].Should().Be(key);
+                }
+                else
+                {
+                    values.TryGetValue(key, out var value).Should().Be(fillMissingKeys);
+
+                    var fromCache = cache.GetMany(1, new[] { key });
+                    fromCache.Should().HaveCount(fillMissingKeys ? 1 : 0);
+                    
+                    if (fillMissingKeys)
+                    {
+                        value.Should().Be(-1);
+                        fromCache.Single().Value.Should().Be(-1);
+                    }
+                }
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void FillMissingKeysUsingValueFactory_WorksAsExpected(bool fillMissingKeys)
+        {
+            Func<int, IEnumerable<int>, ConcurrentDictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return new ConcurrentDictionary<int, int>(innerKeys.Where(k => k % 2 == 0).ToDictionary(k => k));
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor<int, IEnumerable<int>, ConcurrentDictionary<int, int>, int, int>(originalFunction)
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (fillMissingKeys)
+                config.FillMissingKeys((outerKey, innerKey) => -(outerKey + innerKey));
+
+            var cachedFunction = config.Build();
+
+            var values = cachedFunction(1, Enumerable.Range(0, 10));
+
+            foreach (var key in Enumerable.Range(0, 10))
+            {
+                if (key % 2 == 0)
+                {
+                    values[key].Should().Be(key);
+                }
+                else
+                {
+                    values.TryGetValue(key, out var value).Should().Be(fillMissingKeys);
+
+                    var fromCache = cache.GetMany(1, new[] { key });
+                    fromCache.Should().HaveCount(fillMissingKeys ? 1 : 0);
+                    
+                    if (fillMissingKeys)
+                    {
+                        value.Should().Be(-(1 + key));
+                        fromCache.Single().Value.Should().Be(-(1 + key));
+                    }
+                }
+            }
+        }
+        
+        [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
         public void SkipCacheGet_WorksForAllCombinations(bool flag1, bool flag2)
         {

@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,6 +15,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly int _maxBatchSize;
         private readonly BatchBehaviour _batchBehaviour;
+        private readonly bool _shouldFillMissingKeys;
+        private readonly bool _shouldFillMissingKeysWithConstantValue;
+        private readonly TValue _fillMissingKeysConstantValue;
+        private readonly Func<TKey, TValue> _fillMissingKeysValueFactory;
         private readonly ICache<TKey, TValue> _cache;
         private static readonly IReadOnlyCollection<KeyValuePair<TKey, TValue>> EmptyValuesCollection = new List<KeyValuePair<TKey, TValue>>();
 
@@ -46,6 +49,18 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             
             _maxBatchSize = config.MaxBatchSize;
             _batchBehaviour = config.BatchBehaviour;
+
+            if (config.FillMissingKeysConstantValue.IsSet)
+            {
+                _shouldFillMissingKeys = true;
+                _shouldFillMissingKeysWithConstantValue = true;
+                _fillMissingKeysConstantValue = config.FillMissingKeysConstantValue.Value;
+            }
+            else if (!(config.FillMissingKeysValueFactory is null))
+            {
+                _shouldFillMissingKeys = true;
+                _fillMissingKeysValueFactory = config.FillMissingKeysValueFactory;
+            }
         }
 
         public async Task<Dictionary<TKey, TValue>> GetMany(
@@ -84,7 +99,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 var resultsDictionaryLock = new object();
                 var index = 0;
                 foreach (var batch in batches)
-                    tasks[index++] = GetValuesFromFunc(batch, cancellationToken, resultsDictionary, resultsDictionaryLock);
+                {
+                    tasks[index++] = GetValuesFromFunc(
+                        batch,
+                        cancellationToken,
+                        resultsDictionary,
+                        resultsDictionaryLock);
+                }
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
@@ -96,7 +117,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 if (_skipCacheGetPredicate is null)
                     return _cache.GetMany(keysCollection);
                     
-                var filteredKeys = CacheKeysFilter<TKey>.Filter(keysCollection, _skipCacheGetPredicate, out var pooledArray);
+                var filteredKeys = CacheKeysFilter<TKey>.Filter(
+                    keysCollection,
+                    _skipCacheGetPredicate,
+                    out var pooledArray);
 
                 try
                 {
@@ -124,6 +148,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             var valuesFromFunc = getValuesFromFuncTask.Result;
 
+            if (_shouldFillMissingKeys)
+                valuesFromFunc = FillMissingKeys(keys, valuesFromFunc);
+            
             if (valuesFromFunc is null)
                 return;
 
@@ -159,7 +186,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         : _cache.SetMany(valuesFromFuncCollection, timeToLive);
                 }
 
-                var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(valuesFromFuncCollection, _skipCacheSetPredicate, out var pooledArray);
+                var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(
+                    valuesFromFuncCollection,
+                    _skipCacheSetPredicate,
+                    out var pooledArray);
 
                 try
                 {
@@ -183,6 +213,36 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 return default;
             }
+        }
+
+        private Dictionary<TKey, TValue> FillMissingKeys(
+            IReadOnlyCollection<TKey> keys,
+            IEnumerable<KeyValuePair<TKey, TValue>> valuesFromFunc)
+        {
+            if (!(valuesFromFunc is Dictionary<TKey, TValue> valuesDictionary && valuesDictionary.Comparer.Equals(_keyComparer)))
+            {
+                valuesDictionary = new Dictionary<TKey, TValue>(keys.Count, _keyComparer);
+
+                if (!(valuesFromFunc is null))
+                {
+                    foreach (var kv in valuesFromFunc)
+                        valuesDictionary[kv.Key] = kv.Value;
+                }
+            }
+            
+            foreach (var key in keys)
+            {
+                if (valuesDictionary.ContainsKey(key))
+                    continue;
+                
+                var value = _shouldFillMissingKeysWithConstantValue
+                    ? _fillMissingKeysConstantValue
+                    : _fillMissingKeysValueFactory(key);
+                
+                valuesDictionary[key] = value;
+            }
+
+            return valuesDictionary;
         }
     }
 }

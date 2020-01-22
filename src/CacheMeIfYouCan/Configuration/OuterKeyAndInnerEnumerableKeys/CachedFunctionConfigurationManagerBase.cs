@@ -55,6 +55,18 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig FillMissingKeys(TValue value)
+        {
+            _config.FillMissingKeysConstantValue = (true, value);
+            return (TConfig)this;
+        }
+
+        public TConfig FillMissingKeys(Func<TOuterKey, TInnerKey, TValue> valueFactory)
+        {
+            _config.FillMissingKeysValueFactory = valueFactory;
+            return (TConfig)this;
+        }
+
         public TConfig SkipCacheWhen(
             Func<TOuterKey, bool> predicate,
             SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)

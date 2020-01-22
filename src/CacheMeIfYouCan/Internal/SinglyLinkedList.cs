@@ -47,7 +47,7 @@ namespace CacheMeIfYouCan.Internal
             
             public bool MoveNext()
             {
-                if (_current == null)
+                if (_current is null)
                 {
                     _current = _list._head;
                     return !(_current is null);
