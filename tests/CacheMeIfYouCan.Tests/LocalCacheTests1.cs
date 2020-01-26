@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = BuildCache(cacheName);
 
             var tasks = Enumerable
-                .Range(0, 5)
+                .Range(1, 5)
                 .Select(i => Task.Run(() =>
                 {
                     for (var j = 0; j < 100; j++)
