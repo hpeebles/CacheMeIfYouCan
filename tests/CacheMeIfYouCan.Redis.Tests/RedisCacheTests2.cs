@@ -92,7 +92,7 @@ namespace CacheMeIfYouCan.Redis.Tests
 
             Func<Task> task = () => cache.GetMany(1, new[] { 1 });
 
-            await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* {cache.GetType()}");
+            await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* '{cache.GetType()}'.");
         }
 
         private static RedisCache<int, int, int> BuildRedisCache(
