@@ -3,6 +3,6 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+    <ProjectReference Include="..\..\src\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
 </Project>

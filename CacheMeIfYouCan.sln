@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "CacheMeIfYouCan\CacheMeIfYouCan.csproj", "{0E5C541F-0B77-4073-AEFE-0BA03EC3CA0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "src\CacheMeIfYouCan\CacheMeIfYouCan.csproj", "{0E5C541F-0B77-4073-AEFE-0BA03EC3CA0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "..\tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "helpers\CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{EB0E7F39-18FD-46F3-800B-EC98C38055A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "src\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{EB0E7F39-18FD-46F3-800B-EC98C38055A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis.Tests", "..\tests\CacheMeIfYouCan.Redis.Tests\CacheMeIfYouCan.Redis.Tests.csproj", "{09EB8E7F-EE8E-432F-8108-10255FE234EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis.Tests", "tests\CacheMeIfYouCan.Redis.Tests\CacheMeIfYouCan.Redis.Tests.csproj", "{09EB8E7F-EE8E-432F-8108-10255FE234EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
