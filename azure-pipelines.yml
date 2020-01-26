@@ -9,28 +9,43 @@ pool:
 variables:
   buildConfiguration: 'Release'
   pathToMainProject: 'src/CacheMeIfYouCan/CacheMeIfYouCan.csproj'
-  pathToTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
-
+  pathToMainTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
+  pathToRedisProject: 'src/CacheMeIfYouCan.Redis/CacheMeIfYouCan.Redis.csproj'
+  pathToRedisTestProject: 'tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj'
+  
 steps:
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet build'
+  displayName: 'dotnet build CacheMeIfYouCan'
   inputs:
     command: 'build'
     arguments: '--configuration $(buildConfiguration)'
     projects: '$(pathToMainProject)'
 
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet test netcoreapp3.1'
+  displayName: 'dotnet build CacheMeIfYouCan.Redis'
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(pathToRedisProject)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test CacheMeIfYouCan'
   inputs:
     command: 'test'
-    arguments: '$(pathToTestProject) --framework netcoreapp3.1'
+    arguments: '$(pathToMainTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test CacheMeIfYouCan.Redis'
+  inputs:
+    command: 'test'
+    arguments: '$(pathToRedisTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   displayName: "dotnet pack"
   inputs:
     command: 'pack'
-    arguments: '--configuration $(buildConfiguration)'
-    packagesToPack: '$(pathToMainProject)'
+    arguments: '--no-build --configuration $(buildConfiguration)'
+    packagesToPack: 'src/**/*.csproj'
     nobuild: true
     versioningScheme: 'byBuildNumber'
 
