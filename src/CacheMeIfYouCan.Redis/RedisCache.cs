@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    public sealed class RedisCache<TKey, TValue> : IDistributedCache<TKey, TValue>
+    public sealed class RedisCache<TKey, TValue> : IDistributedCache<TKey, TValue>, IDisposable
     {
         private readonly IConnectionMultiplexer _connectionMultiplexer;
         private readonly Func<TKey, RedisKey> _keySerializer;
@@ -16,6 +17,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly int _dbIndex;
         private readonly CommandFlags _setValueFlags;
         private readonly RedisValue _nullValue;
+        private bool _disposed;
         private static readonly IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> EmptyResults =
             new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>[0];
         
@@ -42,6 +44,8 @@ namespace CacheMeIfYouCan.Redis
 
         public async Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var redisKey = _keySerializer(key);
@@ -62,6 +66,8 @@ namespace CacheMeIfYouCan.Redis
 
         public async Task Set(TKey key, TValue value, TimeSpan timeToLive)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var redisKey = _keySerializer(key);
@@ -77,6 +83,8 @@ namespace CacheMeIfYouCan.Redis
 
         public async Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(IReadOnlyCollection<TKey> keys)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var valuesFoundCount = 0;
@@ -136,6 +144,8 @@ namespace CacheMeIfYouCan.Redis
 
         public async Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var tasks = ArrayPool<Task>.Shared.Rent(values.Count);
@@ -163,9 +173,22 @@ namespace CacheMeIfYouCan.Redis
                 ArrayPool<Task>.Shared.Return(tasks);
             }
         }
+
+        public void Dispose()
+        {
+            _disposed = true;
+            _connectionMultiplexer.Dispose();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(this.GetType().ToString());
+        }
     }
     
-    public sealed class RedisCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>
+    public sealed class RedisCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>, IDisposable
     {
         private readonly IConnectionMultiplexer _connectionMultiplexer;
         private readonly Func<TOuterKey, RedisKey> _outerKeySerializer;
@@ -176,6 +199,7 @@ namespace CacheMeIfYouCan.Redis
         private readonly CommandFlags _setValueFlags;
         private readonly RedisKey _keySeparator;
         private readonly RedisValue _nullValue;
+        private bool _disposed;
         private static readonly IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> EmptyResults =
             new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>[0];
 
@@ -208,6 +232,8 @@ namespace CacheMeIfYouCan.Redis
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
@@ -274,6 +300,8 @@ namespace CacheMeIfYouCan.Redis
             IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
+            CheckDisposed();
+            
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
@@ -303,6 +331,19 @@ namespace CacheMeIfYouCan.Redis
             {
                 ArrayPool<Task>.Shared.Return(tasks);
             }
+        }
+
+        public void Dispose()
+        {
+            _disposed = true;
+            _connectionMultiplexer.Dispose();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(this.GetType().ToString());
         }
     }
 }

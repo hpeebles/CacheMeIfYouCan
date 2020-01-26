@@ -129,6 +129,18 @@ namespace CacheMeIfYouCan.Redis.Tests
             task.IsCompleted.Should().Be(useFireAndForget);
         }
 
+        [Fact]
+        public async Task WhenDisposed_ThrowsObjectDisposedException()
+        {
+            var cache = BuildRedisCache();
+            
+            cache.Dispose();
+
+            Func<Task> task = () => cache.TryGet(1);
+
+            await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* {cache.GetType()}");
+        }
+
         private static RedisCache<int, int> BuildRedisCache(
             bool useFireAndForget = false,
             string keyPrefix = null,
