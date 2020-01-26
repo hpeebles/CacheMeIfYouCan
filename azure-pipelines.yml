@@ -10,6 +10,8 @@ variables:
   buildConfiguration: 'Release'
   pathToMainProject: 'src/CacheMeIfYouCan/CacheMeIfYouCan.csproj'
   pathToMainTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
+  pathToPollyProject: 'src/CacheMeIfYouCan.Polly/CacheMeIfYouCan.Polly.csproj'
+  pathToPollyTestProject: 'tests/CacheMeIfYouCan.Polly.Tests/CacheMeIfYouCan.Polly.Tests.csproj'
   pathToRedisProject: 'src/CacheMeIfYouCan.Redis/CacheMeIfYouCan.Redis.csproj'
   pathToRedisTestProject: 'tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj'
   
@@ -20,6 +22,13 @@ steps:
     command: 'build'
     arguments: '--configuration $(buildConfiguration)'
     projects: '$(pathToMainProject)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build CacheMeIfYouCan.Polly'
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(pathToPollyProject)'
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build CacheMeIfYouCan.Redis'
@@ -33,6 +42,12 @@ steps:
   inputs:
     command: 'test'
     arguments: '$(pathToMainTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test CacheMeIfYouCan.Polly'
+  inputs:
+    command: 'test'
+    arguments: '$(pathToPollyTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet test CacheMeIfYouCan.Redis'

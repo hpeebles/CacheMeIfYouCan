@@ -17,11 +17,18 @@ namespace CacheMeIfYouCan.Tests
         public int SetManyExecutionCount;
         public int HitsCount;
         public int MissesCount;
+        private bool _throwExceptionOnNextAction;
 
         public Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
             Interlocked.Increment(ref TryGetExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             if (_innerCache.TryGet(key, out var value))
             {
                 Interlocked.Increment(ref HitsCount);
@@ -36,6 +43,12 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetExecutionCount);
             
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             _innerCache.Set(key, (value, DateTime.UtcNow + timeToLive), timeToLive);
             
             return Task.CompletedTask;
@@ -44,6 +57,12 @@ namespace CacheMeIfYouCan.Tests
         public Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(IReadOnlyCollection<TKey> keys)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
+            
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
             
             var values = _innerCache
                 .GetMany(keys)
@@ -62,10 +81,18 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             _innerCache.SetMany(values.ToDictionary(kv => kv.Key, kv => (kv.Value, DateTime.UtcNow + timeToLive)), timeToLive);
             
             return Task.CompletedTask;
         }
+
+        public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
     }
     
     public class MockDistributedCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>
@@ -76,11 +103,18 @@ namespace CacheMeIfYouCan.Tests
         public int SetManyExecutionCount;
         public int HitsCount;
         public int MissesCount;
+        private bool _throwExceptionOnNextAction;
 
         public Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             var values = _innerCache
                 .GetMany(outerKey, innerKeys)
                 .ToDictionary(kv => kv.Key, kv => new ValueAndTimeToLive<TValue>(kv.Value.Item1, kv.Value.Item2 - DateTime.UtcNow));
@@ -98,9 +132,17 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
+            if (_throwExceptionOnNextAction)
+            {
+                _throwExceptionOnNextAction = false;
+                throw new Exception();
+            }
+            
             _innerCache.SetMany(outerKey, values.ToDictionary(kv => kv.Key, kv => (kv.Value, DateTime.UtcNow + timeToLive)), timeToLive);
 
             return Task.CompletedTask;
         }
+
+        public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
     }
 }
