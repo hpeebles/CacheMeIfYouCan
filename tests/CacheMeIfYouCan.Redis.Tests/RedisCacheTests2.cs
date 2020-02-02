@@ -57,7 +57,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         }
         
         [Theory]
-        [InlineData(50)]
+        [InlineData(100)]
         [InlineData(1000)]
         public async Task WithTimeToLive_DataExpiredCorrectly(int timeToLiveMs)
         {
