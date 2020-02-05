@@ -297,5 +297,43 @@ namespace CacheMeIfYouCan.Tests
                 return DateTime.UtcNow;
             }
         }
+
+        [Fact]
+        public void WithJitter_CausesRefreshIntervalToFluctuate()
+        {
+            var fastRefreshEvent = new ManualResetEventSlim();
+            var slowRefreshEvent = new ManualResetEventSlim();
+
+            var lastRefresh = DateTime.MinValue;
+            var averageRefreshInterval = TimeSpan.FromSeconds(1);
+
+            var cachedObject = CachedObjectFactory.ConfigureFor(() =>
+                {
+                    var now = DateTime.UtcNow;
+
+                    if (lastRefresh != DateTime.MinValue)
+                    {
+                        var refreshInterval = now - lastRefresh;
+                        if (refreshInterval < 0.5 * averageRefreshInterval)
+                            fastRefreshEvent.Set();
+                        else if (refreshInterval > 1.5 * averageRefreshInterval)
+                            slowRefreshEvent.Set();
+                    }
+
+                    lastRefresh = now;
+
+                    return now;
+                })
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .WithJitter(99)
+                .Build();
+            
+            cachedObject.Initialize();
+
+            WaitHandle
+                .WaitAll(new[] { fastRefreshEvent.WaitHandle, slowRefreshEvent.WaitHandle }, TimeSpan.FromSeconds(30))
+                .Should()
+                .BeTrue();
+        }
     }
 }

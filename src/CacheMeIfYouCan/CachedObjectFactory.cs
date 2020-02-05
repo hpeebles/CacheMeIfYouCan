@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
     public static class CachedObjectFactory
     {
-        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<T> getValueFunc)
+        public static ICachedObjectConfigurationManager<T> ConfigureFor<T>(Func<T> getValueFunc)
         {
             if (getValueFunc is null)
                 throw new ArgumentNullException(nameof(getValueFunc));
@@ -14,7 +15,7 @@ namespace CacheMeIfYouCan
             return ConfigureFor(_ => Task.FromResult(getValueFunc()));
         }
         
-        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<Task<T>> getValueFunc)
+        public static ICachedObjectConfigurationManager<T> ConfigureFor<T>(Func<Task<T>> getValueFunc)
         {
             if (getValueFunc is null)
                 throw new ArgumentNullException(nameof(getValueFunc));
@@ -22,7 +23,7 @@ namespace CacheMeIfYouCan
             return new CachedObjectConfigurationManager<T>(_ => getValueFunc());
         }
         
-        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<CancellationToken, T> getValueFunc)
+        public static ICachedObjectConfigurationManager<T> ConfigureFor<T>(Func<CancellationToken, T> getValueFunc)
         {
             if (getValueFunc is null)
                 throw new ArgumentNullException(nameof(getValueFunc));
@@ -30,7 +31,7 @@ namespace CacheMeIfYouCan
             return ConfigureFor(cancellationToken => Task.FromResult(getValueFunc(cancellationToken)));
         }
         
-        public static CachedObjectConfigurationManager<T> ConfigureFor<T>(Func<CancellationToken, Task<T>> getValueFunc)
+        public static ICachedObjectConfigurationManager<T> ConfigureFor<T>(Func<CancellationToken, Task<T>> getValueFunc)
         {
             if (getValueFunc is null)
                 throw new ArgumentNullException(nameof(getValueFunc));
