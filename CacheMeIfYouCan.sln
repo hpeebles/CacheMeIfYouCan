@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Polly", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Polly.Tests", "tests\CacheMeIfYouCan.Polly.Tests\CacheMeIfYouCan.Polly.Tests.csproj", "{AF8803FC-0559-40E6-A902-72C0A77DF380}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.ProtoBuf", "src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj", "{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{AF8803FC-0559-40E6-A902-72C0A77DF380}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF8803FC-0559-40E6-A902-72C0A77DF380}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF8803FC-0559-40E6-A902-72C0A77DF380}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

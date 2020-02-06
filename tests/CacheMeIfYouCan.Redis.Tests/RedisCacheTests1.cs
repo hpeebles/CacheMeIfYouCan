@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Serializers.ProtoBuf;
 using FluentAssertions;
 using StackExchange.Redis;
 using Xunit;
@@ -14,10 +15,12 @@ namespace CacheMeIfYouCan.Redis.Tests
     /// </summary>
     public class RedisCacheTests1
     {
-        [Fact]
-        public void Concurrent_Set_TryGet_AllItemsReturnedSuccessfully()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Concurrent_Set_TryGet_AllItemsReturnedSuccessfully(bool useStreamSerializer)
         {
-            var cache = BuildRedisCache();
+            var cache = BuildRedisCache(useStreamSerializer: useStreamSerializer);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -27,10 +30,11 @@ namespace CacheMeIfYouCan.Redis.Tests
                     {
                         var key = 2 * ((10 * i) + j);
                         
-                        await cache.Set(key, key, TimeSpan.FromSeconds(1));
+                        await cache.Set(key, new TestClass(key), TimeSpan.FromSeconds(1));
                         var (success, value) = await cache.TryGet(key);
                         success.Should().BeTrue();
-                        value.Value.Should().Be(key);
+                        value.Value.IntValue.Should().Be(key);
+                        value.Value.StringValue.Should().Be(key.ToString());
                         value.TimeToLive.Should().BePositive().And.BeLessThan(TimeSpan.FromSeconds(1));
                         (await cache.TryGet(key + 1)).Success.Should().BeFalse();
                         Thread.Yield();
@@ -53,12 +57,15 @@ namespace CacheMeIfYouCan.Redis.Tests
                     for (var j = 0; j < 100; j++)
                     {
                         var keys = Enumerable.Range((10 * i) + j, i).ToList();
-                        await cache.SetMany(keys.Select(k => new KeyValuePair<int, int>(k, k)).ToList(), TimeSpan.FromSeconds(1));
+                        await cache.SetMany(keys.Select(k => new KeyValuePair<int, TestClass>(k, new TestClass(k))).ToList(), TimeSpan.FromSeconds(1));
                         var values = await cache.GetMany(keys);
                         values.Select(kv => kv.Key).Should().BeEquivalentTo(keys);
-                        values.Select(kv => kv.Value.Value).Should().BeEquivalentTo(keys);
-                        foreach (var timeToLive in values.Select(kv => kv.Value.TimeToLive))
-                            timeToLive.Should().BePositive().And.BeLessThan(TimeSpan.FromSeconds(1));
+                        foreach (var (key, value) in values)
+                        {
+                            value.Value.IntValue.Should().Be(key);
+                            value.Value.StringValue.Should().Be(key.ToString());
+                            value.TimeToLive.Should().BePositive().And.BeLessThan(TimeSpan.FromSeconds(1));
+                        }
                         
                         Thread.Yield();
                     }
@@ -74,7 +81,7 @@ namespace CacheMeIfYouCan.Redis.Tests
             var cache = BuildRedisCache();
 
             var keys = Enumerable.Range(1, 10).ToList();
-            var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, int>(i, i)).ToList();
+            var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i))).ToList();
 
             await cache.SetMany(values, TimeSpan.FromSeconds(1));
 
@@ -90,7 +97,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         {
             var cache = BuildRedisCache();
             
-            await cache.Set(1, 1, TimeSpan.FromMilliseconds(timeToLiveMs));
+            await cache.Set(1, new TestClass(1), TimeSpan.FromMilliseconds(timeToLiveMs));
             (await cache.TryGet(1)).Success.Should().BeTrue();
             
             Thread.Sleep(timeToLiveMs + 20);
@@ -105,7 +112,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         {
             var cache = BuildRedisCache();
             
-            await cache.SetMany(new[] { new KeyValuePair<int, int>(1, 1) }, TimeSpan.FromMilliseconds(timeToLiveMs));
+            await cache.SetMany(new[] { new KeyValuePair<int, TestClass>(1, new TestClass(1)) }, TimeSpan.FromMilliseconds(timeToLiveMs));
             (await cache.GetMany(new[] { 1 })).Should().ContainSingle();
             
             Thread.Sleep(timeToLiveMs + 20);
@@ -123,14 +130,14 @@ namespace CacheMeIfYouCan.Redis.Tests
             var cache = BuildRedisCache(useFireAndForget);
 
             var task = setMany
-                ? cache.Set(1, 1, TimeSpan.FromSeconds(1))
-                : cache.SetMany(new[] { new KeyValuePair<int, int>(1, 1) }, TimeSpan.FromSeconds(1));
+                ? cache.Set(1, new TestClass(1), TimeSpan.FromSeconds(1))
+                : cache.SetMany(new[] { new KeyValuePair<int, TestClass>(1, new TestClass(1)) }, TimeSpan.FromSeconds(1));
 
             task.IsCompleted.Should().Be(useFireAndForget);
         }
 
         [Fact]
-        public async Task WhenDisposed_ThrowsObjectDisposedException()
+        public async Task WhenDisposed_ThrowsObjectDisposedExceptionIfAccessed()
         {
             var cache = BuildRedisCache();
             
@@ -141,18 +148,30 @@ namespace CacheMeIfYouCan.Redis.Tests
             await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* '{cache.GetType()}'.");
         }
 
-        private static RedisCache<int, int> BuildRedisCache(
+        private static RedisCache<int, TestClass> BuildRedisCache(
             bool useFireAndForget = false,
             string keyPrefix = null,
-            string nullValue = null)
+            string nullValue = null,
+            bool useStreamSerializer = false)
         {
             var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
+
+            if (useStreamSerializer)
+            {
+                return new RedisCache<int, TestClass>(
+                    connectionMultiplexer,
+                    k => k.ToString(),
+                    new ProtoBufSerializer<TestClass>(),
+                    useFireAndForgetWherePossible: useFireAndForget,
+                    keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
+                    nullValue: nullValue);
+            }
             
-            return new RedisCache<int, int>(
+            return new RedisCache<int, TestClass>(
                 connectionMultiplexer,
                 k => k.ToString(),
-                v => (RedisValue)v,
-                v => (int)v,
+                v => v.ToString(),
+                v => TestClass.Parse(v),
                 useFireAndForgetWherePossible: useFireAndForget,
                 keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
                 nullValue: nullValue);

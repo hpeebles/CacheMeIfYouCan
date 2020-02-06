@@ -12,5 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj" />
+    <ProjectReference Include="..\..\src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj" />
   </ItemGroup>
 </Project>
