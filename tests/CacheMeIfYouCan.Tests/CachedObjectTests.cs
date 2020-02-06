@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -15,7 +14,7 @@ namespace CacheMeIfYouCan.Tests
         public void Initialize_WhenCalledMultipleTimesConcurrently_ExecutesOnce()
         {
             var executionCount = 0;
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMinutes(1))
                 .Build();
@@ -40,7 +39,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void Value_IfCalledWhenNotInitialized_WillInitializeValue()
         {
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromMinutes(1))
                 .Build();
@@ -59,7 +58,7 @@ namespace CacheMeIfYouCan.Tests
             
             var countdown = new CountdownEvent(5);
             
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
@@ -78,7 +77,10 @@ namespace CacheMeIfYouCan.Tests
             {
                 var now = DateTime.UtcNow;
                 values.Add(now);
-                countdown.Signal();
+                
+                if (!countdown.IsSet)
+                    countdown.Signal();
+                
                 return now;
             }
         }
@@ -88,7 +90,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var count = 0;
             
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
                 .Build();
@@ -116,7 +118,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task Status_UpdatedCorrectly()
         {
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMinutes(1))
                 .Build();
@@ -146,7 +148,7 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnceDisposed_RefreshValueFuncStopsBeingCalled()
         {
             var executionCount = 0;
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
                 .Build();
@@ -176,7 +178,7 @@ namespace CacheMeIfYouCan.Tests
         public async Task Version_UpdatedEachTimeValueIsRefreshed()
         {
             var executionCount = 0;
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
                 .Build();
@@ -201,7 +203,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void OnceDisposed_ThrowsObjectDisposedExceptionIfAccessed()
         {
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
                 .Build();
@@ -221,7 +223,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void InitializeAsync_IfAlreadyInitialized_ReturnsCompletedTask()
         {
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
                 .Build();
@@ -237,7 +239,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var isFirstAttempt = true;
             
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
                 .WithRefreshValueFuncTimeout(TimeSpan.FromMilliseconds(100))
@@ -269,7 +271,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var signal = new ManualResetEventSlim();
             
-            var cachedObject = CachedObjectFactory
+            using var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(1))
                 .Build();
@@ -292,8 +294,6 @@ namespace CacheMeIfYouCan.Tests
                 {
                     if (!signal.IsSet)
                         signal.Set();
-                    
-                    throw;
                 }
                 
                 return DateTime.UtcNow;
@@ -309,7 +309,7 @@ namespace CacheMeIfYouCan.Tests
             var lastRefresh = DateTime.MinValue;
             var averageRefreshInterval = TimeSpan.FromSeconds(1);
 
-            var cachedObject = CachedObjectFactory.ConfigureFor(() =>
+            using var cachedObject = CachedObjectFactory.ConfigureFor(() =>
                 {
                     var now = DateTime.UtcNow;
 
