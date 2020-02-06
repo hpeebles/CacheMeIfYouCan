@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "src\Cach
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "helpers\CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "sandbox\CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "src\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{EB0E7F39-18FD-46F3-800B-EC98C38055A7}"
 EndProject
