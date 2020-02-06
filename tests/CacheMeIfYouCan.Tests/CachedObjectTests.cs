@@ -290,7 +290,9 @@ namespace CacheMeIfYouCan.Tests
                 }
                 catch (TaskCanceledException)
                 {
-                    signal.Set();
+                    if (!signal.IsSet)
+                        signal.Set();
+                    
                     throw;
                 }
                 
