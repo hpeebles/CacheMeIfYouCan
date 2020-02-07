@@ -453,5 +453,24 @@ namespace CacheMeIfYouCan.Tests
                     countdown.Signal();
             }
         }
+
+        [Fact]
+        public void WhenDisposed_InnerValueIsAlsoDisposed()
+        {
+            var disposable = new DisposableClass();
+
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(() => disposable)
+                .WithRefreshInterval(TimeSpan.FromSeconds(1))
+                .Build();
+
+            cachedObject.Initialize();
+
+            disposable.IsDisposed.Should().BeFalse();
+            
+            cachedObject.Dispose();
+
+            disposable.IsDisposed.Should().BeTrue();
+        }
     }
 }

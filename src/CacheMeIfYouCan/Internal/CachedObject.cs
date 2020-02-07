@@ -150,6 +150,7 @@ namespace CacheMeIfYouCan.Internal
 
         public void Dispose()
         {
+            T finalValue;
             lock (_updateStateLock)
             {
                 if (_state == Disposed)
@@ -166,7 +167,13 @@ namespace CacheMeIfYouCan.Internal
                 initializationTcs?.TrySetException(GetObjectDisposedException());
 
                 _refreshTimer.Dispose();
+
+                finalValue = _value;
+                _value = default;
             }
+            
+            if (finalValue is IDisposable disposable)
+                disposable.Dispose();
         }
 
         private async Task RefreshValue()
