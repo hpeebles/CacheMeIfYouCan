@@ -385,7 +385,7 @@ namespace CacheMeIfYouCan.Tests
                 else
                     e.PreviousValue.Should().Be(events[index - 1].NewValue);
                 
-                e.Duration.Should().BeCloseTo(TimeSpan.FromMilliseconds(100));
+                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
                 e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(e.PreviousValue);
                 e.Version.Should().Be(index + 1);
             }
@@ -442,7 +442,7 @@ namespace CacheMeIfYouCan.Tests
                 var e = events[index];
                 e.Exception.Message.Should().Be("error!");
                 e.CurrentValue.Should().Be(firstValue);
-                e.Duration.Should().BeCloseTo(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(50));
+                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
                 e.Version.Should().Be(1);
             }
             
