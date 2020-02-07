@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -10,6 +11,8 @@ namespace CacheMeIfYouCan.Internal
         private TimeSpan? _refreshInterval;
         private Func<TimeSpan> _refreshIntervalFactory;
         private TimeSpan? _refreshValueFuncTimeout;
+        private Action<CachedObjectValueRefreshedEvent<T>> _onValueRefreshedAction;
+        private Action<CachedObjectValueRefreshExceptionEvent<T>> _onValueRefreshExceptionAction;
 
         internal CachedObjectConfigurationManager(Func<CancellationToken, Task<T>> getValueFunc)
         {
@@ -40,6 +43,18 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
+        public ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action)
+        {
+            _onValueRefreshedAction += action;
+            return this;
+        }
+        
+        public ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action)
+        {
+            _onValueRefreshExceptionAction += action;
+            return this;
+        }
+        
         public ICachedObject<T> Build()
         {
             var refreshIntervalFactory = _refreshIntervalFactory;
@@ -52,10 +67,18 @@ namespace CacheMeIfYouCan.Internal
             if (refreshIntervalFactory is null)
                 throw new Exception("No refresh interval has been configured");
             
-            return new CachedObject<T>(
+            var cachedObject = new CachedObject<T>(
                 _getValueFunc,
                 refreshIntervalFactory,
                 _refreshValueFuncTimeout);
+
+            if (!(_onValueRefreshedAction is null))
+                cachedObject.OnValueRefreshed += (_, e) => _onValueRefreshedAction(e);
+
+            if (!(_onValueRefreshExceptionAction is null))
+                cachedObject.OnValueRefreshException += (_, e) => _onValueRefreshExceptionAction(e);
+
+            return cachedObject;
         }
 
         ICachedObjectConfigurationManager<T> ICachedObjectConfigurationManager_WithRefreshInterval<T>.WithJitter(double jitterPercentage)

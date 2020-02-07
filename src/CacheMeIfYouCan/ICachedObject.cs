@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan
 {
-    public interface ICachedObject<out T> : IDisposable
+    public interface ICachedObject<T> : IDisposable
     {
         T Value { get; }
         
@@ -15,5 +15,9 @@ namespace CacheMeIfYouCan
         void Initialize(CancellationToken cancellationToken = default);
 
         Task InitializeAsync(CancellationToken cancellationToken = default);
+
+        event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
+        
+        event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;
     }
 }

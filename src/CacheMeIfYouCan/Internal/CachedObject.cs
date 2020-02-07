@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace CacheMeIfYouCan.Internal
         private TaskCompletionSource<bool> _initializationTaskCompletionSource;
         private T _value;
         private int _state;
+        private DateTime _dateOfPreviousSuccessfulRefresh;
         private Timer _refreshTimer;
         private long _version;
         private const int PendingInitialization = (int)CachedObjectState.PendingInitialization;
@@ -51,9 +53,10 @@ namespace CacheMeIfYouCan.Internal
         }
 
         public CachedObjectState State => (CachedObjectState)_state;
-
         public long Version => _version;
-        
+        public event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
+        public event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;
+
         public void Initialize(CancellationToken cancellationToken = default)
         {
             Task.Run(() => InitializeAsync(cancellationToken)).GetAwaiter().GetResult();
@@ -102,11 +105,18 @@ namespace CacheMeIfYouCan.Internal
             cancellationToken = cts.Token;
             
             TimeSpan refreshInterval;
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 _value = await _getValueFunc(cancellationToken).ConfigureAwait(false);
                 refreshInterval = _refreshIntervalFactory();
                 tcs.TrySetResult(true);
+                
+                Interlocked.Increment(ref _version);
+
+                PublishValueRefreshedEvent(default, stopwatch.Elapsed);
+                
+                _dateOfPreviousSuccessfulRefresh = DateTime.UtcNow;
             }
             catch (Exception ex)
             {
@@ -118,6 +128,9 @@ namespace CacheMeIfYouCan.Internal
                 }
                 
                 tcs.TrySetException(ex);
+                
+                PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
+                
                 throw;
             }
 
@@ -128,8 +141,6 @@ namespace CacheMeIfYouCan.Internal
                 _initializationTaskCompletionSource = null;
             }
 
-            Interlocked.Increment(ref _version);
-            
             _refreshTimer = new Timer(
                 async _ => await RefreshValue().ConfigureAwait(false),
                 null,
@@ -166,12 +177,23 @@ namespace CacheMeIfYouCan.Internal
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(_isDisposedCancellationTokenSource.Token);
             if (_refreshValueFuncTimeout.HasValue)
                 cts.CancelAfter(_refreshValueFuncTimeout.Value);
-            
+
+            var stopwatch = Stopwatch.StartNew();
             try
             {
-                _value = await _getValueFunc(cts.Token).ConfigureAwait(false);
-
+                var newValue = await _getValueFunc(cts.Token).ConfigureAwait(false);
+                var oldValue = _value;
+                _value = newValue;
+                
                 Interlocked.Increment(ref _version);
+                
+                PublishValueRefreshedEvent(oldValue, stopwatch.Elapsed);
+                
+                _dateOfPreviousSuccessfulRefresh = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
             }
             finally
             {
@@ -183,6 +205,39 @@ namespace CacheMeIfYouCan.Internal
                         _refreshTimer.Change((long)nextInterval.TotalMilliseconds, -1);
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void PublishValueRefreshedEvent(T previousValue, TimeSpan duration)
+        {
+            var onValueRefreshedEvent = OnValueRefreshed;
+            if (onValueRefreshedEvent is null)
+                return;
+            
+            var message = new CachedObjectValueRefreshedEvent<T>(
+                _value,
+                previousValue,
+                duration,
+                _dateOfPreviousSuccessfulRefresh,
+                _version);
+
+            onValueRefreshedEvent(this, message);
+        }
+        
+        private void PublishValueRefreshExceptionEvent(Exception exception, TimeSpan duration)
+        {
+            var onValueRefreshExceptionEvent = OnValueRefreshException;
+            if (onValueRefreshExceptionEvent is null)
+                return;
+            
+            var message = new CachedObjectValueRefreshExceptionEvent<T>(
+                exception,
+                _value,
+                duration,
+                _dateOfPreviousSuccessfulRefresh,
+                _version);
+
+            onValueRefreshExceptionEvent(this, message);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

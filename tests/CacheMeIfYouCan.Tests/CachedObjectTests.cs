@@ -337,5 +337,121 @@ namespace CacheMeIfYouCan.Tests
                 .Should()
                 .BeTrue();
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task OnValueRefreshed_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var events = new List<CachedObjectValueRefreshedEvent<DateTime>>();
+            var countdown = new CountdownEvent(10);
+            
+            var config = CachedObjectFactory.ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    return DateTime.UtcNow;
+                })
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(20));
+
+            if (addedPreBuilding)
+                config.OnValueRefreshed(Action);
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnValueRefreshed += (_, e) => Action(e);
+            
+            await cachedObject.InitializeAsync();
+
+            var start = DateTime.UtcNow;
+            
+            countdown.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+
+            var end = DateTime.UtcNow;
+            
+            cachedObject.Dispose();
+
+            events.Should().HaveCountGreaterOrEqualTo(10);
+
+            events.First().NewValue.Should().BeCloseTo(start);
+            events.Last().NewValue.Should().BeCloseTo(end);
+            
+            for (var index = 0; index < 10; index++)
+            {
+                var e = events[index];
+
+                if (index == 0)
+                    e.PreviousValue.Should().Be(DateTime.MinValue);
+                else
+                    e.PreviousValue.Should().Be(events[index - 1].NewValue);
+                
+                e.Duration.Should().BeCloseTo(TimeSpan.FromMilliseconds(100));
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(e.PreviousValue);
+                e.Version.Should().Be(index + 1);
+            }
+            
+            void Action(CachedObjectValueRefreshedEvent<DateTime> e)
+            {
+                events.Add(e);
+                if (!countdown.IsSet)
+                    countdown.Signal();
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task OnValueRefreshException_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var events = new List<CachedObjectValueRefreshExceptionEvent<DateTime>>();
+            var countdown = new CountdownEvent(10);
+            var first = true;
+            
+            var config = CachedObjectFactory.ConfigureFor(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    
+                    if (!first)
+                        throw new Exception("error!");
+
+                    first = false;
+                    return DateTime.UtcNow;
+                })
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(20));
+
+            if (addedPreBuilding)
+                config.OnValueRefreshException(Action);
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnValueRefreshException += (_, e) => Action(e);
+            
+            await cachedObject.InitializeAsync();
+
+            var firstValue = cachedObject.Value;
+            
+            countdown.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+
+            cachedObject.Dispose();
+
+            events.Should().HaveCountGreaterOrEqualTo(10);
+
+            for (var index = 0; index < 10; index++)
+            {
+                var e = events[index];
+                e.Exception.Message.Should().Be("error!");
+                e.CurrentValue.Should().Be(firstValue);
+                e.Duration.Should().BeCloseTo(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(50));
+                e.Version.Should().Be(1);
+            }
+            
+            void Action(CachedObjectValueRefreshExceptionEvent<DateTime> e)
+            {
+                events.Add(e);
+                if (!countdown.IsSet)
+                    countdown.Signal();
+            }
+        }
     }
 }
