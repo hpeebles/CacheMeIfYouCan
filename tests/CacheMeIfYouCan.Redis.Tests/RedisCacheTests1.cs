@@ -148,6 +148,28 @@ namespace CacheMeIfYouCan.Redis.Tests
             await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* '{cache.GetType()}'.");
         }
 
+        [Theory]
+        [InlineData("x")]
+        [InlineData("000")]
+        public async Task Nulls_StoredAsChosenNullValue(string nullValue)
+        {
+            var keyPrefix = Guid.NewGuid().ToString();
+            
+            var cache = BuildRedisCache(keyPrefix: keyPrefix, nullValue: nullValue);
+
+            var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
+            var redisDb = connectionMultiplexer.GetDatabase();
+            
+            await cache.Set(1, null, TimeSpan.FromSeconds(1));
+            var (success, value) = await cache.TryGet(1);
+            success.Should().BeTrue();
+            value.Value.Should().BeNull();
+            value.TimeToLive.Should().BePositive().And.BeLessThan(TimeSpan.FromSeconds(1));
+
+            var rawValueInRedis = await redisDb.StringGetAsync(keyPrefix + "1");
+            rawValueInRedis.Should().Be(nullValue);
+        }
+
         private static RedisCache<int, TestClass> BuildRedisCache(
             bool useFireAndForget = false,
             string keyPrefix = null,
