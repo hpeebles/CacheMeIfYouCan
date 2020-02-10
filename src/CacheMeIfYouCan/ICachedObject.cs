@@ -16,6 +16,8 @@ namespace CacheMeIfYouCan
 
         Task InitializeAsync(CancellationToken cancellationToken = default);
 
+        Task RefreshValueAsync(CancellationToken cancellationToken = default);
+        
         event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
         
         event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;

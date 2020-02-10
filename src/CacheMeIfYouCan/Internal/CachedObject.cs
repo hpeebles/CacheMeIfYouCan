@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly CancellationTokenSource _isDisposedCancellationTokenSource;
         private readonly object _updateStateLock = new object();
         private TaskCompletionSource<bool> _initializationTaskCompletionSource;
+        private TaskCompletionSource<bool> _refreshValueTaskCompletionSource;
         private T _value;
         private int _state;
         private DateTime _dateOfPreviousSuccessfulRefresh;
@@ -142,10 +143,33 @@ namespace CacheMeIfYouCan.Internal
             }
 
             _refreshTimer = new Timer(
-                async _ => await RefreshValue().ConfigureAwait(false),
+                async _ => await RefreshValueSafe().ConfigureAwait(false),
                 null,
                 (long)refreshInterval.TotalMilliseconds,
                 -1);
+        }
+
+        public Task RefreshValueAsync(CancellationToken cancellationToken = default)
+        {
+            var task = RefreshValueImpl(cancellationToken);
+
+            if (!cancellationToken.CanBeCanceled)
+                return task;
+            
+            var cancellableTcs = new TaskCompletionSource<bool>();
+            task.ContinueWith(t =>
+            {
+                if (t.Status == TaskStatus.RanToCompletion)
+                    cancellableTcs.TrySetResult(true);
+                else if (t.IsCanceled)
+                    cancellableTcs.TrySetCanceled();
+                else
+                    cancellableTcs.TrySetException(t.Exception);
+            }, cancellationToken);
+            
+            cancellationToken.Register(() => cancellableTcs.TrySetCanceled());
+
+            return cancellableTcs.Task;
         }
 
         public void Dispose()
@@ -176,12 +200,46 @@ namespace CacheMeIfYouCan.Internal
                 disposable.Dispose();
         }
 
-        private async Task RefreshValue()
+        // Only called from the Timer
+        private async Task RefreshValueSafe()
+        {
+            try
+            {
+                await RefreshValueImpl().ConfigureAwait(false);
+            }
+            catch
+            { }
+        }
+
+        private async Task RefreshValueImpl(CancellationToken cancellationToken = default)
         {
             if (_state == Disposed)
-                return;
+                throw GetObjectDisposedException();
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(_isDisposedCancellationTokenSource.Token);
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            TaskCompletionSource<bool> tcs;
+            var refreshAlreadyInProgress = false;
+            lock (_updateStateLock)
+            {
+                if (!(_refreshValueTaskCompletionSource is null))
+                {
+                    tcs = _refreshValueTaskCompletionSource;
+                    refreshAlreadyInProgress = true;
+                }
+                else
+                {
+                    tcs = _refreshValueTaskCompletionSource = new TaskCompletionSource<bool>();
+                }
+            }
+
+            if (refreshAlreadyInProgress)
+            {
+                await tcs.Task.ConfigureAwait(false);
+                return;
+            }
+            
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _isDisposedCancellationTokenSource.Token);
             if (_refreshValueFuncTimeout.HasValue)
                 cts.CancelAfter(_refreshValueFuncTimeout.Value);
 
@@ -197,10 +255,17 @@ namespace CacheMeIfYouCan.Internal
                 PublishValueRefreshedEvent(oldValue, stopwatch.Elapsed);
                 
                 _dateOfPreviousSuccessfulRefresh = DateTime.UtcNow;
+                
+                tcs.SetResult(true);
             }
             catch (Exception ex)
             {
                 PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
+                if (cts.IsCancellationRequested)
+                    tcs.SetCanceled();
+                else
+                    tcs.SetException(ex);
+                throw;
             }
             finally
             {
@@ -209,7 +274,9 @@ namespace CacheMeIfYouCan.Internal
                 lock (_updateStateLock)
                 {
                     if (_state != Disposed)
-                        _refreshTimer.Change((long)nextInterval.TotalMilliseconds, -1);
+                        _refreshTimer.Change((long) nextInterval.TotalMilliseconds, -1);
+
+                    _refreshValueTaskCompletionSource = null;
                 }
             }
         }

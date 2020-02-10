@@ -472,5 +472,110 @@ namespace CacheMeIfYouCan.Tests
 
             disposable.IsDisposed.Should().BeTrue();
         }
+
+        [Fact]
+        public async Task RefreshValueAsync_TriggersRefresh()
+        {
+            var executionCount = 0;
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(GetValue)
+                .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                .Build();
+
+            cachedObject.Initialize();
+
+            for (var i = 2; i < 10; i++)
+            {
+                await cachedObject.RefreshValueAsync().ConfigureAwait(false);
+                executionCount.Should().Be(i);
+            }
+
+            DateTime GetValue()
+            {
+                Interlocked.Increment(ref executionCount);
+                return DateTime.UtcNow;
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task RefreshTriggered_WhenRefreshAlreadyInProgress_TaskIsShared(bool manuallyTriggerFirstRefresh)
+        {
+            var executionCount = 0;
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(GetValue)
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(500))
+                .Build();
+
+            cachedObject.Initialize();
+
+            var delay = TimeSpan.FromMilliseconds(manuallyTriggerFirstRefresh ? 250 : 750);
+            
+            await Task.Delay(delay).ConfigureAwait(false);
+
+            var tasks = Enumerable
+                .Range(0, 10)
+                .Select(_ => cachedObject.RefreshValueAsync())
+                .ToList();
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+
+            executionCount.Should().Be(2);
+
+            async Task<DateTime> GetValue()
+            {
+                Interlocked.Increment(ref executionCount);
+                await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
+                return DateTime.UtcNow;
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task RefreshValueAsync_IfCancelled_CancelsTaskIfItWasManuallyTriggered(bool manuallyTriggerFirstRefresh)
+        {
+            var refreshValueFuncCancelled = false;
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(GetValue)
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(500))
+                .Build();
+
+            cachedObject.Initialize();
+
+            var delay = TimeSpan.FromMilliseconds(manuallyTriggerFirstRefresh ? 250 : 750);
+            
+            await Task.Delay(delay).ConfigureAwait(false);
+
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromMilliseconds(50));
+            
+            Func<Task> func = () => cachedObject.RefreshValueAsync(cts.Token);
+
+            await func.Should().ThrowAsync<OperationCanceledException>();
+
+            // Give the cancellation time to propagate
+            await Task.Delay(1).ConfigureAwait(false);
+            
+            refreshValueFuncCancelled.Should().Be(manuallyTriggerFirstRefresh);
+
+            async Task<DateTime> GetValue(CancellationToken cancellationToken)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    refreshValueFuncCancelled = true;
+                    throw;
+                }
+                return DateTime.UtcNow;
+            }
+        }
     }
 }
