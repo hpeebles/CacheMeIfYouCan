@@ -115,7 +115,8 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
-        public async Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(IReadOnlyCollection<TKey> keys)
+        public async Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(
+            IReadOnlyCollection<TKey> keys)
         {
             CheckDisposed();
             
@@ -130,7 +131,9 @@ namespace CacheMeIfYouCan.Redis
                 foreach (var key in keys)
                     tasks[i++] = GetSingle(key);
 
-                await Task.WhenAll(new ArraySegment<Task<(TKey, RedisValueWithExpiry)>>(tasks, 0, keys.Count)).ConfigureAwait(false);
+                await Task
+                    .WhenAll(new ArraySegment<Task<(TKey, RedisValueWithExpiry)>>(tasks, 0, keys.Count))
+                    .ConfigureAwait(false);
 
                 if (valuesFoundCount == 0)
                     return EmptyResults;
@@ -330,7 +333,9 @@ namespace CacheMeIfYouCan.Redis
                 foreach (var innerKey in innerKeys)
                     tasks[i++] = GetSingle(innerKey);
 
-                await Task.WhenAll(new ArraySegment<Task<(TInnerKey, RedisValueWithExpiry)>>(tasks, 0, innerKeys.Count)).ConfigureAwait(false);
+                await Task
+                    .WhenAll(new ArraySegment<Task<(TInnerKey, RedisValueWithExpiry)>>(tasks, 0, innerKeys.Count))
+                    .ConfigureAwait(false);
 
                 if (valuesFoundCount == 0)
                     return EmptyResults;

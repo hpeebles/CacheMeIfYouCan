@@ -504,10 +504,8 @@ namespace CacheMeIfYouCan.Tests
             }
         }
         
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task RefreshTriggered_WhenRefreshAlreadyInProgress_TaskIsShared(bool manuallyTriggerFirstRefresh)
+        [Fact]
+        public async Task RefreshValueAsync_IfRefreshAlreadyRunning_TaskWillBeQueuedSoThatRefreshAlwaysStartsAfterMethodCall()
         {
             var executionCount = 0;
             
@@ -518,56 +516,84 @@ namespace CacheMeIfYouCan.Tests
 
             cachedObject.Initialize();
 
-            var delay = TimeSpan.FromMilliseconds(manuallyTriggerFirstRefresh ? 250 : 750);
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
             
-            await Task.Delay(delay).ConfigureAwait(false);
-
             var tasks = Enumerable
                 .Range(0, 10)
-                .Select(_ => cachedObject.RefreshValueAsync())
+                .Select(_ => RunTask())
                 .ToList();
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
 
-            executionCount.Should().Be(2);
+            executionCount.Should().BeGreaterThan(5).And.BeLessThan(15);
 
-            async Task<DateTime> GetValue()
+            async Task RunTask()
             {
+                while (!cts.IsCancellationRequested)
+                {
+                    var start = DateTime.UtcNow;
+                    await cachedObject.RefreshValueAsync().ConfigureAwait(false);
+                    var value = cachedObject.Value;
+                    start.Should().BeOnOrBefore(value.Start);
+                }
+            }
+            
+            async Task<(DateTime Start, DateTime Finish)> GetValue()
+            {
+                var start = DateTime.UtcNow;
                 Interlocked.Increment(ref executionCount);
                 await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
-                return DateTime.UtcNow;
+                return (start, DateTime.UtcNow);
             }
         }
         
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task RefreshValueAsync_IfCancelled_CancelsUnderlyingTaskIfItWasManuallyTriggered(bool manuallyTriggerFirstRefresh)
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(9)]
+        [InlineData(10)]
+        public async Task RefreshValueAsync_IfCancelled_CancelsUnderlyingFuncOnlyIfEveryWaitingTaskIsCancelled(int numberToCancel)
         {
             var refreshValueFuncCancelled = false;
             
             var cachedObject = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(500))
+                .WithRefreshInterval(TimeSpan.FromMinutes(1))
                 .Build();
 
             cachedObject.Initialize();
 
-            var delay = TimeSpan.FromMilliseconds(manuallyTriggerFirstRefresh ? 250 : 750);
+            var firstRefreshTask = cachedObject.RefreshValueAsync();
             
-            await Task.Delay(delay).ConfigureAwait(false);
+            var ctsList = Enumerable
+                .Range(0, 10)
+                .Select(_ => new CancellationTokenSource())
+                .ToArray();
 
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(50));
+            var queuedRefreshTasks = Enumerable
+                .Range(0, 10)
+                .Select(i => cachedObject.RefreshValueAsync(ctsList[i].Token))
+                .ToArray();
+
+            await firstRefreshTask.ConfigureAwait(false);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
             
-            Func<Task> func = () => cachedObject.RefreshValueAsync(cts.Token);
+            for (var i = 0; i < numberToCancel; i++)
+                ctsList[i].Cancel();
 
-            await func.Should().ThrowAsync<OperationCanceledException>();
+            try
+            {
+                await Task.WhenAll(queuedRefreshTasks).ConfigureAwait(false);
+            }
+            catch
+            { }
 
-            // Give the cancellation time to propagate
-            await Task.Delay(1).ConfigureAwait(false);
-            
-            refreshValueFuncCancelled.Should().Be(manuallyTriggerFirstRefresh);
+            for (var i = 0; i < 10; i++)
+                queuedRefreshTasks[i].Status.Should().Be(i < numberToCancel ? TaskStatus.Canceled : TaskStatus.RanToCompletion);
+
+            refreshValueFuncCancelled.Should().Be(numberToCancel == 10);
 
             async Task<DateTime> GetValue(CancellationToken cancellationToken)
             {
