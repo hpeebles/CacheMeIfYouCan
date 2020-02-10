@@ -473,8 +473,10 @@ namespace CacheMeIfYouCan.Tests
             disposable.IsDisposed.Should().BeTrue();
         }
 
-        [Fact]
-        public async Task RefreshValueAsync_TriggersRefresh()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task RefreshValueAsync_TriggersRefresh(bool async)
         {
             var executionCount = 0;
             
@@ -487,7 +489,11 @@ namespace CacheMeIfYouCan.Tests
 
             for (var i = 2; i < 10; i++)
             {
-                await cachedObject.RefreshValueAsync().ConfigureAwait(false);
+                if (async)
+                    await cachedObject.RefreshValueAsync().ConfigureAwait(false);
+                else
+                    cachedObject.RefreshValue();
+                
                 executionCount.Should().Be(i);
             }
 
@@ -536,7 +542,7 @@ namespace CacheMeIfYouCan.Tests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task RefreshValueAsync_IfCancelled_CancelsTaskIfItWasManuallyTriggered(bool manuallyTriggerFirstRefresh)
+        public async Task RefreshValueAsync_IfCancelled_CancelsUnderlyingTaskIfItWasManuallyTriggered(bool manuallyTriggerFirstRefresh)
         {
             var refreshValueFuncCancelled = false;
             

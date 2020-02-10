@@ -149,6 +149,11 @@ namespace CacheMeIfYouCan.Internal
                 -1);
         }
 
+        public void RefreshValue(CancellationToken cancellationToken = default)
+        {
+            Task.Run(() => RefreshValueAsync(cancellationToken), cancellationToken).GetAwaiter().GetResult();
+        }
+
         public Task RefreshValueAsync(CancellationToken cancellationToken = default)
         {
             var task = RefreshValueImpl(cancellationToken);
