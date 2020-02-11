@@ -573,7 +573,7 @@ namespace CacheMeIfYouCan.Tests
 
             var queuedRefreshTasks = Enumerable
                 .Range(0, 10)
-                .Select(i => cachedObject.RefreshValueAsync(ctsList[i].Token))
+                .Select(i => cachedObject.RefreshValueAsync(cancellationToken: ctsList[i].Token))
                 .ToArray();
 
             await firstRefreshTask.ConfigureAwait(false);
@@ -606,6 +606,59 @@ namespace CacheMeIfYouCan.Tests
                     refreshValueFuncCancelled = true;
                     throw;
                 }
+                return DateTime.UtcNow;
+            }
+        }
+
+        [Theory]
+        [InlineData(0, 2, 3, 4, 5)]
+        [InlineData(150, 2, 2, 3, 4)]
+        [InlineData(300, 1, 2, 2, 3)]
+        public async Task RefreshValueAsync_WithSkipIfPreviousRefreshStartedWithinTimeFrameSet_SkipsWhenWithinTimeFrame(
+            int timeFrameMs, int expected1, int expected2, int expected3, int expected4)
+        {
+            var timeFrame = TimeSpan.FromMilliseconds(timeFrameMs);
+            
+            var executionStartCount = 0;
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(GetValue)
+                .WithRefreshInterval(TimeSpan.FromMinutes(1))
+                .Build();
+
+            cachedObject.Initialize();
+
+            var task1 = cachedObject.RefreshValueAsync(timeFrame);
+
+            await Task.Delay(10).ConfigureAwait(false);
+            
+            executionStartCount.Should().Be(expected1);
+
+            await Task.Delay(100).ConfigureAwait(false);
+
+            var task2 = cachedObject.RefreshValueAsync(timeFrame);
+
+            await Task.Delay(150).ConfigureAwait(false);
+
+            executionStartCount.Should().Be(expected2);
+            
+            var task3 = cachedObject.RefreshValueAsync(timeFrame);
+            var task4 = cachedObject.RefreshValueAsync(timeFrame);
+
+            await Task.Delay(250).ConfigureAwait(false);
+
+            executionStartCount.Should().Be(expected3);
+            
+            var task5 = cachedObject.RefreshValueAsync(timeFrame);
+            
+            await Task.WhenAll(task1, task2, task3, task4, task5).ConfigureAwait(false);
+            
+            executionStartCount.Should().Be(expected4);
+            
+            async Task<DateTime> GetValue()
+            {
+                Interlocked.Increment(ref executionStartCount);
+                await Task.Delay(TimeSpan.FromMilliseconds(200)).ConfigureAwait(false);
                 return DateTime.UtcNow;
             }
         }

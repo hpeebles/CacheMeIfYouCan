@@ -19,7 +19,8 @@ namespace CacheMeIfYouCan.Internal
         private CachedObjectRefreshHandler _queuedRefreshHandler;
         private T _value;
         private volatile int _state;
-        private DateTime _dateOfPreviousSuccessfulRefresh;
+        private DateTime _datePreviousSuccessfulRefreshStarted;
+        private DateTime _datePreviousSuccessfulRefreshFinished;
         private Timer _refreshTimer;
         private long _version;
         private const int PendingInitialization = (int)CachedObjectState.PendingInitialization;
@@ -100,7 +101,9 @@ namespace CacheMeIfYouCan.Internal
                 return;
             }
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _isDisposedCancellationTokenSource.Token);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                _isDisposedCancellationTokenSource.Token);
             
             if (_refreshValueFuncTimeout.HasValue)
                 cts.CancelAfter(_refreshValueFuncTimeout.Value);
@@ -108,6 +111,7 @@ namespace CacheMeIfYouCan.Internal
             cancellationToken = cts.Token;
             
             TimeSpan refreshInterval;
+            var start = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
             try
             {
@@ -118,8 +122,9 @@ namespace CacheMeIfYouCan.Internal
                 Interlocked.Increment(ref _version);
 
                 PublishValueRefreshedEvent(default, stopwatch.Elapsed);
-                
-                _dateOfPreviousSuccessfulRefresh = DateTime.UtcNow;
+
+                _datePreviousSuccessfulRefreshStarted = start;
+                _datePreviousSuccessfulRefreshFinished = DateTime.UtcNow;
             }
             catch (Exception ex)
             {
@@ -151,14 +156,20 @@ namespace CacheMeIfYouCan.Internal
                 -1);
         }
 
-        public void RefreshValue(CancellationToken cancellationToken = default)
+        public void RefreshValue(
+            TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
+            CancellationToken cancellationToken = default)
         {
-            Task.Run(() => RefreshValueAsync(cancellationToken), cancellationToken).GetAwaiter().GetResult();
+            Task.Run(() => RefreshValueAsync(
+                skipIfPreviousRefreshStartedWithinTimeFrame,
+                cancellationToken), cancellationToken).GetAwaiter().GetResult();
         }
 
-        public Task RefreshValueAsync(CancellationToken cancellationToken = default)
+        public Task RefreshValueAsync(
+            TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
+            CancellationToken cancellationToken = default)
         {
-            var task = RefreshValueImpl(cancellationToken);
+            var task = RefreshValueImpl(skipIfPreviousRefreshStartedWithinTimeFrame, cancellationToken);
 
             if (!cancellationToken.CanBeCanceled)
                 return task;
@@ -226,12 +237,21 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private async Task RefreshValueImpl(CancellationToken cancellationToken = default)
+        private async Task RefreshValueImpl(
+            TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
+            CancellationToken cancellationToken = default)
         {
             if (_state == Disposed)
                 throw GetObjectDisposedException();
 
             cancellationToken.ThrowIfCancellationRequested();
+
+            var skipIfPreviousRefreshStartedSince = skipIfPreviousRefreshStartedWithinTimeFrame > TimeSpan.Zero
+                ? (DateTime?)DateTime.UtcNow - skipIfPreviousRefreshStartedWithinTimeFrame
+                : null;
+
+            if (_datePreviousSuccessfulRefreshStarted > skipIfPreviousRefreshStartedSince)
+                return;
 
             var tcs = new TaskCompletionSource<bool>();
 
@@ -260,7 +280,7 @@ namespace CacheMeIfYouCan.Internal
                     if (_queuedRefreshHandler is null)
                         _queuedRefreshHandler = new CachedObjectRefreshHandler(this);
                     
-                    _queuedRefreshHandler.AddWaiter(tcs);
+                    _queuedRefreshHandler.AddWaiter(tcs, skipIfPreviousRefreshStartedSince);
                     return _queuedRefreshHandler;
                 }
             }
@@ -277,7 +297,7 @@ namespace CacheMeIfYouCan.Internal
                 _value,
                 previousValue,
                 duration,
-                _dateOfPreviousSuccessfulRefresh,
+                _datePreviousSuccessfulRefreshFinished,
                 _version);
 
             onValueRefreshedEvent(this, message);
@@ -293,7 +313,7 @@ namespace CacheMeIfYouCan.Internal
                 exception,
                 _value,
                 duration,
-                _dateOfPreviousSuccessfulRefresh,
+                _datePreviousSuccessfulRefreshFinished,
                 _version);
 
             onValueRefreshExceptionEvent(this, message);
@@ -316,21 +336,23 @@ namespace CacheMeIfYouCan.Internal
         {
             private readonly CachedObject<T> _parent;
             private readonly List<TaskCompletionSource<bool>> _tcsList;
+            private readonly List<(DateTime SkipIfStartedSince, TaskCompletionSource<bool> Tcs)> _skippableTcsList; 
             private readonly CancellationTokenSource _cts;
             private readonly IDisposable _cancellationRegistration;
             private readonly object _lock = new object();
             private State _state;
-            private int _cancellationCount;
+            private int _waiterCount;
 
             public CachedObjectRefreshHandler(CachedObject<T> parent)
             {
                 _parent = parent;
                 _tcsList = new List<TaskCompletionSource<bool>>();
+                _skippableTcsList = new List<(DateTime, TaskCompletionSource<bool>)>();
                 _cts = new CancellationTokenSource();
                 _cancellationRegistration = _parent._isDisposedCancellationTokenSource.Token.Register(() => _cts.Cancel());
             }
 
-            public bool AddWaiter(TaskCompletionSource<bool> tcs)
+            public bool AddWaiter(TaskCompletionSource<bool> tcs, DateTime? skipIfPreviousRefreshStartedSince = null)
             {
                 lock (_lock)
                 {
@@ -338,15 +360,20 @@ namespace CacheMeIfYouCan.Internal
                         return false;
 
                     _tcsList.Add(tcs);
+                    _waiterCount++;
+                    
+                    if (skipIfPreviousRefreshStartedSince.HasValue)
+                        _skippableTcsList.Add((skipIfPreviousRefreshStartedSince.Value, tcs));
+                    
                     return true;
                 }
             }
             
             public void MarkCancellation()
             {
-                var cancellationCount = Interlocked.Increment(ref _cancellationCount);
+                var waiterCount = Interlocked.Decrement(ref _waiterCount);
 
-                if (cancellationCount != _tcsList.Count)
+                if (waiterCount > 0)
                     return;
                 
                 lock (_lock)
@@ -372,7 +399,22 @@ namespace CacheMeIfYouCan.Internal
 
                     _state = State.Running;
                 }
-                
+
+                foreach (var (skipIfStartedSince, tcs) in _skippableTcsList)
+                {
+                    if (_parent._datePreviousSuccessfulRefreshStarted < skipIfStartedSince)
+                        continue;
+                    
+                    tcs.TrySetResult(true);
+                    _waiterCount--;
+                }
+
+                if (_waiterCount == 0)
+                {
+                    this.Dispose();
+                    return;
+                }
+
                 Task.Run(RunAsync);
             }
 
@@ -383,11 +425,19 @@ namespace CacheMeIfYouCan.Internal
                     _state = State.Disposed;
                     _cancellationRegistration.Dispose();
                     _cts.Dispose();
+                    
+                    lock (_parent._lock)
+                    {
+                        _parent._currentRefreshHandler = _parent._queuedRefreshHandler;
+                        _parent._queuedRefreshHandler = null;
+                        _parent._currentRefreshHandler?.Start();
+                    }
                 }
             }
 
             private async Task RunAsync()
             {
+                var start = DateTime.UtcNow;
                 var stopwatch = Stopwatch.StartNew();
                 try
                 {
@@ -401,11 +451,12 @@ namespace CacheMeIfYouCan.Internal
                 
                     _parent.PublishValueRefreshedEvent(oldValue, stopwatch.Elapsed);
                 
-                    _parent._dateOfPreviousSuccessfulRefresh = DateTime.UtcNow;
-                
                     foreach (var tcs in _tcsList)
                         tcs.TrySetResult(true);
-
+                    
+                    _parent._datePreviousSuccessfulRefreshStarted = start;
+                    _parent._datePreviousSuccessfulRefreshFinished = DateTime.UtcNow;
+                    
                     var nextInterval = _parent._refreshIntervalFactory();
                     
                     if (_parent._state != Disposed)
@@ -428,14 +479,6 @@ namespace CacheMeIfYouCan.Internal
                 finally
                 {
                     this.Dispose();
-                    
-                    lock (_parent._lock)
-                    {
-                        _parent._currentRefreshHandler = _parent._queuedRefreshHandler;
-                        _parent._queuedRefreshHandler = null;
-
-                        _parent._currentRefreshHandler?.Start();
-                    }
                 }
             }
 
