@@ -269,18 +269,18 @@ namespace CacheMeIfYouCan.Internal
                     if (_currentRefreshHandler is null)
                     {
                         var handler = _currentRefreshHandler = new CachedObjectRefreshHandler(this);
-                        handler.AddWaiter(tcs);
-                        handler.Start();
+                        handler.AddWaiter_WithinParentLock(tcs);
+                        handler.Start_WithinParentLock();
                         return handler;
                     }
 
-                    if (_currentRefreshHandler.AddWaiter(tcs))
+                    if (_currentRefreshHandler.AddWaiter_WithinParentLock(tcs))
                         return _currentRefreshHandler;
 
                     if (_queuedRefreshHandler is null)
                         _queuedRefreshHandler = new CachedObjectRefreshHandler(this);
                     
-                    _queuedRefreshHandler.AddWaiter(tcs, skipIfPreviousRefreshStartedSince);
+                    _queuedRefreshHandler.AddWaiter_WithinParentLock(tcs, skipIfPreviousRefreshStartedSince);
                     return _queuedRefreshHandler;
                 }
             }
@@ -339,7 +339,6 @@ namespace CacheMeIfYouCan.Internal
             private readonly List<(DateTime SkipIfStartedSince, TaskCompletionSource<bool> Tcs)> _skippableTcsList; 
             private readonly CancellationTokenSource _cts;
             private readonly IDisposable _cancellationRegistration;
-            private readonly object _lock = new object();
             private State _state;
             private int _waiterCount;
 
@@ -352,21 +351,18 @@ namespace CacheMeIfYouCan.Internal
                 _cancellationRegistration = _parent._isDisposedCancellationTokenSource.Token.Register(() => _cts.Cancel());
             }
 
-            public bool AddWaiter(TaskCompletionSource<bool> tcs, DateTime? skipIfPreviousRefreshStartedSince = null)
+            public bool AddWaiter_WithinParentLock(TaskCompletionSource<bool> tcs, DateTime? skipIfPreviousRefreshStartedSince = null)
             {
-                lock (_lock)
-                {
-                    if (_state != State.Queued)
-                        return false;
+                if (_state != State.Queued)
+                    return false;
 
-                    _tcsList.Add(tcs);
-                    _waiterCount++;
-                    
-                    if (skipIfPreviousRefreshStartedSince.HasValue)
-                        _skippableTcsList.Add((skipIfPreviousRefreshStartedSince.Value, tcs));
-                    
-                    return true;
-                }
+                _tcsList.Add(tcs);
+                _waiterCount++;
+                
+                if (skipIfPreviousRefreshStartedSince.HasValue)
+                    _skippableTcsList.Add((skipIfPreviousRefreshStartedSince.Value, tcs));
+                
+                return true;
             }
             
             public void MarkCancellation()
@@ -376,7 +372,7 @@ namespace CacheMeIfYouCan.Internal
                 if (waiterCount > 0)
                     return;
                 
-                lock (_lock)
+                lock (_parent._lock)
                 {
                     if (_state != State.Running)
                         return;
@@ -385,20 +381,17 @@ namespace CacheMeIfYouCan.Internal
                 }
             }
 
-            public void Start()
+            public void Start_WithinParentLock()
             {
-                lock (_lock)
-                {
-                    if (_state == State.Disposed)
-                        throw new ObjectDisposedException(this.GetType().ToString());
-                    
-                    _parent.ThrowIfDisposed();
-                    
-                    if (_parent._refreshValueFuncTimeout.HasValue)
-                        _cts.CancelAfter(_parent._refreshValueFuncTimeout.Value);
+                if (_state == State.Disposed)
+                    throw new ObjectDisposedException(this.GetType().ToString());
+                
+                _parent.ThrowIfDisposed();
+                
+                if (_parent._refreshValueFuncTimeout.HasValue)
+                    _cts.CancelAfter(_parent._refreshValueFuncTimeout.Value);
 
-                    _state = State.Running;
-                }
+                _state = State.Running;
 
                 foreach (var (skipIfStartedSince, tcs) in _skippableTcsList)
                 {
@@ -406,13 +399,12 @@ namespace CacheMeIfYouCan.Internal
                         continue;
                     
                     tcs.TrySetResult(true);
-                    _waiterCount--;
-                }
 
-                if (_waiterCount == 0)
-                {
-                    this.Dispose();
-                    return;
+                    if (Interlocked.Decrement(ref _waiterCount) == 0)
+                    {
+                        this.Dispose_WithinParentLock();
+                        return;
+                    }
                 }
 
                 Task.Run(RunAsync);
@@ -420,19 +412,19 @@ namespace CacheMeIfYouCan.Internal
 
             public void Dispose()
             {
-                lock (_lock)
-                {
-                    _state = State.Disposed;
-                    _cancellationRegistration.Dispose();
-                    _cts.Dispose();
+                lock (_parent._lock)
+                    Dispose_WithinParentLock();
+            }
+
+            private void Dispose_WithinParentLock()
+            {
+                _state = State.Disposed;
+                _cancellationRegistration.Dispose();
+                _cts.Dispose();
                     
-                    lock (_parent._lock)
-                    {
-                        _parent._currentRefreshHandler = _parent._queuedRefreshHandler;
-                        _parent._queuedRefreshHandler = null;
-                        _parent._currentRefreshHandler?.Start();
-                    }
-                }
+                _parent._currentRefreshHandler = _parent._queuedRefreshHandler;
+                _parent._queuedRefreshHandler = null;
+                _parent._currentRefreshHandler?.Start_WithinParentLock();
             }
 
             private async Task RunAsync()
