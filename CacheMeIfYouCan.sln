@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Polly.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.ProtoBuf", "src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj", "{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Benchmarks", "benchmarks\CacheMeIfYouCan.Benchmarks\CacheMeIfYouCan.Benchmarks.csproj", "{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
