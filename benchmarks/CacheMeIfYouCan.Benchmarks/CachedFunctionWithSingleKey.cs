@@ -16,7 +16,7 @@ namespace CacheMeIfYouCan.Benchmarks
         public CachedFunctionWithSingleKey()
         {
             var cache = new DictionaryCache<int, int>();
-            cache.Set(1, 1, TimeSpan.FromMinutes(1));
+            cache.Set(1, 1, TimeSpan.FromHours(1));
             
             _func = CachedFunctionFactory
                 .ConfigureFor<int, int>(OriginalFunc)
