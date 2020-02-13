@@ -662,5 +662,121 @@ namespace CacheMeIfYouCan.Tests
                 return DateTime.UtcNow;
             }
         }
+
+        [Fact]
+        public void WithUpdateFunc_ValueIsUpdatedCorrectly()
+        {
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(() => 1)
+                .WithUpdates<int>((current, input) => current + input)
+                .Build();
+
+            cachedObject.Value.Should().Be(1);
+
+            for (var i = 2; i < 100; i++)
+            {
+                cachedObject.UpdateValue(1);
+                cachedObject.Value.Should().Be(i);
+                cachedObject.Version.Should().Be(i);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateAsync_RefreshValueAsync_UnderlyingTasksAlwaysRunOneAtATime()
+        {
+            var concurrentExecutions = 0;
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(RefreshValue)
+                .WithUpdates<int>(UpdateValue)
+                .Build();
+
+            cachedObject.Initialize();
+
+            var tasks = Enumerable
+                .Range(0, 10)
+                .SelectMany(_ => new[] { cachedObject.UpdateValueAsync(1), cachedObject.RefreshValueAsync() })
+                .ToList();
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+             
+            async Task<int> RefreshValue()
+            {
+                if (Interlocked.Increment(ref concurrentExecutions) > 1)
+                    throw new Exception();
+                
+                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+                Interlocked.Decrement(ref concurrentExecutions);
+
+                return 0;
+            }
+
+            async Task<int> UpdateValue(int current, int input)
+            {
+                if (Interlocked.Increment(ref concurrentExecutions) > 1)
+                    throw new Exception();
+                
+                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+                Interlocked.Decrement(ref concurrentExecutions);
+
+                return current + input;
+            }
+        }
+        
+        [Fact]
+        public async Task UpdateAsync_RefreshValueAsync_RefreshesTakePriority()
+        {
+            var lockObj = new object();
+            
+            var cachedObject = CachedObjectFactory
+                .ConfigureFor(RefreshValue)
+                .WithUpdates<int>(UpdateValue)
+                .Build();
+
+            cachedObject.Initialize();
+            
+            var tasksInOrderOfCompletion = new List<(Task Task, bool IsRefresh)>();
+            
+            var updates = Enumerable.Range(0, 10).Select(_ => RunTask(cachedObject.UpdateValueAsync(1), false)).ToList();
+            var refreshes = Enumerable.Range(0, 10).Select(_ => RunTask(cachedObject.RefreshValueAsync(), true)).ToList();
+
+            await Task.WhenAll(updates.Concat(refreshes)).ConfigureAwait(false);
+
+            for (var i = 0; i < 20; i++)
+            {
+                if (i == 0)
+                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeFalse();
+                else if (i <= 10)
+                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeTrue();
+                else
+                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeFalse();
+            }
+            
+            Task RunTask(Task task, bool isRefresh)
+            {
+                task.ContinueWith(t =>
+                {
+                    lock (lockObj)
+                        tasksInOrderOfCompletion.Add((t, isRefresh));
+                });
+                return task;
+            }
+                
+            async Task<int> RefreshValue()
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+                return 0;
+            }
+
+            async Task<int> UpdateValue(int current, int input)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+
+                return current + input;
+            }
+        }
     }
 }
