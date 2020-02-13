@@ -374,18 +374,18 @@ namespace CacheMeIfYouCan.Internal
 
                             Interlocked.Increment(ref _version);
                             
-                            next.Tcs.TrySetResult(true);
-                            
                             PublishValueUpdatedEvent(previousValue, next.Input, stopwatch.Elapsed);
+                            
+                            next.Tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
                         {
+                            PublishValueUpdateExceptionEvent(ex, next.Input, stopwatch.Elapsed);
+                            
                             if (cts.Token.IsCancellationRequested)
                                 next.Tcs.TrySetCanceled();
                             else
                                 next.Tcs.TrySetException(ex);
-                            
-                            PublishValueUpdateExceptionEvent(ex, next.Input, stopwatch.Elapsed);
                         }
 
                         _refreshOrUpdateMutex.Release();
@@ -607,11 +607,11 @@ namespace CacheMeIfYouCan.Internal
                 
                     Interlocked.Increment(ref _parent._version);
                 
-                    foreach (var tcs in _tcsList)
-                        tcs.TrySetResult(true);
-                    
                     _parent.PublishValueRefreshedEvent(oldValue, stopwatch.Elapsed);
                 
+                    foreach (var tcs in _tcsList)
+                        tcs.TrySetResult(true);
+
                     _parent._datePreviousSuccessfulRefreshStarted = start;
                     _parent._datePreviousSuccessfulRefreshFinished = DateTime.UtcNow;
                     
@@ -622,7 +622,6 @@ namespace CacheMeIfYouCan.Internal
                 }
                 catch (Exception ex)
                 {
-                    _parent.PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
                     if (_cts.IsCancellationRequested)
                     {
                         foreach (var tcs in _tcsList)
@@ -633,6 +632,8 @@ namespace CacheMeIfYouCan.Internal
                         foreach (var tcs in _tcsList)
                             tcs.TrySetException(ex);
                     }
+                    
+                    _parent.PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
                 }
                 finally
                 {

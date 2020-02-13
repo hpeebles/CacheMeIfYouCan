@@ -764,18 +764,122 @@ namespace CacheMeIfYouCan.Tests
                 return task;
             }
                 
-            async Task<int> RefreshValue()
+            static async Task<int> RefreshValue()
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
 
                 return 0;
             }
 
-            async Task<int> UpdateValue(int current, int input)
+            static async Task<int> UpdateValue(int current, int input)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
 
                 return current + input;
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task OnValueUpdated_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var events = new List<CachedObjectValueUpdatedEvent<int, int>>();
+            
+            var config = CachedObjectFactory
+                .ConfigureFor(() => 1)
+                .WithUpdates<int>(async (current, input) =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    return current + input;
+                });
+
+            if (addedPreBuilding)
+                config.OnValueUpdated(events.Add);
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnValueUpdated += (_, e) => events.Add(e);
+
+            var start = DateTime.UtcNow;
+            
+            await cachedObject.InitializeAsync();
+
+            var previousValue = cachedObject.Value;
+            
+            for (var i = 0; i < 10; i++)
+            {
+                cachedObject.UpdateValue(i);
+
+                events.Should().HaveCount(i + 1);
+                
+                var e = events[i];
+                e.NewValue.Should().Be(previousValue + i);
+                e.PreviousValue.Should().Be(previousValue);
+                e.UpdateFuncInput.Should().Be(i);
+                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start);
+                e.Version.Should().Be(i + 2);
+
+                previousValue += i;
+            }
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task OnValueUpdateException_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var events = new List<CachedObjectValueUpdateExceptionEvent<int, int>>();
+            var updateIndex = 0;
+            
+            var config = CachedObjectFactory
+                .ConfigureFor(() => 1)
+                .WithUpdates<int>(async (current, input) =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    
+                    if (updateIndex++ % 2 == 1)
+                        throw new Exception("error!");
+
+                    return current + input;
+                });
+
+            if (addedPreBuilding)
+                config.OnValueUpdateException(events.Add);
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnValueUpdateException += (_, e) => events.Add(e);
+
+            var start = DateTime.UtcNow;
+            
+            cachedObject.Initialize();
+
+            var expectedValue = 1;
+            
+            Func<Task> func = () => cachedObject.UpdateValueAsync(1);
+
+            for (var i = 0; i < 10; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    await func.Should().NotThrowAsync();
+                    expectedValue++;
+                    continue;
+                }
+
+                await func.Should().ThrowAsync<Exception>();
+
+                var e = events[(i - 1) / 2];
+                e.Exception.Message.Should().Be("error!");
+                e.CurrentValue.Should().Be(expectedValue);
+                e.UpdateFuncInput.Should().Be(1);
+                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start);
+                e.Version.Should().Be(1 + ((i + 1) / 2));
             }
         }
     }
