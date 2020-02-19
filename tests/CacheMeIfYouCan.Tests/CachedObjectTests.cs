@@ -756,12 +756,11 @@ namespace CacheMeIfYouCan.Tests
             
             Task RunTask(Task task, bool isRefresh)
             {
-                task.ContinueWith(t =>
+                return task.ContinueWith(t =>
                 {
                     lock (lockObj)
                         tasksInOrderOfCompletion.Add((t, isRefresh));
                 });
-                return task;
             }
                 
             static async Task<int> RefreshValue()
