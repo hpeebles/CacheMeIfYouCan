@@ -341,6 +341,56 @@ namespace CacheMeIfYouCan.Tests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
+        public async Task OnInitialized_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var signal = new ManualResetEventSlim();
+            
+            var config = CachedObjectFactory.ConfigureFor(() => DateTime.UtcNow);
+            
+            if (addedPreBuilding)
+                config.OnInitialized(_ => signal.Set());
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnInitialized += (_, __) => signal.Set();
+
+            signal.IsSet.Should().BeFalse();
+            
+            await cachedObject.InitializeAsync();
+
+            signal.Wait(TimeSpan.FromMilliseconds(100)).Should().BeTrue();
+        }
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task OnDisposed_ActionCalledAsExpected(bool addedPreBuilding)
+        {
+            var signal = new ManualResetEventSlim();
+            
+            var config = CachedObjectFactory.ConfigureFor(() => DateTime.UtcNow);
+            
+            if (addedPreBuilding)
+                config.OnDisposed(_ => signal.Set());
+
+            var cachedObject = config.Build();
+
+            if (!addedPreBuilding)
+                cachedObject.OnDisposed += (_, __) => signal.Set();
+
+            await cachedObject.InitializeAsync();
+
+            signal.IsSet.Should().BeFalse();
+
+            cachedObject.Dispose();
+
+            signal.IsSet.Should().BeTrue();
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         public async Task OnValueRefreshed_ActionCalledAsExpected(bool addedPreBuilding)
         {
             var events = new List<CachedObjectValueRefreshedEvent<DateTime>>();

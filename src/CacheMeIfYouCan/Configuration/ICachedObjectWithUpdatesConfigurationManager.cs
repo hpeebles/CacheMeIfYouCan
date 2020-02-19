@@ -7,6 +7,8 @@ namespace CacheMeIfYouCan.Configuration
         ICachedObjectWithUpdatesConfigurationManager_WithRefreshInterval<T, TUpdateFuncInput> WithRefreshInterval(TimeSpan refreshInterval);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithRefreshIntervalFactory(Func<TimeSpan> refreshIntervalFactory);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithRefreshValueFuncTimeout(TimeSpan timeout);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnInitialized(Action<ICachedObject<T>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnDisposed(Action<ICachedObject<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(Action<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> action);

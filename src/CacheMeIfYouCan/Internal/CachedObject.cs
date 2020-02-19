@@ -79,6 +79,8 @@ namespace CacheMeIfYouCan.Internal
 
         public CachedObjectState State => (CachedObjectState)_state;
         public long Version => _version;
+        public event EventHandler OnInitialized;
+        public event EventHandler OnDisposed;
         public event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
         public event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;
         public event EventHandler<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> OnValueUpdated;
@@ -169,6 +171,8 @@ namespace CacheMeIfYouCan.Internal
                 _initializationTaskCompletionSource = null;
             }
 
+            OnInitialized?.Invoke(this, null);
+            
             if (_refreshIntervalFactory is null)
                 return;
 
@@ -264,6 +268,8 @@ namespace CacheMeIfYouCan.Internal
             
             if (finalValue is IDisposable disposable)
                 disposable.Dispose();
+            
+            OnDisposed?.Invoke(this, null);
         }
 
         // Only called from the Timer

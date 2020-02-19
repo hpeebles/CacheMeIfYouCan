@@ -40,6 +40,18 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
+        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnInitialized(Action<ICachedObject<T>> action)
+        {
+            base.OnInitialized(action);
+            return this;
+        }
+
+        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnDisposed(Action<ICachedObject<T>> action)
+        {
+            base.OnDisposed(action);
+            return this;
+        }
+
         public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action)
         {
             base.OnValueRefreshed(action);
@@ -82,6 +94,8 @@ namespace CacheMeIfYouCan.Internal
                 refreshIntervalFactory,
                 _refreshValueFuncTimeout);
 
+            AddOnInitializedAction(cachedObject);
+            AddOnDisposedAction(cachedObject);
             AddOnValueRefreshedActions(cachedObject);
             AddOnValueUpdatedActions(cachedObject);
             
