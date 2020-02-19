@@ -1,7 +1,7 @@
 name: $(majorVersion).$(minorVersion).$(Rev:r)
 
 trigger:
-- v0.2
+- master
 
 pool:
   vmImage: 'windows-latest'
