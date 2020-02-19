@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
             Expression<Func<T, Func<TKey, Task<TValue>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsync<TKey, TValue>> configurationAction)
+            Action<ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
@@ -34,7 +34,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
             Expression<Func<T, Func<TKey, TValue>>> expression,
-            Action<CachedFunctionConfigurationManagerSync<TKey, TValue>> configurationAction)
+            Action<ICachedFunctionConfigurationManagerSync_1Param_KeySelector<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
@@ -42,7 +42,7 @@ namespace CacheMeIfYouCan.Configuration
 
         public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
             Expression<Func<T, Func<TKey, CancellationToken, Task<TValue>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsyncCanx<TKey, TValue>> configurationAction)
+            Action<ICachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Configuration
         
         public CachedInterfaceConfigurationManager<T> Configure<TKey, TValue>(
             Expression<Func<T, Func<TKey, CancellationToken, TValue>>> expression,
-            Action<CachedFunctionConfigurationManagerSyncCanx<TKey, TValue>> configurationAction)
+            Action<ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TKey, TValue>> configurationAction)
         {
             AddConfigAction(expression, configurationAction);
             return this;

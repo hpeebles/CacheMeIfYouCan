@@ -1,34 +1,208 @@
-﻿using System;
+﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
-    public sealed class CachedFunctionConfigurationManagerSyncCanx<TKey, TValue>
-        : CachedFunctionConfigurationManagerBase<TKey, TValue, CachedFunctionConfigurationManagerSyncCanx<TKey, TValue>>
+    public abstract class CachedFunctionConfigurationManagerSyncCanxBase<TParams, TKey, TValue, TConfig>
+        : CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
-        private readonly Func<TKey, CancellationToken, TValue> _originalFunction;
+        private readonly Func<TParams, CancellationToken, TValue> _originalFunction;
+        private readonly Func<TParams, TKey> _cacheKeySelector;
 
-        internal CachedFunctionConfigurationManagerSyncCanx(Func<TKey, CancellationToken, TValue> originalFunction)
+        internal CachedFunctionConfigurationManagerSyncCanxBase(
+            Func<TParams, CancellationToken, TValue> originalFunction,
+            Func<TParams, TKey> cacheKeySelector)
+        {
+            _originalFunction = originalFunction;
+            _cacheKeySelector = cacheKeySelector;
+        }
+
+        private protected Func<TParams, CancellationToken, TValue> BuildInternal()
+        {
+            var cachedFunction = BuildCachedFunction(ConvertFunction(), _cacheKeySelector);
+
+            return (key, cancellationToken) => Task.Run(() => cachedFunction.Get(key, cancellationToken), cancellationToken).GetAwaiter().GetResult();
+        }
+
+        private Func<TParams, CancellationToken, Task<TValue>> ConvertFunction()
+        {
+            return (keys, cancellationToken) => Task.FromResult(_originalFunction(keys, cancellationToken));
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> :
+        CachedFunctionConfigurationManagerSyncCanxBase<TParam, TParam, TValue, ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TParam, TValue>>,
+        ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue>
+    {
+        private readonly Func<TParam, CancellationToken, TValue> _originalFunction;
+
+        internal CachedFunctionConfigurationManagerSyncCanx_1Param(
+            Func<TParam, CancellationToken, TValue> originalFunction)
+            : base(originalFunction, p => p)
         {
             _originalFunction = originalFunction;
         }
-        
-        public Func<TKey, CancellationToken, TValue> Build()
+
+        public ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
-            var cachedFunction = BuildCachedFunction(ConvertFunction());
-
-            return Get;
-
-            TValue Get(TKey key, CancellationToken cancellationToken)
-            {
-                return Task.Run(() => cachedFunction.Get(key, cancellationToken)).GetAwaiter().GetResult();
-            }
+            return new CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
-        
-        private Func<TKey, CancellationToken, Task<TValue>> ConvertFunction()
+
+        public Func<TParam, CancellationToken, TValue> Build()
         {
-            return (keys, cancellationToken) => Task.FromResult(_originalFunction(keys, cancellationToken));
+            return BuildInternal();
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_1Param(
+            Func<TParam, CancellationToken, TValue> originalFunction,
+            Func<TParam, TKey> cacheKeySelector)
+            : base(originalFunction, cacheKeySelector)
+        { }
+
+        public Func<TParam, CancellationToken, TValue> Build()
+        {
+            return BuildInternal();
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_2Params<TParam1, TParam2, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_2Params<TParam1, TParam2, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_2Params(
+            Func<TParam1, TParam2, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TParam3, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TParam3, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_3Params(
+            Func<TParam1, TParam2, TParam3, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_4Params(
+            Func<TParam1, TParam2, TParam3, TParam4, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TParam4, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_5Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_6Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_7Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue, CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_8Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, CancellationToken, TValue> originalFunction,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey> cacheKeySelector)
+            : base(
+                TupleHelper.ConvertFuncToTupleInput(originalFunction),
+                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, CancellationToken, TValue> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
         }
     }
 }

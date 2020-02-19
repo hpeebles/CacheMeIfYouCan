@@ -23,23 +23,23 @@ namespace CacheMeIfYouCan.ILTemplates
         {
             var methods = InterfaceMethodsResolver.GetAllMethods(typeof(ISampleInterface));
 
-            var singleKeyAsync0ConfigManager = new CachedFunctionConfigurationManagerAsync<string, string>(originalImpl.SingleKeyAsync);
-            var singleKeyAsync0ConfigAction = (Action<CachedFunctionConfigurationManagerAsync<string, string>>)config[methods[0]];
+            var singleKeyAsync0ConfigManager = new CachedFunctionConfigurationManagerAsync_1Param<string, string>(originalImpl.SingleKeyAsync);
+            var singleKeyAsync0ConfigAction = (Action<ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<string, string>>)config[methods[0]];
             singleKeyAsync0ConfigAction(singleKeyAsync0ConfigManager);
             _singleKeyAsync0 = singleKeyAsync0ConfigManager.Build();
 
-            var singleKeySync1ConfigManager = new CachedFunctionConfigurationManagerSync<string, string>(originalImpl.SingleKeySync);
-            var singleKeySync1ConfigAction = (Action<CachedFunctionConfigurationManagerSync<string, string>>)config[methods[1]];
+            var singleKeySync1ConfigManager = new CachedFunctionConfigurationManagerSync_1Param<string, string>(originalImpl.SingleKeySync);
+            var singleKeySync1ConfigAction = (Action<ICachedFunctionConfigurationManagerSync_1Param_KeySelector<string, string>>)config[methods[1]];
             singleKeySync1ConfigAction(singleKeySync1ConfigManager);
             _singleKeySync1 = singleKeySync1ConfigManager.Build();
             
-            var singleKeyAsyncCanx2ConfigManager = new CachedFunctionConfigurationManagerAsyncCanx<string, string>(originalImpl.SingleKeyAsyncCanx);
-            var singleKeyAsyncCanx2ConfigAction = (Action<CachedFunctionConfigurationManagerAsyncCanx<string, string>>)config[methods[2]];
+            var singleKeyAsyncCanx2ConfigManager = new CachedFunctionConfigurationManagerAsyncCanx_1Param<string, string>(originalImpl.SingleKeyAsyncCanx);
+            var singleKeyAsyncCanx2ConfigAction = (Action<ICachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<string, string>>)config[methods[2]];
             singleKeyAsyncCanx2ConfigAction(singleKeyAsyncCanx2ConfigManager);
             _singleKeyAsyncCanx2 = singleKeyAsyncCanx2ConfigManager.Build();
             
-            var singleKeySyncCanx3ConfigManager = new CachedFunctionConfigurationManagerSyncCanx<string, string>(originalImpl.SingleKeySyncCanx);
-            var singleKeySyncCanx3ConfigAction = (Action<CachedFunctionConfigurationManagerSyncCanx<string, string>>)config[methods[3]];
+            var singleKeySyncCanx3ConfigManager = new CachedFunctionConfigurationManagerSyncCanx_1Param<string, string>(originalImpl.SingleKeySyncCanx);
+            var singleKeySyncCanx3ConfigAction = (Action<ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<string, string>>)config[methods[3]];
             singleKeySyncCanx3ConfigAction(singleKeySyncCanx3ConfigManager);
             _singleKeySyncCanx3 = singleKeySyncCanx3ConfigManager.Build();
             

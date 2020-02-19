@@ -4,19 +4,22 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
-    internal sealed class CachedFunctionWithSingleKey<TKey, TValue>
+    internal sealed class CachedFunctionWithSingleKey<TParams, TKey, TValue>
     {
-        private readonly Func<TKey, CancellationToken, Task<TValue>> _originalFunction;
+        private readonly Func<TParams, CancellationToken, Task<TValue>> _originalFunction;
+        private readonly Func<TParams, TKey> _keySelector;
         private readonly Func<TKey, TimeSpan> _timeToLiveFactory;
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly ICache<TKey, TValue> _cache;
 
         public CachedFunctionWithSingleKey(
-            Func<TKey, CancellationToken, Task<TValue>> originalFunction,
+            Func<TParams, CancellationToken, Task<TValue>> originalFunction,
+            Func<TParams, TKey> keySelector,
             CachedFunctionWithSingleKeyConfiguration<TKey, TValue> config)
         {
             _originalFunction = originalFunction;
+            _keySelector = keySelector;
 
             if (config.DisableCaching)
             {
@@ -37,9 +40,11 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        public async Task<TValue> Get(TKey key, CancellationToken cancellationToken)
+        public async Task<TValue> Get(TParams parameters, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            var key = _keySelector(parameters);
             
             if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key))
             {
@@ -52,7 +57,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     return tryGetTask.Result.Value;
             }
 
-            var value = await _originalFunction(key, cancellationToken).ConfigureAwait(false);
+            var value = await _originalFunction(parameters, cancellationToken).ConfigureAwait(false);
 
             if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
             {

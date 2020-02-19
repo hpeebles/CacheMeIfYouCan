@@ -57,12 +57,12 @@ BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
 Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 .NET Core SDK=3.1.100
   [Host]     : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
-  Job-OYGEWJ : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+  Job-GBDCCG : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
 
-Force=False  
+Force=False
 
 |    Method |     Mean |    Error |    StdDev |   Median |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
 |---------- |---------:|---------:|----------:|---------:|-------:|-------:|------:|----------:|
-|  CacheHit | 126.3 ns |  0.96 ns |   0.80 ns | 126.3 ns |      - |      - |     - |         - |
-| CacheMiss | 580.4 ns | 43.70 ns | 127.48 ns | 498.2 ns | 0.0162 | 0.0038 |     - |     104 B |
+|  CacheHit | 129.6 ns |  0.89 ns |   0.83 ns | 129.7 ns |      - |      - |     - |         - |
+| CacheMiss | 555.6 ns | 40.48 ns | 118.72 ns | 482.5 ns | 0.0162 | 0.0038 |     - |     104 B |
 */

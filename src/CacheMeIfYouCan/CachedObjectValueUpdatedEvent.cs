@@ -2,12 +2,12 @@
 
 namespace CacheMeIfYouCan
 {
-    public readonly struct CachedObjectValueUpdatedEvent<T, TInput>
+    public readonly struct CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>
     {
         internal CachedObjectValueUpdatedEvent(
             T newValue,
             T previousValue,
-            TInput updateFuncInput,
+            TUpdateFuncInput updateFuncInput,
             TimeSpan duration,
             DateTime dateOfPreviousSuccessfulRefresh,
             long version)
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan
         
         public T NewValue { get; }
         public T PreviousValue { get; }
-        public TInput UpdateFuncInput { get; }
+        public TUpdateFuncInput UpdateFuncInput { get; }
         public TimeSpan Duration { get; }
         public DateTime DateOfPreviousSuccessfulRefresh { get; }
         public long Version { get; }

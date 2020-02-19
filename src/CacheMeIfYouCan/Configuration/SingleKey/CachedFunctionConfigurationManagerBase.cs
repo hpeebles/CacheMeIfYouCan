@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
@@ -6,8 +7,9 @@ using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
-    public abstract class CachedFunctionConfigurationManagerBase<TKey, TValue, TConfig>
-        where TConfig : CachedFunctionConfigurationManagerBase<TKey, TValue, TConfig>
+    public abstract class CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig> :
+        ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly CachedFunctionWithSingleKeyConfiguration<TKey, TValue> _config =
             new CachedFunctionWithSingleKeyConfiguration<TKey, TValue>();
@@ -20,25 +22,25 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         public TConfig WithTimeToLiveFactory(Func<TKey, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
         
         public TConfig WithLocalCache(ILocalCache<TKey, TValue> cache)
         {
             _config.LocalCache = cache;
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig WithDistributedCache(IDistributedCache<TKey, TValue> cache)
         {
             _config.DistributedCache = cache;
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig DisableCaching(bool disableCaching = true)
         {
             _config.DisableCaching = disableCaching;
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
         
         public TConfig SkipCacheWhen(
@@ -51,13 +53,13 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
                 _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or((key, value) => predicate(key));
 
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig SkipCacheWhen(Func<TKey, TValue, bool> predicate)
         {
             _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or(predicate);
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig SkipLocalCacheWhen(
@@ -70,13 +72,13 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
                 _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or((key, value) => predicate(key));
 
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig SkipLocalCacheWhen(Func<TKey, TValue, bool> predicate)
         {
             _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or(predicate);
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
         
         public TConfig SkipDistributedCacheWhen(
@@ -89,19 +91,25 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
                 _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or((key, value) => predicate(key));
 
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
         public TConfig SkipDistributedCacheWhen(Func<TKey, TValue, bool> predicate)
         {
             _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or(predicate);
-            return (TConfig)this;
+            return ThisAsTConfig();
         }
 
-        private protected CachedFunctionWithSingleKey<TKey, TValue> BuildCachedFunction(
-            Func<TKey, CancellationToken, Task<TValue>> originalFunction)
+        private protected CachedFunctionWithSingleKey<TParams, TKey, TValue> BuildCachedFunction(
+            Func<TParams, CancellationToken, Task<TValue>> originalFunction,
+            Func<TParams, TKey> cacheKeySelector)
         {
-            return new CachedFunctionWithSingleKey<TKey, TValue>(originalFunction, _config);
+            return new CachedFunctionWithSingleKey<TParams, TKey, TValue>(originalFunction, cacheKeySelector, _config);
+        }
+
+        private TConfig ThisAsTConfig()
+        {
+            return (TConfig)(object)this;
         }
     }
 }

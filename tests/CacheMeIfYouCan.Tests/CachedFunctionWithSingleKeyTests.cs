@@ -459,5 +459,557 @@ namespace CacheMeIfYouCan.Tests
                 return TimeSpan.FromSeconds(1);
             }
         }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_1Param_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<string, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, CancellationToken, Task<int>> originalFunction = (p, cancellationToken) => Task.FromResult(p);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector(p => p.ToString())
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, CancellationToken.None).ConfigureAwait(false)).Should().Be(1);
+                }
+                else
+                {
+                    Func<int, Task<int>> originalFunction = Task.FromResult;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector(p => p.ToString())
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1).ConfigureAwait(false)).Should().Be(1);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, CancellationToken, int> originalFunction = (p, cancellationToken) => p;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector(p => p.ToString())
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, CancellationToken.None).Should().Be(1);
+                }
+                else
+                {
+                    Func<int, int> originalFunction = p => p;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector(p => p.ToString())
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1).Should().Be(1);
+                }
+            }
+
+            cache.TryGet("1", out var value).Should().BeTrue();
+            value.Should().Be(1);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_2Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, cancellationToken) => Task.FromResult(p1 + p2);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, CancellationToken.None).ConfigureAwait(false)).Should().Be(3);
+                }
+                else
+                {
+                    Func<int, int, Task<int>> originalFunction = (p1, p2) => Task.FromResult(p1 + p2);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2).ConfigureAwait(false)).Should().Be(3);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, CancellationToken, int> originalFunction = (p1, p2, cancellationToken) => p1 + p2;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, CancellationToken.None).Should().Be(3);
+                }
+                else
+                {
+                    Func<int, int, int> originalFunction = (p1, p2) => p1 + p2;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2).Should().Be(3);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(3);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_3Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, cancellationToken) => Task.FromResult(p1 + p2 + p3);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, CancellationToken.None).ConfigureAwait(false)).Should().Be(6);
+                }
+                else
+                {
+                    Func<int, int, int, Task<int>> originalFunction = (p1, p2, p3) => Task.FromResult(p1 + p2 + p3);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3).ConfigureAwait(false)).Should().Be(6);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, cancellationToken) => p1 + p2 + p3;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, CancellationToken.None).Should().Be(6);
+                }
+                else
+                {
+                    Func<int, int, int, int> originalFunction = (p1, p2, p3) => p1 + p2 + p3;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3).Should().Be(6);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(6);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_4Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, p4, cancellationToken) => Task.FromResult(p1 + p2 + p3 + p4);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, CancellationToken.None).ConfigureAwait(false)).Should().Be(10);
+                }
+                else
+                {
+                    Func<int, int, int, int, Task<int>> originalFunction = (p1, p2, p3, p4) => Task.FromResult(p1 + p2 + p3 + p4);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4).ConfigureAwait(false)).Should().Be(10);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, p4, cancellationToken) => p1 + p2 + p3 + p4;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, CancellationToken.None).Should().Be(10);
+                }
+                else
+                {
+                    Func<int, int, int, int, int> originalFunction = (p1, p2, p3, p4) => p1 + p2 + p3 + p4;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4).Should().Be(10);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(10);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_5Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => Task.FromResult(p1 + p2 + p3 + p4 + p5);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, CancellationToken.None).ConfigureAwait(false)).Should().Be(15);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, Task<int>> originalFunction = (p1, p2, p3, p4, p5) => Task.FromResult(p1 + p2 + p3 + p4 + p5);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5).ConfigureAwait(false)).Should().Be(15);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => p1 + p2 + p3 + p4 + p5;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, CancellationToken.None).Should().Be(15);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int> originalFunction = (p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5).Should().Be(15);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(15);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_6Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, CancellationToken.None).ConfigureAwait(false)).Should().Be(21);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6).ConfigureAwait(false)).Should().Be(21);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => p1 + p2 + p3 + p4 + p5 + p6;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, CancellationToken.None).Should().Be(21);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, int> originalFunction = (p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6).Should().Be(21);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(21);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_7Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6 + p7);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7, CancellationToken.None).ConfigureAwait(false)).Should().Be(28);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, int, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6 + p7);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7).ConfigureAwait(false)).Should().Be(28);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => p1 + p2 + p3 + p4 + p5 + p6 + p7;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, CancellationToken.None).Should().Be(28);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, int, int> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7).Should().Be(28);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(28);
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task WithKeySelector_8Params_WorksAsExpected(bool isAsync, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+
+            if (isAsync)
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, int, int, CancellationToken, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7, 8, CancellationToken.None).ConfigureAwait(false)).Should().Be(36);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, int, int, Task<int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => Task.FromResult(p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7, 8).ConfigureAwait(false)).Should().Be(36);
+                }
+            }
+            else
+            {
+                if (hasCancellationToken)
+                {
+                    Func<int, int, int, int, int, int, int, int, CancellationToken, int> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, 8, CancellationToken.None).Should().Be(36);
+                }
+                else
+                {
+                    Func<int, int, int, int, int, int, int, int, int> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor(originalFunction)
+                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, 8).Should().Be(36);
+                }
+            }
+
+            cache.TryGet(1, out var value).Should().BeTrue();
+            value.Should().Be(36);
+        }
     }
 }

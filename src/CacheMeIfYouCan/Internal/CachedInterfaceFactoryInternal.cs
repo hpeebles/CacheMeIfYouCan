@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -72,6 +73,10 @@ namespace CacheMeIfYouCan.Internal
                     throw new Exception($"{interfaceType.Name}.{methodInfo.Name} has not been configured");
                 
                 var configManagerType = configAction.GetType().GenericTypeArguments[0];
+                
+                if (configManagerType.IsInterface)
+                    configManagerType = ConfigurationManagerInterfaceTypeToConcreteTypeMap.GetConcreteType(configManagerType);
+                
                 var configManagerTypeCtor = configManagerType
                     .GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Single();
