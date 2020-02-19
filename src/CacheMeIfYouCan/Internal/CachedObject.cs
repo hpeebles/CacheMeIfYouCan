@@ -138,11 +138,11 @@ namespace CacheMeIfYouCan.Internal
             try
             {
                 _value = await _getValueFunc(cancellationToken).ConfigureAwait(false);
-                tcs.TrySetResult(true);
                 
                 Interlocked.Increment(ref _version);
 
                 PublishValueRefreshedEvent(default, stopwatch.Elapsed);
+                tcs.TrySetResult(true);
 
                 _datePreviousSuccessfulRefreshStarted = start;
                 _datePreviousSuccessfulRefreshFinished = DateTime.UtcNow;
@@ -156,10 +156,9 @@ namespace CacheMeIfYouCan.Internal
                     _initializationTaskCompletionSource = null;
                 }
                 
-                tcs.TrySetException(ex);
-                
                 PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
-                
+                tcs.TrySetException(ex);
+
                 throw;
             }
 
@@ -375,7 +374,6 @@ namespace CacheMeIfYouCan.Internal
                             Interlocked.Increment(ref _version);
                             
                             PublishValueUpdatedEvent(previousValue, next.Input, stopwatch.Elapsed);
-                            
                             next.Tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
@@ -622,7 +620,11 @@ namespace CacheMeIfYouCan.Internal
                 }
                 catch (Exception ex)
                 {
-                    if (_cts.IsCancellationRequested)
+                    var wasCancelled = _cts.IsCancellationRequested;
+                    
+                    _parent.PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
+                    
+                    if (wasCancelled)
                     {
                         foreach (var tcs in _tcsList)
                             tcs.TrySetCanceled();
@@ -632,8 +634,6 @@ namespace CacheMeIfYouCan.Internal
                         foreach (var tcs in _tcsList)
                             tcs.TrySetException(ex);
                     }
-                    
-                    _parent.PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
                 }
                 finally
                 {
