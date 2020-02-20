@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CacheMeIfYouCan.Internal.CachedFunctions
+namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
 {
     internal sealed class CachedFunctionWithEnumerableKeysConfiguration<TKey, TValue> : CachedFunctionConfigurationBase<TKey, TValue>
     {

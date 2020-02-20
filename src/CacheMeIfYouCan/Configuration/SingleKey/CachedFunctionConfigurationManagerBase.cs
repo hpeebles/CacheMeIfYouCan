@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
+using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {

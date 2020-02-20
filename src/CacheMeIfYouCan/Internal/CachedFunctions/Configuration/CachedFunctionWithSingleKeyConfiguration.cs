@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan.Internal.CachedFunctions
+namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
 {
     internal sealed class CachedFunctionWithSingleKeyConfiguration<TKey, TValue> : CachedFunctionConfigurationBase<TKey, TValue>
     {

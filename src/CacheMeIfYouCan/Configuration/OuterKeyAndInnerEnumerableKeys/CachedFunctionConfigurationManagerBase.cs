@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
+using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 using CacheMeIfYouCan.Internal.RequestConverters;
 using CacheMeIfYouCan.Internal.ResponseConverters;
 

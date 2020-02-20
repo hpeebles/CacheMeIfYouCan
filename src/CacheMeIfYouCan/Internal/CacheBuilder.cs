@@ -1,5 +1,5 @@
 ﻿using System;
-using CacheMeIfYouCan.Internal.CachedFunctions;
+using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal
 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
