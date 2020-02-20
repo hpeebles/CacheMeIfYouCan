@@ -1,47 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Channels;
+using System.Threading;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class ObjectPool<T>
+    internal sealed class ObjectPool<T> where T : class
     {
         private readonly Func<T> _factory;
-        private readonly ChannelReader<T> _reader;
-        private readonly ChannelWriter<T> _writer;
+        private readonly T[] _items;
+        private T _firstItem;
 
         public ObjectPool(Func<T> factory, int capacity)
         {
-            _factory = factory;
+            if (capacity <= 0)
+                throw new ArgumentOutOfRangeException(nameof(capacity));
             
-            var channel = Channel.CreateBounded<T>(new BoundedChannelOptions(capacity));
-
-            _reader = channel.Reader;
-            _writer = channel.Writer;
+            _factory = factory;
+            _items = new T[capacity - 1];
         }
         
         public T Rent()
         {
-            return _reader.TryRead(out var item)
-                ? item
-                : _factory();
+            var item = _firstItem;
+            if (item != null && Interlocked.CompareExchange(ref _firstItem, null, item) == item)
+                return item;
+            
+            var items = _items;
+            for (var i = 0; i < items.Length; i++)
+            {
+                item = items[i];
+                if (item != null && Interlocked.CompareExchange(ref items[i], null, item) == item)
+                    return item;
+            }
+
+            item = _factory();
+
+            return item;
         }
 
         public void Return(T item)
         {
-            _writer.TryWrite(item);
+            if (_firstItem == null && Interlocked.CompareExchange(ref _firstItem, item, null) == null)
+                return;
+            
+            var items = _items;
+            for (var i = 0; i < items.Length; i++)
+            {
+                if (Interlocked.CompareExchange(ref items[i], item, null) == null)
+                    return;
+            }
         }
 
         // Only use this for tests!
         public List<T> PeekAll()
         {
-            var list = new List<T>();
-            while (_reader.TryRead(out var next))
-                list.Add(next);
-
-            foreach (var item in list)
-                _writer.TryWrite(item);
-
+            var list = new List<T> { _firstItem };
+            list.AddRange(_items);
+            list.RemoveAll(x => x is null);
             return list;
         }
     }
