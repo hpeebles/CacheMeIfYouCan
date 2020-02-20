@@ -23,5 +23,6 @@ namespace CacheMeIfYouCan
         public TimeSpan Duration { get; }
         public DateTime DateOfPreviousSuccessfulRefresh { get; }
         public long Version { get; }
+        public bool IsResultOfInitialization => Version == 1;
     }
 }

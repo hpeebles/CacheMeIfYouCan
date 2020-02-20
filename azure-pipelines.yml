@@ -10,6 +10,7 @@ variables:
   buildConfiguration: 'Release'
   pathToSolutionFile: 'CacheMeIfYouCan.sln'
   pathToMainTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
+  pathToCronTestProject: 'tests/CacheMeIfYouCan.Cron.Tests/CacheMeIfYouCan.Cron.Tests.csproj'
   pathToPollyTestProject: 'tests/CacheMeIfYouCan.Polly.Tests/CacheMeIfYouCan.Polly.Tests.csproj'
   pathToRedisTestProject: 'tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj'
   
@@ -28,6 +29,12 @@ steps:
     arguments: '$(pathToMainTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
 
 - task: DotNetCoreCLI@2
+  displayName: 'dotnet test CacheMeIfYouCan.Cron'
+  inputs:
+    command: 'test'
+    arguments: '$(pathToCronTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
+
+- task: DotNetCoreCLI@2
   displayName: 'dotnet test CacheMeIfYouCan.Polly'
   inputs:
     command: 'test'
@@ -43,7 +50,7 @@ steps:
   displayName: "dotnet pack"
   inputs:
     command: 'pack'
-    arguments: '--no-build --configuration $(buildConfiguration)'
+    arguments: '--configuration $(buildConfiguration) --no-build'
     packagesToPack: 'src/**/*.csproj'
     nobuild: true
     versioningScheme: 'byBuildNumber'
