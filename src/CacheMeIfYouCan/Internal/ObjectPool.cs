@@ -1,62 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 
 namespace CacheMeIfYouCan.Internal
 {
     internal sealed class ObjectPool<T> where T : class
     {
         private readonly Func<T> _factory;
-        private readonly T[] _items;
+        private readonly ChannelReader<T> _reader;
+        private readonly ChannelWriter<T> _writer;
         private T _firstItem;
 
         public ObjectPool(Func<T> factory, int capacity)
         {
-            if (capacity <= 0)
+            if (capacity <= 1)
                 throw new ArgumentOutOfRangeException(nameof(capacity));
             
             _factory = factory;
-            _items = new T[capacity - 1];
+            
+            var channel = Channel.CreateBounded<T>(new BoundedChannelOptions(capacity - 1));
+
+            _reader = channel.Reader;
+            _writer = channel.Writer;
         }
         
         public T Rent()
         {
-            var item = _firstItem;
-            if (item != null && Interlocked.CompareExchange(ref _firstItem, null, item) == item)
-                return item;
+            var firstItem = _firstItem;
+            if (!(firstItem is null) && Interlocked.CompareExchange(ref _firstItem, null, firstItem) == firstItem)
+                return firstItem;
             
-            var items = _items;
-            for (var i = 0; i < items.Length; i++)
-            {
-                item = items[i];
-                if (item != null && Interlocked.CompareExchange(ref items[i], null, item) == item)
-                    return item;
-            }
-
-            item = _factory();
-
-            return item;
+            return _reader.TryRead(out var item)
+                ? item
+                : _factory();
         }
 
         public void Return(T item)
         {
-            if (_firstItem == null && Interlocked.CompareExchange(ref _firstItem, item, null) == null)
+            if (_firstItem is null && Interlocked.CompareExchange(ref _firstItem, item, null) == null)
                 return;
             
-            var items = _items;
-            for (var i = 0; i < items.Length; i++)
-            {
-                if (Interlocked.CompareExchange(ref items[i], item, null) == null)
-                    return;
-            }
+            _writer.TryWrite(item);
         }
 
         // Only use this for tests!
         public List<T> PeekAll()
         {
-            var list = new List<T> { _firstItem };
-            list.AddRange(_items);
-            list.RemoveAll(x => x is null);
+            var list = new List<T>();
+
+            var firstItem = _firstItem;
+            if (!(firstItem is null))
+                list.Add(firstItem);
+            
+            while (_reader.TryRead(out var next))
+                list.Add(next);
+
+            foreach (var item in list.Skip(1))
+                _writer.TryWrite(item);
+
             return list;
         }
     }
