@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -77,16 +78,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             if (!getFromCacheTask.IsCompleted)
                 await getFromCacheTask.ConfigureAwait(false);
 
-            var fromCache = getFromCacheTask.Result;
-            
-            var resultsDictionary = fromCache is null || fromCache.Count == 0
-                ? new Dictionary<TKey, TValue>(_keyComparer)
-                : fromCache.ToDictionary(kv => kv.Key, kv => kv.Value, _keyComparer);
+            var resultsDictionary = getFromCacheTask.Result;
 
-            var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(keysCollection, resultsDictionary);
-
-            if (missingKeys is null)
+            if (resultsDictionary.Count == keysCollection.Count)
                 return resultsDictionary;
+            
+            var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(keysCollection, resultsDictionary);
 
             if (missingKeys.Count < _maxBatchSize)
             {
@@ -113,26 +110,67 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             return resultsDictionary;
 
-            ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetFromCache()
+            async ValueTask<Dictionary<TKey, TValue>> GetFromCache()
             {
-                if (_skipCacheGetPredicate is null)
-                    return _cache.GetMany(keysCollection);
-                    
-                var filteredKeys = CacheKeysFilter<TKey>.Filter(
-                    keysCollection,
-                    _skipCacheGetPredicate,
-                    out var pooledArray);
+                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keysCollection.Count);
+                Dictionary<TKey, TValue> resultsFromCache;
 
                 try
                 {
-                    return filteredKeys.Count > 0
-                        ? _cache.GetMany(filteredKeys)
-                        : new ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>>(EmptyValuesCollection);
+                    int countFoundInCache;
+                    if (_skipCacheGetPredicate is null)
+                    {
+                        var task = _cache.GetMany(keysCollection, getFromCacheResultsArray);
+
+                        if (!task.IsCompleted)
+                            await task.ConfigureAwait(false);
+
+                        countFoundInCache = task.Result;
+                    }
+                    else
+                    {
+                        var filteredKeys = CacheKeysFilter<TKey>.Filter(
+                            keysCollection,
+                            _skipCacheGetPredicate,
+                            out var pooledKeyArray);
+
+                        try
+                        {
+                            var task = filteredKeys.Count > 0
+                                ? _cache.GetMany(filteredKeys, getFromCacheResultsArray)
+                                : new ValueTask<int>(0);
+
+                            if (!task.IsCompleted)
+                                await task.ConfigureAwait(false);
+
+                            countFoundInCache = task.Result;
+                        }
+                        finally
+                        {
+                            CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+                        }
+                    }
+
+                    if (countFoundInCache == 0)
+                    {
+                        resultsFromCache = new Dictionary<TKey, TValue>(_keyComparer);
+                    }
+                    else
+                    {
+                        resultsFromCache = new Dictionary<TKey, TValue>(countFoundInCache, _keyComparer);
+                        for (var i = 0; i < countFoundInCache; i++)
+                        {
+                            var kv = getFromCacheResultsArray[i];
+                            resultsFromCache[kv.Key] = kv.Value;
+                        }
+                    }
                 }
                 finally
                 {
-                    CacheKeysFilter<TKey>.ReturnPooledArray(pooledArray);
+                    ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(getFromCacheResultsArray);
                 }
+
+                return resultsFromCache;
             }
         }
 

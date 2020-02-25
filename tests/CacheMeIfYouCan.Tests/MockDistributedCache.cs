@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Tests
             return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(IReadOnlyCollection<TKey> keys)
+        public Task<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
             
@@ -64,17 +64,24 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
             
-            var values = _innerCache
-                .GetMany(keys)
-                .ToDictionary(kv => kv.Key, kv => new ValueAndTimeToLive<TValue>(kv.Value.Item1, kv.Value.Item2 - DateTime.UtcNow));
+            var resultsArray = new KeyValuePair<TKey, (TValue, DateTime)>[keys.Count];
+            
+            var countFound = _innerCache.GetMany(keys, resultsArray);
 
-            var hits = values.Count;
-            var misses = keys.Count - values.Count;
+            for (var i = 0; i < countFound; i++)
+            {
+                var (key, (value, expiry)) = resultsArray[i];
+                var timeToLive = expiry - DateTime.UtcNow;
+                destination.Span[i] = new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>(key, new ValueAndTimeToLive<TValue>(value, timeToLive));
+            }
+            
+            var hits = countFound;
+            var misses = keys.Count - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
                 
-            return Task.FromResult<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>>(values);
+            return Task.FromResult(hits);
         }
 
         public Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -105,7 +112,10 @@ namespace CacheMeIfYouCan.Tests
         public int MissesCount;
         private bool _throwExceptionOnNextAction;
 
-        public Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
+        public Task<int> GetMany(
+            TOuterKey outerKey,
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -114,18 +124,27 @@ namespace CacheMeIfYouCan.Tests
                 _throwExceptionOnNextAction = false;
                 throw new Exception();
             }
+
+            var resultsArray = new KeyValuePair<TInnerKey, (TValue, DateTime)>[innerKeys.Count];
             
-            var values = _innerCache
-                .GetMany(outerKey, innerKeys)
-                .ToDictionary(kv => kv.Key, kv => new ValueAndTimeToLive<TValue>(kv.Value.Item1, kv.Value.Item2 - DateTime.UtcNow));
+            var countFound = _innerCache.GetMany(outerKey, innerKeys, resultsArray);
+
+            for (var i = 0; i < countFound; i++)
+            {
+                var (key, (value, expiry)) = resultsArray[i];
+                var timeToLive = expiry - DateTime.UtcNow;
+                destination.Span[i] = new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>(
+                    key,
+                    new ValueAndTimeToLive<TValue>(value, timeToLive));
+            }
             
-            var hits = values.Count;
-            var misses = innerKeys.Count - values.Count;
+            var hits = countFound;
+            var misses = innerKeys.Count - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
 
-            return Task.FromResult<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>>(values);
+            return Task.FromResult(hits);
         }
 
         public Task SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)

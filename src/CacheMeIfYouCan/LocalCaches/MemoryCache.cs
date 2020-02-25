@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Caching;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.LocalCaches
 {
@@ -34,19 +35,23 @@ namespace CacheMeIfYouCan.LocalCaches
             _memoryCache.Set(_keySerializer(key), value, DateTimeOffset.UtcNow.Add(timeToLive));
         }
 
-        public IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
-            var values = new List<KeyValuePair<TKey, TValue>>();
+            if (destination.Length < keys.Count) 
+                throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
+            var span = destination.Span;
+            
+            var countFound = 0;
             foreach (var key in keys)
             {
                 var fromCache = _memoryCache.Get(_keySerializer(key));
 
                 if (fromCache != null)
-                    values.Add(new KeyValuePair<TKey, TValue>(key, (TValue)fromCache)); 
+                    span[countFound++] = new KeyValuePair<TKey, TValue>(key, (TValue)fromCache); 
             }
 
-            return values;
+            return countFound;
         }
 
         public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -85,21 +90,25 @@ namespace CacheMeIfYouCan.LocalCaches
             _innerKeySerializer = innerKeySerializer;
         }
         
-        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
+        public int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            var outerKeyString = _outerKeySerializer(outerKey);
-            
-            var values = new List<KeyValuePair<TInnerKey, TValue>>();
+            if (destination.Length < innerKeys.Count)
+                throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
+            var outerKeyString = _outerKeySerializer(outerKey);
+
+            var span = destination.Span;
+            
+            var countFound = 0;
             foreach (var key in innerKeys)
             {
                 var fromCache = _memoryCache.Get(outerKeyString + _innerKeySerializer(key));
 
                 if (fromCache != null)
-                    values.Add(new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache)); 
+                    span[countFound++] = new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache); 
             }
 
-            return values;
+            return countFound;
         }
 
         public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
@@ -112,11 +121,11 @@ namespace CacheMeIfYouCan.LocalCaches
                 _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value, expirationDate);
         }
 
-        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 
-            foreach (var kv in values)
+            foreach (var kv in values.Span)
             {
                 var expirationDate = DateTimeOffset.UtcNow.Add(kv.Value.TimeToLive);
 

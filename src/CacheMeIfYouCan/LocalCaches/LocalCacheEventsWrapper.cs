@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.LocalCaches
         private readonly Func<TKey, TimeSpan, Exception, bool> _onTryGetException;
         private readonly Action<TKey, TValue, TimeSpan, TimeSpan> _onSetCompletedSuccessfully;
         private readonly Func<TKey, TValue, TimeSpan, TimeSpan, Exception, bool> _onSetException;
-        private readonly Action<IReadOnlyCollection<TKey>, IReadOnlyCollection<KeyValuePair<TKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
+        private readonly Action<IReadOnlyCollection<TKey>, Memory<KeyValuePair<TKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
         private readonly Func<IReadOnlyCollection<TKey>, TimeSpan, Exception, bool> _onGetManyException;
         private readonly Action<IReadOnlyCollection<KeyValuePair<TKey, TValue>>, TimeSpan, TimeSpan> _onSetManyCompletedSuccessfully;
         private readonly Func<IReadOnlyCollection<KeyValuePair<TKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> _onSetManyException;
@@ -107,20 +107,22 @@ namespace CacheMeIfYouCan.LocalCaches
             }
         }
 
-        public IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
             if (_onGetManyException is null)
             {
                 if (_onGetManyCompletedSuccessfully is null)
-                    return _innerCache.GetMany(keys);
+                    return _innerCache.GetMany(keys, destination);
 
                 var stopwatch = Stopwatch.StartNew();
 
-                var values = _innerCache.GetMany(keys);
+                var countFound = _innerCache.GetMany(keys, destination);
 
+                var values = destination.Slice(0, countFound);
+                
                 _onGetManyCompletedSuccessfully(keys, values, stopwatch.Elapsed);
 
-                return values;
+                return countFound;
             }
             else
             {
@@ -128,18 +130,20 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 try
                 {
-                    var values = _innerCache.GetMany(keys);
+                    var countFound = _innerCache.GetMany(keys, destination);
+                    
+                    var values = destination.Slice(0, countFound);
                     
                     _onGetManyCompletedSuccessfully?.Invoke(keys, values, stopwatch.Elapsed);
 
-                    return values;
+                    return countFound;
                 }
                 catch (Exception ex)
                 {
                     if (!_onGetManyException(keys, stopwatch.Elapsed, ex))
                         throw;
 
-                    return null;
+                    return 0;
                 }
             }
         }
@@ -219,12 +223,12 @@ namespace CacheMeIfYouCan.LocalCaches
     
     public sealed class LocalCacheEventsWrapper<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
     {
-        private readonly Action<TOuterKey, IReadOnlyCollection<TInnerKey>, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
+        private readonly Action<TOuterKey, IReadOnlyCollection<TInnerKey>, Memory<KeyValuePair<TInnerKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
         private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan, Exception, bool> _onGetManyException;
         private readonly Action<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan> _onSetManyCompletedSuccessfully;
         private readonly Func<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> _onSetManyException;
-        private readonly Action<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> _onSetManyWithVaryingTimesToLiveCompletedSuccessfully;
-        private readonly Func<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> _onSetManyWithVaryingTimesToLiveException;
+        private readonly Action<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> _onSetManyWithVaryingTimesToLiveCompletedSuccessfully;
+        private readonly Func<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> _onSetManyWithVaryingTimesToLiveException;
         private readonly Action<TOuterKey, TInnerKey, bool, TValue, TimeSpan> _onTryRemoveCompletedSuccessfully;
         private readonly Func<TOuterKey, TInnerKey, TimeSpan, Exception, bool> _onTryRemoveException;
         private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache;
@@ -244,22 +248,25 @@ namespace CacheMeIfYouCan.LocalCaches
             _innerCache = innerCache;
         }
 
-        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(
+        public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             if (_onGetManyException is null)
             {
                 if (_onGetManyCompletedSuccessfully is null)
-                    return _innerCache.GetMany(outerKey, innerKeys);
+                    return _innerCache.GetMany(outerKey, innerKeys, destination);
 
                 var stopwatch = Stopwatch.StartNew();
 
-                var values = _innerCache.GetMany(outerKey, innerKeys);
+                var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
+                
+                var values = destination.Slice(0, countFound);
 
                 _onGetManyCompletedSuccessfully(outerKey, innerKeys, values, stopwatch.Elapsed);
 
-                return values;
+                return countFound;
             }
             else
             {
@@ -267,18 +274,20 @@ namespace CacheMeIfYouCan.LocalCaches
 
                 try
                 {
-                    var values = _innerCache.GetMany(outerKey, innerKeys);
+                    var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
 
+                    var values = destination.Slice(0, countFound);
+                    
                     _onGetManyCompletedSuccessfully?.Invoke(outerKey, innerKeys, values, stopwatch.Elapsed);
 
-                    return values;
+                    return countFound;
                 }
                 catch (Exception ex)
                 {
                     if (!_onGetManyException(outerKey, innerKeys, stopwatch.Elapsed, ex))
                         throw;
 
-                    return null;
+                    return 0;
                 }
             }
         }
@@ -322,7 +331,7 @@ namespace CacheMeIfYouCan.LocalCaches
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             if (_onSetManyWithVaryingTimesToLiveException is null)
             {

@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, int>>, TimeSpan)>();
+            var successfulResults = new List<(int, IReadOnlyCollection<int>, Memory<KeyValuePair<int, int>>, TimeSpan)>();
             var failedResults = new List<(int, IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)
@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Tests
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().Be(1);
                 successfulResults.Last().Item2.Should().BeSameAs(innerKeys);
-                successfulResults.Last().Item3.Should().BeEquivalentTo(new KeyValuePair<int, int>(2, 3));
+                successfulResults.Last().Item3.ToArray().Should().BeEquivalentTo(new KeyValuePair<int, int>(2, 3));
                 successfulResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
@@ -179,8 +179,8 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
-            var failedResults = new List<(int, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan, Exception)>();
+            var successfulResults = new List<(int, Memory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
+            var failedResults = new List<(int, Memory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan, Exception)>();
             
             if (flag1)
             {
@@ -195,7 +195,7 @@ namespace CacheMeIfYouCan.Tests
                 config.OnSetManyWithVaryingTimesToLiveException = (outerKey, valuesAndTimesToLive, duration, exception) =>
                 {
                     failedResults.Add((outerKey, valuesAndTimesToLive, duration, exception));
-                    return valuesAndTimesToLive.Any(kv => kv.Key == 6);
+                    return valuesAndTimesToLive.ToArray().Any(kv => kv.Key == 6);
                 };
             }
             
@@ -208,12 +208,15 @@ namespace CacheMeIfYouCan.Tests
                 new KeyValuePair<int, ValueAndTimeToLive<int>>(4, new ValueAndTimeToLive<int>(5, TimeSpan.FromMinutes(2)))
             };
             
-            cache.SetManyWithVaryingTimesToLive(1, valuesAndTimesToLive);
+            var valuesMemory = new Memory<KeyValuePair<int, ValueAndTimeToLive<int>>>(valuesAndTimesToLive);
+            
+            cache.SetManyWithVaryingTimesToLive(1, valuesMemory);
             if (flag1)
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().Be(1);
-                successfulResults.Last().Item2.Should().BeSameAs(valuesAndTimesToLive);
+                successfulResults.Last().Item2.Should().Be(valuesMemory);
+                successfulResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
@@ -228,7 +231,8 @@ namespace CacheMeIfYouCan.Tests
             {
                 failedResults.Should().ContainSingle();
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(valuesAndTimesToLive);
+                failedResults.Last().Item2.Should().Be(valuesMemory);
+                failedResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
@@ -245,7 +249,8 @@ namespace CacheMeIfYouCan.Tests
                 action();
                 failedResults.Should().HaveCount(2);
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(valuesAndTimesToLive);
+                failedResults.Last().Item2.Should().Be(valuesMemory);
+                failedResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else

@@ -45,11 +45,11 @@ namespace CacheMeIfYouCan.Polly
                 : _setPolicy.ExecuteAsync(() => _innerCache.Set(key, value, timeToLive));
         }
 
-        public Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(IReadOnlyCollection<TKey> keys)
+        public Task<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             return _getManyPolicy is null
-                ? _innerCache.GetMany(keys)
-                : _getManyPolicy.ExecuteAsync(() => _innerCache.GetMany(keys));
+                ? _innerCache.GetMany(keys, destination)
+                : _getManyPolicy.ExecuteAsync(() => _innerCache.GetMany(keys, destination));
         }
 
         public Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -83,13 +83,14 @@ namespace CacheMeIfYouCan.Polly
             _setManyPolicy = setManyPolicy;
         }
 
-        public Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(
+        public Task<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             return _getManyPolicy is null
-                ? _innerCache.GetMany(outerKey, innerKeys)
-                : _getManyPolicy.ExecuteAsync(() => _innerCache.GetMany(outerKey, innerKeys));
+                ? _innerCache.GetMany(outerKey, innerKeys, destination)
+                : _getManyPolicy.ExecuteAsync(() => _innerCache.GetMany(outerKey, innerKeys, destination));
         }
 
         public Task SetMany(

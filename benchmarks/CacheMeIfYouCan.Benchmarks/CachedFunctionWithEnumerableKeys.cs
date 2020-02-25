@@ -117,10 +117,10 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 
 |                            Method |        Mean |     Error |      StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
 |---------------------------------- |------------:|----------:|------------:|-------:|-------:|------:|----------:|
-|                            OneHit |    412.5 ns |   8.22 ns |     8.07 ns | 0.0892 |      - |     - |     560 B |
-|                           OneMiss |    891.3 ns |  17.15 ns |    16.04 ns | 0.1030 | 0.0257 |     - |     648 B |
-|                  OneHitAndOneMiss |  1,076.7 ns |  11.49 ns |     9.60 ns | 0.1297 | 0.0324 |     - |     816 B |
-|                    OneHundredHits | 12,235.5 ns | 156.05 ns |   145.96 ns | 0.8698 |      - |     - |    5536 B |
-|                  OneHundredMisses | 37,087.0 ns | 728.67 ns | 1,134.45 ns | 1.9531 | 0.0610 |     - |   12603 B |
-| OneHundredHitsAndOneHundredMisses | 48,958.5 ns | 960.44 ns |   851.40 ns | 2.3804 | 0.9155 |     - |   14976 B |
+|                            OneHit |    432.5 ns |   1.11 ns |     0.98 ns | 0.0739 |      - |     - |     464 B |
+|                           OneMiss |    956.2 ns |  13.06 ns |    11.58 ns | 0.1030 | 0.0248 |     - |     648 B |
+|                  OneHitAndOneMiss |  1,120.7 ns |  25.12 ns |    25.80 ns | 0.1202 | 0.0305 |     - |     760 B |
+|                    OneHundredHits | 10,158.8 ns |  71.56 ns |    63.44 ns | 0.5188 |      - |     - |    3336 B |
+|                  OneHundredMisses | 36,477.7 ns | 812.64 ns | 1,112.36 ns | 1.8311 | 0.4883 |     - |   11808 B |
+| OneHundredHitsAndOneHundredMisses | 48,382.9 ns | 953.71 ns |   979.38 ns | 2.0142 | 0.7324 |     - |   12816 B |
 */

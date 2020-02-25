@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan.Tests
             _innerCache.Set(key, value, timeToLive);
         }
 
-        public IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -62,15 +62,15 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
 
-            var values = _innerCache.GetMany(keys);
+            var countFound = _innerCache.GetMany(keys, destination);
             
-            var hits = values.Count;
-            var misses = keys.Count - values.Count;
+            var hits = countFound;
+            var misses = keys.Count - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
 
-            return values;
+            return countFound;
         }
 
         public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -114,9 +114,10 @@ namespace CacheMeIfYouCan.Tests
         public int MissesCount;
         private bool _throwExceptionOnNextAction;
 
-        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(
+        public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -126,15 +127,15 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
 
-            var values = _innerCache.GetMany(outerKey, innerKeys);
+            var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
             
-            var hits = values.Count;
-            var misses = innerKeys.Count - values.Count;
+            var hits = countFound;
+            var misses = innerKeys.Count - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
 
-            return values;
+            return countFound;
         }
 
         public void SetMany(
@@ -153,7 +154,7 @@ namespace CacheMeIfYouCan.Tests
             _innerCache.SetMany(outerKey, values, timeToLive);
         }
 
-        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             Interlocked.Increment(ref SetMany2ExecutionCount);
             

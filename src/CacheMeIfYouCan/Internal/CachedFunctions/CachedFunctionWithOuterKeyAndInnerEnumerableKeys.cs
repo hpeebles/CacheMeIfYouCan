@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -84,16 +85,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             if (!getFromCacheTask.IsCompleted)
                 await getFromCacheTask.ConfigureAwait(false);
 
-            var fromCache = getFromCacheTask.Result;
-            
-            var resultsDictionary = fromCache is null || fromCache.Count == 0
-                ? new Dictionary<TInnerKey, TValue>(_keyComparer)
-                : fromCache.ToDictionary(kv => kv.Key, kv => kv.Value, _keyComparer);
+            var resultsDictionary = getFromCacheTask.Result;
+
+            if (resultsDictionary.Count == innerKeysCollection.Count)
+                return resultsDictionary;
 
             var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
-
-            if (missingKeys is null)
-                return resultsDictionary;
 
             if (missingKeys.Count < _maxBatchSize)
             {
@@ -114,30 +111,71 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             return resultsDictionary;
             
-            ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>> GetFromCache()
+            async ValueTask<Dictionary<TInnerKey, TValue>> GetFromCache()
             {
                 if (!(_skipCacheGetPredicateOuterKeyOnly is null) && _skipCacheGetPredicateOuterKeyOnly(outerKey))
-                    return new ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>>(EmptyValuesCollection);
+                    return new Dictionary<TInnerKey, TValue>(_keyComparer);
                 
-                if (_skipCacheGetPredicate is null)
-                    return _cache.GetMany(outerKey, innerKeysCollection);
-                    
-                var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
-                    outerKey,
-                    innerKeysCollection,
-                    _skipCacheGetPredicate,
-                    out var pooledArray);
+                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeysCollection.Count);
+                Dictionary<TInnerKey, TValue> resultsFromCache;
 
                 try
                 {
-                    return filteredKeys.Count > 0
-                        ? _cache.GetMany(outerKey, filteredKeys)
-                        : new ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>>(EmptyValuesCollection);
+                    int countFoundInCache;
+                    if (_skipCacheGetPredicate is null)
+                    {
+                        var task = _cache.GetMany(outerKey, innerKeysCollection, getFromCacheResultsArray);
+
+                        if (!task.IsCompleted)
+                            await task.ConfigureAwait(false);
+
+                        countFoundInCache = task.Result;
+                    }
+                    else
+                    {
+                        var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
+                            outerKey,
+                            innerKeysCollection,
+                            _skipCacheGetPredicate,
+                            out var pooledArray);
+
+                        try
+                        {
+                            var task = filteredKeys.Count > 0
+                                ? _cache.GetMany(outerKey, filteredKeys, getFromCacheResultsArray)
+                                : new ValueTask<int>(0);
+
+                            if (!task.IsCompleted)
+                                await task.ConfigureAwait(false);
+
+                            countFoundInCache = task.Result;
+                        }
+                        finally
+                        {
+                            CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
+                        }
+                    }
+
+                    if (countFoundInCache == 0)
+                    {
+                        resultsFromCache = new Dictionary<TInnerKey, TValue>(_keyComparer);
+                    }
+                    else
+                    {
+                        resultsFromCache = new Dictionary<TInnerKey, TValue>(countFoundInCache, _keyComparer);
+                        for (var i = 0; i < countFoundInCache; i++)
+                        {
+                            var kv = getFromCacheResultsArray[i];
+                            resultsFromCache[kv.Key] = kv.Value;
+                        }
+                    }
                 }
                 finally
                 {
-                    CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
+                    ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(getFromCacheResultsArray);
                 }
+
+                return resultsFromCache;
             }
         }
 

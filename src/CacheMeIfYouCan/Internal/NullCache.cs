@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Internal
         
         public ValueTask<(bool Success, TValue Value)> TryGet(TKey key) => default;
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive) => default;
-        public ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetMany(IReadOnlyCollection<TKey> keys) => default;
+        public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination) => default;
         public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive) => default;
     }
     
@@ -22,7 +22,10 @@ namespace CacheMeIfYouCan.Internal
         
         public static readonly NullCache<TOuterKey, TInnerKey, TValue> Instance = new NullCache<TOuterKey, TInnerKey, TValue>();
         
-        public ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys)
+        public ValueTask<int> GetMany(
+            TOuterKey outerKey,
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             return default;
         }

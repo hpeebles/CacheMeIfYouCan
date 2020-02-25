@@ -169,7 +169,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int>();
 
-            var successfulResults = new List<(IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, int>>, TimeSpan)>();
+            var successfulResults = new List<(IReadOnlyCollection<int>, Memory<KeyValuePair<int, int>>, TimeSpan)>();
             var failedResults = new List<(IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)
@@ -200,7 +200,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().BeSameAs(keys);
-                successfulResults.Last().Item2.Should().BeEquivalentTo(new KeyValuePair<int, int>(1, 2));
+                successfulResults.Last().Item2.ToArray().Should().BeEquivalentTo(new KeyValuePair<int, int>(1, 2));
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else

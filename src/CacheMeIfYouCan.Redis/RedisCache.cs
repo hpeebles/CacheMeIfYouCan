@@ -115,8 +115,9 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
-        public async Task<IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>> GetMany(
-            IReadOnlyCollection<TKey> keys)
+        public async Task<int> GetMany(
+            IReadOnlyCollection<TKey> keys,
+            Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
             
@@ -135,29 +136,9 @@ namespace CacheMeIfYouCan.Redis
                     .WhenAll(new ArraySegment<Task<(TKey, RedisValueWithExpiry)>>(tasks, 0, keys.Count))
                     .ConfigureAwait(false);
 
-                if (valuesFoundCount == 0)
-                    return EmptyResults;
-
-                var results = new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>[valuesFoundCount];
-                var resultsIndex = 0;
-                foreach (var task in tasks)
-                {
-                    var (key, fromRedis) = task.Result;
-
-                    if (fromRedis.Value.IsNull)
-                        continue;
-
-                    var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
-                    
-                    results[resultsIndex++] = new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>(
-                        key,
-                        new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
-
-                    if (resultsIndex == valuesFoundCount)
-                        break;
-                }
-
-                return results;
+                return valuesFoundCount == 0
+                    ? 0
+                    : CopyResultsToDestinationArray();
             }
             finally
             {
@@ -174,6 +155,30 @@ namespace CacheMeIfYouCan.Redis
                     Interlocked.Increment(ref valuesFoundCount);
 
                 return (key, fromRedis);
+            }
+
+            int CopyResultsToDestinationArray()
+            {
+                var span = destination.Span;
+                var index = 0;
+                foreach (var task in tasks)
+                {
+                    var (key, fromRedis) = task.Result;
+
+                    if (fromRedis.Value.IsNull)
+                        continue;
+
+                    var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
+                    
+                    span[index++] = new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>(
+                        key,
+                        new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
+
+                    if (index == valuesFoundCount)
+                        break;
+                }
+
+                return index;
             }
         }
 
@@ -314,9 +319,10 @@ namespace CacheMeIfYouCan.Redis
             _keySeparator = keySeparator;
         }
         
-        public async Task<IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>> GetMany(
+        public async Task<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
             
@@ -337,29 +343,9 @@ namespace CacheMeIfYouCan.Redis
                     .WhenAll(new ArraySegment<Task<(TInnerKey, RedisValueWithExpiry)>>(tasks, 0, innerKeys.Count))
                     .ConfigureAwait(false);
 
-                if (valuesFoundCount == 0)
-                    return EmptyResults;
-
-                var results = new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>[valuesFoundCount];
-                var resultsIndex = 0;
-                foreach (var task in tasks)
-                {
-                    var (key, fromRedis) = task.Result;
-
-                    if (fromRedis.Value.IsNull)
-                        continue;
-
-                    var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
-
-                    results[resultsIndex++] = new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>(
-                        key,
-                        new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
-
-                    if (resultsIndex == valuesFoundCount)
-                        break;
-                }
-
-                return results;
+                return valuesFoundCount == 0
+                    ? 0
+                    : CopyResultsToDestinationArray();
             }
             finally
             {
@@ -378,6 +364,30 @@ namespace CacheMeIfYouCan.Redis
                     Interlocked.Increment(ref valuesFoundCount);
 
                 return (innerKey, fromRedis);
+            }
+            
+            int CopyResultsToDestinationArray()
+            {
+                var span = destination.Span;
+                var index = 0;
+                foreach (var task in tasks)
+                {
+                    var (key, fromRedis) = task.Result;
+
+                    if (fromRedis.Value.IsNull)
+                        continue;
+
+                    var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
+                    
+                    span[index++] = new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>(
+                        key,
+                        new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
+
+                    if (index == valuesFoundCount)
+                        break;
+                }
+
+                return index;
             }
         }
 

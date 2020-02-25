@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -30,20 +31,35 @@ namespace CacheMeIfYouCan.Internal
             return new ValueTask(_innerCache.Set(key, value, timeToLive));
         }
 
-        public async ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetMany(IReadOnlyCollection<TKey> keys)
+        public async ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
-            var resultsWithTimeToLive = await _innerCache
-                .GetMany(keys)
-                .ConfigureAwait(false);
+            var pooledArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(keys.Count);
 
-            if (resultsWithTimeToLive is null)
-                return EmptyResults;
+            try
+            {
+                var countFound = await _innerCache
+                    .GetMany(keys, pooledArray)
+                    .ConfigureAwait(false);
+
+                if (countFound > 0)
+                    CopyResultsToDestination(countFound);
+
+                return countFound;
+            }
+            finally
+            {
+                ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledArray);
+            }
             
-            var results = new List<KeyValuePair<TKey, TValue>>(resultsWithTimeToLive.Count);
-            foreach (var kv in resultsWithTimeToLive)
-                results.Add(new KeyValuePair<TKey, TValue>(kv.Key, kv.Value));
-
-            return results;
+            void CopyResultsToDestination(int countFound)
+            {
+                var span = destination.Span;
+                for (var i = 0; i <= countFound; i++)
+                {
+                    var kv = pooledArray[i];
+                    span[i] = new KeyValuePair<TKey, TValue>(kv.Key, kv.Value);
+                }
+            }
         }
 
         public async ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -65,22 +81,38 @@ namespace CacheMeIfYouCan.Internal
             _innerCache = innerCache;
         }
         
-        public async ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>> GetMany(
+        public async ValueTask<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            var resultsWithTimeToLive = await _innerCache
-                .GetMany(outerKey, innerKeys)
-                .ConfigureAwait(false);
+            var pooledArray = ArrayPool<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(innerKeys.Count);
 
-            if (resultsWithTimeToLive is null)
-                return EmptyResults;
-            
-            var results = new List<KeyValuePair<TInnerKey, TValue>>(resultsWithTimeToLive.Count);
-            foreach (var kv in resultsWithTimeToLive)
-                results.Add(new KeyValuePair<TInnerKey, TValue>(kv.Key, kv.Value));
+            try
+            {
+                var countFound = await _innerCache
+                    .GetMany(outerKey, innerKeys, pooledArray)
+                    .ConfigureAwait(false);
 
-            return results;
+                if (countFound > 0)
+                    CopyResultsToDestination(countFound);
+                
+                return countFound;
+            }
+            finally
+            {
+                ArrayPool<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledArray);
+            }
+
+            void CopyResultsToDestination(int countFound)
+            {
+                var span = destination.Span;
+                for (var i = 0; i <= countFound; i++)
+                {
+                    var kv = pooledArray[i];
+                    span[i] = new KeyValuePair<TInnerKey, TValue>(kv.Key, kv.Value);
+                }
+            }
         }
 
         public async ValueTask SetMany(

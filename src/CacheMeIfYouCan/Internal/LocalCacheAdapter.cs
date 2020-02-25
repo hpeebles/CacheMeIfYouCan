@@ -7,7 +7,6 @@ namespace CacheMeIfYouCan.Internal
     internal sealed class LocalCacheAdapter<TKey, TValue> : ICache<TKey, TValue>
     {
         private readonly ILocalCache<TKey, TValue> _innerCache;
-        private static readonly IReadOnlyCollection<KeyValuePair<TKey, TValue>> EmptyResults = new List<KeyValuePair<TKey, TValue>>();
 
         public LocalCacheAdapter(ILocalCache<TKey, TValue> innerCache)
         {
@@ -30,11 +29,11 @@ namespace CacheMeIfYouCan.Internal
             return default;
         }
 
-        public ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetMany(IReadOnlyCollection<TKey> keys)
+        public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
-            var results = _innerCache.GetMany(keys) ?? EmptyResults;
+            var countFound = _innerCache.GetMany(keys, destination);
             
-            return new ValueTask<IReadOnlyCollection<KeyValuePair<TKey, TValue>>>(results);
+            return new ValueTask<int>(countFound);
         }
 
         public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -48,21 +47,20 @@ namespace CacheMeIfYouCan.Internal
     internal sealed class LocalCacheAdapter<TOuterKey, TInnerKey, TValue> : ICache<TOuterKey, TInnerKey, TValue>
     {
         private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache;
-        private static readonly IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> EmptyResults =
-            new List<KeyValuePair<TInnerKey, TValue>>();
 
         public LocalCacheAdapter(ILocalCache<TOuterKey, TInnerKey, TValue> innerCache)
         {
             _innerCache = innerCache;
         }
 
-        public ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>> GetMany(
+        public ValueTask<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            var results = _innerCache.GetMany(outerKey, innerKeys) ?? EmptyResults;
+            var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
             
-            return new ValueTask<IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>>(results);
+            return new ValueTask<int>(countFound);
         }
 
         public ValueTask SetMany(

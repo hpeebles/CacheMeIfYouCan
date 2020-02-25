@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.LocalCaches
 {
@@ -33,19 +34,23 @@ namespace CacheMeIfYouCan.LocalCaches
             SetImpl(key, value, timeToLive);
         }
 
-        public IReadOnlyCollection<KeyValuePair<TKey, TValue>> GetMany(IReadOnlyCollection<TKey> keys)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
             CheckDisposed();
 
-            var results = new List<KeyValuePair<TKey, TValue>>();
+            if (destination.Length < keys.Count)
+                throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
+            var span = destination.Span;
+            
+            var countFound = 0;
             foreach (var key in keys)
             {
                 if (TryGetImpl(key, out var value))
-                    results.Add(new KeyValuePair<TKey, TValue>(key, value));
+                    span[countFound++] = new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            return results;
+            return countFound;
         }
 
         public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -80,16 +85,21 @@ namespace CacheMeIfYouCan.LocalCaches
             _innerKeyComparer = innerKeyComparer;
         }
         
-        public IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> GetMany(
+        public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            IReadOnlyCollection<TInnerKey> innerKeys,
+            Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             CheckDisposed();
 
-            var results = new List<KeyValuePair<TInnerKey, TValue>>();
+            if (destination.Length < innerKeys.Count)
+                throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
+            var span = destination.Span;
+            
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
             
+            var countFound = 0;
             foreach (var innerKey in innerKeys)
             {
                 var innerKeyHashCode = _innerKeyComparer.GetHashCode(innerKey);
@@ -97,10 +107,10 @@ namespace CacheMeIfYouCan.LocalCaches
                 var hashCode = GetCombinedHashCode(outerKeyHashCode, innerKeyHashCode);
 
                 if (TryGetImpl(new TupleKey<TOuterKey, TInnerKey>(outerKey, innerKey, hashCode), out var value))
-                    results.Add(new KeyValuePair<TInnerKey, TValue>(innerKey, value));
+                    span[countFound++] = new KeyValuePair<TInnerKey, TValue>(innerKey, value);
             }
 
-            return results;
+            return countFound;
         }
 
         public void SetMany(
@@ -127,13 +137,13 @@ namespace CacheMeIfYouCan.LocalCaches
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             CheckDisposed();
 
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
 
-            foreach (var value in values)
+            foreach (var value in values.Span)
             {
                 var innerKeyHashCode = _innerKeyComparer.GetHashCode(value.Key);
 
