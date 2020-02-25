@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Internal.ResponseConverters
     {
         public List<KeyValuePair<TKey, TValue>> Convert(Dictionary<TKey, TValue> values)
         {
-            return values.ToList();
+            return new List<KeyValuePair<TKey, TValue>>(values);
         }
     }
 }
