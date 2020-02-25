@@ -51,11 +51,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 var tryGetTask = _cache.TryGet(key);
 
-                if (!tryGetTask.IsCompleted)
-                    await tryGetTask.ConfigureAwait(false);
+                var (success, valueFromCache) = tryGetTask.IsCompleted
+                    ? tryGetTask.Result
+                    : await tryGetTask.ConfigureAwait(false);
 
-                if (tryGetTask.Result.Success)
-                    return tryGetTask.Result.Value;
+                if (success)
+                    return valueFromCache;
             }
 
             var value = await _originalFunction(parameters, cancellationToken).ConfigureAwait(false);

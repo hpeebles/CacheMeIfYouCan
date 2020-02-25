@@ -30,10 +30,9 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             {
                 var task = cachedFunction.GetMany(outerKey, innerKeys, cancellationToken);
 
-                if (!task.IsCompleted)
-                    await task.ConfigureAwait(false);
-
-                var results = task.Result;
+                var results = task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
 
                 return results switch
                 {
@@ -60,10 +59,9 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 
                 var task = _originalFunction(outerKey, typedRequest, cancellationToken);
 
-                if (task.IsCompleted)
-                    await task.ConfigureAwait(false);
-
-                return task.Result;
+                return task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
             }
         }
     }

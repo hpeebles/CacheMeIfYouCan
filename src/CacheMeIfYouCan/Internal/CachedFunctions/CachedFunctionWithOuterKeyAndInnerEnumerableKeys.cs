@@ -23,7 +23,6 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly TValue _fillMissingKeysConstantValue;
         private readonly Func<TOuterKey, TInnerKey, TValue> _fillMissingKeysValueFactory;
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
-        private static readonly IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> EmptyValuesCollection = new List<KeyValuePair<TInnerKey, TValue>>();
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
             Func<TOuterKey, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
@@ -81,10 +80,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             var getFromCacheTask = GetFromCache();
 
-            if (!getFromCacheTask.IsCompleted)
-                await getFromCacheTask.ConfigureAwait(false);
-
-            var resultsDictionary = getFromCacheTask.Result;
+            var resultsDictionary = getFromCacheTask.IsCompleted
+                ? getFromCacheTask.Result
+                : await getFromCacheTask.ConfigureAwait(false);
 
             if (resultsDictionary.Count == innerKeysCollection.Count)
                 return resultsDictionary;
@@ -125,10 +123,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     {
                         var task = _cache.GetMany(outerKey, innerKeysCollection, getFromCacheResultsArray);
 
-                        if (!task.IsCompleted)
-                            await task.ConfigureAwait(false);
-
-                        countFoundInCache = task.Result;
+                        countFoundInCache = task.IsCompleted
+                            ? task.Result
+                            : await task.ConfigureAwait(false);
                     }
                     else
                     {
@@ -144,10 +141,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                                 ? _cache.GetMany(outerKey, filteredKeys, getFromCacheResultsArray)
                                 : new ValueTask<int>(0);
 
-                            if (!task.IsCompleted)
-                                await task.ConfigureAwait(false);
-
-                            countFoundInCache = task.Result;
+                            countFoundInCache = task.IsCompleted
+                                ? task.Result
+                                : await task.ConfigureAwait(false);
                         }
                         finally
                         {
@@ -187,10 +183,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         {
             var getValuesFromFuncTask = _originalFunction(outerKey, innerKeys, cancellationToken);
 
-            if (!getValuesFromFuncTask.IsCompleted)
-                await getValuesFromFuncTask.ConfigureAwait(false);
-
-            var valuesFromFunc = getValuesFromFuncTask.Result;
+            var valuesFromFunc = getValuesFromFuncTask.IsCompleted
+                ? getValuesFromFuncTask.Result
+                : await getValuesFromFuncTask.ConfigureAwait(false);
 
             if (_shouldFillMissingKeys)
                 valuesFromFunc = FillMissingKeys(outerKey, innerKeys, valuesFromFunc);
