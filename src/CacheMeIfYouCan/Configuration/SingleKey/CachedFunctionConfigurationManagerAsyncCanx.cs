@@ -22,9 +22,19 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 
         private protected Func<TParams, CancellationToken, Task<TValue>> BuildInternal()
         {
-            var cachedFunction = BuildCachedFunction(_originalFunction, _cacheKeySelector);
+            var cachedFunction = BuildCachedFunction(ConvertFunction(), _cacheKeySelector);
 
-            return (key, cancellationToken) => cachedFunction.Get(key, cancellationToken);
+            return Get;
+            
+            Task<TValue> Get(TParams parameters, CancellationToken cancellationToken)
+            {
+                return cachedFunction.Get(parameters, cancellationToken).AsTask();
+            }
+        }
+        
+        private Func<TParams, CancellationToken, ValueTask<TValue>> ConvertFunction()
+        {
+            return (keys, cancellationToken) => new ValueTask<TValue>(_originalFunction(keys, cancellationToken));
         }
     }
     
@@ -46,10 +56,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return new CachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
 
-        public Func<TParam, CancellationToken, Task<TValue>> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, CancellationToken, Task<TValue>> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue>
@@ -62,10 +69,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             : base(originalFunction, cacheKeySelector)
         { }
 
-        public Func<TParam, CancellationToken, Task<TValue>> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, CancellationToken, Task<TValue>> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_2Params<TParam1, TParam2, TKey, TValue>

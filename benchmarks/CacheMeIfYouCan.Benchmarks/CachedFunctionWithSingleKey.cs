@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
@@ -11,8 +10,7 @@ namespace CacheMeIfYouCan.Benchmarks
 {
     public class CachedFunctionWithSingleKey
     {
-        private readonly Func<int, Task<int>> _func;
-        private readonly Task<int>[] _results = Enumerable.Range(1, 2).Select(Task.FromResult).ToArray();
+        private readonly Func<int, ValueTask<int>> _func;
 
         public CachedFunctionWithSingleKey()
         {
@@ -41,12 +39,12 @@ namespace CacheMeIfYouCan.Benchmarks
         }
 
         [Benchmark]
-        public Task<int> CacheHit() => _func(1);
+        public ValueTask<int> CacheHit() => _func(1);
         
         [Benchmark]
-        public Task<int> CacheMiss() => _func(2);
+        public ValueTask<int> CacheMiss() => _func(2);
 
-        private Task<int> OriginalFunc(int k) => _results[k - 1];
+        private static ValueTask<int> OriginalFunc(int k) => new ValueTask<int>(k);
     }
 }
 
@@ -62,6 +60,6 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 
 |    Method |     Mean |    Error |   StdDev |   Median |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
 |---------- |---------:|---------:|---------:|---------:|-------:|-------:|------:|----------:|
-|  CacheHit | 131.3 ns |  0.81 ns |  0.68 ns | 131.4 ns |      - |      - |     - |         - |
-| CacheMiss | 415.7 ns | 31.35 ns | 92.45 ns | 364.3 ns | 0.0048 | 0.0014 |     - |      32 B |
+|  CacheHit | 144.1 ns |  1.84 ns |  1.63 ns | 143.9 ns |      - |      - |     - |         - |
+| CacheMiss | 425.3 ns | 28.46 ns | 83.92 ns | 381.6 ns | 0.0048 | 0.0014 |     - |      32 B |
 */

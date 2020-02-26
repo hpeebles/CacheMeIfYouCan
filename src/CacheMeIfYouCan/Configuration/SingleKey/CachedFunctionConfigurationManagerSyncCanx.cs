@@ -24,12 +24,21 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             var cachedFunction = BuildCachedFunction(ConvertFunction(), _cacheKeySelector);
 
-            return (key, cancellationToken) => Task.Run(() => cachedFunction.Get(key, cancellationToken), cancellationToken).GetAwaiter().GetResult();
+            return Get;
+            
+            TValue Get(TParams parameters, CancellationToken cancellationToken)
+            {
+                var valueTask = cachedFunction.Get(parameters, cancellationToken);
+
+                return valueTask.IsCompleted
+                    ? valueTask.Result
+                    : valueTask.AsTask().GetAwaiter().GetResult();
+            }
         }
 
-        private Func<TParams, CancellationToken, Task<TValue>> ConvertFunction()
+        private Func<TParams, CancellationToken, ValueTask<TValue>> ConvertFunction()
         {
-            return (keys, cancellationToken) => Task.FromResult(_originalFunction(keys, cancellationToken));
+            return (keys, cancellationToken) => new ValueTask<TValue>(_originalFunction(keys, cancellationToken));
         }
     }
     
@@ -51,10 +60,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return new CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
 
-        public Func<TParam, CancellationToken, TValue> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, CancellationToken, TValue> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>
@@ -67,10 +73,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             : base(originalFunction, cacheKeySelector)
         { }
 
-        public Func<TParam, CancellationToken, TValue> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, CancellationToken, TValue> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerSyncCanx_2Params<TParam1, TParam2, TKey, TValue>

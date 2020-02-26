@@ -23,12 +23,21 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
         {
             var cachedFunction = BuildCachedFunction(ConvertFunction(), _cacheKeySelector);
 
-            return key => Task.Run(() => cachedFunction.Get(key, CancellationToken.None)).GetAwaiter().GetResult();
+            return Get;
+
+            TValue Get(TParams parameters)
+            {
+                var valueTask = cachedFunction.Get(parameters, CancellationToken.None);
+
+                return valueTask.IsCompleted
+                    ? valueTask.Result
+                    : valueTask.AsTask().GetAwaiter().GetResult();
+            }
         }
 
-        private Func<TParams, CancellationToken, Task<TValue>> ConvertFunction()
+        private Func<TParams, CancellationToken, ValueTask<TValue>> ConvertFunction()
         {
-            return (keys, _) => Task.FromResult(_originalFunction(keys));
+            return (keys, _) => new ValueTask<TValue>(_originalFunction(keys));
         }
     }
     
@@ -50,10 +59,7 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
             return new CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
 
-        public Func<TParam, TValue> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, TValue> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>
@@ -66,10 +72,7 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
             : base(originalFunction, cacheKeySelector)
         { }
 
-        public Func<TParam, TValue> Build()
-        {
-            return BuildInternal();
-        }
+        public Func<TParam, TValue> Build() => BuildInternal();
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_2Params<TParam1, TParam2, TKey, TValue>

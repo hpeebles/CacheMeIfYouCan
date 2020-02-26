@@ -297,6 +297,150 @@ namespace CacheMeIfYouCan
             
             return new CachedFunctionConfigurationManagerSyncCanx_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(originalFunction);
         }
+        
+        public static ICachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TKey, TValue> ConfigureFor<TKey, TValue>(
+            Func<TKey, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_1Param<TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_2Params_KeySelector<TParam1, TParam2, TValue> ConfigureFor<TParam1, TParam2, TValue>(
+            Func<TParam1, TParam2, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_2Params_KeySelector<TParam1, TParam2, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_3Params_KeySelector<TParam1, TParam2, TParam3, TValue> ConfigureFor<TParam1, TParam2, TParam3, TValue>(
+            Func<TParam1, TParam2, TParam3, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_3Params_KeySelector<TParam1, TParam2, TParam3, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(originalFunction);
+        }
+        
+        public static ICachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TKey, TValue> ConfigureFor<TKey, TValue>(
+            Func<TKey, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_1Param<TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_2Params_KeySelector<TParam1, TParam2, TValue> ConfigureFor<TParam1, TParam2, TValue>(
+            Func<TParam1, TParam2, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_2Params_KeySelector<TParam1, TParam2, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_3Params_KeySelector<TParam1, TParam2, TParam3, TValue> ConfigureFor<TParam1, TParam2, TParam3, TValue>(
+            Func<TParam1, TParam2, TParam3, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_3Params_KeySelector<TParam1, TParam2, TParam3, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue> ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, CancellationToken, ValueTask<TValue>> originalFunction)
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(originalFunction);
+        }
 
         public static CachedFunctionConfigurationManagerAsync<TRequest, TResponse, TKey, TValue>
             ConfigureFor<TRequest, TResponse, TKey, TValue>(Func<TRequest, Task<TResponse>> originalFunction)

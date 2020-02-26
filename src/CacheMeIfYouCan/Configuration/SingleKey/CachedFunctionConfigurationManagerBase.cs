@@ -101,7 +101,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         }
 
         private protected CachedFunctionWithSingleKey<TParams, TKey, TValue> BuildCachedFunction(
-            Func<TParams, CancellationToken, Task<TValue>> originalFunction,
+            Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
             Func<TParams, TKey> cacheKeySelector)
         {
             return new CachedFunctionWithSingleKey<TParams, TKey, TValue>(originalFunction, cacheKeySelector, _config);

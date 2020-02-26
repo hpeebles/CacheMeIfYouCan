@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
     internal sealed class CachedFunctionWithSingleKey<TParams, TKey, TValue>
     {
-        private readonly Func<TParams, CancellationToken, Task<TValue>> _originalFunction;
+        private readonly Func<TParams, CancellationToken, ValueTask<TValue>> _originalFunction;
         private readonly Func<TParams, TKey> _keySelector;
         private readonly Func<TKey, TimeSpan> _timeToLiveFactory;
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
@@ -15,7 +15,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TKey, TValue> _cache;
 
         public CachedFunctionWithSingleKey(
-            Func<TParams, CancellationToken, Task<TValue>> originalFunction,
+            Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
             Func<TParams, TKey> keySelector,
             CachedFunctionWithSingleKeyConfiguration<TKey, TValue> config)
         {
@@ -41,7 +41,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        public async Task<TValue> Get(TParams parameters, CancellationToken cancellationToken)
+        public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -59,8 +59,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     return valueFromCache;
             }
 
-            var value = await _originalFunction(parameters, cancellationToken).ConfigureAwait(false);
+            var getFromFuncTask = _originalFunction(parameters, cancellationToken);
 
+            var value = getFromFuncTask.IsCompleted
+                ? getFromFuncTask.Result
+                : await getFromFuncTask.ConfigureAwait(false);
+            
             if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
             {
                 var timeToLive = _timeToLiveFactory(key);
