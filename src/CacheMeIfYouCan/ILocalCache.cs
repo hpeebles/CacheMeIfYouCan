@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan
         
         void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
 
-        void SetManyWithVaryingTimesToLive(TOuterKey outerKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
+        void SetManyWithVaryingTimesToLive(TOuterKey outerKey, ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
 
         bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value);
     }

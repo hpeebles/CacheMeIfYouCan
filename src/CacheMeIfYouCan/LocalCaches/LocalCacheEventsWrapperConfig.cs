@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.LocalCaches
         public Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan, Exception, bool> OnGetManyException { get; set; }
         public Action<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan> OnSetManyCompletedSuccessfully { get; set; }
         public Func<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> OnSetManyException { get; set; }
-        public Action<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> OnSetManyWithVaryingTimesToLiveCompletedSuccessfully { get; set; }
-        public Func<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> OnSetManyWithVaryingTimesToLiveException { get; set; }
+        public Action<TOuterKey, ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> OnSetManyWithVaryingTimesToLiveCompletedSuccessfully { get; set; }
+        public Func<TOuterKey, ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> OnSetManyWithVaryingTimesToLiveException { get; set; }
         public Action<TOuterKey, TInnerKey, bool, TValue, TimeSpan> OnTryRemoveCompletedSuccessfully { get; set; }
         public Func<TOuterKey, TInnerKey, TimeSpan, Exception, bool> OnTryRemoveException { get; set; }
     }

@@ -121,7 +121,9 @@ namespace CacheMeIfYouCan.LocalCaches
                 _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value, expirationDate);
         }
 
-        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(
+            TOuterKey outerKey,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 

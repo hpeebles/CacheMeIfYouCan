@@ -154,7 +154,9 @@ namespace CacheMeIfYouCan.Tests
             _innerCache.SetMany(outerKey, values, timeToLive);
         }
 
-        public void SetManyWithVaryingTimesToLive(TOuterKey outerKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+        public void SetManyWithVaryingTimesToLive(
+            TOuterKey outerKey,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             Interlocked.Increment(ref SetMany2ExecutionCount);
             

@@ -227,8 +227,8 @@ namespace CacheMeIfYouCan.LocalCaches
         private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan, Exception, bool> _onGetManyException;
         private readonly Action<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan> _onSetManyCompletedSuccessfully;
         private readonly Func<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> _onSetManyException;
-        private readonly Action<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> _onSetManyWithVaryingTimesToLiveCompletedSuccessfully;
-        private readonly Func<TOuterKey, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> _onSetManyWithVaryingTimesToLiveException;
+        private readonly Action<TOuterKey, ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan> _onSetManyWithVaryingTimesToLiveCompletedSuccessfully;
+        private readonly Func<TOuterKey, ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>, TimeSpan, Exception, bool> _onSetManyWithVaryingTimesToLiveException;
         private readonly Action<TOuterKey, TInnerKey, bool, TValue, TimeSpan> _onTryRemoveCompletedSuccessfully;
         private readonly Func<TOuterKey, TInnerKey, TimeSpan, Exception, bool> _onTryRemoveException;
         private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache;
@@ -331,7 +331,7 @@ namespace CacheMeIfYouCan.LocalCaches
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             if (_onSetManyWithVaryingTimesToLiveException is null)
             {

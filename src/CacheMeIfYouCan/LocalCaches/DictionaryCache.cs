@@ -137,7 +137,7 @@ namespace CacheMeIfYouCan.LocalCaches
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             CheckDisposed();
 
