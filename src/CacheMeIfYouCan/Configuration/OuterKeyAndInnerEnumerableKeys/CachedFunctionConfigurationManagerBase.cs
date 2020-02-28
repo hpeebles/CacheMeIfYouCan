@@ -10,15 +10,15 @@ using CacheMeIfYouCan.Internal.ResponseConverters;
 
 namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 {
-    public abstract class CachedFunctionConfigurationManagerBase<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue, TConfig>
-        where TConfig : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue, TConfig>
-        where TInnerRequest : IEnumerable<TInnerKey>
+    public abstract class CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
+        where TConfig : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
+        where TInnerKeys : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
     {
         private readonly CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> _config =
             new CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue>();
 
-        private Func<IReadOnlyCollection<TInnerKey>, TInnerRequest> _requestConverter;
+        private Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> _requestConverter;
         private Func<Dictionary<TInnerKey, TValue>, TResponse> _responseConverter;
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -174,7 +174,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig WithRequestConverter(Func<IReadOnlyCollection<TInnerKey>, TInnerRequest> requestConverter)
+        public TConfig WithRequestConverter(Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> requestConverter)
         {
             _requestConverter = requestConverter;
             return (TConfig)this;
@@ -186,9 +186,9 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
         
-        private protected Func<IReadOnlyCollection<TInnerKey>, TInnerRequest> GetRequestConverter()
+        private protected Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> GetRequestConverter()
         {
-            return _requestConverter ?? DefaultRequestConverterResolver.Get<TInnerKey, TInnerRequest>(_config.KeyComparer);
+            return _requestConverter ?? DefaultRequestConverterResolver.Get<TInnerKey, TInnerKeys>(_config.KeyComparer);
         }
         
         private protected Func<Dictionary<TInnerKey, TValue>, TResponse> GetResponseConverter()

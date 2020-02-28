@@ -96,40 +96,40 @@ namespace CacheMeIfYouCan.Configuration
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
-            Expression<Func<T, Func<TOuterKey, TInnerRequest, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
-            where TInnerRequest : IEnumerable<TInnerKey>
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>(
+            Expression<Func<T, Func<TOuterKey, TInnerKeys, Task<TResponse>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsync<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>> configurationAction)
+            where TInnerKeys : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
-            Expression<Func<T, Func<TOuterKey, TInnerRequest, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSync<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
-            where TInnerRequest : IEnumerable<TInnerKey>
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>(
+            Expression<Func<T, Func<TOuterKey, TInnerKeys, TResponse>>> expression,
+            Action<CachedFunctionConfigurationManagerSync<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>> configurationAction)
+            where TInnerKeys : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
 
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
-            Expression<Func<T, Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>>>> expression,
-            Action<CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
-            where TInnerRequest : IEnumerable<TInnerKey>
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>(
+            Expression<Func<T, Func<TOuterKey, TInnerKeys, CancellationToken, Task<TResponse>>>> expression,
+            Action<CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>> configurationAction)
+            where TInnerKeys : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
             AddConfigAction(expression, configurationAction);
             return this;
         }
         
-        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>(
-            Expression<Func<T, Func<TOuterKey, TInnerRequest, CancellationToken, TResponse>>> expression,
-            Action<CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>> configurationAction)
-            where TInnerRequest : IEnumerable<TInnerKey>
+        public CachedInterfaceConfigurationManager<T> Configure<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>(
+            Expression<Func<T, Func<TOuterKey, TInnerKeys, CancellationToken, TResponse>>> expression,
+            Action<CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>> configurationAction)
+            where TInnerKeys : IEnumerable<TInnerKey>
             where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
         {
             AddConfigAction(expression, configurationAction);

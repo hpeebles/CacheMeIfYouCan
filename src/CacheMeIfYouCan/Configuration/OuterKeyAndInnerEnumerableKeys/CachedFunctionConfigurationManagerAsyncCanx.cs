@@ -5,20 +5,20 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 {
-    public sealed class CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>
-        : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue, CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerRequest, TResponse, TInnerKey, TValue>>
-        where TInnerRequest : IEnumerable<TInnerKey>
+    public sealed class CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, CachedFunctionConfigurationManagerAsyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>>
+        where TInnerKeys : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
     {
-        private readonly Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>> _originalFunction;
+        private readonly Func<TOuterKey, TInnerKeys, CancellationToken, Task<TResponse>> _originalFunction;
 
         internal CachedFunctionConfigurationManagerAsyncCanx(
-            Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>> originalFunction)
+            Func<TOuterKey, TInnerKeys, CancellationToken, Task<TResponse>> originalFunction)
         {
             _originalFunction = originalFunction;
         }
 
-        public Func<TOuterKey, TInnerRequest, CancellationToken, Task<TResponse>> Build()
+        public Func<TOuterKey, TInnerKeys, CancellationToken, Task<TResponse>> Build()
         {
             var cachedFunction = BuildCachedFunction(ConvertFunction());
 
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             
             return Get;
             
-            async Task<TResponse> Get(TOuterKey outerKey, TInnerRequest innerKeys, CancellationToken cancellationToken)
+            async Task<TResponse> Get(TOuterKey outerKey, TInnerKeys innerKeys, CancellationToken cancellationToken)
             {
                 var task = cachedFunction.GetMany(outerKey, innerKeys, cancellationToken);
 
@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
                 IReadOnlyCollection<TInnerKey> innerKeys,
                 CancellationToken cancellationToken)
             {
-                if (!(innerKeys is TInnerRequest typedRequest))
+                if (!(innerKeys is TInnerKeys typedRequest))
                     typedRequest = requestConverter(innerKeys);
 
                 var task = _originalFunction(outerKey, typedRequest, cancellationToken);
