@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_2Params<TParam1, TParam2, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_2Params<TParam1, TParam2, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_2Params<TParam1, TParam2, TKey, TValue>(
@@ -30,7 +30,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TParam3, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TParam3, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TParam3, TKey, TValue>(
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TParam4, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>(
@@ -66,7 +66,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>(
@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>(
@@ -102,7 +102,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>(
@@ -120,7 +120,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> WithCacheKeySelector<TKey>(
+        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> WithCacheKey<TKey>(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>(

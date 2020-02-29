@@ -479,7 +479,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -493,7 +493,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -507,7 +507,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -521,7 +521,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -535,7 +535,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -549,7 +549,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector(p => p.ToString())
+                        .WithCacheKey(p => p.ToString())
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -582,7 +582,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -596,7 +596,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -610,7 +610,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -624,7 +624,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -638,7 +638,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -652,7 +652,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2) => p1)
+                        .WithCacheKey((p1, p2) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -685,7 +685,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -699,7 +699,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -713,7 +713,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -727,7 +727,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -741,7 +741,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -755,7 +755,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3) => p1)
+                        .WithCacheKey((p1, p2, p3) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -788,7 +788,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -802,7 +802,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -816,7 +816,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -830,7 +830,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -844,7 +844,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -858,7 +858,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4) => p1)
+                        .WithCacheKey((p1, p2, p3, p4) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -891,7 +891,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -905,7 +905,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -919,7 +919,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -933,7 +933,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -947,7 +947,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -961,7 +961,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -994,7 +994,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1008,7 +1008,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1022,7 +1022,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1036,7 +1036,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1050,7 +1050,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1064,7 +1064,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1097,7 +1097,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1111,7 +1111,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1125,7 +1125,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1139,7 +1139,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1153,7 +1153,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1167,7 +1167,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1200,7 +1200,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1214,7 +1214,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1228,7 +1228,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1242,7 +1242,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1256,7 +1256,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();
@@ -1270,7 +1270,7 @@ namespace CacheMeIfYouCan.Tests
                     
                     var cachedFunction = CachedFunctionFactory
                         .ConfigureFor(originalFunction)
-                        .WithCacheKeySelector((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
+                        .WithCacheKey((p1, p2, p3, p4, p5, p6, p7, p8) => p1)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
                         .Build();

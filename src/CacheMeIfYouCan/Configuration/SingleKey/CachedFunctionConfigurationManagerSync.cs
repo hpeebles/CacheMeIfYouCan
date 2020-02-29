@@ -54,7 +54,7 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }

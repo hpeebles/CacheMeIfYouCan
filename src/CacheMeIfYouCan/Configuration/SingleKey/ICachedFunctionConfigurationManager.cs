@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
     public interface ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> :
@@ -41,7 +41,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
     public interface ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> :
@@ -53,7 +53,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerSync_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
     public interface ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> :
@@ -65,7 +65,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
     public interface ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> :
@@ -77,7 +77,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
     public interface ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> :
@@ -89,6 +89,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     public interface ICachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue> :
         ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
 }

@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKeySelector<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
