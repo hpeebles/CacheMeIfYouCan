@@ -8,8 +8,8 @@ using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
     public abstract class CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig> :
-        ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
-        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly CachedFunctionWithSingleKeyConfiguration<TKey, TValue> _config =
             new CachedFunctionWithSingleKeyConfiguration<TKey, TValue>();

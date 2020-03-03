@@ -467,7 +467,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_1Param_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With1Param_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
 
@@ -570,7 +570,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_2Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With2Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -673,7 +673,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_3Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With3Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -776,7 +776,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_4Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With4Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -879,7 +879,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_5Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With5Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -982,7 +982,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_6Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With6Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -1085,7 +1085,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_7Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With7Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 
@@ -1188,7 +1188,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("sync", false)]
         [InlineData("valuetask", true)]
         [InlineData("valuetask", false)]
-        public async Task WithKeySelector_8Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        public async Task With8Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
 

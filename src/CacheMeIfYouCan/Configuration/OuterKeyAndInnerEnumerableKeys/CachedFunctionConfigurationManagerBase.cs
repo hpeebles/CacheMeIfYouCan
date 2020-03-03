@@ -10,8 +10,8 @@ using CacheMeIfYouCan.Internal.ResponseConverters;
 
 namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 {
-    public abstract class CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
-        where TConfig : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
+    public abstract class CachedFunctionConfigurationManagerBase<TParams, TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
+        where TConfig : CachedFunctionConfigurationManagerBase<TParams, TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
         where TInnerKeys : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
     {
@@ -196,11 +196,13 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return _responseConverter ?? DefaultResponseConverterResolver.Get<TInnerKey, TValue, TResponse>(_config.KeyComparer);
         }
 
-        private protected CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TOuterKey, TInnerKey, TValue> BuildCachedFunction(
-            Func<TOuterKey, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction)
+        private protected CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue> BuildCachedFunction(
+            Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
+            Func<TParams, TOuterKey> keySelector)
         {
-            return new CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TOuterKey, TInnerKey, TValue>(
+            return new CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue>(
                 originalFunction,
+                keySelector,
                 _config);
         }
     }

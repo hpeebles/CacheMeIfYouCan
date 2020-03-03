@@ -7,9 +7,9 @@ using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
-    internal sealed class CachedFunctionWithEnumerableKeys<TKey, TValue>
+    internal sealed class CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>
     {
-        private readonly Func<IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> _originalFunction;
+        private readonly Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> _originalFunction;
         private readonly Func<IReadOnlyCollection<TKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TKey> _keyComparer;
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
@@ -23,7 +23,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TKey, TValue> _cache;
 
         public CachedFunctionWithEnumerableKeys(
-            Func<IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
+            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
             CachedFunctionWithEnumerableKeysConfiguration<TKey, TValue> config)
         {
             _originalFunction = originalFunction;
@@ -64,6 +64,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
 
         public async Task<Dictionary<TKey, TValue>> GetMany(
+            TParams parameters,
             IEnumerable<TKey> keys,
             CancellationToken cancellationToken)
         {
@@ -84,7 +85,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (missingKeys.Count < _maxBatchSize)
             {
-                await GetValuesFromFunc(missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
+                await GetValuesFromFunc(parameters, missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
             }
             else
             {
@@ -96,6 +97,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 foreach (var batch in batches)
                 {
                     tasks[index++] = GetValuesFromFunc(
+                        parameters,
                         batch,
                         cancellationToken,
                         resultsDictionary,
@@ -170,12 +172,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
 
         private async Task GetValuesFromFunc(
+            TParams parameters,
             IReadOnlyCollection<TKey> keys,
             CancellationToken cancellationToken,
             Dictionary<TKey, TValue> resultsDictionary,
             object resultsDictionaryLock = null)
         {
-            var getValuesFromFuncTask = _originalFunction(keys, cancellationToken);
+            var getValuesFromFuncTask = _originalFunction(parameters, keys, cancellationToken);
 
             var valuesFromFunc = getValuesFromFuncTask.IsCompleted
                 ? getValuesFromFuncTask.Result

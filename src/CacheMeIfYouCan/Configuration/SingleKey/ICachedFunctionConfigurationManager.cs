@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
-    public interface ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, out TConfig>
-        where TConfig : ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, TConfig>
+    public interface ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, out TConfig>
+        where TConfig : ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         TConfig WithTimeToLive(TimeSpan timeToLive);
         TConfig WithTimeToLiveFactory(Func<TKey, TimeSpan> timeToLiveFactory);
@@ -20,75 +20,69 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         TConfig SkipDistributedCacheWhen(Func<TKey, TValue, bool> predicate);
     }
 
-    public interface ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, Task<TValue>> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
-    public interface ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, CancellationToken, Task<TValue>> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
-    public interface ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, TValue> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerSync_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerSync_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
-    public interface ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, CancellationToken, TValue> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
-    public interface ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, ValueTask<TValue>> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
     
-    public interface ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> :
-        ICachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>>
-    {
-        Func<TParam, CancellationToken, ValueTask<TValue>> Build();
-    }
+    public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>>,
+        ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue>
+    { }
 
-    public interface ICachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue> :
-        ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TParam, TValue>
+    public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue> :
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TParam, TValue>
     {
-        ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector);
     }
 }

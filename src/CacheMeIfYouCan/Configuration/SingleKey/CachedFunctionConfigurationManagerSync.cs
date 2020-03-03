@@ -6,7 +6,7 @@ using CacheMeIfYouCan.Internal;
 
 public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, TValue, TConfig>
         : CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
-        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly Func<TParams, TValue> _originalFunction;
         private readonly Func<TParams, TKey> _cacheKeySelector;
@@ -42,8 +42,8 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_1Param<TParam, TValue> :
-        CachedFunctionConfigurationManagerSyncBase<TParam, TParam, TValue, ICachedFunctionConfigurationManagerSync_1Param<TParam, TParam, TValue>>,
-        ICachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue>
+        CachedFunctionConfigurationManagerSyncBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TParam, TValue>>,
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue>
     {
         private readonly Func<TParam, TValue> _originalFunction;
 
@@ -54,7 +54,7 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
@@ -63,8 +63,8 @@ public abstract class CachedFunctionConfigurationManagerSyncBase<TParams, TKey, 
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>
-        : CachedFunctionConfigurationManagerSyncBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>>,
-            ICachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>
+        : CachedFunctionConfigurationManagerSyncBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>>,
+            ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>
     {
         internal CachedFunctionConfigurationManagerSync_1Param(
             Func<TParam, TValue> originalFunction,

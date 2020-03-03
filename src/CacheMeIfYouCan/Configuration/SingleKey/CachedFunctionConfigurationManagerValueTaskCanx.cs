@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 {
     public abstract class CachedFunctionConfigurationManagerValueTaskCanxBase<TParams, TKey, TValue, TConfig>
         : CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
-        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly Func<TParams, CancellationToken, ValueTask<TValue>> _originalFunction;
         private readonly Func<TParams, TKey> _cacheKeySelector;
@@ -34,8 +34,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> :
-        CachedFunctionConfigurationManagerValueTaskCanxBase<TParam, TParam, TValue, ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TParam, TValue>>,
-        ICachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue>
+        CachedFunctionConfigurationManagerValueTaskCanxBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TParam, TValue>>,
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue>
     {
         private readonly Func<TParam, CancellationToken, ValueTask<TValue>> _originalFunction;
 
@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
@@ -55,8 +55,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>
-        : CachedFunctionConfigurationManagerValueTaskCanxBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>>,
-            ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>
+        : CachedFunctionConfigurationManagerValueTaskCanxBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>>,
+            ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue>
     {
         internal CachedFunctionConfigurationManagerValueTaskCanx_1Param(
             Func<TParam, CancellationToken, ValueTask<TValue>> originalFunction,

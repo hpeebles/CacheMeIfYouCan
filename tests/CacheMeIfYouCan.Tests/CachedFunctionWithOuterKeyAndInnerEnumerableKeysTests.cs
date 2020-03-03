@@ -10,7 +10,7 @@ using Xunit;
 
 namespace CacheMeIfYouCan.Tests
 {
-    public class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationTests
+    public class CachedFunctionWithOuterKeyAndInnerEnumerableKeysTests
     {
         [Fact]
         public void Concurrent_CorrectValuesAreReturned()
@@ -25,6 +25,7 @@ namespace CacheMeIfYouCan.Tests
 
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
@@ -94,6 +95,7 @@ namespace CacheMeIfYouCan.Tests
 
                 var cachedFunction = CachedFunctionFactory
                     .ConfigureFor<int, T, Dictionary<int, int>, int, int>(originalFunction)
+                    .UseFirstParamAsOuterCacheKey()
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
                     .Build();
@@ -118,6 +120,7 @@ namespace CacheMeIfYouCan.Tests
             
             var config = CachedFunctionFactory
                 .ConfigureFor<int, SortedSet<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
 
@@ -171,6 +174,7 @@ namespace CacheMeIfYouCan.Tests
 
                 var cachedFunction = CachedFunctionFactory
                     .ConfigureFor<int, IEnumerable<int>, T, int, int>(originalFunction)
+                    .UseFirstParamAsOuterCacheKey()
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
                     .Build();
@@ -194,6 +198,7 @@ namespace CacheMeIfYouCan.Tests
             
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, SortedDictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
 
@@ -228,6 +233,7 @@ namespace CacheMeIfYouCan.Tests
 
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
@@ -257,6 +263,7 @@ namespace CacheMeIfYouCan.Tests
             
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromMilliseconds(timeToLiveMs))
                 .Build();
@@ -286,6 +293,7 @@ namespace CacheMeIfYouCan.Tests
             
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLiveFactory(outerKey => TimeSpan.FromMilliseconds(outerKey))
                 .Build();
@@ -321,6 +329,7 @@ namespace CacheMeIfYouCan.Tests
 
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .DisableCaching(disableCaching)
@@ -354,6 +363,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -400,6 +410,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, ConcurrentDictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -447,6 +458,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -492,6 +504,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -550,6 +563,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -612,6 +626,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -687,6 +702,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -733,6 +749,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -788,6 +805,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
@@ -834,6 +852,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
 
@@ -887,6 +906,7 @@ namespace CacheMeIfYouCan.Tests
 
             var config = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .SkipCacheWhen(x => true, SkipCacheWhen.SkipCacheGet)
                 .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
@@ -932,6 +952,7 @@ namespace CacheMeIfYouCan.Tests
 
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithBatchedFetches(10, batchBehaviour)
@@ -940,6 +961,531 @@ namespace CacheMeIfYouCan.Tests
             cachedFunction(0, Enumerable.Range(0, 25)).Keys.Should().BeEquivalentTo(Enumerable.Range(0, 25));
 
             batchSizes.Should().BeEquivalentTo(expectedBatchSizes);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With2Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) => Task.FromResult(p2.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .UseFirstParamAsOuterCacheKey()
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2) => Task.FromResult(p2.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .UseFirstParamAsOuterCacheKey()
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    (await cachedFunction(1, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, cancellationToken) => p2.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .UseFirstParamAsOuterCacheKey()
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2) => p2.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .UseFirstParamAsOuterCacheKey()
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+
+            cache.GetMany(1, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With3Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) => Task.FromResult(p3.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2) => p1 + p2)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3) => Task.FromResult(p3.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2) => p1 + p2)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, cancellationToken) => p3.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2) => p1 + p2)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3) => p3.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2) => p1 + p2)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+
+            cache.GetMany(3, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With4Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) => Task.FromResult(p4.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) => Task.FromResult(p4.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, cancellationToken) => p4.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4) => p4.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+        
+            cache.GetMany(6, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With5Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => Task.FromResult(p5.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) => Task.FromResult(p5.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => p5.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5) => p5.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+        
+            cache.GetMany(10, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With6Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => Task.FromResult(p6.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) => Task.FromResult(p6.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => p6.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6) => p6.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+        
+            cache.GetMany(15, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With7Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => Task.FromResult(p7.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => Task.FromResult(p7.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => p7.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, 6, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => p7.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, 6, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+        
+            cache.GetMany(21, input).Should().BeEquivalentTo(expectedOutput);
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        public async Task With8Params_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int, int>();
+        
+            var input = Enumerable.Range(1, 10).ToArray();
+            var expectedOutput = input.ToDictionary(x => x);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => Task.FromResult(p8.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7, input, CancellationToken.None).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => Task.FromResult(p8.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    (await cachedFunction(1, 2, 3, 4, 5, 6, 7, input).ConfigureAwait(false)).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => p8.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, input, CancellationToken.None).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => p8.ToDictionary(x => x);
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+        
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+            }
+        
+            cache.GetMany(28, input).Should().BeEquivalentTo(expectedOutput);
         }
     }
 }

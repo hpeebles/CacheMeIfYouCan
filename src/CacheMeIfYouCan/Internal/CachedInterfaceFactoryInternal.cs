@@ -20,19 +20,19 @@ namespace CacheMeIfYouCan.Internal
             ModuleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
         }
         
-        public static T Build<T>(T originalImpl, Dictionary<MethodInfo, object> configActions)
+        public static T Build<T>(T originalImpl, Dictionary<MethodInfo, object> configFunctions)
         {
             var interfaceType = typeof(T);
 
             if (!interfaceType.IsInterface)
                 throw new InvalidOperationException("<T> must be an interface");
             
-            var newType = CreateType(interfaceType, configActions);
+            var newType = CreateType(interfaceType, configFunctions);
 
-            return (T)Activator.CreateInstance(newType, originalImpl, configActions);
+            return (T)Activator.CreateInstance(newType, originalImpl, configFunctions);
         }
 
-        private static Type CreateType(Type interfaceType, Dictionary<MethodInfo, object> configActions)
+        private static Type CreateType(Type interfaceType, Dictionary<MethodInfo, object> configFunctions)
         {
             var typeName = GetProxyName(interfaceType);
 
@@ -69,10 +69,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 var methodInfo = allInterfaceMethods[index];
 
-                if (!configActions.TryGetValue(methodInfo, out var configAction))
+                if (!configFunctions.TryGetValue(methodInfo, out var configFunction))
                     throw new Exception($"{interfaceType.Name}.{methodInfo.Name} has not been configured");
-                
-                var configManagerType = configAction.GetType().GenericTypeArguments[0];
+
+                var configFunctionType = configFunction.GetType();
+                var configManagerType = configFunctionType.GenericTypeArguments[0];
                 
                 if (configManagerType.IsInterface)
                     configManagerType = ConfigurationManagerInterfaceTypeToConcreteTypeMap.GetConcreteType(configManagerType);
@@ -82,12 +83,12 @@ namespace CacheMeIfYouCan.Internal
                     .Single();
                 
                 ctorGen.DeclareLocal(configManagerType);
+                ctorGen.DeclareLocal(configFunctionType);
                 
                 var fieldName = $"_{Char.ToLower(methodInfo.Name[0])}{methodInfo.Name.Substring(1)}{index}";
                 var fieldType = BuildFieldType(methodInfo);
                 var field = typeBuilder.DefineField(fieldName, fieldType, FieldAttributes.Private);
                 var fieldCtor = fieldType.GetConstructor(new[] { typeof(object), typeof(IntPtr) });
-                var configManagerActionType = typeof(Action<>).MakeGenericType(configManagerType);
                 
                 // Create new CachedFunctionConfigurationManager object and pass function into ctor
                 ctorGen.Emit(OpCodes.Ldarg_1);
@@ -95,7 +96,7 @@ namespace CacheMeIfYouCan.Internal
                 ctorGen.Emit(OpCodes.Ldvirtftn, methodInfo);
                 ctorGen.Emit(OpCodes.Newobj, fieldCtor);
                 ctorGen.Emit(OpCodes.Newobj, configManagerTypeCtor);
-                ctorGen.Emit(OpCodes.Stloc, index + 1);
+                ctorGen.Emit(OpCodes.Stloc, (2 * index) + 1);
 
                 // Get the configuration action for this method and cast it to its specific type
                 ctorGen.Emit(OpCodes.Ldarg_2);
@@ -103,16 +104,15 @@ namespace CacheMeIfYouCan.Internal
                 ctorGen.Emit(OpCodes.Ldc_I4, index);
                 ctorGen.Emit(OpCodes.Ldelem_Ref);
                 ctorGen.Emit(OpCodes.Callvirt, dictionaryGetItemMethodInfo);
-                ctorGen.Emit(OpCodes.Castclass, configManagerActionType);
+                ctorGen.Emit(OpCodes.Castclass, configFunctionType);
+                ctorGen.Emit(OpCodes.Stloc, (2 * index) + 2);
 
                 // Run the configuration action on the CachedFunctionConfigurationManager
-                ctorGen.Emit(OpCodes.Ldloc, index + 1);
-                ctorGen.Emit(OpCodes.Callvirt, configManagerActionType.GetMethod("Invoke"));
-                
-                // Create the cached function by calling CachedFunctionConfigurationManager.Build()
-                ctorGen.Emit(OpCodes.Ldarg_0); 
-                ctorGen.Emit(OpCodes.Ldloc, index + 1);
-                ctorGen.Emit(OpCodes.Callvirt, configManagerType.GetMethod("Build"));
+                ctorGen.Emit(OpCodes.Ldarg_0);
+                ctorGen.Emit(OpCodes.Ldloc, (2 * index) + 2);
+                ctorGen.Emit(OpCodes.Ldloc, (2 * index) + 1);
+                ctorGen.Emit(OpCodes.Callvirt, configFunctionType.GetMethod("Invoke"));
+                ctorGen.Emit(OpCodes.Callvirt, configFunctionType.GenericTypeArguments[1].GetMethod("Build"));
                 ctorGen.Emit(OpCodes.Stfld, field);
 
                 var parameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray(); 

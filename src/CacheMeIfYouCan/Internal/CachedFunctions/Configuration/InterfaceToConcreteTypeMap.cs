@@ -22,10 +22,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         {
             return new Dictionary<Type, Type>
             {
-                { typeof(ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerAsync_1Param<,>) },
-                { typeof(ICachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerAsyncCanx_1Param<,>) },
-                { typeof(ICachedFunctionConfigurationManagerSync_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerSync_1Param<,>) },
-                { typeof(ICachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerSyncCanx_1Param<,>) }
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerAsync_1Param<,>) },
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerAsyncCanx_1Param<,>) },
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerSync_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerSync_1Param<,>) },
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerSyncCanx_1Param<,>) },
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerValueTask_1Param<,>) },
+                { typeof(ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<,>), typeof(CachedFunctionConfigurationManagerValueTaskCanx_1Param<,>) }
             };
         }
     }

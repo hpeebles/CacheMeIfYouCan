@@ -7,9 +7,10 @@ using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
-    internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TOuterKey, TInnerKey, TValue>
+    internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue>
     {
-        private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> _originalFunction;
+        private readonly Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> _originalFunction;
+        private readonly Func<TParams, TOuterKey> _keySelector;
         private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TInnerKey> _keyComparer;
         private readonly Func<TOuterKey, bool> _skipCacheGetPredicateOuterKeyOnly;
@@ -25,11 +26,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
-            Func<TOuterKey, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
+            Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
+            Func<TParams, TOuterKey> keySelector,
             CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> config)
         {
             _originalFunction = originalFunction;
-            
+            _keySelector = keySelector;
+
             if (config.DisableCaching)
             {
                 _timeToLiveFactory = (_, __) => TimeSpan.Zero;
@@ -70,12 +73,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
 
         public async Task<Dictionary<TInnerKey, TValue>> GetMany(
-            TOuterKey outerKey,
+            TParams parameters,
             IEnumerable<TInnerKey> innerKeys,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
+            var outerKey = _keySelector(parameters);
             var innerKeysCollection = innerKeys.ToReadOnlyCollection();
 
             var getFromCacheTask = GetFromCache();
@@ -91,7 +95,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (missingKeys.Count < _maxBatchSize)
             {
-                await GetValuesFromFunc(outerKey, missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
+                await GetValuesFromFunc(parameters, outerKey, missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
             }
             else
             {
@@ -101,7 +105,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 var resultsDictionaryLock = new object();
                 var index = 0;
                 foreach (var batch in batches)
-                    tasks[index++] = GetValuesFromFunc(outerKey, batch, cancellationToken, resultsDictionary, resultsDictionaryLock);
+                    tasks[index++] = GetValuesFromFunc(parameters, outerKey, batch, cancellationToken, resultsDictionary, resultsDictionaryLock);
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
@@ -175,13 +179,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
 
         private async Task GetValuesFromFunc(
+            TParams parameters,
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
             CancellationToken cancellationToken,
             Dictionary<TInnerKey, TValue> resultsDictionary,
             object resultsDictionaryLock = null)
         {
-            var getValuesFromFuncTask = _originalFunction(outerKey, innerKeys, cancellationToken);
+            var getValuesFromFuncTask = _originalFunction(parameters, innerKeys, cancellationToken);
 
             var valuesFromFunc = getValuesFromFuncTask.IsCompleted
                 ? getValuesFromFuncTask.Result

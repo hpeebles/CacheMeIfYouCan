@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 {
     public abstract class CachedFunctionConfigurationManagerAsyncBase<TParams, TKey, TValue, TConfig>
         : CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
-        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly Func<TParams, Task<TValue>> _originalFunction;
         private readonly Func<TParams, TKey> _cacheKeySelector;
@@ -39,8 +39,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> :
-        CachedFunctionConfigurationManagerAsyncBase<TParam, TParam, TValue, ICachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>>,
-        ICachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue>
+        CachedFunctionConfigurationManagerAsyncBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>>,
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue>
     {
         private readonly Func<TParam, Task<TValue>> _originalFunction;
 
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
@@ -60,8 +60,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>>,
-            ICachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>
+        : CachedFunctionConfigurationManagerAsyncBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>>,
+            ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_1Param(
             Func<TParam, Task<TValue>> originalFunction,

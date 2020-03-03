@@ -5,35 +5,38 @@ using System.Threading.Tasks;
 
 namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
 {
-    public sealed class CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>
-        : CachedFunctionConfigurationManagerBase<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx<TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue>>
+    public abstract class CachedFunctionConfigurationManagerSyncCanxBase<TParams, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, TConfig>
+        : CachedFunctionConfigurationManagerBase<TParams, TOuterKey, TInnerKeys, TResponse, TInnerKey, TValue, TConfig>
         where TInnerKeys : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+        where TConfig : CachedFunctionConfigurationManagerSyncCanxBase<TParams, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, TConfig>
     {
-        private readonly Func<TOuterKey, TInnerKeys, CancellationToken, TResponse> _originalFunction;
+        private readonly Func<TParams, TInnerKeys, CancellationToken, TResponse> _originalFunction;
+        private readonly Func<TParams, TOuterKey> _keySelector;
 
-        internal CachedFunctionConfigurationManagerSyncCanx(
-            Func<TOuterKey, TInnerKeys, CancellationToken, TResponse> originalFunction)
+        internal CachedFunctionConfigurationManagerSyncCanxBase(
+            Func<TParams, TInnerKeys, CancellationToken, TResponse> originalFunction,
+            Func<TParams, TOuterKey> keySelector)
         {
             _originalFunction = originalFunction;
+            _keySelector = keySelector;
         }
 
-        public Func<TOuterKey, TInnerKeys, CancellationToken, TResponse> Build()
+        private protected Func<TParams, TInnerKeys, CancellationToken, TResponse> BuildInternal()
         {
-            var cachedFunction = BuildCachedFunction(ConvertFunction());
+            var cachedFunction = BuildCachedFunction(ConvertFunction(), _keySelector);
 
             var responseConverter = GetResponseConverter();
             
             return Get;
             
-            TResponse Get(TOuterKey outerKey, TInnerKeys innerKeys, CancellationToken cancellationToken)
+            TResponse Get(TParams parameters, TInnerKeys innerKeys, CancellationToken cancellationToken)
             {
-                var task = cachedFunction.GetMany(outerKey, innerKeys, cancellationToken);
+                var task = cachedFunction.GetMany(parameters, innerKeys, cancellationToken);
 
-                if (!task.IsCompleted)
-                    Task.Run(() => task).GetAwaiter().GetResult();
-
-                var results = task.Result;
+                var results = task.IsCompleted
+                    ? task.Result
+                    : task.GetAwaiter().GetResult();
 
                 return results switch
                 {
@@ -44,22 +47,169 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             }
         }
 
-        private Func<TOuterKey, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> ConvertFunction()
+        private Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> ConvertFunction()
         {
             var requestConverter = GetRequestConverter();
 
             return Get;
             
             Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>> Get(
-                TOuterKey outerKey,
+                TParams parameters,
                 IReadOnlyCollection<TInnerKey> innerKeys,
                 CancellationToken cancellationToken)
             {
                 if (!(innerKeys is TInnerKeys typedRequest))
                     typedRequest = requestConverter(innerKeys);
 
-                return Task.FromResult((IEnumerable<KeyValuePair<TInnerKey, TValue>>)_originalFunction(outerKey, typedRequest, cancellationToken));
+                return Task.FromResult<IEnumerable<KeyValuePair<TInnerKey, TValue>>>(_originalFunction(parameters, typedRequest, cancellationToken));
             }
+        }
+    }
+
+    public sealed class CachedFunctionConfigurationManagerSyncCanx<TParam, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<TParam, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx<TParam, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_2Params<TParam, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx(
+            Func<TParam, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam, TOuterKey> keySelector)
+            : base(originalFunc, keySelector)
+        { }
+
+        public Func<TParam, TInnerKeys, CancellationToken, TResponse> Build() => BuildInternal();
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_3Params(
+            Func<TParam1, TParam2, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2))
+        { }
+
+        public Func<TParam1, TParam2, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, innerKeys, cancellationToken) => cachedFunction((param1, param2), innerKeys, cancellationToken);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_4Params(
+            Func<TParam1, TParam2, TParam3, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TParam3, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, t.Item3, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2, t.Item3))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, param3, innerKeys, cancellationToken) => cachedFunction((param1, param2, param3), innerKeys, cancellationToken);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_5Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TParam3, TParam4, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, t.Item3, t.Item4, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2, t.Item3, t.Item4))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, param3, param4, innerKeys, cancellationToken) => cachedFunction((param1, param2, param3, param4), innerKeys, cancellationToken);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_6Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, param3, param4, param5, innerKeys, cancellationToken) => cachedFunction((param1, param2, param3, param4, param5), innerKeys, cancellationToken);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_7Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, param3, param4, param5, param6, innerKeys, cancellationToken) => cachedFunction((param1, param2, param3, param4, param5, param6), innerKeys, cancellationToken);
+        }
+    }
+    
+    public sealed class CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionConfigurationManagerSyncCanxBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue, CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue>>,
+            ICachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, TResponse>
+        where TInnerKeys : IEnumerable<TInnerKey>
+        where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
+    {
+        internal CachedFunctionConfigurationManagerSyncCanx_8Params(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, CancellationToken, TResponse> originalFunc,
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TOuterKey> keySelector)
+            : base(
+                (t, innerKeys, cancellationToken) => originalFunc(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, innerKeys, cancellationToken),
+                t => keySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7))
+        { }
+
+        public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, CancellationToken, TResponse> Build()
+        {
+            var cachedFunction = BuildInternal();
+
+            return (param1, param2, param3, param4, param5, param6, param7, innerKeys, cancellationToken) => cachedFunction((param1, param2, param3, param4, param5, param6, param7), innerKeys, cancellationToken);
         }
     }
 }

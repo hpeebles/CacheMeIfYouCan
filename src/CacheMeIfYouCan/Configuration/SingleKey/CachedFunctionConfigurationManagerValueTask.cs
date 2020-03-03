@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 {
     public abstract class CachedFunctionConfigurationManagerValueTaskBase<TParams, TKey, TValue, TConfig>
         : CachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
-        where TConfig : class, ICachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
+        where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
         private readonly Func<TParams, ValueTask<TValue>> _originalFunction;
         private readonly Func<TParams, TKey> _cacheKeySelector;
@@ -39,8 +39,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> :
-        CachedFunctionConfigurationManagerValueTaskBase<TParam, TParam, TValue, ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TParam, TValue>>,
-        ICachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue>
+        CachedFunctionConfigurationManagerValueTaskBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TParam, TValue>>,
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue>
     {
         private readonly Func<TParam, ValueTask<TValue>> _originalFunction;
 
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
@@ -60,8 +60,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>
-        : CachedFunctionConfigurationManagerValueTaskBase<TParam, TKey, TValue, ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>>,
-            ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>
+        : CachedFunctionConfigurationManagerValueTaskBase<TParam, TKey, TValue, ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>>,
+            ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>
     {
         internal CachedFunctionConfigurationManagerValueTask_1Param(
             Func<TParam, ValueTask<TValue>> originalFunction,

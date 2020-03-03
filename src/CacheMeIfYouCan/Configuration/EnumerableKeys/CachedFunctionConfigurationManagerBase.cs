@@ -10,8 +10,8 @@ using CacheMeIfYouCan.Internal.ResponseConverters;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
-    public abstract class CachedFunctionConfigurationManagerBase<TRequest, TResponse, TKey, TValue, TConfig>
-        where TConfig : CachedFunctionConfigurationManagerBase<TRequest, TResponse, TKey, TValue, TConfig>
+    public abstract class CachedFunctionConfigurationManagerBase<TParams, TRequest, TResponse, TKey, TValue, TConfig>
+        where TConfig : CachedFunctionConfigurationManagerBase<TParams, TRequest, TResponse, TKey, TValue, TConfig>
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {
@@ -151,10 +151,10 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return _responseConverter ?? DefaultResponseConverterResolver.Get<TKey, TValue, TResponse>(_config.KeyComparer);
         }
 
-        private protected CachedFunctionWithEnumerableKeys<TKey, TValue> BuildCachedFunction(
-            Func<IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
+        private protected CachedFunctionWithEnumerableKeys<TParams, TKey, TValue> BuildCachedFunction(
+            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
         {
-            return new CachedFunctionWithEnumerableKeys<TKey, TValue>(originalFunction, _config);
+            return new CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>(originalFunction, _config);
         }
     }
 }
