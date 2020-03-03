@@ -44,13 +44,13 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             }
         }
 
-        private Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
+        private Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
         {
             var requestConverter = GetRequestConverter();
 
             return Get;
             
-            Task<IEnumerable<KeyValuePair<TKey, TValue>>> Get(
+            ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>> Get(
                 TParams parameters,
                 IReadOnlyCollection<TKey> keys,
                 CancellationToken cancellationToken)
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
                 if (!(keys is TKeys typedRequest))
                     typedRequest = requestConverter(keys);
 
-                return Task.FromResult<IEnumerable<KeyValuePair<TKey, TValue>>>(_originalFunction(parameters, typedRequest, cancellationToken));
+                return new ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>(_originalFunction(parameters, typedRequest, cancellationToken));
             }
         }
     }

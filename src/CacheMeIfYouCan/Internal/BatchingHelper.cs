@@ -4,7 +4,7 @@ namespace CacheMeIfYouCan.Internal
 {
     internal static class BatchingHelper
     {
-        public static IReadOnlyCollection<IReadOnlyCollection<T>> Batch<T>(
+        public static T[][] Batch<T>(
             IReadOnlyCollection<T> values,
             int maxBatchSize,
             BatchBehaviour batchBehaviour)

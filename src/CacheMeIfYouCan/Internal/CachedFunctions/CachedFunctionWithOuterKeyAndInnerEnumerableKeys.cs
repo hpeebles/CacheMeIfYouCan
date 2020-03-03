@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
     internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue>
     {
-        private readonly Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> _originalFunction;
+        private readonly Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> _originalFunction;
         private readonly Func<TParams, TOuterKey> _keySelector;
         private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TInnerKey> _keyComparer;
@@ -26,7 +26,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
-            Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
+            Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
             Func<TParams, TOuterKey> keySelector,
             CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> config)
         {
@@ -72,7 +72,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        public async Task<Dictionary<TInnerKey, TValue>> GetMany(
+        public async ValueTask<Dictionary<TInnerKey, TValue>> GetMany(
             TParams parameters,
             IEnumerable<TInnerKey> innerKeys,
             CancellationToken cancellationToken)
@@ -95,19 +95,39 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (missingKeys.Count < _maxBatchSize)
             {
-                await GetValuesFromFunc(parameters, outerKey, missingKeys, cancellationToken, resultsDictionary).ConfigureAwait(false);
+                var getValuesFromFuncTask = GetValuesFromFunc(parameters, outerKey, missingKeys, cancellationToken, resultsDictionary);
+
+                if (!getValuesFromFuncTask.IsCompleted)
+                    await getValuesFromFuncTask.ConfigureAwait(false);
             }
             else
             {
                 var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
                 
-                var tasks = new Task[batches.Count];
+                Task[] tasks = null;
                 var resultsDictionaryLock = new object();
-                var index = 0;
-                foreach (var batch in batches)
-                    tasks[index++] = GetValuesFromFunc(parameters, outerKey, batch, cancellationToken, resultsDictionary, resultsDictionaryLock);
+                var tasksIndex = 0;
+                for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                {
+                    var getValuesFromFuncTask = GetValuesFromFunc(
+                        parameters,
+                        outerKey,
+                        batches[batchIndex],
+                        cancellationToken,
+                        resultsDictionary,
+                        resultsDictionaryLock);
 
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                    if (getValuesFromFuncTask.IsCompleted)
+                        continue;
+                    
+                    if (tasks is null)
+                        tasks = new Task[batches.Length - batchIndex];
+
+                    tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                }
+
+                if (!(tasks is null))
+                    await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
             }
 
             return resultsDictionary;
@@ -178,7 +198,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        private async Task GetValuesFromFunc(
+        private async ValueTask GetValuesFromFunc(
             TParams parameters,
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,

@@ -152,7 +152,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         private protected CachedFunctionWithEnumerableKeys<TParams, TKey, TValue> BuildCachedFunction(
-            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
+            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
         {
             return new CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>(originalFunction, _config);
         }

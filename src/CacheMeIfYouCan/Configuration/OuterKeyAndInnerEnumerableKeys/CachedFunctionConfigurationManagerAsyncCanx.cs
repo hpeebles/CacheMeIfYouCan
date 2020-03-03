@@ -47,13 +47,13 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             }
         }
 
-        private Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> ConvertFunction()
+        private Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> ConvertFunction()
         {
             var requestConverter = GetRequestConverter();
 
             return Get;
             
-            async Task<IEnumerable<KeyValuePair<TInnerKey, TValue>>> Get(
+            async ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>> Get(
                 TParams parameters,
                 IReadOnlyCollection<TInnerKey> innerKeys,
                 CancellationToken cancellationToken)

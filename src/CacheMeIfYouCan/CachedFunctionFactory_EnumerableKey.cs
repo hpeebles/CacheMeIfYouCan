@@ -367,5 +367,186 @@ namespace CacheMeIfYouCan
             return new CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>(originalFunction);
         }
         #endregion
+        
+        #region ValueTask
+        public static CachedFunctionConfigurationManagerValueTask<TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TKeys, TResponse, TKey, TValue>(Func<TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask<TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_2Params<TParam, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam, TKeys, TResponse, TKey, TValue>(Func<TParam, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_2Params<TParam, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        #endregion
+        
+        #region ValueTaskCanx
+        public static CachedFunctionConfigurationManagerValueTaskCanx<TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TKeys, TResponse, TKey, TValue>(Func<TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx<TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_2Params<TParam, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam, TKeys, TResponse, TKey, TValue>(Func<TParam, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_2Params<TParam, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>(
+                Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        
+        public static CachedFunctionConfigurationManagerValueTaskCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>
+            ConfigureFor<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>(Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
+            where TKeys : IEnumerable<TKey>
+            where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
+        {
+            if (originalFunction is null)
+                throw new ArgumentNullException(nameof(originalFunction));
+            
+            return new CachedFunctionConfigurationManagerValueTaskCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue>(originalFunction);
+        }
+        #endregion
     }
 }

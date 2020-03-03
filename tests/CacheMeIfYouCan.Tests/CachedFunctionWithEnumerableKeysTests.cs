@@ -769,6 +769,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With1Param_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -830,6 +832,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p, cancellationToken) => new ValueTask<Dictionary<int, int>>(p.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = p => new ValueTask<Dictionary<int, int>>(p.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -844,6 +872,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With2Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -905,6 +935,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) => new ValueTask<Dictionary<int, int>>(p2.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2) => new ValueTask<Dictionary<int, int>>(p2.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -919,6 +975,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With3Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -980,6 +1038,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, 2, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) => new ValueTask<Dictionary<int, int>>(p3.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3) => new ValueTask<Dictionary<int, int>>(p3.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -994,6 +1078,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With4Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -1055,6 +1141,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, 2, 3, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) => new ValueTask<Dictionary<int, int>>(p4.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) => new ValueTask<Dictionary<int, int>>(p4.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -1069,6 +1181,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With5Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -1130,6 +1244,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, 2, 3, 4, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => new ValueTask<Dictionary<int, int>>(p5.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) => new ValueTask<Dictionary<int, int>>(p5.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -1144,6 +1284,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With6Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -1205,6 +1347,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, 2, 3, 4, 5, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => new ValueTask<Dictionary<int, int>>(p6.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) => new ValueTask<Dictionary<int, int>>(p6.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -1219,6 +1387,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With7Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -1280,6 +1450,32 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(1, 2, 3, 4, 5, 6, input).Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => new ValueTask<Dictionary<int, int>>(p7.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => new ValueTask<Dictionary<int, int>>(p7.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, input).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
             }
 
             for (var i = 1; i <= 10; i++)
@@ -1294,6 +1490,8 @@ namespace CacheMeIfYouCan.Tests
         [InlineData("async", false)]
         [InlineData("sync", true)]
         [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
         public async Task With8Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
@@ -1353,6 +1551,32 @@ namespace CacheMeIfYouCan.Tests
                         .Build();
 
                     cachedFunction(1, 2, 3, 4, 5, 6, 7, input).Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => new ValueTask<Dictionary<int, int>>(p8.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, input, CancellationToken.None).Result.Should().BeEquivalentTo(expectedOutput);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => new ValueTask<Dictionary<int, int>>(p8.ToDictionary(x => x));
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .Build();
+
+                    cachedFunction(1, 2, 3, 4, 5, 6, 7, input).Result.Should().BeEquivalentTo(expectedOutput);
                     break;
                 }
             }

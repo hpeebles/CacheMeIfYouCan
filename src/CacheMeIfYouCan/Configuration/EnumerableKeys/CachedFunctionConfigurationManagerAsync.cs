@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
-using CacheMeIfYouCan.Configuration.SingleKey;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
@@ -45,13 +44,13 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             }
         }
 
-        private Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, Task<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
+        private Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
         {
             var requestConverter = GetRequestConverter();
 
             return Get;
             
-            async Task<IEnumerable<KeyValuePair<TKey, TValue>>> Get(
+            async ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>> Get(
                 TParams parameters,
                 IReadOnlyCollection<TKey> keys,
                 CancellationToken cancellationToken)
