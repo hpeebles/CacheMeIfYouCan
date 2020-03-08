@@ -66,16 +66,16 @@ namespace CacheMeIfYouCan.Benchmarks
         
          [Benchmark]
          public ValueTask<Dictionary<int, int>> OneHit() => _func(_oneHit);
-        //
-        // [Benchmark]
-        // public ValueTask<Dictionary<int, int>> OneMiss() => _func(_oneMiss);
-        //
-        // [Benchmark]
-        // public ValueTask<Dictionary<int, int>> OneHitAndOneMiss() => _func(_oneHitAndOneMiss);
-        //
-        // [Benchmark]
-        // public ValueTask<Dictionary<int, int>> OneHundredHits() => _func(_oneHundredHits);
-        //
+        
+        [Benchmark]
+        public ValueTask<Dictionary<int, int>> OneMiss() => _func(_oneMiss);
+        
+        [Benchmark]
+        public ValueTask<Dictionary<int, int>> OneHitAndOneMiss() => _func(_oneHitAndOneMiss);
+        
+        [Benchmark]
+        public ValueTask<Dictionary<int, int>> OneHundredHits() => _func(_oneHundredHits);
+        
         [Benchmark]
         public ValueTask<Dictionary<int, int>> OneHundredMisses() => _func(_oneHundredMisses);
         

@@ -1,7 +1,6 @@
 ﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
@@ -39,7 +38,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> :
-        CachedFunctionConfigurationManagerAsyncBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TParam, TValue>>,
+        CachedFunctionConfigurationManagerAsyncBase<TParam, TParam, TValue, ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>>,
         ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue>
     {
         private readonly Func<TParam, Task<TValue>> _originalFunction;
@@ -56,6 +55,15 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return new CachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
 
+        public ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new CachedFunctionWithSingleKeyResult_Success<TParam, TValue>(r)));
+            OnException(r => onException(new CachedFunctionWithSingleKeyResult_Exception<TParam>(r)));
+            return this;
+        }
+        
         public Func<TParam, Task<TValue>> Build() => BuildInternal();
     }
     
@@ -69,6 +77,15 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             : base(originalFunction, cacheKeySelector)
         { }
 
+        public ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>(r)));
+            OnException(r => onException(new CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>(r)));
+            return this;
+        }
+        
         public Func<TParam, Task<TValue>> Build() => BuildInternal();
     }
     
@@ -79,15 +96,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2),
+                t => cacheKeySelector(t.Item1, t.Item2))
         { }
+
+        public CachedFunctionConfigurationManagerAsync_2Params<TParam1, TParam2, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
 
         public Func<TParam1, TParam2, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2) => cachedFunction((p1, p2));
         }
     }
     
@@ -98,15 +124,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3))
         { }
 
+        public CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TParam3, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+        
         public Func<TParam1, TParam2, TParam3, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3) => cachedFunction((p1, p2, p3));
         }
     }
     
@@ -117,15 +152,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TParam4, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4))
         { }
 
+        public CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+        
         public Func<TParam1, TParam2, TParam3, TParam4, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3, p4) => cachedFunction((p1, p2, p3, p4));
         }
     }
     
@@ -136,15 +180,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5))
         { }
-
+        
+        public CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+        
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3, p4, p5) => cachedFunction((p1, p2, p3, p4, p5));
         }
     }
     
@@ -155,15 +208,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6))
         { }
+
+        public CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3, p4, p5, p6) => cachedFunction((p1, p2, p3, p4, p5, p6));
         }
     }
     
@@ -174,15 +236,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7))
         { }
+
+        public CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3, p4, p5, p6, p7) => cachedFunction((p1, p2, p3, p4, p5, p6, p7));
         }
     }
     
@@ -193,15 +264,24 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, Task<TValue>> originalFunction,
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey> cacheKeySelector)
             : base(
-                TupleHelper.ConvertFuncToTupleInput(originalFunction),
-                TupleHelper.ConvertFuncToTupleInput(cacheKeySelector))
+                t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8),
+                t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8))
         { }
+
+        public CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> OnResult(
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue>> onSuccess = null,
+            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, Task<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return TupleHelper.ConvertFuncFromTupleInput(cachedFunction);
+            return (p1, p2, p3, p4, p5, p6, p7, p8) => cachedFunction((p1, p2, p3, p4, p5, p6, p7, p8));
         }
     }
 }

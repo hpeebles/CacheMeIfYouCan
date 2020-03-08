@@ -11,8 +11,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
         where TConfig : class, ISingleKeyCachedFunctionConfigurationManagerBase<TParams, TKey, TValue, TConfig>
     {
-        private readonly CachedFunctionWithSingleKeyConfiguration<TKey, TValue> _config =
-            new CachedFunctionWithSingleKeyConfiguration<TKey, TValue>();
+        private readonly CachedFunctionWithSingleKeyConfiguration<TParams, TKey, TValue> _config =
+            new CachedFunctionWithSingleKeyConfiguration<TParams, TKey, TValue>();
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
@@ -98,6 +98,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or(predicate);
             return ThisAsTConfig();
+        }
+
+        private protected void OnSuccess(Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>> action)
+        {
+            if (!(action is null))
+                _config.OnSuccessAction += action;
+        }
+        
+        private protected void OnException(Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>> action)
+        {
+            if (!(action is null))
+                _config.OnExceptionAction += action;
         }
 
         private protected CachedFunctionWithSingleKey<TParams, TKey, TValue> BuildCachedFunction(

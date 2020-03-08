@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
@@ -13,14 +14,18 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly ICache<TKey, TValue> _cache;
+        private readonly Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>> _onSuccessAction;
+        private readonly Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>> _onExceptionAction;
 
         public CachedFunctionWithSingleKey(
             Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
             Func<TParams, TKey> keySelector,
-            CachedFunctionWithSingleKeyConfiguration<TKey, TValue> config)
+            CachedFunctionWithSingleKeyConfiguration<TParams, TKey, TValue> config)
         {
             _originalFunction = originalFunction;
             _keySelector = keySelector;
+            _onSuccessAction = config.OnSuccessAction;
+            _onExceptionAction = config.OnExceptionAction;
 
             if (config.DisableCaching)
             {
@@ -43,42 +48,77 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
         public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var key = _keySelector(parameters);
-            
-            if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key))
+            var start = DateTime.UtcNow;
+            var timer = Stopwatch.StartNew();
+            TKey key = default;
+            try
             {
-                var tryGetTask = _cache.TryGet(key);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var (success, valueFromCache) = tryGetTask.IsCompleted
-                    ? tryGetTask.Result
-                    : await tryGetTask.ConfigureAwait(false);
+                key = _keySelector(parameters);
 
-                if (success)
-                    return valueFromCache;
-            }
-
-            var getFromFuncTask = _originalFunction(parameters, cancellationToken);
-
-            var value = getFromFuncTask.IsCompleted
-                ? getFromFuncTask.Result
-                : await getFromFuncTask.ConfigureAwait(false);
-            
-            if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
-            {
-                var timeToLive = _timeToLiveFactory(key);
-
-                if (timeToLive > TimeSpan.Zero)
+                if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(key))
                 {
-                    var setTask = _cache.Set(key, value, timeToLive);
+                    var tryGetTask = _cache.TryGet(key);
 
-                    if (!setTask.IsCompleted)
-                        await setTask.ConfigureAwait(false);
+                    var (success, valueFromCache) = tryGetTask.IsCompleted
+                        ? tryGetTask.Result
+                        : await tryGetTask.ConfigureAwait(false);
+
+                    if (success)
+                    {
+                        _onSuccessAction?.Invoke(new CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>(
+                            parameters,
+                            key,
+                            valueFromCache,
+                            start,
+                            timer.Elapsed,
+                            true));
+
+                        return valueFromCache;
+                    }
                 }
-            }
 
-            return value;
+                var getFromFuncTask = _originalFunction(parameters, cancellationToken);
+
+                var value = getFromFuncTask.IsCompleted
+                    ? getFromFuncTask.Result
+                    : await getFromFuncTask.ConfigureAwait(false);
+
+                if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
+                {
+                    var timeToLive = _timeToLiveFactory(key);
+
+                    if (timeToLive > TimeSpan.Zero)
+                    {
+                        var setTask = _cache.Set(key, value, timeToLive);
+
+                        if (!setTask.IsCompleted)
+                            await setTask.ConfigureAwait(false);
+                    }
+                }
+                
+                _onSuccessAction?.Invoke(new CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>(
+                    parameters,
+                    key,
+                    value,
+                    start,
+                    timer.Elapsed,
+                    false));
+
+                return value;
+            }
+            catch (Exception ex) when (!(_onExceptionAction is null))
+            {
+                _onExceptionAction(new CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>(
+                    parameters,
+                    key,
+                    start,
+                    timer.Elapsed,
+                    ex));
+
+                throw;
+            }
         }
     }
 }
