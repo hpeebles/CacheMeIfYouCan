@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 using FluentAssertions;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace CacheMeIfYouCan.Cron.Tests
         {
             var countdown = new CountdownEvent(5);
             
-            var refreshResults = new List<CachedObjectValueRefreshedEvent<DateTime>>();
+            var refreshResults = new List<ValueRefreshedEvent<DateTime>>();
 
             var cachedObject = CachedObjectFactory
                 .ConfigureFor(async () =>

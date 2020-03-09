@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
@@ -23,8 +24,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue> :
@@ -38,8 +39,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>
     { 
         ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> :
@@ -47,8 +48,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TParam, TValue> :
@@ -62,8 +63,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> :
@@ -71,8 +72,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue> :
@@ -86,8 +87,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> :
@@ -95,8 +96,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue> :
@@ -110,8 +111,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> :
@@ -119,8 +120,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue> :
@@ -134,8 +135,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> :
@@ -143,8 +144,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null);
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue> :
@@ -158,7 +159,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null);
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null);
     }
 }

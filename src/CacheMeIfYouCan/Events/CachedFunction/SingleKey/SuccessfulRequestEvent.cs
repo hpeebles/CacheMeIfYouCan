@@ -1,63 +1,68 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
 {
-    public readonly struct CachedFunctionWithSingleKeyResult_Exception<TKey>
+    public readonly struct SuccessfulRequestEvent<TKey, TValue>
     {
-        internal CachedFunctionWithSingleKeyResult_Exception(
-            in CachedFunctionWithSingleKeyResult_MultiParam_Exception<TKey, TKey> result)
+        internal SuccessfulRequestEvent(in SuccessfulRequestEvent_MultiParam<TKey, TKey, TValue> result)
         {
             Key = result.Key;
+            Value = result.Value;
             Start = result.Start;
             Duration = result.Duration;
-            Exception = result.Exception;
+            WasCached = result.WasCached;
         }
         
         public TKey Key { get; }
+        public TValue Value { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public Exception Exception { get; }
+        public bool WasCached { get; }
     }
     
-    public readonly struct CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>
+    public readonly struct SuccessfulRequestEvent_1Param<TParam, TKey, TValue>
     {
-        internal CachedFunctionWithSingleKeyResult_1Param_Exception(
-            in CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParam, TKey> result)
+        internal SuccessfulRequestEvent_1Param(in SuccessfulRequestEvent_MultiParam<TParam, TKey, TValue> result)
         {
             Parameter = result.Parameters;
             Key = result.Key;
+            Value = result.Value;
             Start = result.Start;
             Duration = result.Duration;
-            Exception = result.Exception;
+            WasCached = result.WasCached;
         }
         
         public TParam Parameter { get; }
         public TKey Key { get; }
+        public TValue Value { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public Exception Exception { get; }
+        public bool WasCached { get; }
     }
 
-    public readonly struct CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>
+    public readonly struct SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>
     {
-        internal CachedFunctionWithSingleKeyResult_MultiParam_Exception(
+        internal SuccessfulRequestEvent_MultiParam(
             TParams parameters,
             TKey key,
+            TValue value,
             DateTime start,
             TimeSpan duration,
-            Exception exception)
+            bool wasCached)
         {
             Parameters = parameters;
             Key = key;
+            Value = value;
             Start = start;
             Duration = duration;
-            Exception = exception;
+            WasCached = wasCached;
         }
 
         public TParams Parameters { get; }
         public TKey Key { get; }
+        public TValue Value { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public Exception Exception { get; }
+        public bool WasCached { get; }
     }
 }

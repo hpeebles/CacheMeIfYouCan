@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
@@ -14,8 +15,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly ICache<TKey, TValue> _cache;
-        private readonly Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>> _onSuccessAction;
-        private readonly Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>> _onExceptionAction;
+        private readonly Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> _onSuccessAction;
+        private readonly Action<ExceptionEvent_MultiParam<TParams, TKey>> _onExceptionAction;
 
         public CachedFunctionWithSingleKey(
             Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
@@ -67,7 +68,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                     if (success)
                     {
-                        _onSuccessAction?.Invoke(new CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>(
+                        _onSuccessAction?.Invoke(new SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>(
                             parameters,
                             key,
                             valueFromCache,
@@ -98,7 +99,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     }
                 }
                 
-                _onSuccessAction?.Invoke(new CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>(
+                _onSuccessAction?.Invoke(new SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>(
                     parameters,
                     key,
                     value,
@@ -110,7 +111,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             catch (Exception ex) when (!(_onExceptionAction is null))
             {
-                _onExceptionAction(new CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>(
+                _onExceptionAction(new ExceptionEvent_MultiParam<TParams, TKey>(
                     parameters,
                     key,
                     start,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
@@ -100,13 +101,13 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return ThisAsTConfig();
         }
 
-        private protected void OnSuccess(Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<TParams, TKey, TValue>> action)
+        private protected void OnSuccess(Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> action)
         {
             if (!(action is null))
                 _config.OnSuccessAction += action;
         }
         
-        private protected void OnException(Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<TParams, TKey>> action)
+        private protected void OnException(Action<ExceptionEvent_MultiParam<TParams, TKey>> action)
         {
             if (!(action is null))
                 _config.OnExceptionAction += action;

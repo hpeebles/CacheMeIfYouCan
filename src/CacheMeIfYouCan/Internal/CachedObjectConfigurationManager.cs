@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -15,8 +16,8 @@ namespace CacheMeIfYouCan.Internal
         private Func<TimeSpan> _refreshIntervalFactory;
         private Action<ICachedObject<T>> _onInitializedAction;
         private Action<ICachedObject<T>> _onDisposedAction;
-        private Action<CachedObjectValueRefreshedEvent<T>> _onValueRefreshedAction;
-        private Action<CachedObjectValueRefreshExceptionEvent<T>> _onValueRefreshExceptionAction;
+        private Action<ValueRefreshedEvent<T>> _onValueRefreshedAction;
+        private Action<ValueRefreshExceptionEvent<T>> _onValueRefreshExceptionAction;
 
         internal CachedObjectConfigurationManager(Func<CancellationToken, Task<T>> getValueFunc)
         {
@@ -59,13 +60,13 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
-        public ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action)
+        public ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action)
         {
             _onValueRefreshedAction += action;
             return this;
         }
         
-        public ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action)
+        public ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action)
         {
             _onValueRefreshExceptionAction += action;
             return this;

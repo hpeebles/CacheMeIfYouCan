@@ -1,20 +1,18 @@
 ﻿using System;
 
-namespace CacheMeIfYouCan
+namespace CacheMeIfYouCan.Events.CachedObject
 {
-    public readonly struct CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>
+    public readonly struct ValueRefreshedEvent<T>
     {
-        internal CachedObjectValueUpdatedEvent(
+        internal ValueRefreshedEvent(
             T newValue,
             T previousValue,
-            TUpdateFuncInput updateFuncInput,
             TimeSpan duration,
             DateTime dateOfPreviousSuccessfulRefresh,
             long version)
         {
             NewValue = newValue;
             PreviousValue = previousValue;
-            UpdateFuncInput = updateFuncInput;
             Duration = duration;
             DateOfPreviousSuccessfulRefresh = dateOfPreviousSuccessfulRefresh;
             Version = version;
@@ -22,9 +20,9 @@ namespace CacheMeIfYouCan
         
         public T NewValue { get; }
         public T PreviousValue { get; }
-        public TUpdateFuncInput UpdateFuncInput { get; }
         public TimeSpan Duration { get; }
         public DateTime DateOfPreviousSuccessfulRefresh { get; }
         public long Version { get; }
+        public bool IsResultOfInitialization => Version == 1;
     }
 }

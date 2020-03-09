@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -81,10 +82,10 @@ namespace CacheMeIfYouCan.Internal
         public long Version => _version;
         public event EventHandler OnInitialized;
         public event EventHandler OnDisposed;
-        public event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
-        public event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;
-        public event EventHandler<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> OnValueUpdated;
-        public event EventHandler<CachedObjectValueUpdateExceptionEvent<T, TUpdateFuncInput>> OnValueUpdateException;
+        public event EventHandler<ValueRefreshedEvent<T>> OnValueRefreshed;
+        public event EventHandler<ValueRefreshExceptionEvent<T>> OnValueRefreshException;
+        public event EventHandler<ValueUpdatedEvent<T, TUpdateFuncInput>> OnValueUpdated;
+        public event EventHandler<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> OnValueUpdateException;
 
         public void Initialize(CancellationToken cancellationToken = default)
         {
@@ -406,7 +407,7 @@ namespace CacheMeIfYouCan.Internal
             if (onValueRefreshedEvent is null)
                 return;
             
-            var message = new CachedObjectValueRefreshedEvent<T>(
+            var message = new ValueRefreshedEvent<T>(
                 _value,
                 previousValue,
                 duration,
@@ -422,7 +423,7 @@ namespace CacheMeIfYouCan.Internal
             if (onValueRefreshExceptionEvent is null)
                 return;
             
-            var message = new CachedObjectValueRefreshExceptionEvent<T>(
+            var message = new ValueRefreshExceptionEvent<T>(
                 exception,
                 _value,
                 duration,
@@ -438,7 +439,7 @@ namespace CacheMeIfYouCan.Internal
             if (onValueUpdatedEvent is null)
                 return;
             
-            var message = new CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>(
+            var message = new ValueUpdatedEvent<T, TUpdateFuncInput>(
                 _value,
                 previousValue,
                 updateFuncInput,
@@ -455,7 +456,7 @@ namespace CacheMeIfYouCan.Internal
             if (onValueUpdateExceptionEvent is null)
                 return;
             
-            var message = new CachedObjectValueUpdateExceptionEvent<T, TUpdateFuncInput>(
+            var message = new ValueUpdateExceptionEvent<T, TUpdateFuncInput>(
                 exception,
                 _value,
                 updateFuncInput,

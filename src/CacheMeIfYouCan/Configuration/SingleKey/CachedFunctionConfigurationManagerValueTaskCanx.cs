@@ -1,6 +1,7 @@
 ﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
@@ -46,11 +47,11 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         }
 
         public ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_Success<TParam, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_Exception<TParam>> onException = null)
+            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParam>> onException = null)
         {
-            OnSuccess(r => onSuccess(new CachedFunctionWithSingleKeyResult_Success<TParam, TValue>(r)));
-            OnException(r => onException(new CachedFunctionWithSingleKeyResult_Exception<TParam>(r)));
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent<TParam, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent<TParam>(r)));
             return this;
         }
         
@@ -68,11 +69,11 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>> onException = null)
+            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null)
         {
-            OnSuccess(r => onSuccess(new CachedFunctionWithSingleKeyResult_1Param_Success<TParam, TKey, TValue>(r)));
-            OnException(r => onException(new CachedFunctionWithSingleKeyResult_1Param_Exception<TParam, TKey>(r)));
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent_1Param<TParam, TKey, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent_1Param<TParam, TKey>(r)));
             return this;
         }
         
@@ -91,8 +92,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_2Params<TParam1, TParam2, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -119,8 +120,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_3Params<TParam1, TParam2, TParam3, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -147,8 +148,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -175,8 +176,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
         
         public CachedFunctionConfigurationManagerValueTaskCanx_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -203,8 +204,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -231,8 +232,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);
@@ -259,8 +260,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         { }
 
         public CachedFunctionConfigurationManagerValueTaskCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> OnResult(
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Success<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue>> onSuccess = null,
-            Action<CachedFunctionWithSingleKeyResult_MultiParam_Exception<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey>> onException = null)
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey>> onException = null)
         {
             OnSuccess(onSuccess);
             OnException(onException);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan
 {
@@ -15,7 +16,7 @@ namespace CacheMeIfYouCan
         Task RefreshValueAsync(TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default, CancellationToken cancellationToken = default);
         event EventHandler OnInitialized;
         event EventHandler OnDisposed;
-        event EventHandler<CachedObjectValueRefreshedEvent<T>> OnValueRefreshed;
-        event EventHandler<CachedObjectValueRefreshExceptionEvent<T>> OnValueRefreshException;
+        event EventHandler<ValueRefreshedEvent<T>> OnValueRefreshed;
+        event EventHandler<ValueRefreshExceptionEvent<T>> OnValueRefreshException;
     }
 }

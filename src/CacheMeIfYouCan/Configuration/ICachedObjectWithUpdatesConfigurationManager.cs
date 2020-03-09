@@ -1,4 +1,5 @@
 using System;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Configuration
 {
@@ -9,10 +10,10 @@ namespace CacheMeIfYouCan.Configuration
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithRefreshValueFuncTimeout(TimeSpan timeout);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnInitialized(Action<ICachedObject<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnDisposed(Action<ICachedObject<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(Action<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdateException(Action<CachedObjectValueUpdateExceptionEvent<T, TUpdateFuncInput>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(Action<ValueUpdatedEvent<T, TUpdateFuncInput>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdateException(Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> action);
         ICachedObjectWithUpdates<T, TUpdateFuncInput> Build();
     }
 

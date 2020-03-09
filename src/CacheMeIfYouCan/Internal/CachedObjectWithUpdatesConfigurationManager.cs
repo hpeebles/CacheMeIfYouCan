@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -11,8 +12,8 @@ namespace CacheMeIfYouCan.Internal
         ICachedObjectWithUpdatesConfigurationManager_WithRefreshInterval<T, TUpdateFuncInput>
     {
         private readonly Func<T, TUpdateFuncInput, CancellationToken, Task<T>> _updateValueFunc;
-        private Action<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> _onValueUpdatedAction;
-        private Action<CachedObjectValueUpdateExceptionEvent<T, TUpdateFuncInput>> _onValueUpdateExceptionAction;
+        private Action<ValueUpdatedEvent<T, TUpdateFuncInput>> _onValueUpdatedAction;
+        private Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> _onValueUpdateExceptionAction;
 
         public CachedObjectWithUpdatesConfigurationManager(
             Func<CancellationToken, Task<T>> getValueFunc,
@@ -52,27 +53,27 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action)
+        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action)
         {
             base.OnValueRefreshed(action);
             return this;
         }
 
-        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action)
+        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action)
         {
             base.OnValueRefreshException(action);
             return this;
         }
         
         public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(
-            Action<CachedObjectValueUpdatedEvent<T, TUpdateFuncInput>> action)
+            Action<ValueUpdatedEvent<T, TUpdateFuncInput>> action)
         {
             _onValueUpdatedAction += action;
             return this;
         }
 
         public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdateException(
-            Action<CachedObjectValueUpdateExceptionEvent<T, TUpdateFuncInput>> action)
+            Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> action)
         {
             _onValueUpdateExceptionAction += action;
             return this;

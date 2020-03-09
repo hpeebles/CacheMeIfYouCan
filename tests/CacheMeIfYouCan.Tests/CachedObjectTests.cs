@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 using FluentAssertions;
 using Xunit;
 
@@ -393,7 +394,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnValueRefreshed_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var events = new List<CachedObjectValueRefreshedEvent<DateTime>>();
+            var events = new List<ValueRefreshedEvent<DateTime>>();
             var countdown = new CountdownEvent(10);
             
             var config = CachedObjectFactory.ConfigureFor(async () =>
@@ -440,7 +441,7 @@ namespace CacheMeIfYouCan.Tests
                 e.Version.Should().Be(index + 1);
             }
             
-            void Action(CachedObjectValueRefreshedEvent<DateTime> e)
+            void Action(ValueRefreshedEvent<DateTime> e)
             {
                 events.Add(e);
                 if (!countdown.IsSet)
@@ -453,7 +454,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnValueRefreshException_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var events = new List<CachedObjectValueRefreshExceptionEvent<DateTime>>();
+            var events = new List<ValueRefreshExceptionEvent<DateTime>>();
             var countdown = new CountdownEvent(10);
             var first = true;
             
@@ -496,7 +497,7 @@ namespace CacheMeIfYouCan.Tests
                 e.Version.Should().Be(1);
             }
             
-            void Action(CachedObjectValueRefreshExceptionEvent<DateTime> e)
+            void Action(ValueRefreshExceptionEvent<DateTime> e)
             {
                 events.Add(e);
                 if (!countdown.IsSet)
@@ -833,7 +834,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnValueUpdated_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var events = new List<CachedObjectValueUpdatedEvent<int, int>>();
+            var events = new List<ValueUpdatedEvent<int, int>>();
             
             var config = CachedObjectFactory
                 .ConfigureFor(() => 1)
@@ -880,7 +881,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnValueUpdateException_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var events = new List<CachedObjectValueUpdateExceptionEvent<int, int>>();
+            var events = new List<ValueUpdateExceptionEvent<int, int>>();
             var updateIndex = 0;
             
             var config = CachedObjectFactory

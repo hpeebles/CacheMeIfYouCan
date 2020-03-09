@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Configuration
 {
@@ -11,8 +12,8 @@ namespace CacheMeIfYouCan.Configuration
         ICachedObjectConfigurationManager<T> WithRefreshValueFuncTimeout(TimeSpan timeout);
         ICachedObjectConfigurationManager<T> OnInitialized(Action<ICachedObject<T>> action);
         ICachedObjectConfigurationManager<T> OnDisposed(Action<ICachedObject<T>> action);
-        ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<CachedObjectValueRefreshedEvent<T>> action);
-        ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<CachedObjectValueRefreshExceptionEvent<T>> action);
+        ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action);
+        ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, CancellationToken, Task<T>> updateValueFunc);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, CancellationToken, T> updateValueFunc);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, Task<T>> updateValueFunc);

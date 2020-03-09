@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using CacheMeIfYouCan.LocalCaches;
 using FluentAssertions;
 using Xunit;
@@ -1294,8 +1295,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_WhenKeyIsParam_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<int, int>();
-            CachedFunctionWithSingleKeyResult_Success<int, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_Exception<int> lastException = default;
+            SuccessfulRequestEvent<int, int> lastSuccess = default;
+            ExceptionEvent<int> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -1487,8 +1488,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With1Param_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_1Param_Success<int, string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_1Param_Exception<int, string> lastException = default;
+            SuccessfulRequestEvent_1Param<int, string, int> lastSuccess = default;
+            ExceptionEvent_1Param<int, string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -1688,8 +1689,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With2Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -1891,8 +1892,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With3Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -2096,8 +2097,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With4Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -2303,8 +2304,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With5Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -2512,8 +2513,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With6Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int, int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int, int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -2723,8 +2724,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With7Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int, int, int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int, int, int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
@@ -2936,8 +2937,8 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnResult_With8Params_WorksAsExpected(string functionType, bool hasCancellationToken)
         {
             var cache = new MockLocalCache<string, int>();
-            CachedFunctionWithSingleKeyResult_MultiParam_Success<(int, int, int, int, int, int, int, int), string, int> lastSuccess = default;
-            CachedFunctionWithSingleKeyResult_MultiParam_Exception<(int, int, int, int, int, int, int, int), string> lastException = default;
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int, int, int, int), string, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int, int, int, int), string> lastException = default;
 
             var first = true;
             var exceptionMessage = Guid.NewGuid().ToString();
