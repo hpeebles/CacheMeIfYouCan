@@ -32,17 +32,17 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             
             TResponse Get(TParams parameters, TInnerKeys innerKeys)
             {
-                var task = cachedFunction.GetMany(parameters, innerKeys, CancellationToken.None);
+                var valueTask = cachedFunction.GetMany(parameters, innerKeys, CancellationToken.None);
 
-                var results = task.IsCompleted
-                    ? task.Result
-                    : task.GetAwaiter().GetResult();
+                var results = valueTask.IsCompleted
+                    ? valueTask.Result
+                    : valueTask.AsTask().GetAwaiter().GetResult();
 
                 return results switch
                 {
                     null => default,
                     TResponse typedResponse => typedResponse,
-                    _ => responseConverter(task.Result)
+                    _ => responseConverter(results)
                 };
             }
         }
@@ -99,7 +99,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, innerKeys) => cachedFunction((param1, param2), innerKeys);
+            return (p1, p2, innerKeys) => cachedFunction((p1, p2), innerKeys);
         }
     }
     
@@ -121,7 +121,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, innerKeys) => cachedFunction((param1, param2, param3), innerKeys);
+            return (p1, p2, p3, innerKeys) => cachedFunction((p1, p2, p3), innerKeys);
         }
     }
     
@@ -143,8 +143,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, innerKeys) =>
-                cachedFunction((param1, param2, param3, param4), innerKeys);
+            return (p1, p2, p3, p4, innerKeys) =>
+                cachedFunction((p1, p2, p3, p4), innerKeys);
         }
     }
     
@@ -166,8 +166,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, innerKeys) =>
-                cachedFunction((param1, param2, param3, param4, param5), innerKeys);
+            return (p1, p2, p3, p4, p5, innerKeys) =>
+                cachedFunction((p1, p2, p3, p4, p5), innerKeys);
         }
     }
     
@@ -189,8 +189,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, innerKeys) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6), innerKeys);
+            return (p1, p2, p3, p4, p5, p6, innerKeys) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6), innerKeys);
         }
     }
     
@@ -212,8 +212,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, param7, innerKeys) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6, param7), innerKeys);
+            return (p1, p2, p3, p4, p5, p6, p7, innerKeys) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6, p7), innerKeys);
         }
     }
 }

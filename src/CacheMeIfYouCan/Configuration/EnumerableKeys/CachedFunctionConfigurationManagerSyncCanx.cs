@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
+using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
@@ -29,17 +30,17 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             
             TResponse Get(TParams parameters, TKeys request, CancellationToken cancellationToken)
             {
-                var task = cachedFunction.GetMany(parameters, request, cancellationToken);
+                var valueTask = cachedFunction.GetMany(parameters, request, cancellationToken);
 
-                var results = task.IsCompleted
-                    ? task.Result
-                    : task.GetAwaiter().GetResult();
+                var results = valueTask.IsCompleted
+                    ? valueTask.Result
+                    : valueTask.AsTask().GetAwaiter().GetResult();
 
                 return results switch
                 {
                     null => default,
                     TResponse typedResponse => typedResponse,
-                    _ => responseConverter(task.Result)
+                    _ => responseConverter(results)
                 };
             }
         }
@@ -73,6 +74,15 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             : base((_, keys, cancellationToken) => originalFunction(keys, cancellationToken))
         { }
 
+        public CachedFunctionConfigurationManagerSyncCanx<TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent<TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TKey>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent<TKey, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent<TKey>(r)));
+            return this;
+        }
+        
         public Func<TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
@@ -106,6 +116,15 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx<TParam, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1ExtraParam<TParam, TKey>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent_1ExtraParam<TParam, TKey>(r)));
+            return this;
+        }
+        
         public Func<TParam, TKeys, CancellationToken, TResponse> Build() => BuildInternal();
     }
     
@@ -128,13 +147,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return new CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
-
+        
+        public CachedFunctionConfigurationManagerSyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+        
         public Func<TParam1, TParam2, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, keys, cancellationToken) =>
-                cachedFunction((param1, param2), keys, cancellationToken);
+            return (p1, p2, keys, cancellationToken) => cachedFunction((p1, p2), keys, cancellationToken);
         }
     }
     
@@ -158,12 +185,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, keys, cancellationToken) =>
-                cachedFunction((param1, param2, param3), keys, cancellationToken);
+            return (p1, p2, p3, keys, cancellationToken) => cachedFunction((p1, p2, p3), keys, cancellationToken);
         }
     }
     
@@ -187,12 +222,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, keys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4), keys, cancellationToken);
+            return (p1, p2, p3, p4, keys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4), keys, cancellationToken);
         }
     }
     
@@ -216,12 +260,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, keys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5), keys, cancellationToken);
+            return (p1, p2, p3, p4, p5, keys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5), keys, cancellationToken);
         }
     }
     
@@ -245,12 +298,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, keys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6), keys, cancellationToken);
+            return (param1, p2, p3, p4, p5, p6, keys, cancellationToken) =>
+                cachedFunction((param1, p2, p3, p4, p5, p6), keys, cancellationToken);
         }
     }
     
@@ -274,12 +336,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerSyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, CancellationToken, TResponse> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, param7, keys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6, param7), keys, cancellationToken);
+            return (param1, p2, p3, p4, p5, p6, p7, keys, cancellationToken) =>
+                cachedFunction((param1, p2, p3, p4, p5, p6, p7), keys, cancellationToken);
         }
     }
 }

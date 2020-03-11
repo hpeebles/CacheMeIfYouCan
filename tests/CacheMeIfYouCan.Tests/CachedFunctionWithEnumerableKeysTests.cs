@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 using CacheMeIfYouCan.LocalCaches;
 using FluentAssertions;
 using Xunit;
@@ -1585,6 +1586,1622 @@ namespace CacheMeIfYouCan.Tests
             {
                 cache.TryGet(i, out var value).Should().BeTrue();
                 value.Should().Be(i);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_WithNoExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent<int, int> lastSuccess = default;
+            ExceptionEvent<int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = p =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<IEnumerable<int>, Dictionary<int, int>> originalFunction = p =>
+                    {
+                        ThrowIfFirst();
+                        return p.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = p =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With1ExtraParam_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_1ExtraParam<int, int, int> lastSuccess = default;
+            ExceptionEvent_1ExtraParam<int, int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p2.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p2.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p2.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2) =>
+                    {
+                        ThrowIfFirst();
+                        return p2.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p2.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p2.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameter.Should().Be(1);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameter.Should().Be(1);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With2ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p3.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p3.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p3.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3) =>
+                    {
+                        ThrowIfFirst();
+                        return p3.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p3.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p3.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With3ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p4.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p4.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p4.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4) =>
+                    {
+                        ThrowIfFirst();
+                        return p4.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p4.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p4.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Parameters.Item3.Should().Be(3);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Parameters.Item3.Should().Be(3);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With4ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p5.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p5.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p5.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5) =>
+                    {
+                        ThrowIfFirst();
+                        return p5.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p5.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p5.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Parameters.Item3.Should().Be(3);
+                lastSuccess.Parameters.Item4.Should().Be(4);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Parameters.Item3.Should().Be(3);
+                lastException.Parameters.Item4.Should().Be(4);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With5ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p6.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p6.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p6.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6) =>
+                    {
+                        ThrowIfFirst();
+                        return p6.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p6.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p6.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Parameters.Item3.Should().Be(3);
+                lastSuccess.Parameters.Item4.Should().Be(4);
+                lastSuccess.Parameters.Item5.Should().Be(5);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Parameters.Item3.Should().Be(3);
+                lastException.Parameters.Item4.Should().Be(4);
+                lastException.Parameters.Item5.Should().Be(5);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With6ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p7.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p7.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p7.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) =>
+                    {
+                        ThrowIfFirst();
+                        return p7.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p7.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p7.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Parameters.Item3.Should().Be(3);
+                lastSuccess.Parameters.Item4.Should().Be(4);
+                lastSuccess.Parameters.Item5.Should().Be(5);
+                lastSuccess.Parameters.Item6.Should().Be(6);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Parameters.Item3.Should().Be(3);
+                lastException.Parameters.Item4.Should().Be(4);
+                lastException.Parameters.Item5.Should().Be(5);
+                lastException.Parameters.Item6.Should().Be(6);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+        
+        [Theory]
+        [InlineData("async", true)]
+        [InlineData("async", false)]
+        [InlineData("sync", true)]
+        [InlineData("sync", false)]
+        [InlineData("valuetask", true)]
+        [InlineData("valuetask", false)]
+        public async Task OnResult_With7ExtraParams_WorksAsExpected(string functionType, bool hasCancellationToken)
+        {
+            var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent_MultiParam<(int, int, int, int, int, int, int), int, int> lastSuccess = default;
+            ExceptionEvent_MultiParam<(int, int, int, int, int, int, int), int> lastException = default;
+
+            var first = true;
+            var exceptionMessage = Guid.NewGuid().ToString();
+            var keys = Enumerable.Range(1, 10).ToList();
+            var expectedResponse = keys.ToDictionary(k => k);
+            
+            switch (functionType)
+            {
+                case "async" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p8.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys, CancellationToken.None);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "async":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) =>
+                    {
+                        ThrowIfFirst();
+                        return Task.FromResult(p8.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys);
+                    await func.Should().ThrowAsync<Exception>();
+                    CheckException();
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    (await func().ConfigureAwait(false)).Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return p8.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys, CancellationToken.None);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "sync":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) =>
+                    {
+                        ThrowIfFirst();
+                        return p8.ToDictionary(k => k);
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys);
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask" when hasCancellationToken:
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p8.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys, CancellationToken.None).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+                case "valuetask":
+                {
+                    Func<int, int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) =>
+                    {
+                        ThrowIfFirst();
+                        return new ValueTask<Dictionary<int, int>>(p8.ToDictionary(k => k));
+                    };
+                    
+                    var cachedFunction = CachedFunctionFactory
+                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .WithLocalCache(cache)
+                        .WithTimeToLive(TimeSpan.FromSeconds(1))
+                        .OnResult(r => lastSuccess = r, ex => lastException = ex)
+                        .Build();
+
+                    Func<Dictionary<int, int>> func = () => cachedFunction(1, 2, 3, 4, 5, 6, 7,keys).Result;
+                    func.Should().Throw<Exception>();
+                    CheckException();
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(false);
+                    func().Should().BeEquivalentTo(expectedResponse);
+                    CheckSuccess(true);
+                    break;
+                }
+            }
+
+            void ThrowIfFirst()
+            {
+                if (!first)
+                    return;
+
+                first = false;
+                throw new Exception(exceptionMessage);
+            }
+
+            void CheckSuccess(bool wasCached)
+            {
+                var now = DateTime.UtcNow;
+                lastSuccess.Parameters.Item1.Should().Be(1);
+                lastSuccess.Parameters.Item2.Should().Be(2);
+                lastSuccess.Parameters.Item3.Should().Be(3);
+                lastSuccess.Parameters.Item4.Should().Be(4);
+                lastSuccess.Parameters.Item5.Should().Be(5);
+                lastSuccess.Parameters.Item6.Should().Be(6);
+                lastSuccess.Parameters.Item7.Should().Be(7);
+                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
+            }
+
+            void CheckException()
+            {
+                var now = DateTime.UtcNow;
+                lastException.Parameters.Item1.Should().Be(1);
+                lastException.Parameters.Item2.Should().Be(2);
+                lastException.Parameters.Item3.Should().Be(3);
+                lastException.Parameters.Item4.Should().Be(4);
+                lastException.Parameters.Item5.Should().Be(5);
+                lastException.Parameters.Item6.Should().Be(6);
+                lastException.Parameters.Item7.Should().Be(7);
+                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Exception.Message.Should().Be(exceptionMessage);
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
+using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
@@ -29,17 +30,17 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             
             async Task<TResponse> Get(TParams parameters, TKeys request)
             {
-                var task = cachedFunction.GetMany(parameters, request, CancellationToken.None);
+                var valueTask = cachedFunction.GetMany(parameters, request, CancellationToken.None);
 
-                var results = task.IsCompleted
-                    ? task.Result
-                    : await task.ConfigureAwait(false);
+                var results = valueTask.IsCompleted
+                    ? valueTask.Result
+                    : await valueTask.ConfigureAwait(false);
 
                 return results switch
                 {
                     null => default,
                     TResponse typedResponse => typedResponse,
-                    _ => responseConverter(task.Result)
+                    _ => responseConverter(results)
                 };
             }
         }
@@ -77,6 +78,15 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             : base((_, keys) => originalFunction(keys))
         { }
 
+        public CachedFunctionConfigurationManagerAsync<TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent<TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TKey>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent<TKey, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent<TKey>(r)));
+            return this;
+        }
+        
         public Func<TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -110,6 +120,15 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync<TParam, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_2Params<TParam, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_1ExtraParam<TParam, TKey>> onException = null)
+        {
+            OnSuccess(r => onSuccess(new SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>(r)));
+            OnException(r => onException(new ExceptionEvent_1ExtraParam<TParam, TKey>(r)));
+            return this;
+        }
+        
         public Func<TParam, TKeys, Task<TResponse>> Build() => BuildInternal();
     }
     
@@ -132,12 +151,21 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return new CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
-
+        
+        public CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+        
         public Func<TParam1, TParam2, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, keys) => cachedFunction((param1, param2), keys);
+            return (p1, p2, keys) => cachedFunction((p1, p2), keys);
         }
     }
     
@@ -161,11 +189,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, keys) => cachedFunction((param1, param2, param3), keys);
+            return (p1, p2, p3, keys) => cachedFunction((p1, p2, p3), keys);
         }
     }
     
@@ -189,11 +226,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, keys) => cachedFunction((param1, param2, param3, param4), keys);
+            return (p1, p2, p3, p4, keys) => cachedFunction((p1, p2, p3, p4), keys);
         }
     }
     
@@ -217,12 +263,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, keys) =>
-                cachedFunction((param1, param2, param3, param4, param5), keys);
+            return (p1, p2, p3, p4, p5, keys) => cachedFunction((p1, p2, p3, p4, p5), keys);
         }
     }
     
@@ -246,12 +300,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, keys) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6), keys);
+            return (p1, p2, p3, p4, p5, p6, keys) => cachedFunction((p1, p2, p3, p4, p5, p6), keys);
         }
     }
     
@@ -275,12 +337,20 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> OnResult(
+            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
+        {
+            OnSuccess(onSuccess);
+            OnException(onException);
+            return this;
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, param7, keys) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6, param7), keys);
+            return (p1, p2, p3, p4, p5, p6, p7, keys) => cachedFunction((p1, p2, p3, p4, p5, p6, p7), keys);
         }
     }
 }

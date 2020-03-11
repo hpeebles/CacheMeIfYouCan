@@ -32,17 +32,17 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             
             async ValueTask<TResponse> Get(TParams parameters, TInnerKeys innerKeys, CancellationToken cancellationToken)
             {
-                var task = cachedFunction.GetMany(parameters, innerKeys, cancellationToken);
+                var valueTask = cachedFunction.GetMany(parameters, innerKeys, cancellationToken);
 
-                var results = task.IsCompleted
-                    ? task.Result
-                    : await task.ConfigureAwait(false);
+                var results = valueTask.IsCompleted
+                    ? valueTask.Result
+                    : await valueTask.ConfigureAwait(false);
 
                 return results switch
                 {
                     null => default,
                     TResponse typedResponse => typedResponse,
-                    _ => responseConverter(task.Result)
+                    _ => responseConverter(results)
                 };
             }
         }
@@ -103,8 +103,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2), innerKeys, cancellationToken);
+            return (p1, p2, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2), innerKeys, cancellationToken);
         }
     }
     
@@ -126,8 +126,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2, param3), innerKeys, cancellationToken);
+            return (p1, p2, p3, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2, p3), innerKeys, cancellationToken);
         }
     }
     
@@ -149,8 +149,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4), innerKeys, cancellationToken);
+            return (p1, p2, p3, p4, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4), innerKeys, cancellationToken);
         }
     }
     
@@ -172,8 +172,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5), innerKeys, cancellationToken);
+            return (p1, p2, p3, p4, p5, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5), innerKeys, cancellationToken);
         }
     }
     
@@ -195,8 +195,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6), innerKeys, cancellationToken);
+            return (p1, p2, p3, p4, p5, p6, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6), innerKeys, cancellationToken);
         }
     }
     
@@ -218,8 +218,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             var cachedFunction = BuildInternal();
 
-            return (param1, param2, param3, param4, param5, param6, param7, innerKeys, cancellationToken) =>
-                cachedFunction((param1, param2, param3, param4, param5, param6, param7), innerKeys, cancellationToken);
+            return (p1, p2, p3, p4, p5, p6, p7, innerKeys, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6, p7), innerKeys, cancellationToken);
         }
     }
 }

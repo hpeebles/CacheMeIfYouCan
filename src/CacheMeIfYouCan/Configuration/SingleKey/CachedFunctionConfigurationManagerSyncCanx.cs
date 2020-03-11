@@ -28,11 +28,11 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             
             TValue Get(TParams parameters, CancellationToken cancellationToken)
             {
-                var task = cachedFunction.Get(parameters, cancellationToken);
+                var valueTask = cachedFunction.Get(parameters, cancellationToken);
 
-                return task.IsCompleted
-                    ? task.Result
-                    : task.GetAwaiter().GetResult();
+                return valueTask.IsCompleted
+                    ? valueTask.Result
+                    : valueTask.AsTask().GetAwaiter().GetResult();
             }
         }
         

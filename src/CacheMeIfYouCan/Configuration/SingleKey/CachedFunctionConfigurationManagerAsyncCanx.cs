@@ -226,7 +226,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             var cachedFunction = BuildInternal();
 
-            return (p1, p2, p3, p4, p5, p6, cancellationToken) => cachedFunction((p1, p2, p3, p4, p5, p6), cancellationToken);
+            return (p1, p2, p3, p4, p5, p6, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6), cancellationToken);
         }
     }
     
@@ -254,7 +255,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             var cachedFunction = BuildInternal();
 
-            return (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => cachedFunction((p1, p2, p3, p4, p5, p6, p7), cancellationToken);
+            return (p1, p2, p3, p4, p5, p6, p7, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6, p7), cancellationToken);
         }
     }
     
@@ -282,7 +284,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             var cachedFunction = BuildInternal();
 
-            return (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => cachedFunction((p1, p2, p3, p4, p5, p6, p7, p8), cancellationToken);
+            return (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) =>
+                cachedFunction((p1, p2, p3, p4, p5, p6, p7, p8), cancellationToken);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
@@ -15,8 +16,8 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         where TRequest : IEnumerable<TKey>
         where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly CachedFunctionWithEnumerableKeysConfiguration<TKey, TValue> _config =
-            new CachedFunctionWithEnumerableKeysConfiguration<TKey, TValue>();
+        private readonly CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue> _config =
+            new CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue>();
         
         private Func<IReadOnlyCollection<TKey>, TRequest> _requestConverter;
         private Func<Dictionary<TKey, TValue>, TResponse> _responseConverter;
@@ -149,6 +150,18 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         private protected Func<Dictionary<TKey, TValue>, TResponse> GetResponseConverter()
         {
             return _responseConverter ?? DefaultResponseConverterResolver.Get<TKey, TValue, TResponse>(_config.KeyComparer);
+        }
+        
+        private protected void OnSuccess(Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> action)
+        {
+            if (!(action is null))
+                _config.OnSuccessAction += action;
+        }
+        
+        private protected void OnException(Action<ExceptionEvent_MultiParam<TParams, TKey>> action)
+        {
+            if (!(action is null))
+                _config.OnExceptionAction += action;
         }
 
         private protected CachedFunctionWithEnumerableKeys<TParams, TKey, TValue> BuildCachedFunction(
