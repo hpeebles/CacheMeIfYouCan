@@ -60,15 +60,16 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
         
-        public ICachedObjectConfigurationManager<T> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action)
+        public ICachedObjectConfigurationManager<T> OnValueRefresh(
+            Action<ValueRefreshedEvent<T>> onSuccess,
+            Action<ValueRefreshExceptionEvent<T>> onException)
         {
-            _onValueRefreshedAction += action;
-            return this;
-        }
-        
-        public ICachedObjectConfigurationManager<T> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action)
-        {
-            _onValueRefreshExceptionAction += action;
+            if (!(onSuccess is null))
+                _onValueRefreshedAction += onSuccess;
+            
+            if (!(onException is null))
+                _onValueRefreshExceptionAction += onException;
+            
             return this;
         }
 

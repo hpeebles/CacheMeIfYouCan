@@ -53,29 +53,24 @@ namespace CacheMeIfYouCan.Internal
             return this;
         }
 
-        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action)
+        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefresh(
+            Action<ValueRefreshedEvent<T>> onSuccess,
+            Action<ValueRefreshExceptionEvent<T>> onException)
         {
-            base.OnValueRefreshed(action);
-            return this;
-        }
-
-        public new ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action)
-        {
-            base.OnValueRefreshException(action);
+            base.OnValueRefresh(onSuccess, onException);
             return this;
         }
         
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(
-            Action<ValueUpdatedEvent<T, TUpdateFuncInput>> action)
+        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdate(
+            Action<ValueUpdatedEvent<T, TUpdateFuncInput>> onSuccess,
+            Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> onException)
         {
-            _onValueUpdatedAction += action;
-            return this;
-        }
-
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdateException(
-            Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> action)
-        {
-            _onValueUpdateExceptionAction += action;
+            if (!(onSuccess is null))
+                _onValueUpdatedAction += onSuccess;
+            
+            if (!(onException is null))
+                _onValueUpdateExceptionAction += onException;
+            
             return this;
         }
 

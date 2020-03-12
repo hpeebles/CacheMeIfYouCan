@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Cron.Tests
                     return start;
                 })
                 .WithRefreshSchedule(cronExpression, true)
-                .OnValueRefreshed(r =>
+                .OnValueRefresh(r =>
                 {
                     if (r.IsResultOfInitialization)
                         return;

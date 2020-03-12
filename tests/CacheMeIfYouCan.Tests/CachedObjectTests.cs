@@ -405,7 +405,7 @@ namespace CacheMeIfYouCan.Tests
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(20));
 
             if (addedPreBuilding)
-                config.OnValueRefreshed(Action);
+                config.OnValueRefresh(Action);
 
             var cachedObject = config.Build();
 
@@ -471,7 +471,7 @@ namespace CacheMeIfYouCan.Tests
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(20));
 
             if (addedPreBuilding)
-                config.OnValueRefreshException(Action);
+                config.OnValueRefresh(onException: Action);
 
             var cachedObject = config.Build();
 
@@ -845,7 +845,7 @@ namespace CacheMeIfYouCan.Tests
                 });
 
             if (addedPreBuilding)
-                config.OnValueUpdated(events.Add);
+                config.OnValueUpdate(events.Add);
 
             var cachedObject = config.Build();
 
@@ -897,7 +897,7 @@ namespace CacheMeIfYouCan.Tests
                 });
 
             if (addedPreBuilding)
-                config.OnValueUpdateException(events.Add);
+                config.OnValueUpdate(onException: events.Add);
 
             var cachedObject = config.Build();
 

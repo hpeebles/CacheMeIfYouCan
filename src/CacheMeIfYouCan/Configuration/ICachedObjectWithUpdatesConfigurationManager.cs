@@ -10,10 +10,8 @@ namespace CacheMeIfYouCan.Configuration
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithRefreshValueFuncTimeout(TimeSpan timeout);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnInitialized(Action<ICachedObject<T>> action);
         ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnDisposed(Action<ICachedObject<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshed(Action<ValueRefreshedEvent<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefreshException(Action<ValueRefreshExceptionEvent<T>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdated(Action<ValueUpdatedEvent<T, TUpdateFuncInput>> action);
-        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdateException(Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> action);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueRefresh(Action<ValueRefreshedEvent<T>> onSuccess = null, Action<ValueRefreshExceptionEvent<T>> onException = null);
+        ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> OnValueUpdate(Action<ValueUpdatedEvent<T, TUpdateFuncInput>> onSuccess = null, Action<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> onException = null);
         ICachedObjectWithUpdates<T, TUpdateFuncInput> Build();
     }
 
