@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Internal
 
         public int Count => _collection.Count;
 
-        public struct Enumerator : IEnumerator<TKey>
+        public readonly struct Enumerator : IEnumerator<TKey>
         {
             private readonly IEnumerator<KeyValuePair<TKey, TValue>> _parentEnumerator;
 

@@ -60,10 +60,10 @@ namespace CacheMeIfYouCan.Internal
                 return true;
             }
 
-            public T Current => _current.Value;
+            public readonly T Current => _current.Value;
             public void Reset() => _current = null;
-            public void Dispose() { }
-            object IEnumerator.Current => Current;
+            public readonly void Dispose() { }
+            readonly object IEnumerator.Current => Current;
         }
     }
 }
