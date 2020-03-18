@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Tests
             var cache = new DictionaryCache<int, int>(EqualityComparer<int>.Default, TimeSpan.FromMilliseconds(100));
 
             for (var i = 0; i < 100; i++)
-                cache.Set(i, i, TimeSpan.FromMilliseconds(1));
+                cache.Set(i, i, TimeSpan.FromMilliseconds(100));
             
             Thread.Sleep(TimeSpan.FromSeconds(1.5));
 

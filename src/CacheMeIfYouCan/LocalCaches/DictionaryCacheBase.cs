@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -12,30 +11,29 @@ namespace CacheMeIfYouCan.LocalCaches
     public abstract class DictionaryCacheBase<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, ValueAndExpiry> _values;
-        private readonly SortedDictionary<int, SinglyLinkedList<KeyAndExpiry>> _keysByExpiryDateSeconds;
+        private readonly MinHeap<KeyAndExpiry> _keysToExpireHeap;
         private readonly ObjectPool<ValueAndExpiry> _valueAndExpiryPool;
         private readonly ObjectPool<KeyAndExpiry> _keyAndExpiryPool;
-        private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryDictionaryReader;
-        private readonly ChannelWriter<KeyAndExpiry> _keysToBePutIntoExpiryDictionaryWriter;
+        private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryHeapReader;
+        private readonly ChannelWriter<KeyAndExpiry> _keysToBePutIntoExpiryHeapWriter;
         private readonly TimeSpan _keyExpiryProcessorInterval;
         private readonly Timer _keyExpiryProcessorTimer;
         private int _disposed;
-        private static readonly DateTime UnixStartDate = new DateTime(1970, 1, 1);
         
         protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
-            _keysByExpiryDateSeconds = new SortedDictionary<int, SinglyLinkedList<KeyAndExpiry>>();
+            _keysToExpireHeap = new MinHeap<KeyAndExpiry>(KeyAndExpiryComparer.Instance);
             _valueAndExpiryPool = new ObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
             _keyAndExpiryPool = new ObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
             
-            var keysToBePutIntoExpiryDictionary = Channel.CreateUnbounded<KeyAndExpiry>(new UnboundedChannelOptions
+            var keysToBePutIntoExpiryHeapChannel = Channel.CreateUnbounded<KeyAndExpiry>(new UnboundedChannelOptions
             {
                 SingleReader = true
             });
 
-            _keysToBePutIntoExpiryDictionaryReader = keysToBePutIntoExpiryDictionary.Reader;
-            _keysToBePutIntoExpiryDictionaryWriter = keysToBePutIntoExpiryDictionary.Writer;
+            _keysToBePutIntoExpiryHeapReader = keysToBePutIntoExpiryHeapChannel.Reader;
+            _keysToBePutIntoExpiryHeapWriter = keysToBePutIntoExpiryHeapChannel.Writer;
             _keyExpiryProcessorInterval = keyExpiryProcessorInterval;
             _keyExpiryProcessorTimer = new Timer(
                 _ => ProcessKeyExpiryDates(),
@@ -123,7 +121,7 @@ namespace CacheMeIfYouCan.LocalCaches
             keyAndExpiry.Key = key;
             keyAndExpiry.ExpiryTicks = expiryTicks;
 
-            _keysToBePutIntoExpiryDictionaryWriter.TryWrite(keyAndExpiry);
+            _keysToBePutIntoExpiryHeapWriter.TryWrite(keyAndExpiry);
         }
 
         protected bool RemoveImpl(TKey key, out TValue value)
@@ -147,38 +145,22 @@ namespace CacheMeIfYouCan.LocalCaches
         
         private void ProcessKeyExpiryDates()
         {
-            var timestampSecondsNow = GetTimestampSeconds(DateTime.UtcNow.Ticks);
+            var nowTicks = DateTime.UtcNow.Ticks;
             
-            while (_keysToBePutIntoExpiryDictionaryReader.TryRead(out var keyAndExpiry))
+            while (_keysToBePutIntoExpiryHeapReader.TryRead(out var keyAndExpiry))
             {
-                var expiryTimestampSeconds = GetTimestampSeconds(keyAndExpiry.ExpiryTicks);
-
-                if (expiryTimestampSeconds < timestampSecondsNow)
-                {
+                if (keyAndExpiry.ExpiryTicks < nowTicks)
                     RemoveExpiredKey(keyAndExpiry);
-                    continue;
-                }
-
-                if (!_keysByExpiryDateSeconds.TryGetValue(expiryTimestampSeconds, out var keysWithSimilarExpiry))
-                {
-                    keysWithSimilarExpiry = new SinglyLinkedList<KeyAndExpiry>();
-                    _keysByExpiryDateSeconds.Add(expiryTimestampSeconds, keysWithSimilarExpiry);
-                }
-                
-                keysWithSimilarExpiry.Append(keyAndExpiry);
+                else
+                    _keysToExpireHeap.Add(keyAndExpiry);
             }
 
-            while (_keysByExpiryDateSeconds.Count > 0)
+            while (
+                _keysToExpireHeap.TryPeek(out var nextPeek) &&
+                nextPeek.ExpiryTicks < nowTicks &&
+                _keysToExpireHeap.TryTake(out var next))
             {
-                var next = _keysByExpiryDateSeconds.First();
-
-                if (next.Key >= timestampSecondsNow)
-                    break;
-
-                foreach (var keyAndExpiry in next.Value)
-                    RemoveExpiredKey(keyAndExpiry);
-
-                _keysByExpiryDateSeconds.Remove(next.Key);
+                RemoveExpiredKey(next);
             }
 
             _keyExpiryProcessorTimer.Change((int)_keyExpiryProcessorInterval.TotalMilliseconds, -1);
@@ -205,12 +187,6 @@ namespace CacheMeIfYouCan.LocalCaches
                 throw new ObjectDisposedException(nameof(DictionaryCache<TKey, TValue>));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetTimestampSeconds(long dateTimeTicks)
-        {
-            return (int)((dateTimeTicks - UnixStartDate.Ticks) / TimeSpan.TicksPerSecond);
-        }
-
         internal class ValueAndExpiry
         {
             public TValue Value;
@@ -222,6 +198,21 @@ namespace CacheMeIfYouCan.LocalCaches
         {
             public TKey Key;
             public long ExpiryTicks;
+        }
+
+        private sealed class KeyAndExpiryComparer : IComparer<KeyAndExpiry>
+        {
+            private KeyAndExpiryComparer() { }
+            
+            public static KeyAndExpiryComparer Instance { get; } = new KeyAndExpiryComparer();
+
+            public int Compare(KeyAndExpiry x, KeyAndExpiry y)
+            {
+                if (x is null || y is null)
+                    return 0;
+
+                return x.ExpiryTicks.CompareTo(y.ExpiryTicks);
+            }
         }
 
         internal class DebugInfo
