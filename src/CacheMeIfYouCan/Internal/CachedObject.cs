@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,33 +8,22 @@ using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class CachedObject<T, TUpdateFuncInput> : ICachedObject<T>, ICachedObjectWithUpdates<T, TUpdateFuncInput>
+    internal sealed class CachedObject<T, TUpdateFuncInput> : CachedObjectBase<T>, ICachedObject<T>, ICachedObjectWithUpdates<T, TUpdateFuncInput>
     {
         private readonly Func<CancellationToken, Task<T>> _getValueFunc;
         private readonly Func<T, TUpdateFuncInput, CancellationToken, Task<T>> _updateValueFunc;
         private readonly Func<TimeSpan> _refreshIntervalFactory;
         private readonly TimeSpan? _refreshValueFuncTimeout;
         private readonly Channel<(TUpdateFuncInput Input, TaskCompletionSource<bool> Tcs, CancellationToken CancellationToken)> _updatesQueue;
-        private readonly CancellationTokenSource _isDisposedCancellationTokenSource;
         
         // This is to ensure we never run updates and refreshes at the same time. Refreshes are the priority so no
         // updates will start while there are pending refreshes.
         private readonly SemaphoreSlim _refreshOrUpdateMutex;
         
         private readonly object _lock = new object();
-        private TaskCompletionSource<bool> _initializationTaskCompletionSource;
         private CachedObjectRefreshHandler _currentRefreshHandler;
         private CachedObjectRefreshHandler _queuedRefreshHandler;
-        private T _value;
-        private volatile int _state;
-        private DateTime _datePreviousSuccessfulRefreshStarted;
-        private DateTime _datePreviousSuccessfulRefreshFinished;
         private Timer _refreshTimer;
-        private long _version;
-        private const int PendingInitialization = (int)CachedObjectState.PendingInitialization;
-        private const int InitializationInProgress = (int)CachedObjectState.InitializationInProgress;
-        private const int Ready = (int)CachedObjectState.Ready;
-        private const int Disposed = (int)CachedObjectState.Disposed;
 
         public CachedObject(
             Func<CancellationToken, Task<T>> getValueFunc,
@@ -57,123 +45,33 @@ namespace CacheMeIfYouCan.Internal
             _getValueFunc = getValueFunc;
             _refreshIntervalFactory = refreshIntervalFactory;
             _refreshValueFuncTimeout = refreshValueFuncTimeout;
-            _isDisposedCancellationTokenSource = new CancellationTokenSource();
-            _refreshOrUpdateMutex = new SemaphoreSlim(1);
+            _refreshOrUpdateMutex = new SemaphoreSlim(1, 1);
         }
 
-        public T Value
+        protected override async Task<T> GetInitialValue(CancellationToken cancellationToken)
         {
-            get
-            {
-                var value = _value;
-                if (_state == Ready)
-                    return value;
-                
-                ThrowIfDisposed();
-                
-                Task.Run(() => InitializeAsync()).GetAwaiter().GetResult();
-
-                Thread.MemoryBarrier();
-                return _value;
-            }
-        }
-
-        public CachedObjectState State => (CachedObjectState)_state;
-        public long Version => _version;
-        public event EventHandler OnInitialized;
-        public event EventHandler OnDisposed;
-        public event EventHandler<ValueRefreshedEvent<T>> OnValueRefreshed;
-        public event EventHandler<ValueRefreshExceptionEvent<T>> OnValueRefreshException;
-        public event EventHandler<ValueUpdatedEvent<T, TUpdateFuncInput>> OnValueUpdated;
-        public event EventHandler<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> OnValueUpdateException;
-
-        public void Initialize(CancellationToken cancellationToken = default)
-        {
-            Task.Run(() => InitializeAsync(cancellationToken), cancellationToken).GetAwaiter().GetResult();
-        }
-
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
-        {
-            TaskCompletionSource<bool> tcs;
-            var initializationAlreadyInProgress = false;
-            lock (_lock)
-            {
-                switch (_state)
-                {
-                    case Disposed:
-                        throw GetObjectDisposedException();
-
-                    case Ready:
-                        return;
-
-                    case InitializationInProgress:
-                        tcs = _initializationTaskCompletionSource;
-                        initializationAlreadyInProgress = true;
-                        break;
-
-                    case PendingInitialization:
-                        tcs = _initializationTaskCompletionSource = new TaskCompletionSource<bool>();
-                        _state = InitializationInProgress;
-                        break;
-                    
-                    default:
-                        throw new InvalidOperationException("Invalid state - " + _state);
-                }
-            }
-
-            if (initializationAlreadyInProgress)
-            {
-                await tcs.Task.ConfigureAwait(false);
-                return;
-            }
-
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                _isDisposedCancellationTokenSource.Token);
-            
+            CancellationTokenSource cts = null;
             if (_refreshValueFuncTimeout.HasValue)
+            {
+                cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
                 cts.CancelAfter(_refreshValueFuncTimeout.Value);
-            
-            cancellationToken = cts.Token;
-            
-            var start = DateTime.UtcNow;
-            var stopwatch = Stopwatch.StartNew();
+
+                cancellationToken = cts.Token;
+            }
+
             try
             {
-                _value = await _getValueFunc(cancellationToken).ConfigureAwait(false);
-                
-                Interlocked.Increment(ref _version);
-
-                PublishValueRefreshedEvent(default, stopwatch.Elapsed);
-                tcs.TrySetResult(true);
-
-                _datePreviousSuccessfulRefreshStarted = start;
-                _datePreviousSuccessfulRefreshFinished = DateTime.UtcNow;
+                return await _getValueFunc(cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            finally
             {
-                lock (_lock)
-                {
-                    ThrowIfDisposed();
-                    _state = PendingInitialization;
-                    _initializationTaskCompletionSource = null;
-                }
-                
-                PublishValueRefreshExceptionEvent(ex, stopwatch.Elapsed);
-                tcs.TrySetException(ex);
-
-                throw;
+                cts?.Dispose();
             }
-
-            lock (_lock)
-            {
-                ThrowIfDisposed();
-                _state = Ready;
-                _initializationTaskCompletionSource = null;
-            }
-
-            OnInitialized?.Invoke(this, null);
-            
+        }
+        
+        protected override void PostInitializationAction()
+        {
             if (_refreshIntervalFactory is null)
                 return;
 
@@ -184,18 +82,14 @@ namespace CacheMeIfYouCan.Internal
                 null,
                 (long)refreshInterval.TotalMilliseconds,
                 -1);
+            
+            RegisterDisposable(_refreshTimer);
         }
 
-        public void RefreshValue(
-            TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
-            CancellationToken cancellationToken = default)
-        {
-            Task.Run(() => RefreshValueAsync(
-                skipIfPreviousRefreshStartedWithinTimeFrame,
-                cancellationToken), cancellationToken).GetAwaiter().GetResult();
-        }
-
-        public Task RefreshValueAsync(
+        public event EventHandler<ValueUpdatedEvent<T, TUpdateFuncInput>> OnValueUpdated;
+        public event EventHandler<ValueUpdateExceptionEvent<T, TUpdateFuncInput>> OnValueUpdateException;
+        
+        public override Task RefreshValueAsync(
             TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
             CancellationToken cancellationToken = default)
         {
@@ -219,7 +113,7 @@ namespace CacheMeIfYouCan.Internal
 
             return cancellableTcs.Task;
         }
-        
+
         void ICachedObjectWithUpdates<T, TUpdateFuncInput>.UpdateValue(TUpdateFuncInput updateFuncInput, CancellationToken cancellationToken)
         {
             Task.Run(() => ((ICachedObjectWithUpdates<T, TUpdateFuncInput>)this).UpdateValueAsync(updateFuncInput, cancellationToken), cancellationToken)
@@ -239,40 +133,6 @@ namespace CacheMeIfYouCan.Internal
             return tcs.Task;
         }
 
-        public void Dispose()
-        {
-            T finalValue;
-            lock (_lock)
-            {
-                if (_state == Disposed)
-                    return;
-
-                _state = Disposed;
-                _isDisposedCancellationTokenSource.Cancel();
-                _isDisposedCancellationTokenSource.Dispose();
-
-                var objectDisposedException = GetObjectDisposedException();
-                
-                var disposedTcs = new TaskCompletionSource<bool>();
-                disposedTcs.SetException(objectDisposedException);
-
-                var initializationTcs = Interlocked.Exchange(ref _initializationTaskCompletionSource, disposedTcs);
-
-                initializationTcs?.TrySetException(objectDisposedException);
-
-                _refreshTimer?.Dispose();
-                _refreshOrUpdateMutex.Dispose();
-                
-                finalValue = _value;
-                _value = default;
-            }
-            
-            if (finalValue is IDisposable disposable)
-                disposable.Dispose();
-            
-            OnDisposed?.Invoke(this, null);
-        }
-
         // Only called from the Timer
         private async Task RefreshValueFromTimer()
         {
@@ -284,7 +144,7 @@ namespace CacheMeIfYouCan.Internal
             {
                 var nextInterval = _refreshIntervalFactory();
                     
-                if (_state != Disposed)
+                if (!IsDisposed())
                     _refreshTimer.Change((long)nextInterval.TotalMilliseconds, -1);
             }
         }
@@ -293,18 +153,19 @@ namespace CacheMeIfYouCan.Internal
             TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
             CancellationToken cancellationToken = default)
         {
-            if (_state == Disposed)
-                throw GetObjectDisposedException();
+            ThrowIfDisposed();
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var skipIfPreviousRefreshStartedSince = skipIfPreviousRefreshStartedWithinTimeFrame > TimeSpan.Zero
-                ? (DateTime?)DateTime.UtcNow - skipIfPreviousRefreshStartedWithinTimeFrame
-                : null;
-
-            if (_datePreviousSuccessfulRefreshStarted > skipIfPreviousRefreshStartedSince)
-                return;
-
+            DateTime? skipIfPreviousRefreshStartedSince = null;
+            if (skipIfPreviousRefreshStartedWithinTimeFrame > TimeSpan.Zero)
+            {
+                skipIfPreviousRefreshStartedSince = DateTime.UtcNow - skipIfPreviousRefreshStartedWithinTimeFrame;
+                
+                if (_datePreviousSuccessfulRefreshStarted > skipIfPreviousRefreshStartedSince)
+                    return;
+            }
+            
             var tcs = new TaskCompletionSource<bool>();
 
             var refreshHandler = GetRefreshHandler();
@@ -400,38 +261,6 @@ namespace CacheMeIfYouCan.Internal
             catch (OperationCanceledException)
             { }
         }
-
-        private void PublishValueRefreshedEvent(T previousValue, TimeSpan duration)
-        {
-            var onValueRefreshedEvent = OnValueRefreshed;
-            if (onValueRefreshedEvent is null)
-                return;
-            
-            var message = new ValueRefreshedEvent<T>(
-                _value,
-                previousValue,
-                duration,
-                _datePreviousSuccessfulRefreshFinished,
-                _version);
-
-            onValueRefreshedEvent(this, message);
-        }
-        
-        private void PublishValueRefreshExceptionEvent(Exception exception, TimeSpan duration)
-        {
-            var onValueRefreshExceptionEvent = OnValueRefreshException;
-            if (onValueRefreshExceptionEvent is null)
-                return;
-            
-            var message = new ValueRefreshExceptionEvent<T>(
-                exception,
-                _value,
-                duration,
-                _datePreviousSuccessfulRefreshFinished,
-                _version);
-
-            onValueRefreshExceptionEvent(this, message);
-        }
         
         private void PublishValueUpdatedEvent(T previousValue, TUpdateFuncInput updateFuncInput, TimeSpan duration)
         {
@@ -465,19 +294,6 @@ namespace CacheMeIfYouCan.Internal
                 _version);
 
             onValueUpdateExceptionEvent(this, message);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ThrowIfDisposed()
-        {
-            if (_state == Disposed)
-                throw GetObjectDisposedException();
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ObjectDisposedException GetObjectDisposedException()
-        {
-            return new ObjectDisposedException(this.GetType().ToString());
         }
 
         private sealed class CachedObjectRefreshHandler : IDisposable
@@ -622,7 +438,7 @@ namespace CacheMeIfYouCan.Internal
                     
                     var nextInterval = _parent._refreshIntervalFactory();
                     
-                    if (_parent._state != Disposed)
+                    if (!_parent.IsDisposed())
                         _parent._refreshTimer?.Change((long)nextInterval.TotalMilliseconds, -1);
                 }
                 catch (Exception ex)

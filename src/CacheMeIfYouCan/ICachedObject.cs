@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan
         Task InitializeAsync(CancellationToken cancellationToken = default);
         void RefreshValue(TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default, CancellationToken cancellationToken = default);
         Task RefreshValueAsync(TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default, CancellationToken cancellationToken = default);
+        ICachedObject<TOut> Map<TOut>(Func<T, TOut> map);
         event EventHandler OnInitialized;
         event EventHandler OnDisposed;
         event EventHandler<ValueRefreshedEvent<T>> OnValueRefreshed;
