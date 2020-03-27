@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CacheMeIfYouCan.LocalCaches;
 using FluentAssertions;
 using Xunit;
 
@@ -18,7 +17,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, IReadOnlyCollection<int>, Memory<KeyValuePair<int, int>>, TimeSpan)>();
+            var successfulResults = new List<(int, IReadOnlyCollection<int>, ReadOnlyMemory<KeyValuePair<int, int>>, TimeSpan)>();
             var failedResults = new List<(int, IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)

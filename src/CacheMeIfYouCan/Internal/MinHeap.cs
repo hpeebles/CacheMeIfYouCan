@@ -116,12 +116,12 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private int GetParent(int index)
+        private static int GetParent(int index)
         {
             return (index - 1) >> 1;
         }
 
-        private (int LeftChild, int RightChild) GetChildren(int parent)
+        private static (int LeftChild, int RightChild) GetChildren(int parent)
         {
             var leftChild = (parent << 1) + 1;
             var rightChild = leftChild + 1;

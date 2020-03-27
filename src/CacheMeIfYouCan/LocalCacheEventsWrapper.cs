@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace CacheMeIfYouCan.LocalCaches
+namespace CacheMeIfYouCan
 {
     public sealed class LocalCacheEventsWrapper<TKey, TValue> : ILocalCache<TKey, TValue>
     {
@@ -10,7 +10,7 @@ namespace CacheMeIfYouCan.LocalCaches
         private readonly Func<TKey, TimeSpan, Exception, bool> _onTryGetException;
         private readonly Action<TKey, TValue, TimeSpan, TimeSpan> _onSetCompletedSuccessfully;
         private readonly Func<TKey, TValue, TimeSpan, TimeSpan, Exception, bool> _onSetException;
-        private readonly Action<IReadOnlyCollection<TKey>, Memory<KeyValuePair<TKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
+        private readonly Action<IReadOnlyCollection<TKey>, ReadOnlyMemory<KeyValuePair<TKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
         private readonly Func<IReadOnlyCollection<TKey>, TimeSpan, Exception, bool> _onGetManyException;
         private readonly Action<IReadOnlyCollection<KeyValuePair<TKey, TValue>>, TimeSpan, TimeSpan> _onSetManyCompletedSuccessfully;
         private readonly Func<IReadOnlyCollection<KeyValuePair<TKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> _onSetManyException;
@@ -223,7 +223,7 @@ namespace CacheMeIfYouCan.LocalCaches
     
     public sealed class LocalCacheEventsWrapper<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
     {
-        private readonly Action<TOuterKey, IReadOnlyCollection<TInnerKey>, Memory<KeyValuePair<TInnerKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
+        private readonly Action<TOuterKey, IReadOnlyCollection<TInnerKey>, ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>>, TimeSpan> _onGetManyCompletedSuccessfully;
         private readonly Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan, Exception, bool> _onGetManyException;
         private readonly Action<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan> _onSetManyCompletedSuccessfully;
         private readonly Func<TOuterKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>>, TimeSpan, TimeSpan, Exception, bool> _onSetManyException;

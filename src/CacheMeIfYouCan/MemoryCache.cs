@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Caching;
 using CacheMeIfYouCan.Internal;
 
-namespace CacheMeIfYouCan.LocalCaches
+namespace CacheMeIfYouCan
 {
     public sealed class MemoryCache<TKey, TValue> : ILocalCache<TKey, TValue>
     {

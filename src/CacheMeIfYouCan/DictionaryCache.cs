@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CacheMeIfYouCan.Internal;
 
-namespace CacheMeIfYouCan.LocalCaches
+namespace CacheMeIfYouCan
 {
     public sealed class DictionaryCache<TKey, TValue> : DictionaryCacheBase<TKey, TValue>,
         ILocalCache<TKey, TValue>, IDisposable

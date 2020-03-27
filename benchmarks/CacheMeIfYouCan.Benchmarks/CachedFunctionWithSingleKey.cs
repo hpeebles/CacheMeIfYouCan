@@ -4,7 +4,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Running;
-using CacheMeIfYouCan.LocalCaches;
 
 namespace CacheMeIfYouCan.Benchmarks
 {

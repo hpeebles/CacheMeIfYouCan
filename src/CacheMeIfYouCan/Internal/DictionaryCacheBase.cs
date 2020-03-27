@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
-using CacheMeIfYouCan.Internal;
 
-namespace CacheMeIfYouCan.LocalCaches
+namespace CacheMeIfYouCan.Internal
 {
     public abstract class DictionaryCacheBase<TKey, TValue>
     {
@@ -20,7 +19,7 @@ namespace CacheMeIfYouCan.LocalCaches
         private readonly Timer _keyExpiryProcessorTimer;
         private int _disposed;
         
-        protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
+        private protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
             _keysToExpireHeap = new MinHeap<KeyAndExpiry>(KeyAndExpiryComparer.Instance);
