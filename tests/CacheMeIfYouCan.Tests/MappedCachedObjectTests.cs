@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using FluentAssertions;
 using Xunit;
 
@@ -100,13 +99,41 @@ namespace CacheMeIfYouCan.Tests
             foreach (var cachedObject in cachedObjects)
                 cachedObject.State.Should().Be(CachedObjectState.PendingInitialization);
             
-            cachedObjects[9].Initialize();
+            cachedObjects.Last().Initialize();
             
             foreach (var cachedObject in cachedObjects)
                 cachedObject.State.Should().Be(CachedObjectState.Ready);
             
             for (var i = 0; i < 10; i++)
                 cachedObjects[i].Value.Should().Be(source.Value.AddDays(i + 1));
+        }
+
+        [Fact]
+        public void DisposePropagatesToAllChildren()
+        {
+            var source = CachedObjectFactory
+                .ConfigureFor(() => DateTime.UtcNow)
+                .Build();
+
+            var cachedObjects = new ICachedObject<DateTime>[10];
+
+            var previous = source;
+            for (var i = 0; i < 10; i++)
+            {
+                var current = previous.Map(x => x.AddDays(1));
+                cachedObjects[i] = current;
+                previous = current;
+            }
+
+            cachedObjects.Last().Initialize();
+            
+            foreach (var cachedObject in cachedObjects)
+                cachedObject.State.Should().Be(CachedObjectState.Ready);
+            
+            source.Dispose();
+            
+            foreach (var cachedObject in cachedObjects)
+                cachedObject.State.Should().Be(CachedObjectState.Disposed);
         }
 
         [Fact]
