@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedObject;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -21,12 +22,12 @@ namespace CacheMeIfYouCan.Internal
             : this(source, x => new ValueTask<T>(map(x)))
         { }
         
-        public MappedCachedObject(ICachedObject<TSource> source, Func<TSource, ValueTask<T>> map)
+        private MappedCachedObject(ICachedObject<TSource> source, Func<TSource, ValueTask<T>> map)
         {
             _source = source;
             _map = map;
             
-            _source.OnValueRefreshed += async (_, args) => await UpdateValue(args.NewValue, args.Version).ConfigureAwait(false);
+            _source.OnValueRefreshed += OnSourceValueRefreshed;
         }
 
         protected override async Task<T> GetInitialValue(CancellationToken cancellationToken)
@@ -57,6 +58,17 @@ namespace CacheMeIfYouCan.Internal
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+
+        public override void Dispose()
+        {
+            _source.OnValueRefreshed -= OnSourceValueRefreshed;
+            base.Dispose();
+        }
+
+        private async void OnSourceValueRefreshed(object _, ValueRefreshedEvent<TSource> args)
+        {
+            await UpdateValue(args.NewValue, args.Version).ConfigureAwait(false);
         }
 
         private async ValueTask UpdateValue(TSource sourceValue, long sourceVersion)

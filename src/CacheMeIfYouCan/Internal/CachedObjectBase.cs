@@ -151,7 +151,7 @@ namespace CacheMeIfYouCan.Internal
             TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,
             CancellationToken cancellationToken = default);
         
-        public void Dispose()
+        public virtual void Dispose()
         {
             T finalValue;
             lock (_lock)
