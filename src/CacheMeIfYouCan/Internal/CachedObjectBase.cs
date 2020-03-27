@@ -136,6 +136,7 @@ namespace CacheMeIfYouCan.Internal
         protected void RegisterDisposable(IDisposable disposable) => _toDispose.Add(disposable);
 
         public ICachedObject<TOut> Map<TOut>(Func<T, TOut> map) => new MappedCachedObject<T, TOut>(this, map);
+        public ICachedObject<TOut> MapAsync<TOut>(Func<T, Task<TOut>> map) => new MappedCachedObject<T, TOut>(this, map);
 
         public virtual void RefreshValue(
             TimeSpan skipIfPreviousRefreshStartedWithinTimeFrame = default,

@@ -8,17 +8,25 @@ namespace CacheMeIfYouCan.Internal
     internal sealed class MappedCachedObject<TSource, T> : CachedObjectBase<T>, ICachedObject<T>
     {
         private readonly ICachedObject<TSource> _source;
-        private readonly Func<TSource, T> _map;
+        private readonly Func<TSource, ValueTask<T>> _map;
         private readonly object _lock = new Object();
         private long _sourceVersion;
         private TaskCompletionSource<T> _initializationTcs;
 
         public MappedCachedObject(ICachedObject<TSource> source, Func<TSource, T> map)
+            : this(source, x => new ValueTask<T>(map(x)))
+        { }
+        
+        public MappedCachedObject(ICachedObject<TSource> source, Func<TSource, Task<T>> map)
+            : this(source, x => new ValueTask<T>(map(x)))
+        { }
+        
+        public MappedCachedObject(ICachedObject<TSource> source, Func<TSource, ValueTask<T>> map)
         {
             _source = source;
             _map = map;
             
-            _source.OnValueRefreshed += (_, args) => UpdateValue(args.NewValue, args.Version);
+            _source.OnValueRefreshed += async (_, args) => await UpdateValue(args.NewValue, args.Version).ConfigureAwait(false);
         }
 
         protected override async Task<T> GetInitialValue(CancellationToken cancellationToken)
@@ -30,7 +38,11 @@ namespace CacheMeIfYouCan.Internal
                 await _source.InitializeAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            return _map(_source.Value);
+            var valueTask = _map(_source.Value);
+
+            return valueTask.IsCompleted
+                ? valueTask.Result
+                : await valueTask.ConfigureAwait(false);
         }
 
         public override void RefreshValue(
@@ -47,7 +59,7 @@ namespace CacheMeIfYouCan.Internal
             throw new NotImplementedException();
         }
 
-        private void UpdateValue(TSource sourceValue, long sourceVersion)
+        private async ValueTask UpdateValue(TSource sourceValue, long sourceVersion)
         {
             if (!IsReady())
                 return;
@@ -58,7 +70,11 @@ namespace CacheMeIfYouCan.Internal
             var timer = Stopwatch.StartNew();
             try
             {
-                var value = _map(sourceValue);
+                var valueTask = _map(sourceValue);
+                var value = valueTask.IsCompleted
+                    ? valueTask.Result
+                    : await valueTask.ConfigureAwait(false);
+                
                 var previousValue = _value;
                 lock (_lock)
                 {

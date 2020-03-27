@@ -10,32 +10,44 @@ namespace CacheMeIfYouCan.Tests
 {
     public class MappedCachedObjectTests
     {
-        [Fact]
-        public void ValueIsMappedFromSourceCorrectly()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ValueIsMappedFromSourceCorrectly(bool async)
         {
             var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .Build();
 
-            var mapped = source.Map(x => -x);
+            var mapped = async
+                ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
+                : source.Map(x => -x);
 
             mapped.Value.Should().Be(-source.Value);
         }
 
-        [Fact]
-        public void ValueIsUpdatedEachTimeSourceIsRefreshed()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ValueIsUpdatedEachTimeSourceIsRefreshed(bool async)
         {
             var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .Build();
 
-            var mapped = source.Map(x => -x);
+            var mapped = async
+                ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
+                : source.Map(x => -x);
 
             mapped.Initialize();
 
             for (var i = 0; i < 10; i++)
             {
                 source.RefreshValue();
+
+                if (async)
+                    await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+                
                 mapped.Version.Should().Be(i + 2);
                 mapped.Value.Should().Be(-source.Value);
             }
