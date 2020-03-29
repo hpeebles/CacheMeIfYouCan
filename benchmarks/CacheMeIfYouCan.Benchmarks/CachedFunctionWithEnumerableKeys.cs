@@ -39,7 +39,8 @@ namespace CacheMeIfYouCan.Benchmarks
                 cache.Set(i, i, TimeSpan.FromHours(1));
             
             _func = CachedFunctionFactory
-                .ConfigureFor<List<int>, Dictionary<int, int>, int, int>(OriginalFunc)
+                .ConfigureFor((List<int> x) => OriginalFunc(x))
+                .WithEnumerableKeys<List<int>, Dictionary<int, int>, int, int>()
                 .WithTimeToLive(TimeSpan.FromTicks(1))
                 .WithLocalCache(cache)
                 .Build();

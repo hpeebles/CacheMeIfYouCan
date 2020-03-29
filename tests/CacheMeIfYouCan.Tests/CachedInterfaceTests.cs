@@ -63,12 +63,12 @@ namespace CacheMeIfYouCan.Tests
             var cache6 = new MockLocalCache<int, int>();
             
             var cachedInterface = CachedInterfaceFactory.For<IDummyEnumerableKeyInterface>(originalImpl)
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetAsync, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache1))
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetAsyncCanx, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache2))
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetSync, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache3))
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetSyncCanx, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache4))
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetValueTask, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache5))
-                .Configure<IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetValueTaskCanx, c => c.WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache6))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetAsync, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache1))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetAsyncCanx, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache2))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetSync, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache3))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetSyncCanx, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache4))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetValueTask, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache5))
+                .Configure<IEnumerable<int>, Dictionary<int, int>>(x => x.GetValueTaskCanx, c => c.WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache6))
                 .Build();
 
             cachedInterface.GetAsync(new[] { 1 }).Result.Single().Should().Be(new KeyValuePair<int, int>(1, 1));
@@ -103,12 +103,12 @@ namespace CacheMeIfYouCan.Tests
             var cache6 = new MockLocalCache<int, int, int>();
             
             var cachedInterface = CachedInterfaceFactory.For<IDummyOuterKeyAndInnerEnumerableKeyInterface>(originalImpl)
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetAsync, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache1))
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetAsyncCanx, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache2))
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetSync, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache3))
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetSyncCanx, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache4))
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetValueTask, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache5))
-                .Configure<int, IEnumerable<int>, Dictionary<int, int>, int, int>(x => x.GetValueTaskCanx, c => c.UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache6))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetAsync, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache1))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetAsyncCanx, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache2))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetSync, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache3))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetSyncCanx, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache4))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetValueTask, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache5))
+                .Configure<int, IEnumerable<int>, Dictionary<int, int>>(x => x.GetValueTaskCanx, c => c.WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>().UseFirstParamAsOuterCacheKey().WithTimeToLive(TimeSpan.FromSeconds(1)).WithLocalCache(cache6))
                 .Build();
 
             cachedInterface.GetAsync(0, new[] { 1 }).Result.Single().Should().Be(new KeyValuePair<int, int>(1, 1));

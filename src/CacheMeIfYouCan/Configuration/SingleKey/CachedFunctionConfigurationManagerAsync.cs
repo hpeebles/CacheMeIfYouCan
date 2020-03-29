@@ -54,8 +54,10 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             return new CachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
-        
+
         public Func<TParam, Task<TValue>> Build() => BuildInternal();
+
+        internal Func<TParam, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue>

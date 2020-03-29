@@ -5,7 +5,7 @@ using CacheMeIfYouCan.Configuration.SingleKey;
 
 namespace CacheMeIfYouCan
 {
-    public static partial class CachedFunctionFactory
+    public static class CachedFunctionFactory
     {
         #region Async
         public static ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TKey, TValue> ConfigureFor<TKey, TValue>(
@@ -227,7 +227,7 @@ namespace CacheMeIfYouCan
             
             return new CachedFunctionConfigurationManagerSync_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>(originalFunction);
         }
-#endregion
+        #endregion
 
         #region SyncCanx
         public static ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TKey, TValue> ConfigureFor<TKey, TValue>(

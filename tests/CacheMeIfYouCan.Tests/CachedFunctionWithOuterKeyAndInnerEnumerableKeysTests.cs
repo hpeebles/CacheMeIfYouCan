@@ -24,7 +24,8 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -94,7 +95,8 @@ namespace CacheMeIfYouCan.Tests
                 };
 
                 var cachedFunction = CachedFunctionFactory
-                    .ConfigureFor<int, T, Dictionary<int, int>, int, int>(originalFunction)
+                    .ConfigureFor(originalFunction)
+                    .WithEnumerableKeys<int, T, Dictionary<int, int>, int, int>()
                     .UseFirstParamAsOuterCacheKey()
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
@@ -119,7 +121,8 @@ namespace CacheMeIfYouCan.Tests
             };
             
             var config = CachedFunctionFactory
-                .ConfigureFor<int, SortedSet<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, SortedSet<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
@@ -173,7 +176,8 @@ namespace CacheMeIfYouCan.Tests
                 };
 
                 var cachedFunction = CachedFunctionFactory
-                    .ConfigureFor<int, IEnumerable<int>, T, int, int>(originalFunction)
+                    .ConfigureFor(originalFunction)
+                    .WithEnumerableKeys<int, IEnumerable<int>, T, int, int>()
                     .UseFirstParamAsOuterCacheKey()
                     .WithTimeToLive(TimeSpan.FromSeconds(1))
                     .WithLocalCache(new MockLocalCache<int, int, int>())
@@ -197,7 +201,8 @@ namespace CacheMeIfYouCan.Tests
             };
             
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, SortedDictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, SortedDictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .WithLocalCache(new MockLocalCache<int, int, int>());
@@ -232,7 +237,8 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -262,7 +268,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
             
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromMilliseconds(timeToLiveMs))
@@ -292,7 +299,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
             
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLiveFactory(outerKey => TimeSpan.FromMilliseconds(outerKey))
@@ -305,7 +313,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 cachedFunction(0, new[] { key });
 
-                Thread.Sleep(TimeSpan.FromMilliseconds(key / 2));
+                Thread.Sleep(TimeSpan.FromMilliseconds((double)key / 2));
 
                 cache.GetMany(0, new[] { key }).Should().BeNullOrEmpty();
 
@@ -328,7 +336,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -362,7 +371,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -409,7 +419,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, ConcurrentDictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, ConcurrentDictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -457,7 +468,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -503,7 +515,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
@@ -562,7 +575,8 @@ namespace CacheMeIfYouCan.Tests
             var distributedCache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
@@ -625,7 +639,8 @@ namespace CacheMeIfYouCan.Tests
             var distributedCache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(localCache)
                 .WithDistributedCache(distributedCache)
@@ -701,7 +716,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -748,7 +764,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
@@ -804,7 +821,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
@@ -851,7 +869,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockDistributedCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithDistributedCache(cache)
                 .WithTimeToLive(TimeSpan.FromSeconds(100));
@@ -905,7 +924,8 @@ namespace CacheMeIfYouCan.Tests
             var cache = new MockLocalCache<int, int, int>();
 
             var config = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .SkipCacheWhen(x => true, SkipCacheWhen.SkipCacheGet)
@@ -951,7 +971,8 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cachedFunction = CachedFunctionFactory
-                .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(new MockLocalCache<int, int, int>())
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -984,7 +1005,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) => Task.FromResult(p2.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -998,7 +1020,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2) => Task.FromResult(p2.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1012,7 +1035,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, cancellationToken) => p2.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1026,7 +1050,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2) => p2.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1040,7 +1065,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, cancellationToken) => new ValueTask<Dictionary<int, int>>(p2.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1054,7 +1080,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2) => new ValueTask<Dictionary<int, int>>(p2.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .UseFirstParamAsOuterCacheKey()
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1089,7 +1116,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) => Task.FromResult(p3.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1103,7 +1131,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3) => Task.FromResult(p3.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1117,7 +1146,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, cancellationToken) => p3.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1131,7 +1161,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3) => p3.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1145,7 +1176,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, cancellationToken) => new ValueTask<Dictionary<int, int>>(p3.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1159,7 +1191,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3) => new ValueTask<Dictionary<int, int>>(p3.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2) => p1 + p2)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1194,7 +1227,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) => Task.FromResult(p4.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1208,7 +1242,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) => Task.FromResult(p4.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1222,7 +1257,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, cancellationToken) => p4.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1236,7 +1272,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4) => p4.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1250,7 +1287,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, cancellationToken) => new ValueTask<Dictionary<int, int>>(p4.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1264,7 +1302,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4) => new ValueTask<Dictionary<int, int>>(p4.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3) => p1 + p2 + p3)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1299,7 +1338,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => Task.FromResult(p5.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1313,7 +1353,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) => Task.FromResult(p5.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1327,7 +1368,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => p5.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1341,7 +1383,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5) => p5.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1355,7 +1398,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, cancellationToken) => new ValueTask<Dictionary<int, int>>(p5.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1369,7 +1413,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5) => new ValueTask<Dictionary<int, int>>(p5.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4) => p1 + p2 + p3 + p4)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1404,7 +1449,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => Task.FromResult(p6.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1418,7 +1464,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) => Task.FromResult(p6.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1432,7 +1479,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => p6.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1446,7 +1494,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6) => p6.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1460,7 +1509,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, cancellationToken) => new ValueTask<Dictionary<int, int>>(p6.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1474,7 +1524,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6) => new ValueTask<Dictionary<int, int>>(p6.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5) => p1 + p2 + p3 + p4 + p5)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1509,7 +1560,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => Task.FromResult(p7.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1523,7 +1575,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => Task.FromResult(p7.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1537,7 +1590,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => p7.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1551,7 +1605,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => p7.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1565,7 +1620,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, cancellationToken) => new ValueTask<Dictionary<int, int>>(p7.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1579,7 +1635,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7) => new ValueTask<Dictionary<int, int>>(p7.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6) => p1 + p2 + p3 + p4 + p5 + p6)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1614,7 +1671,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => Task.FromResult(p8.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1628,7 +1686,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, Task<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => Task.FromResult(p8.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1642,7 +1701,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => p8.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1656,7 +1716,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => p8.ToDictionary(x => x);
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1670,7 +1731,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, CancellationToken, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8, cancellationToken) => new ValueTask<Dictionary<int, int>>(p8.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))
@@ -1684,7 +1746,8 @@ namespace CacheMeIfYouCan.Tests
                     Func<int, int, int, int, int, int, int, IEnumerable<int>, ValueTask<Dictionary<int, int>>> originalFunction = (p1, p2, p3, p4, p5, p6, p7, p8) => new ValueTask<Dictionary<int, int>>(p8.ToDictionary(x => x));
                     
                     var cachedFunction = CachedFunctionFactory
-                        .ConfigureFor<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>(originalFunction)
+                        .ConfigureFor(originalFunction)
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                         .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1 + p2 + p3 + p4 + p5 + p6 + p7)
                         .WithLocalCache(cache)
                         .WithTimeToLive(TimeSpan.FromSeconds(1))

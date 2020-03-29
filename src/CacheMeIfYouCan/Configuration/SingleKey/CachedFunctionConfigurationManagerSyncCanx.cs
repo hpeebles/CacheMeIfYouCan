@@ -60,6 +60,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         }
         
         public Func<TParam, CancellationToken, TValue> Build() => BuildInternal();
+        
+        internal Func<TParam, CancellationToken, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue>

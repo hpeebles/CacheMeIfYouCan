@@ -56,6 +56,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         }
         
         public Func<TParam, ValueTask<TValue>> Build() => BuildInternal();
+        
+        internal Func<TParam, ValueTask<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue>

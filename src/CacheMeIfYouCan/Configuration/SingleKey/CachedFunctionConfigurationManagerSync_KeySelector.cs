@@ -18,6 +18,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_3Params_KeySelector<TParam1, TParam2, TParam3, TValue>
@@ -36,6 +38,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue>
@@ -54,6 +58,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TParam4, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
@@ -72,6 +78,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
@@ -90,6 +98,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>
@@ -108,6 +118,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerSync_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>
@@ -126,5 +138,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+        
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue> OriginalFunction => _originalFunction;
     }
 }

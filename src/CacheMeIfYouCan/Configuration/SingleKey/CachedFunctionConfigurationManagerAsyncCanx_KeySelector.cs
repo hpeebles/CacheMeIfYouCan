@@ -20,6 +20,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_3Params_KeySelector<TParam1, TParam2, TParam3, TValue>
@@ -38,6 +40,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_4Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TValue>
@@ -56,6 +60,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, TParam4, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_5Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
@@ -74,6 +80,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_6Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
@@ -92,6 +100,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_7Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>
@@ -110,6 +120,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
     
     public sealed class CachedFunctionConfigurationManagerAsyncCanx_8Params_KeySelector<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>
@@ -128,5 +140,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 _originalFunction,
                 cacheKeySelector);
         }
+
+        internal Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, CancellationToken, Task<TValue>> OriginalFunction => _originalFunction;
     }
 }
