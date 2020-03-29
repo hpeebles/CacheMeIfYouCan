@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         public Func<IReadOnlyCollection<TKey>, TimeSpan> TimeToLiveFactory { get; set; }
         public int MaxBatchSize { get; set; } = Int32.MaxValue;
         public BatchBehaviour BatchBehaviour { get; set; }
-        public Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> OnSuccessAction { get; set; }
-        public Action<ExceptionEvent_MultiParam<TParams, TKey>> OnExceptionAction { get; set; }
+        public Action<SuccessfulRequestEvent<TParams, TKey, TValue>> OnSuccessAction { get; set; }
+        public Action<ExceptionEvent<TParams, TKey>> OnExceptionAction { get; set; }
     }
 }

@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly TValue _fillMissingKeysConstantValue;
         private readonly Func<TKey, TValue> _fillMissingKeysValueFactory;
         private readonly ICache<TKey, TValue> _cache;
-        private readonly Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> _onSuccessAction;
-        private readonly Action<ExceptionEvent_MultiParam<TParams, TKey>> _onExceptionAction;
+        private readonly Action<SuccessfulRequestEvent<TParams, TKey, TValue>> _onSuccessAction;
+        private readonly Action<ExceptionEvent<TParams, TKey>> _onExceptionAction;
 
         public CachedFunctionWithEnumerableKeys(
             Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 
                 if (cacheHits == keysCollection.Count)
                 {
-                    _onSuccessAction?.Invoke(new SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>(
+                    _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
                         parameters,
                         keysCollection,
                         resultsDictionary,
@@ -143,7 +143,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
                 }
 
-                _onSuccessAction?.Invoke(new SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>(
+                _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
                     parameters,
                     keysCollection,
                     resultsDictionary,
@@ -155,7 +155,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             catch (Exception ex) when (!(_onExceptionAction is null))
             {
-                _onExceptionAction?.Invoke(new ExceptionEvent_MultiParam<TParams, TKey>(
+                _onExceptionAction?.Invoke(new ExceptionEvent<TParams, TKey>(
                     parameters,
                     keysCollection,
                     start,

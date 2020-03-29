@@ -1,7 +1,6 @@
 ﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
 {
@@ -59,15 +58,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             return new CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
         }
-
-        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> OnResult(
-            Action<SuccessfulRequestEvent<TParam, TValue>> onSuccess = null,
-            Action<ExceptionEvent<TParam>> onException = null)
-        {
-            OnSuccess(r => onSuccess(new SuccessfulRequestEvent<TParam, TValue>(r)));
-            OnException(r => onException(new ExceptionEvent<TParam>(r)));
-            return this;
-        }
         
         public Func<TParam, TValue> Build() => BuildInternal();
     }
@@ -81,15 +71,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam, TKey> cacheKeySelector)
             : base(originalFunction, cacheKeySelector)
         { }
-
-        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_1Param<TParam, TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_1Param<TParam, TKey>> onException = null)
-        {
-            OnSuccess(r => onSuccess(new SuccessfulRequestEvent_1Param<TParam, TKey, TValue>(r)));
-            OnException(r => onException(new ExceptionEvent_1Param<TParam, TKey>(r)));
-            return this;
-        }
         
         public Func<TParam, TValue> Build() => BuildInternal();
     }
@@ -104,15 +85,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2),
                 t => cacheKeySelector(t.Item1, t.Item2))
         { }
-
-        public CachedFunctionConfigurationManagerSync_2Params<TParam1, TParam2, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
 
         public Func<TParam1, TParam2, TValue> Build()
         {
@@ -132,15 +104,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3))
         { }
-
-        public CachedFunctionConfigurationManagerSync_3Params<TParam1, TParam2, TParam3, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
         
         public Func<TParam1, TParam2, TParam3, TValue> Build()
         {
@@ -160,15 +123,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4))
         { }
-
-        public CachedFunctionConfigurationManagerSync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
         
         public Func<TParam1, TParam2, TParam3, TParam4, TValue> Build()
         {
@@ -189,15 +143,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5))
         { }
         
-        public CachedFunctionConfigurationManagerSync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
-        
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> Build()
         {
             var cachedFunction = BuildInternal();
@@ -216,15 +161,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6))
         { }
-
-        public CachedFunctionConfigurationManagerSync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> Build()
         {
@@ -245,15 +181,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7))
         { }
 
-        public CachedFunctionConfigurationManagerSync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
-
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue> Build()
         {
             var cachedFunction = BuildInternal();
@@ -272,15 +199,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8))
         { }
-
-        public CachedFunctionConfigurationManagerSync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue> Build()
         {

@@ -101,16 +101,17 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return ThisAsTConfig();
         }
 
-        private protected void OnSuccess(Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> action)
+        public TConfig OnResult(
+            Action<SuccessfulRequestEvent<TParams, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParams, TKey>> onException = null)
         {
-            if (!(action is null))
-                _config.OnSuccessAction += action;
-        }
-        
-        private protected void OnException(Action<ExceptionEvent_MultiParam<TParams, TKey>> action)
-        {
-            if (!(action is null))
-                _config.OnExceptionAction += action;
+            if (!(onSuccess is null))
+                _config.OnSuccessAction += onSuccess;
+            
+            if (!(onException is null))
+                _config.OnExceptionAction += onException;
+
+            return ThisAsTConfig();
         }
 
         private protected CachedFunctionWithSingleKey<TParams, TKey, TValue> BuildCachedFunction(

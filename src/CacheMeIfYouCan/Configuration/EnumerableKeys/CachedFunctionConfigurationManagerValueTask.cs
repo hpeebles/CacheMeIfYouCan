@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
-using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 
 namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 {
@@ -77,15 +76,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         internal CachedFunctionConfigurationManagerValueTask(Func<TKeys, ValueTask<TResponse>> originalFunction)
             : base((_, keys) => originalFunction(keys))
         { }
-
-        public CachedFunctionConfigurationManagerValueTask<TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent<TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent<TKey>> onException = null)
-        {
-            OnSuccess(r => onSuccess(new SuccessfulRequestEvent<TKey, TValue>(r)));
-            OnException(r => onException(new ExceptionEvent<TKey>(r)));
-            return this;
-        }
         
         public Func<TKeys, ValueTask<TResponse>> Build()
         {
@@ -119,15 +109,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return new CachedFunctionConfigurationManagerValueTask<TParam, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
-
-        public CachedFunctionConfigurationManagerValueTask_2Params<TParam, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_1ExtraParam<TParam, TKey>> onException = null)
-        {
-            OnSuccess(r => onSuccess(new SuccessfulRequestEvent_1ExtraParam<TParam, TKey, TValue>(r)));
-            OnException(r => onException(new ExceptionEvent_1ExtraParam<TParam, TKey>(r)));
-            return this;
-        }
         
         public Func<TParam, TKeys, ValueTask<TResponse>> Build() => BuildInternal();
     }
@@ -150,15 +131,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
-        }
-        
-        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
         }
         
         public Func<TParam1, TParam2, TKeys, ValueTask<TResponse>> Build()
@@ -189,15 +161,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
-        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
-
         public Func<TParam1, TParam2, TParam3, TKeys, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -224,15 +187,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
-        }
-
-        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, ValueTask<TResponse>> Build()
@@ -263,15 +217,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
-        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
-
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -300,15 +245,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
-        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
-        }
-
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -335,15 +271,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
-        }
-
-        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> OnResult(
-            Action<SuccessfulRequestEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue>> onSuccess = null,
-            Action<ExceptionEvent_MultiParam<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey>> onException = null)
-        {
-            OnSuccess(onSuccess);
-            OnException(onException);
-            return this;
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, ValueTask<TResponse>> Build()

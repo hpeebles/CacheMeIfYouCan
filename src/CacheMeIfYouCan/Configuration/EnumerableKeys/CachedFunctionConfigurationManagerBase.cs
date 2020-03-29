@@ -130,6 +130,19 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig OnResult(
+            Action<SuccessfulRequestEvent<TParams, TKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParams, TKey>> onException = null)
+        {
+            if (!(onSuccess is null))
+                _config.OnSuccessAction += onSuccess;
+            
+            if (!(onException is null))
+                _config.OnExceptionAction += onException;
+
+            return (TConfig)this;
+        }
+
         public TConfig WithRequestConverter(Func<IReadOnlyCollection<TKey>, TRequest> requestConverter)
         {
             _requestConverter = requestConverter;
@@ -150,18 +163,6 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         private protected Func<Dictionary<TKey, TValue>, TResponse> GetResponseConverter()
         {
             return _responseConverter ?? DefaultResponseConverterResolver.Get<TKey, TValue, TResponse>(_config.KeyComparer);
-        }
-        
-        private protected void OnSuccess(Action<SuccessfulRequestEvent_MultiParam<TParams, TKey, TValue>> action)
-        {
-            if (!(action is null))
-                _config.OnSuccessAction += action;
-        }
-        
-        private protected void OnException(Action<ExceptionEvent_MultiParam<TParams, TKey>> action)
-        {
-            if (!(action is null))
-                _config.OnExceptionAction += action;
         }
 
         private protected CachedFunctionWithEnumerableKeys<TParams, TKey, TValue> BuildCachedFunction(
