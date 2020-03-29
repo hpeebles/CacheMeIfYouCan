@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
 {
-    internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue>
+    internal abstract class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue>
     {
         public Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
         public ILocalCache<TOuterKey, TInnerKey, TValue> LocalCache { get; set; }
@@ -26,5 +27,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         public Func<TOuterKey, TInnerKey, TValue, bool> SkipDistributedCacheSetPredicate { get; set; }
         public int MaxBatchSize { get; set; } = Int32.MaxValue;
         public BatchBehaviour BatchBehaviour { get; set; }
+    }
+
+    internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue>
+        : CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue>
+    {
+        public Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> OnSuccessAction { get; set; }
+        public Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> OnExceptionAction { get; set; }
     }
 }

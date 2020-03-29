@@ -474,7 +474,7 @@ namespace CacheMeIfYouCan.Tests
                 ThrowIfFirst();
                 return -p;
             };
-                    
+            
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithCacheKey(x => x.ToString())
@@ -506,7 +506,7 @@ namespace CacheMeIfYouCan.Tests
                 lastSuccess.Parameters.Should().Be(1);
                 lastSuccess.Key.Should().Be("1");
                 lastSuccess.Value.Should().Be(-1);
-                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
                 lastSuccess.WasCached.Should().Be(wasCached);
             }

@@ -46,7 +46,7 @@ namespace CacheMeIfYouCan.Internal
         }
         
         public static ICache<TOuterKey, TInnerKey, TValue> Build<TOuterKey, TInnerKey, TValue>(
-            CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> config,
+            CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue> config,
             out Func<TOuterKey, bool> additionalSkipCacheGetPredicateOuterKeyOnly,
             out Func<TOuterKey, TInnerKey, bool> additionalSkipCacheGetPredicate,
             out Func<TOuterKey, bool> additionalSkipCacheSetPredicateOuterKeyOnly,

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys;
 using CacheMeIfYouCan.Internal;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
@@ -15,8 +16,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         where TInnerKeys : IEnumerable<TInnerKey>
         where TResponse : IEnumerable<KeyValuePair<TInnerKey, TValue>>
     {
-        private readonly CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> _config =
-            new CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue>();
+        private readonly CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue> _config =
+            new CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue>();
 
         private Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> _requestConverter;
         private Func<Dictionary<TInnerKey, TValue>, TResponse> _responseConverter;
@@ -171,6 +172,19 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             
             _config.MaxBatchSize = maxBatchSize;
             _config.BatchBehaviour = batchBehaviour;
+            return (TConfig)this;
+        }
+
+        public TConfig OnResult(
+            Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> onSuccess = null,
+            Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> onException = null)
+        {
+            if (!(onSuccess is null))
+                _config.OnSuccessAction += onSuccess;
+            
+            if (!(onException is null))
+                _config.OnExceptionAction += onException;
+
             return (TConfig)this;
         }
 

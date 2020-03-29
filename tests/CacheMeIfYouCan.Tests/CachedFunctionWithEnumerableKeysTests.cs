@@ -830,7 +830,7 @@ namespace CacheMeIfYouCan.Tests
                 lastSuccess.Parameters.Should().Be("abc");
                 lastSuccess.Keys.Should().BeEquivalentTo(keys);
                 lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
-                lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
+                lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
                 lastSuccess.CacheHits.Should().Be(wasCached ? keys.Count : 0);
             }

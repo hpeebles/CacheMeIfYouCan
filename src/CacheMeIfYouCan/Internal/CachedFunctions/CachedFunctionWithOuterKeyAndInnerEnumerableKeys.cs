@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys;
 using CacheMeIfYouCan.Internal.CachedFunctions.Configuration;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions
@@ -24,14 +26,20 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly TValue _fillMissingKeysConstantValue;
         private readonly Func<TOuterKey, TInnerKey, TValue> _fillMissingKeysValueFactory;
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
+        private readonly Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> _onSuccessAction;
+        private readonly Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> _onExceptionAction;
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
             Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
             Func<TParams, TOuterKey> keySelector,
-            CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TOuterKey, TInnerKey, TValue> config)
+            CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue> config)
         {
             _originalFunction = originalFunction;
             _keySelector = keySelector;
+            _maxBatchSize = config.MaxBatchSize;
+            _batchBehaviour = config.BatchBehaviour;
+            _onSuccessAction = config.OnSuccessAction;
+            _onExceptionAction = config.OnExceptionAction;
 
             if (config.DisableCaching)
             {
@@ -56,9 +64,6 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
             }
             
-            _maxBatchSize = config.MaxBatchSize;
-            _batchBehaviour = config.BatchBehaviour;
-            
             if (config.FillMissingKeysConstantValue.IsSet)
             {
                 _shouldFillMissingKeys = true;
@@ -77,61 +82,106 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             IEnumerable<TInnerKey> innerKeys,
             CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var outerKey = _keySelector(parameters);
+            var start = DateTime.UtcNow;
+            var timer = Stopwatch.StartNew();
+            TOuterKey outerKey = default;
             var innerKeysCollection = innerKeys.ToReadOnlyCollection();
-
-            var getFromCacheTask = GetFromCache();
-
-            var resultsDictionary = getFromCacheTask.IsCompleted
-                ? getFromCacheTask.Result
-                : await getFromCacheTask.ConfigureAwait(false);
-
-            if (resultsDictionary.Count == innerKeysCollection.Count)
-                return resultsDictionary;
-
-            var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
-
-            if (missingKeys.Count < _maxBatchSize)
+            try
             {
-                var getValuesFromFuncTask = GetValuesFromFunc(parameters, outerKey, missingKeys, cancellationToken, resultsDictionary);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                if (!getValuesFromFuncTask.IsCompleted)
-                    await getValuesFromFuncTask.ConfigureAwait(false);
-            }
-            else
-            {
-                var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
+                outerKey = _keySelector(parameters);
+
+                var getFromCacheTask = GetFromCache();
+
+                var resultsDictionary = getFromCacheTask.IsCompleted
+                    ? getFromCacheTask.Result
+                    : await getFromCacheTask.ConfigureAwait(false);
+
+                var cacheHits = resultsDictionary.Count;
                 
-                Task[] tasks = null;
-                var resultsDictionaryLock = new object();
-                var tasksIndex = 0;
-                for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                if (cacheHits == innerKeysCollection.Count)
+                {
+                    _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
+                        parameters,
+                        outerKey,
+                        innerKeysCollection,
+                        resultsDictionary,
+                        start,
+                        timer.Elapsed,
+                        cacheHits));
+                    
+                    return resultsDictionary;
+                }
+
+                var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
+
+                if (missingKeys.Count < _maxBatchSize)
                 {
                     var getValuesFromFuncTask = GetValuesFromFunc(
                         parameters,
                         outerKey,
-                        batches[batchIndex],
+                        missingKeys,
                         cancellationToken,
-                        resultsDictionary,
-                        resultsDictionaryLock);
+                        resultsDictionary);
 
-                    if (getValuesFromFuncTask.IsCompleted)
-                        continue;
-                    
-                    if (tasks is null)
-                        tasks = new Task[batches.Length - batchIndex];
-
-                    tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                    if (!getValuesFromFuncTask.IsCompletedSuccessfully)
+                        await getValuesFromFuncTask.ConfigureAwait(false);
                 }
+                else
+                {
+                    var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
 
-                if (!(tasks is null))
-                    await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                    Task[] tasks = null;
+                    var resultsDictionaryLock = new object();
+                    var tasksIndex = 0;
+                    for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                    {
+                        var getValuesFromFuncTask = GetValuesFromFunc(
+                            parameters,
+                            outerKey,
+                            batches[batchIndex],
+                            cancellationToken,
+                            resultsDictionary,
+                            resultsDictionaryLock);
+
+                        if (getValuesFromFuncTask.IsCompletedSuccessfully)
+                            continue;
+
+                        if (tasks is null)
+                            tasks = new Task[batches.Length - batchIndex];
+
+                        tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                    }
+
+                    if (!(tasks is null))
+                        await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                }
+                
+                _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
+                    parameters,
+                    outerKey,
+                    innerKeysCollection,
+                    resultsDictionary,
+                    start,
+                    timer.Elapsed,
+                    cacheHits));
+
+                return resultsDictionary;
+            }
+            catch (Exception ex) when (!(_onExceptionAction is null))
+            {
+                _onExceptionAction?.Invoke(new ExceptionEvent<TParams, TOuterKey, TInnerKey>(
+                    parameters,
+                    outerKey,
+                    innerKeysCollection,
+                    start,
+                    timer.Elapsed,
+                    ex));
+
+                throw;
             }
 
-            return resultsDictionary;
-            
             async ValueTask<Dictionary<TInnerKey, TValue>> GetFromCache()
             {
                 if (!(_skipCacheGetPredicateOuterKeyOnly is null) && _skipCacheGetPredicateOuterKeyOnly(outerKey))
