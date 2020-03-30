@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Tests
             _innerCache.Set(key, value, timeToLive);
         }
 
-        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -115,7 +115,7 @@ namespace CacheMeIfYouCan.Tests
         public int GetMany(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
-            Memory<KeyValuePair<TInnerKey, TValue>> destination)
+            Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -154,7 +154,7 @@ namespace CacheMeIfYouCan.Tests
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             Interlocked.Increment(ref SetMany2ExecutionCount);
             

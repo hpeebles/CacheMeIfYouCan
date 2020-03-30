@@ -18,7 +18,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new DistributedCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, IReadOnlyCollection<int>, ReadOnlyMemory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
+            var successfulResults = new List<(int, IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
             var failedResults = new List<(int, IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)

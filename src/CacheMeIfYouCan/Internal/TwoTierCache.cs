@@ -85,7 +85,7 @@ namespace CacheMeIfYouCan.Internal
             else
             {
                 resultsDictionary = new Dictionary<TKey, TValue>(countFromLocalCache, _keyComparer);
-                foreach (var item in destination.Slice(0, countFromLocalCache).Span)
+                foreach (var item in destination.Span.Slice(0, countFromLocalCache))
                     resultsDictionary[item.Key] = item.Value;
             }
 
@@ -99,7 +99,7 @@ namespace CacheMeIfYouCan.Internal
             int GetFromLocalCache()
             {
                 if (_skipLocalCacheGetPredicate is null)
-                    return _localCache.GetMany(keys, destination);
+                    return _localCache.GetMany(keys, destination.Span);
 
                 var filteredKeys = CacheKeysFilter<TKey>.Filter(keys, _skipLocalCacheGetPredicate, out var pooledKeyArray);
 
@@ -107,7 +107,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     return filteredKeys.Count == 0
                         ? 0
-                        : _localCache.GetMany(filteredKeys, destination);
+                        : _localCache.GetMany(filteredKeys, destination.Span);
                 }
                 finally
                 {
@@ -152,7 +152,7 @@ namespace CacheMeIfYouCan.Internal
                     }
 
                     if (countFromDistributedCache > 0)
-                        ProcessValuesFromDistributedCache(valuesMemory.Slice(0, countFromDistributedCache));
+                        ProcessValuesFromDistributedCache(valuesMemory.Span.Slice(0, countFromDistributedCache));
                 }
                 finally
                 {
@@ -162,13 +162,12 @@ namespace CacheMeIfYouCan.Internal
                 return countFromLocalCache + countFromDistributedCache;
             }
 
-            void ProcessValuesFromDistributedCache(Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> fromDistributedCache)
+            void ProcessValuesFromDistributedCache(ReadOnlySpan<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> fromDistributedCache)
             {
-                var fromDistributedCacheSpan = fromDistributedCache.Span;
                 var destinationSpan = destination.Slice(countFromLocalCache).Span;
                 for (var i = 0; i < fromDistributedCache.Length; i++)
                 {
-                    var kv = fromDistributedCacheSpan[i];
+                    var kv = fromDistributedCache[i];
                     _localCache.Set(kv.Key, kv.Value.Value, kv.Value.TimeToLive);
                     destinationSpan[i] = new KeyValuePair<TKey, TValue>(kv.Key, kv.Value);
                 }
@@ -288,7 +287,7 @@ namespace CacheMeIfYouCan.Internal
             else
             {
                 resultsDictionary = new Dictionary<TInnerKey, TValue>(countFromLocalCache, _keyComparer);
-                foreach (var item in destination.Slice(0, countFromLocalCache).Span)
+                foreach (var item in destination.Span.Slice(0, countFromLocalCache))
                     resultsDictionary[item.Key] = item.Value;
             }
 
@@ -308,7 +307,7 @@ namespace CacheMeIfYouCan.Internal
                 }
 
                 if (_skipLocalCacheGetPredicate is null)
-                    return _localCache.GetMany(outerKey, innerKeys, destination);
+                    return _localCache.GetMany(outerKey, innerKeys, destination.Span);
                 
                 var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
                     outerKey,
@@ -320,7 +319,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     return filteredKeys.Count == 0
                         ? 0
-                        : _localCache.GetMany(outerKey, filteredKeys, destination);
+                        : _localCache.GetMany(outerKey, filteredKeys, destination.Span);
                 }
                 finally
                 {
@@ -372,7 +371,7 @@ namespace CacheMeIfYouCan.Internal
                     }
 
                     if (countFromDistributedCache > 0)
-                        ProcessValuesFromDistributedCache(valuesMemory.Slice(0, countFromDistributedCache));
+                        ProcessValuesFromDistributedCache(valuesMemory.Span.Slice(0, countFromDistributedCache));
                 }
                 finally
                 {
@@ -382,16 +381,16 @@ namespace CacheMeIfYouCan.Internal
                 return countFromLocalCache + countFromDistributedCache;
             }
 
-            void ProcessValuesFromDistributedCache(Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> fromDistributedCache)
+            void ProcessValuesFromDistributedCache(
+                ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> fromDistributedCache)
             {
-                var fromDistributedCacheSpan = fromDistributedCache.Span;
-                var destinationSpan = destination.Slice(countFromLocalCache).Span;
+                var destinationSpan = destination.Span.Slice(countFromLocalCache);
                 
                 _localCache.SetManyWithVaryingTimesToLive(outerKey, fromDistributedCache);
                 
                 for (var i = 0; i < fromDistributedCache.Length; i++)
                 {
-                    var kv = fromDistributedCacheSpan[i];
+                    var kv = fromDistributedCache[i];
                     destinationSpan[i] = new KeyValuePair<TInnerKey, TValue>(kv.Key, kv.Value);
                 }
             }

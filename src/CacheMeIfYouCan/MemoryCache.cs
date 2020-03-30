@@ -35,12 +35,10 @@ namespace CacheMeIfYouCan
             _memoryCache.Set(_keySerializer(key), value, DateTimeOffset.UtcNow.Add(timeToLive));
         }
 
-        public int GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
             if (destination.Length < keys.Count) 
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
-
-            var span = destination.Span;
             
             var countFound = 0;
             foreach (var key in keys)
@@ -48,7 +46,7 @@ namespace CacheMeIfYouCan
                 var fromCache = _memoryCache.Get(_keySerializer(key));
 
                 if (fromCache != null)
-                    span[countFound++] = new KeyValuePair<TKey, TValue>(key, (TValue)fromCache); 
+                    destination[countFound++] = new KeyValuePair<TKey, TValue>(key, (TValue)fromCache); 
             }
 
             return countFound;
@@ -90,14 +88,12 @@ namespace CacheMeIfYouCan
             _innerKeySerializer = innerKeySerializer;
         }
         
-        public int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Memory<KeyValuePair<TInnerKey, TValue>> destination)
+        public int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
             if (destination.Length < innerKeys.Count)
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
             var outerKeyString = _outerKeySerializer(outerKey);
-
-            var span = destination.Span;
             
             var countFound = 0;
             foreach (var key in innerKeys)
@@ -105,7 +101,7 @@ namespace CacheMeIfYouCan
                 var fromCache = _memoryCache.Get(outerKeyString + _innerKeySerializer(key));
 
                 if (fromCache != null)
-                    span[countFound++] = new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache); 
+                    destination[countFound++] = new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache); 
             }
 
             return countFound;
@@ -123,11 +119,11 @@ namespace CacheMeIfYouCan
 
         public void SetManyWithVaryingTimesToLive(
             TOuterKey outerKey,
-            ReadOnlyMemory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
+            ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 
-            foreach (var kv in values.Span)
+            foreach (var kv in values)
             {
                 var expirationDate = DateTimeOffset.UtcNow.Add(kv.Value.TimeToLive);
 

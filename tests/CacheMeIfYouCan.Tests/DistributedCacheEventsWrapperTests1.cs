@@ -173,7 +173,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new DistributedCacheEventsWrapperConfig<int, int>();
 
-            var successfulResults = new List<(IReadOnlyCollection<int>, ReadOnlyMemory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
+            var successfulResults = new List<(IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
             var failedResults = new List<(IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)
@@ -205,7 +205,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().BeSameAs(keys);
-                successfulResults.Last().Item2.ToArray().Select(kv => kv.Key).Should().BeEquivalentTo(1);
+                successfulResults.Last().Item2.Select(kv => kv.Key).Should().BeEquivalentTo(1);
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else

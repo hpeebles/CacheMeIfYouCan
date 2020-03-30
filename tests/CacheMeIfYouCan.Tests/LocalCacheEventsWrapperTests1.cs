@@ -168,7 +168,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int>();
 
-            var successfulResults = new List<(IReadOnlyCollection<int>, ReadOnlyMemory<KeyValuePair<int, int>>, TimeSpan)>();
+            var successfulResults = new List<(IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, int>>, TimeSpan)>();
             var failedResults = new List<(IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)

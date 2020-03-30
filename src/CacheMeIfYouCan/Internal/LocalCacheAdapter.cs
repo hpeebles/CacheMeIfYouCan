@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Internal
 
         public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
         {
-            var countFound = _innerCache.GetMany(keys, destination);
+            var countFound = _innerCache.GetMany(keys, destination.Span);
             
             return new ValueTask<int>(countFound);
         }
@@ -58,7 +58,7 @@ namespace CacheMeIfYouCan.Internal
             IReadOnlyCollection<TInnerKey> innerKeys,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
+            var countFound = _innerCache.GetMany(outerKey, innerKeys, destination.Span);
             
             return new ValueTask<int>(countFound);
         }

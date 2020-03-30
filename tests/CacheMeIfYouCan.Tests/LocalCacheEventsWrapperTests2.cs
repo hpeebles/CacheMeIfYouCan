@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, IReadOnlyCollection<int>, ReadOnlyMemory<KeyValuePair<int, int>>, TimeSpan)>();
+            var successfulResults = new List<(int, IReadOnlyCollection<int>, IReadOnlyCollection<KeyValuePair<int, int>>, TimeSpan)>();
             var failedResults = new List<(int, IReadOnlyCollection<int>, TimeSpan, Exception)>();
             
             if (flag1)
@@ -178,8 +178,8 @@ namespace CacheMeIfYouCan.Tests
         {
             var config = new LocalCacheEventsWrapperConfig<int, int, int>();
 
-            var successfulResults = new List<(int, ReadOnlyMemory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
-            var failedResults = new List<(int, ReadOnlyMemory<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan, Exception)>();
+            var successfulResults = new List<(int, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan)>();
+            var failedResults = new List<(int, IReadOnlyCollection<KeyValuePair<int, ValueAndTimeToLive<int>>>, TimeSpan, Exception)>();
             
             if (flag1)
             {
@@ -207,15 +207,12 @@ namespace CacheMeIfYouCan.Tests
                 new KeyValuePair<int, ValueAndTimeToLive<int>>(4, new ValueAndTimeToLive<int>(5, TimeSpan.FromMinutes(2)))
             };
             
-            var valuesMemory = new Memory<KeyValuePair<int, ValueAndTimeToLive<int>>>(valuesAndTimesToLive);
-            
-            cache.SetManyWithVaryingTimesToLive(1, valuesMemory);
+            cache.SetManyWithVaryingTimesToLive(1, valuesAndTimesToLive);
             if (flag1)
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().Be(1);
-                successfulResults.Last().Item2.Should().Be(valuesMemory);
-                successfulResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
+                successfulResults.Last().Item2.Should().BeEquivalentTo(valuesAndTimesToLive);
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
@@ -230,8 +227,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 failedResults.Should().ContainSingle();
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().Be(valuesMemory);
-                failedResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
+                failedResults.Last().Item2.Should().BeEquivalentTo(valuesAndTimesToLive);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
@@ -248,8 +244,7 @@ namespace CacheMeIfYouCan.Tests
                 action();
                 failedResults.Should().HaveCount(2);
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().Be(valuesMemory);
-                failedResults.Last().Item2.ToArray().Should().BeEquivalentTo(valuesAndTimesToLive);
+                failedResults.Last().Item2.Should().BeEquivalentTo(valuesAndTimesToLive);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
             }
             else
