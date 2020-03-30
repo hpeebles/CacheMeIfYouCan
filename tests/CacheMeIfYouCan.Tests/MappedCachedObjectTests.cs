@@ -28,24 +28,26 @@ namespace CacheMeIfYouCan.Tests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task ValueIsUpdatedEachTimeSourceIsRefreshed(bool async)
+        public void ValueIsUpdatedEachTimeSourceIsRefreshed(bool async)
         {
             var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .Build();
 
+            var signal = new AutoResetEvent(false);
+            
             var mapped = async
                 ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
                 : source.Map(x => -x);
 
             mapped.Initialize();
-
+            mapped.OnValueRefreshed += (_, __) => signal.Set();
+            
             for (var i = 0; i < 10; i++)
             {
                 source.RefreshValue();
 
-                if (async)
-                    await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
+                signal.WaitOne(TimeSpan.FromSeconds(1)).Should().BeTrue();
                 
                 mapped.Version.Should().Be(i + 2);
                 mapped.Value.Should().Be(-source.Value);
