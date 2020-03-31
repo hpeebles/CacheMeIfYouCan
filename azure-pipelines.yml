@@ -20,48 +20,43 @@ steps:
   inputs:
     command: build
     projects: $(pathToSolutionFile)
-    configurationToPack: $(buildConfiguration)
+    arguments: --configuration $(buildConfiguration)
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan
   inputs:
     command: test
-    projects: $(pathToMainTestProject)
-    configuration: $(buildConfiguration)
-    nobuild: true
+    project: $(pathToMainTestProject)
+    arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Cron
   inputs:
     command: test
-    projects: $(pathToCronTestProject)
-    configuration: $(buildConfiguration)
-    nobuild: true
+    project: $(pathToCronTestProject)
+    arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Polly
   inputs:
     command: test
     project: $(pathToPollyTestProject)
-    configuration: $(buildConfiguration)
-    nobuild: true
+    arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Redis
   inputs:
     command: test
     project: $(pathToRedisTestProject)
-    configuration: $(buildConfiguration)
-    nobuild: true
+    arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
-  displayName: Pack
+  displayName: Create Packages
   inputs:
     command: pack
     packagesToPack: 'src/**/*.csproj'
     versioningScheme: byBuildNumber
-    configuration: $(buildConfiguration)
-    nobuild: true
+    arguments: --configuration $(buildConfiguration) --no-build
 
 - task: NuGetCommand@2
   displayName: Publish Packages
