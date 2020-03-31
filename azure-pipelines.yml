@@ -26,28 +26,28 @@ steps:
   displayName: Test CacheMeIfYouCan
   inputs:
     command: test
-    project: $(pathToMainTestProject)
+    projects: $(pathToMainTestProject)
     arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Cron
   inputs:
     command: test
-    project: $(pathToCronTestProject)
+    projects: $(pathToCronTestProject)
     arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Polly
   inputs:
     command: test
-    project: $(pathToPollyTestProject)
+    projects: $(pathToPollyTestProject)
     arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan.Redis
   inputs:
     command: test
-    project: $(pathToRedisTestProject)
+    projects: $(pathToRedisTestProject)
     arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
