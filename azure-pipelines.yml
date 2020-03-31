@@ -4,62 +4,74 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: windows-latest
 
 variables:
-  buildConfiguration: 'Release'
-  pathToSolutionFile: 'CacheMeIfYouCan.sln'
-  pathToMainTestProject: 'tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj'
-  pathToCronTestProject: 'tests/CacheMeIfYouCan.Cron.Tests/CacheMeIfYouCan.Cron.Tests.csproj'
-  pathToPollyTestProject: 'tests/CacheMeIfYouCan.Polly.Tests/CacheMeIfYouCan.Polly.Tests.csproj'
-  pathToRedisTestProject: 'tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj'
+  buildConfiguration: Release
+  pathToSolutionFile: CacheMeIfYouCan.sln
+  pathToMainTestProject: tests/CacheMeIfYouCan.Tests/CacheMeIfYouCan.Tests.csproj
+  pathToCronTestProject: tests/CacheMeIfYouCan.Cron.Tests/CacheMeIfYouCan.Cron.Tests.csproj
+  pathToPollyTestProject: tests/CacheMeIfYouCan.Polly.Tests/CacheMeIfYouCan.Polly.Tests.csproj
+  pathToRedisTestProject: tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj
   
 steps:
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet build'
+  displayName: Build
   inputs:
-    command: 'build'
-    arguments: '--configuration $(buildConfiguration)'
-    projects: '$(pathToSolutionFile)'
+    command: build
+    projects: $(pathToSolutionFile)
+    configuration: $(buildConfiguration)
 
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet test CacheMeIfYouCan'
+  displayName: Test CacheMeIfYouCan
   inputs:
-    command: 'test'
-    arguments: '$(pathToMainTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet test CacheMeIfYouCan.Cron'
-  inputs:
-    command: 'test'
-    arguments: '$(pathToCronTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet test CacheMeIfYouCan.Polly'
-  inputs:
-    command: 'test'
-    arguments: '$(pathToPollyTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet test CacheMeIfYouCan.Redis'
-  inputs:
-    command: 'test'
-    arguments: '$(pathToRedisTestProject) --framework netcoreapp3.1 --configuration $(buildConfiguration) --no-build'
-
-- task: DotNetCoreCLI@2
-  displayName: "dotnet pack"
-  inputs:
-    command: 'pack'
-    arguments: '--configuration $(buildConfiguration) --no-build'
-    packagesToPack: 'src/**/*.csproj'
+    command: test
+    projects: $(pathToMainTestProject)
+    framework: netcoreapp3.1
+    configuration: $(buildConfiguration)
     nobuild: true
-    versioningScheme: 'byBuildNumber'
+
+- task: DotNetCoreCLI@2
+  displayName: Test CacheMeIfYouCan.Cron
+  inputs:
+    command: test
+    projects: $(pathToCronTestProject)
+    framework: netcoreapp3.1
+    configuration: $(buildConfiguration)
+    nobuild: true
+
+- task: DotNetCoreCLI@2
+  displayName: Test CacheMeIfYouCan.Polly
+  inputs:
+    command: test
+    project: $(pathToPollyTestProject)
+    framework: netcoreapp3.1
+    configuration: $(buildConfiguration)
+    nobuild: true
+
+- task: DotNetCoreCLI@2
+  displayName: Test CacheMeIfYouCan.Redis
+  inputs:
+    command: test
+    framework: netcoreapp3.1
+    configuration: $(buildConfiguration)
+    nobuild: true
+
+- task: DotNetCoreCLI@2
+  displayName: Pack
+  inputs:
+    command: pack
+    packagesToPack: 'src/**/*.csproj'
+    versioningScheme: byBuildNumber
+    framework: netcoreapp3.1
+    configuration: $(buildConfiguration)
+    nobuild: true
 
 - task: NuGetCommand@2
-  displayName: 'nuget push'
+  displayName: Publish
   inputs:
-    command: 'push'
-    feedsToUse: 'select'
+    command: push
     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-    nuGetFeedType: 'internal'
-    publishVstsFeed: 'Default'
+    feedsToUse: select
+    nuGetFeedType: internal
+    publishVstsFeed: Default
