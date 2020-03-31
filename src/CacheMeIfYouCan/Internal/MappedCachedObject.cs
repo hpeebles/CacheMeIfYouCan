@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedObject;
@@ -10,6 +12,7 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ICachedObject<TSource> _source;
         private readonly Func<TSource, ValueTask<T>> _map;
+        private readonly Type _sourceUpdateFuncInputType;
         private readonly object _lock = new Object();
         private long _sourceVersion;
         private TaskCompletionSource<T> _initializationTcs;
@@ -26,8 +29,10 @@ namespace CacheMeIfYouCan.Internal
         {
             _source = source;
             _map = map;
+            _sourceUpdateFuncInputType = GetSourceUpdateFuncInputType();
             
             _source.OnValueRefreshed += OnSourceValueRefreshed;
+            SubscribeToSourceUpdatedEvents();
         }
 
         protected override async Task<T> GetInitialValue(CancellationToken cancellationToken)
@@ -63,10 +68,16 @@ namespace CacheMeIfYouCan.Internal
         public override void Dispose()
         {
             _source.OnValueRefreshed -= OnSourceValueRefreshed;
+            UnsubscribeFromSourceUpdatedEvents();
             base.Dispose();
         }
 
         private async void OnSourceValueRefreshed(object _, ValueRefreshedEvent<TSource> args)
+        {
+            await UpdateValue(args.NewValue, args.Version).ConfigureAwait(false);
+        }
+        
+        private async void OnSourceValueUpdated<TUpdateFuncInput>(object _, ValueUpdatedEvent<TSource, TUpdateFuncInput> args)
         {
             await UpdateValue(args.NewValue, args.Version).ConfigureAwait(false);
         }
@@ -114,6 +125,50 @@ namespace CacheMeIfYouCan.Internal
             {
                 _initializationTcs = null;
             }
+        }
+
+        private void SubscribeToSourceUpdatedEvents()
+        {
+            if (_sourceUpdateFuncInputType is null)
+                return;
+            
+            var method = this.GetType()
+                .GetMethod(nameof(SubscribeToSourceUpdatedEventsImpl), BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.MakeGenericMethod(_sourceUpdateFuncInputType);
+
+            method?.Invoke(this, null);
+        }
+        
+        private void SubscribeToSourceUpdatedEventsImpl<TUpdateFuncInput>()
+        {
+            ((ICachedObjectWithUpdates<TSource, TUpdateFuncInput>)_source).OnValueUpdated += OnSourceValueUpdated;
+        }
+        
+        private void UnsubscribeFromSourceUpdatedEvents()
+        {
+            if (_sourceUpdateFuncInputType is null)
+                return;
+            
+            var method = this.GetType()
+                .GetMethod(nameof(UnsubscribeToSourceUpdatedEventsImpl), BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.MakeGenericMethod(_sourceUpdateFuncInputType);
+
+            method?.Invoke(this, null);
+        }
+        
+        private void UnsubscribeToSourceUpdatedEventsImpl<TUpdateFuncInput>()
+        {
+            ((ICachedObjectWithUpdates<TSource, TUpdateFuncInput>)_source).OnValueUpdated -= OnSourceValueUpdated;
+        }
+
+        private Type GetSourceUpdateFuncInputType()
+        {
+            return _source
+                .GetType()
+                .GetInterfaces()
+                .Where(i => i.IsGenericType)
+                .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(ICachedObjectWithUpdates<,>))
+                ?.GenericTypeArguments[1];
         }
     }
 }
