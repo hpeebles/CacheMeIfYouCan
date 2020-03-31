@@ -20,14 +20,13 @@ steps:
   inputs:
     command: build
     projects: $(pathToSolutionFile)
-    configuration: $(buildConfiguration)
+    configurationToPack: $(buildConfiguration)
 
 - task: DotNetCoreCLI@2
   displayName: Test CacheMeIfYouCan
   inputs:
     command: test
     projects: $(pathToMainTestProject)
-    framework: netcoreapp3.1
     configuration: $(buildConfiguration)
     nobuild: true
 
@@ -36,7 +35,6 @@ steps:
   inputs:
     command: test
     projects: $(pathToCronTestProject)
-    framework: netcoreapp3.1
     configuration: $(buildConfiguration)
     nobuild: true
 
@@ -45,7 +43,6 @@ steps:
   inputs:
     command: test
     project: $(pathToPollyTestProject)
-    framework: netcoreapp3.1
     configuration: $(buildConfiguration)
     nobuild: true
 
@@ -53,7 +50,7 @@ steps:
   displayName: Test CacheMeIfYouCan.Redis
   inputs:
     command: test
-    framework: netcoreapp3.1
+    project: $(pathToRedisTestProject)
     configuration: $(buildConfiguration)
     nobuild: true
 
@@ -63,12 +60,11 @@ steps:
     command: pack
     packagesToPack: 'src/**/*.csproj'
     versioningScheme: byBuildNumber
-    framework: netcoreapp3.1
     configuration: $(buildConfiguration)
     nobuild: true
 
 - task: NuGetCommand@2
-  displayName: Publish
+  displayName: Publish Packages
   inputs:
     command: push
     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
