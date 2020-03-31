@@ -507,7 +507,7 @@ namespace CacheMeIfYouCan.Tests
                 lastSuccess.Key.Should().Be("1");
                 lastSuccess.Value.Should().Be(-1);
                 lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
-                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
                 lastSuccess.WasCached.Should().Be(wasCached);
             }
 
@@ -517,7 +517,7 @@ namespace CacheMeIfYouCan.Tests
                 lastException.Parameters.Should().Be(1);
                 lastException.Key.Should().Be("1");
                 lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
-                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero);
+                lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
                 lastException.Exception.Message.Should().Be(exceptionMessage);
             }
         }

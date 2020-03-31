@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Tests
             var value = cachedObject.Value;
             cachedObject.State.Should().Be(CachedObjectState.Ready);
 
-            value.Should().BeCloseTo(DateTime.UtcNow);
+            value.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMilliseconds(100));
         }
 
         [Fact]
@@ -424,8 +424,8 @@ namespace CacheMeIfYouCan.Tests
 
             events.Should().HaveCountGreaterOrEqualTo(10);
 
-            events.First().NewValue.Should().BeCloseTo(start);
-            events.Last().NewValue.Should().BeCloseTo(end);
+            events.First().NewValue.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
+            events.Last().NewValue.Should().BeCloseTo(end, TimeSpan.FromMilliseconds(100));
             
             for (var index = 0; index < 10; index++)
             {
@@ -437,7 +437,7 @@ namespace CacheMeIfYouCan.Tests
                     e.PreviousValue.Should().Be(events[index - 1].NewValue);
                 
                 e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
-                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(e.PreviousValue);
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(e.PreviousValue, TimeSpan.FromMilliseconds(100));
                 e.Version.Should().Be(index + 1);
             }
             
@@ -869,7 +869,7 @@ namespace CacheMeIfYouCan.Tests
                 e.PreviousValue.Should().Be(previousValue);
                 e.UpdateFuncInput.Should().Be(i);
                 e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
-                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start);
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
                 e.Version.Should().Be(i + 2);
 
                 previousValue += i;
@@ -928,7 +928,7 @@ namespace CacheMeIfYouCan.Tests
                 e.CurrentValue.Should().Be(expectedValue);
                 e.UpdateFuncInput.Should().Be(1);
                 e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
-                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start);
+                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
                 e.Version.Should().Be(1 + ((i + 1) / 2));
             }
         }

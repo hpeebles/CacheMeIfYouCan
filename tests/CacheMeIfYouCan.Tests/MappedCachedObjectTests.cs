@@ -105,10 +105,10 @@ namespace CacheMeIfYouCan.Tests
 
             await mapped.InitializeAsync().ConfigureAwait(false);
 
-            source.Value.Should().BeCloseTo(dateOfSourceInitialization);
-            mapped.Value.Should().BeCloseTo(dateOfDestinationInitialization);
+            source.Value.Should().BeCloseTo(dateOfSourceInitialization, TimeSpan.FromMilliseconds(100));
+            mapped.Value.Should().BeCloseTo(dateOfDestinationInitialization, TimeSpan.FromMilliseconds(100));
             var diff = mapped.Value - source.Value;
-            diff.Should().BeCloseTo(TimeSpan.FromSeconds(1));
+            diff.Should().BeCloseTo(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(100));
         }
 
         [Fact]
