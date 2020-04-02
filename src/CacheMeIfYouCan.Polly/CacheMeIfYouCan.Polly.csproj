@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>CacheMeIfYouCan.Polly</PackageId>
+    <PackageTags>Cache;Polly;CircuitBreaker</PackageTags>
+    <Description>Extends CacheMeIfYouCan by providing the ability to wrap cache calls with Polly policies (eg. CircuitBreaker, Retry, etc.)</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="7.2.0" />
