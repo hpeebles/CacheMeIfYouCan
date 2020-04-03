@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj" />
+    <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj" />
     <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj" />
     <ProjectReference Include="..\..\..\src\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CacheMeIfYouCan.Serializers.Json;
+using CacheMeIfYouCan.Serializers.MessagePack;
 using CacheMeIfYouCan.Serializers.ProtoBuf;
 using FluentAssertions;
 using Xunit;
@@ -12,6 +13,8 @@ namespace CacheMeIfYouCan.Serializers.Tests
         [Theory]
         [InlineData("json", true)]
         [InlineData("json", false)]
+        [InlineData("messagepack", true)]
+        [InlineData("messagepack", false)]
         [InlineData("protobuf", true)]
         [InlineData("protobuf", false)]
         protected void Serialize_ThenDeserialize_ReturnIsSameAsInput(string serializerName, bool deserializeFromBytes)
@@ -47,8 +50,9 @@ namespace CacheMeIfYouCan.Serializers.Tests
             return name switch
             {
                 "json" => (ISerializer<DummyClass>)new JsonSerializer<DummyClass>(),
+                "messagepack" => new MessagePackSerializer<DummyClass>(),
                 "protobuf" => new ProtoBufSerializer<DummyClass>(),
-                _ => throw new Exception()
+                _ => throw new Exception($"Unrecognised serializer name - {name}")
             };
         }
     }

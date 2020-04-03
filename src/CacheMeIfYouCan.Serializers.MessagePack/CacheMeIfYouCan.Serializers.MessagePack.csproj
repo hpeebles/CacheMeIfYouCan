@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>CacheMeIfYouCan.Serializers.MessagePack</PackageId>
+    <PackageTags>MessagePack;MsgPack;Cache;Serializer</PackageTags>
+    <Description>Extends CacheMeIfYouCan by providing a MessagePack implementation of ISerializer</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" Version="2.1.90" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+  </ItemGroup>
+</Project>

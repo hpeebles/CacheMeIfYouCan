@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>CacheMeIfYouCan.Serializers.Json</PackageId>
-    <PackageTags>Cache;Json;</PackageTags>
+    <PackageTags>Json;Cache;Serializer</PackageTags>
     <Description>Extends CacheMeIfYouCan by providing a System.Text.Json implementation of ISerializer</Description>
   </PropertyGroup>
   <ItemGroup>
