@@ -41,7 +41,7 @@ namespace CacheMeIfYouCan.Redis
         public RedisCache(
             IConnectionMultiplexer connectionMultiplexer,
             Func<TKey, RedisKey> keySerializer,
-            IStreamSerializer<TValue> valueSerializer,
+            ISerializer<TValue> valueSerializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
             RedisKey keyPrefix = default,
@@ -252,7 +252,7 @@ namespace CacheMeIfYouCan.Redis
             IConnectionMultiplexer connectionMultiplexer,
             Func<TOuterKey, RedisKey> outerKeySerializer,
             Func<TInnerKey, RedisKey> innerKeySerializer,
-            IStreamSerializer<TValue> valueSerializer,
+            ISerializer<TValue> valueSerializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
             RedisKey keySeparator = default,

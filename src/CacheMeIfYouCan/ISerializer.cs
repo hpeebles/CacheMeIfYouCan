@@ -2,7 +2,7 @@ using System.IO;
 
 namespace CacheMeIfYouCan
 {
-    public interface IStreamSerializer<T>
+    public interface ISerializer<T>
     {
         void Serialize(Stream destination, T value);
 

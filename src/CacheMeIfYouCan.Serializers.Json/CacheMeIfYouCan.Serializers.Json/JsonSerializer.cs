@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace CacheMeIfYouCan.Serializers.Json
 {
-    public sealed class JsonSerializer<T> : IStreamSerializer<T>
+    public sealed class JsonSerializer<T> : ISerializer<T>
     {
         private readonly JsonSerializerOptions _options;
 

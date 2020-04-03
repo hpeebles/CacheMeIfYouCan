@@ -9,7 +9,7 @@ namespace CacheMeIfYouCan.Redis
     {
         private readonly Func<T, RedisValue> _serializerFunc;
         private readonly Func<RedisValue, T> _deserializerFunc;
-        private readonly IStreamSerializer<T> _streamSerializer;
+        private readonly ISerializer<T> _serializer;
         private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
         private readonly RedisValue _nullValue;
 
@@ -24,12 +24,12 @@ namespace CacheMeIfYouCan.Redis
         }
 
         public RedisValueConverter(
-            IStreamSerializer<T> streamSerializer,
+            ISerializer<T> serializer,
             RecyclableMemoryStreamManager recyclableMemoryStreamManager,
             RedisValue nullValue)
             : this(nullValue)
         {
-            _streamSerializer = streamSerializer;
+            _serializer = serializer;
             _recyclableMemoryStreamManager = recyclableMemoryStreamManager ?? new RecyclableMemoryStreamManager();
         }
 
@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Redis
                 return _serializerFunc(value);
 
             pooledStream = _recyclableMemoryStreamManager.GetStream();
-            _streamSerializer.Serialize(pooledStream, value);
+            _serializer.Serialize(pooledStream, value);
             
             return new ReadOnlyMemory<byte>(pooledStream.GetBuffer(), 0, (int)pooledStream.Length);
         }
@@ -62,7 +62,7 @@ namespace CacheMeIfYouCan.Redis
             if (!(_deserializerFunc is null))
                 return _deserializerFunc(redisValue);
 
-            return _streamSerializer.Deserialize(redisValue);
+            return _serializer.Deserialize(redisValue);
         }
     }
 }

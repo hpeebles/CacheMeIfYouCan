@@ -18,9 +18,9 @@ namespace CacheMeIfYouCan.Redis.Tests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully(bool useStreamSerializer)
+        public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully(bool useSerializer)
         {
-            var cache = BuildRedisCache(useStreamSerializer: useStreamSerializer);
+            var cache = BuildRedisCache(useSerializer: useSerializer);
 
             var tasks = Enumerable
                 .Range(1, 5)
@@ -128,11 +128,11 @@ namespace CacheMeIfYouCan.Redis.Tests
             bool useFireAndForget = false,
             string keyPrefix = null,
             string nullValue = null,
-            bool useStreamSerializer = false)
+            bool useSerializer = false)
         {
             var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
 
-            if (useStreamSerializer)
+            if (useSerializer)
             {
                 return new RedisCache<int, int, TestClass>(
                     connectionMultiplexer,

@@ -3,7 +3,7 @@ using ProtoBuf;
 
 namespace CacheMeIfYouCan.Serializers.ProtoBuf
 {
-    public sealed class ProtoBufSerializer<T> : IStreamSerializer<T>
+    public sealed class ProtoBufSerializer<T> : ISerializer<T>
     {
         public void Serialize(Stream destination, T value)
         {

@@ -42,11 +42,11 @@ namespace CacheMeIfYouCan.Serializers.Tests
             deserialized.Should().BeEquivalentTo(input);
         }
 
-        private static IStreamSerializer<DummyClass> GetSerializer(string name)
+        private static ISerializer<DummyClass> GetSerializer(string name)
         {
             return name switch
             {
-                "json" => (IStreamSerializer<DummyClass>)new JsonSerializer<DummyClass>(),
+                "json" => (ISerializer<DummyClass>)new JsonSerializer<DummyClass>(),
                 "protobuf" => new ProtoBufSerializer<DummyClass>(),
                 _ => throw new Exception()
             };
