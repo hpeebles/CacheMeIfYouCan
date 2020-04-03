@@ -4,7 +4,7 @@
     <Authors>hpeebles</Authors>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/hpeebles/CacheMeIfYouCan</RepositoryUrl>
-	<PackageLicenseUrl>https://github.com/hpeebles/CacheMeIfYouCan/blob/master/LICENSE</PackageLicenseUrl>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Copyright 2020 Hamish Peebles</Copyright>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
