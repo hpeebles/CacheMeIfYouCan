@@ -22,6 +22,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Cron", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Cron.Tests", "tests\CacheMeIfYouCan.Cron.Tests\CacheMeIfYouCan.Cron.Tests.csproj", "{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Json", "src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj", "{FC6B01A7-3049-44A4-833B-31B0961D50C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Tests", "tests\CacheMeIfYouCan.Serializers.Tests\CacheMeIfYouCan.Serializers.Tests\CacheMeIfYouCan.Serializers.Tests.csproj", "{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +76,14 @@ Global
 		{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC6B01A7-3049-44A4-833B-31B0961D50C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC6B01A7-3049-44A4-833B-31B0961D50C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC6B01A7-3049-44A4-833B-31B0961D50C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC6B01A7-3049-44A4-833B-31B0961D50C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

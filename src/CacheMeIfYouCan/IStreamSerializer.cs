@@ -4,9 +4,9 @@ namespace CacheMeIfYouCan
 {
     public interface IStreamSerializer<T>
     {
-        void WriteToStream(Stream stream, T obj);
+        void Serialize(Stream destination, T value);
 
-        T Deserialize(Stream stream);
+        T Deserialize(Stream source);
 
         T Deserialize(byte[] bytes);
     }

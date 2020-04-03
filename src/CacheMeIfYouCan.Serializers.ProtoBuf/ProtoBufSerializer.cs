@@ -5,14 +5,14 @@ namespace CacheMeIfYouCan.Serializers.ProtoBuf
 {
     public sealed class ProtoBufSerializer<T> : IStreamSerializer<T>
     {
-        public void WriteToStream(Stream stream, T obj)
+        public void Serialize(Stream destination, T value)
         {
-            Serializer.Serialize(stream, obj);
+            Serializer.Serialize(destination, value);
         }
 
-        public T Deserialize(Stream stream)
+        public T Deserialize(Stream source)
         {
-            return Serializer.Deserialize<T>(stream);
+            return Serializer.Deserialize<T>(source);
         }
 
         public T Deserialize(byte[] bytes)

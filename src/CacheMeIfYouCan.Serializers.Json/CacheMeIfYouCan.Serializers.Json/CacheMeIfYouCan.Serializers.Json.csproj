@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>CacheMeIfYouCan.Serializers.Json</PackageId>
+    <PackageTags>Cache;Json;</PackageTags>
+    <Description>Extends CacheMeIfYouCan by providing a System.Text.Json implementation of IStreamSerializer</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="4.7.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+  </ItemGroup>
+</Project>

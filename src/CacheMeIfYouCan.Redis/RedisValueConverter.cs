@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Redis
                 return _serializerFunc(value);
 
             pooledStream = _recyclableMemoryStreamManager.GetStream();
-            _streamSerializer.WriteToStream(pooledStream, value);
+            _streamSerializer.Serialize(pooledStream, value);
             
             return new ReadOnlyMemory<byte>(pooledStream.GetBuffer(), 0, (int)pooledStream.Length);
         }
