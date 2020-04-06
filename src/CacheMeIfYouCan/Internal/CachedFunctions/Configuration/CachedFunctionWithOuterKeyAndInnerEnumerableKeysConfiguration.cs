@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
 {
     internal abstract class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue>
     {
-        public Func<TOuterKey, IReadOnlyCollection<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
+        public TimeSpan? TimeToLive { get; set; }
         public ILocalCache<TOuterKey, TInnerKey, TValue> LocalCache { get; set; }
         public IDistributedCache<TOuterKey, TInnerKey, TValue> DistributedCache { get; set; }
         public IEqualityComparer<TInnerKey> KeyComparer { get; set; }
@@ -32,6 +32,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
     internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue>
         : CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue>
     {
+        public Func<TParams, IReadOnlyCollection<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
         public Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> OnSuccessAction { get; set; }
         public Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> OnExceptionAction { get; set; }
     }

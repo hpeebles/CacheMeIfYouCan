@@ -54,9 +54,16 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             _originalFunction = originalFunction;
         }
 
-        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(Func<TParam, TKey> cacheKeySelector)
+        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithCacheKey<TKey>(
+            Func<TParam, TKey> cacheKeySelector)
         {
             return new CachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue>(_originalFunction, cacheKeySelector);
+        }
+
+        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> WithTimeToLiveFactory(
+            Func<TParam, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(timeToLiveFactory);
         }
         
         public Func<TParam, TValue> Build() => BuildInternal();
@@ -73,6 +80,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam, TKey> cacheKeySelector)
             : base(originalFunction, cacheKeySelector)
         { }
+
+        public ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(timeToLiveFactory);
+        }
         
         public Func<TParam, TValue> Build() => BuildInternal();
     }
@@ -87,6 +100,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2),
                 t => cacheKeySelector(t.Item1, t.Item2))
         { }
+
+        public CachedFunctionConfigurationManagerSync_2Params<TParam1, TParam2, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2));
+        }
 
         public Func<TParam1, TParam2, TValue> Build()
         {
@@ -106,6 +125,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3))
         { }
+
+        public CachedFunctionConfigurationManagerSync_3Params<TParam1, TParam2, TParam3, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3));
+        }
         
         public Func<TParam1, TParam2, TParam3, TValue> Build()
         {
@@ -126,6 +151,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4))
         { }
         
+        public CachedFunctionConfigurationManagerSync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4));
+        }
+        
         public Func<TParam1, TParam2, TParam3, TParam4, TValue> Build()
         {
             var cachedFunction = BuildInternal();
@@ -145,6 +176,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5))
         { }
         
+        public CachedFunctionConfigurationManagerSync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5));
+        }
+        
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TValue> Build()
         {
             var cachedFunction = BuildInternal();
@@ -163,6 +200,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6))
         { }
+        
+        public CachedFunctionConfigurationManagerSync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue> Build()
         {
@@ -182,6 +225,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7))
         { }
+        
+        public CachedFunctionConfigurationManagerSync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue> Build()
         {
@@ -201,6 +250,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
                 t => originalFunction(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8),
                 t => cacheKeySelector(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8))
         { }
+
+        public CachedFunctionConfigurationManagerSync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue> Build()
         {

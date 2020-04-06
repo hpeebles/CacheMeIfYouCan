@@ -12,7 +12,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
     internal sealed class CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>
     {
         private readonly Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> _originalFunction;
-        private readonly Func<IReadOnlyCollection<TKey>, TimeSpan> _timeToLiveFactory;
+        private readonly TimeSpan _timeToLive;
+        private readonly Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TKey> _keyComparer;
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
@@ -38,12 +39,15 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (config.DisableCaching)
             {
-                _timeToLiveFactory = keys => TimeSpan.Zero;
                 _cache = NullCache<TKey, TValue>.Instance;
             }
             else
             {
-                _timeToLiveFactory = config.TimeToLiveFactory;
+                if (config.TimeToLive.HasValue)
+                    _timeToLive = config.TimeToLive.Value;
+                else
+                    _timeToLiveFactory = config.TimeToLiveFactory;
+                
                 _keyComparer = config.KeyComparer ?? EqualityComparer<TKey>.Default;
                 
                 _cache = CacheBuilder.Build(
@@ -271,7 +275,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 if (_skipCacheSetPredicate is null)
                 {
-                    var timeToLive = _timeToLiveFactory(keys);
+                    var timeToLive = _timeToLiveFactory?.Invoke(parameters, keys) ?? _timeToLive;
 
                     return timeToLive == TimeSpan.Zero
                         ? default
@@ -291,7 +295,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                             ? keys
                             : new ReadOnlyCollectionKeyValuePairKeys<TKey, TValue>(filteredValues);
                         
-                        var timeToLive = _timeToLiveFactory(filteredKeys);
+                        var timeToLive = _timeToLiveFactory?.Invoke(parameters, filteredKeys) ?? _timeToLive;
 
                         return timeToLive == TimeSpan.Zero
                             ? default

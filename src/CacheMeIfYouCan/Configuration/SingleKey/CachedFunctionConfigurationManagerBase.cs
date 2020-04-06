@@ -17,10 +17,11 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
-            return WithTimeToLiveFactory(_ => timeToLive);
+            _config.TimeToLive = timeToLive;
+            return ThisAsTConfig();
         }
 
-        public TConfig WithTimeToLiveFactory(Func<TKey, TimeSpan> timeToLiveFactory)
+        private protected TConfig WithTimeToLiveFactoryInternal(Func<TParams, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
             return ThisAsTConfig();

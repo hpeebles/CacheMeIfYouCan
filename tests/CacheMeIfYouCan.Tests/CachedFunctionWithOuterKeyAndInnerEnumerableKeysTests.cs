@@ -304,7 +304,7 @@ namespace CacheMeIfYouCan.Tests
                 .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
-                .WithTimeToLiveFactory(outerKey => TimeSpan.FromMilliseconds(outerKey))
+                .WithTimeToLiveFactory((outerKey, innerKeys) => TimeSpan.FromMilliseconds(outerKey))
                 .Build();
 
             foreach (var key in new[] { 250, 500, 1000 })

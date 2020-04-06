@@ -76,7 +76,13 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         internal CachedFunctionConfigurationManagerValueTaskCanx(Func<TKeys, CancellationToken, ValueTask<TResponse>> originalFunction)
             : base((_, keys, cancellationToken) => originalFunction(keys, cancellationToken))
         { }
-        
+
+        public CachedFunctionConfigurationManagerValueTaskCanx<TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((_, keys) => timeToLiveFactory(keys));
+        }
+
         public Func<TKeys, CancellationToken, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -109,6 +115,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx<TParam, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
+
+        public CachedFunctionConfigurationManagerValueTaskCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal(timeToLiveFactory);
+        }
         
         public Func<TParam, TKeys, CancellationToken, ValueTask<TResponse>> Build() => BuildInternal();
     }
@@ -131,6 +143,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx_3Params<TParam1, TParam2, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
+        }
+
+        public CachedFunctionConfigurationManagerValueTaskCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, keys));
         }
         
         public Func<TParam1, TParam2, TKeys, CancellationToken, ValueTask<TResponse>> Build()
@@ -159,6 +177,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
+        }
+
+        public CachedFunctionConfigurationManagerValueTaskCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, keys));
         }
 
         public Func<TParam1, TParam2, TParam3, TKeys, CancellationToken, ValueTask<TResponse>> Build()
@@ -190,6 +214,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerValueTaskCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerValueTaskCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, keys));
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, CancellationToken, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -217,6 +247,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
+        }
+
+        public CachedFunctionConfigurationManagerValueTaskCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, keys));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, CancellationToken, ValueTask<TResponse>> Build()
@@ -248,6 +284,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return new CachedFunctionConfigurationManagerValueTaskCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
         }
 
+        public CachedFunctionConfigurationManagerValueTaskCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, keys));
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, CancellationToken, ValueTask<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -275,6 +317,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TOuterKey> keySelector)
         {
             return new CachedFunctionConfigurationManagerValueTaskCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TOuterKey, TKey, TValue>(_originalFunction, keySelector);
+        }
+
+        public CachedFunctionConfigurationManagerValueTaskCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        {
+            return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, keys));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, CancellationToken, ValueTask<TResponse>> Build()

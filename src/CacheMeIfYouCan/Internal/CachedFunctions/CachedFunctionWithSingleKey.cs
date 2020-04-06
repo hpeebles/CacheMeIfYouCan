@@ -11,7 +11,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
     {
         private readonly Func<TParams, CancellationToken, ValueTask<TValue>> _originalFunction;
         private readonly Func<TParams, TKey> _keySelector;
-        private readonly Func<TKey, TimeSpan> _timeToLiveFactory;
+        private readonly TimeSpan _timeToLive;
+        private readonly Func<TParams, TimeSpan> _timeToLiveFactory;
         private readonly Func<TKey, bool> _skipCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
         private readonly ICache<TKey, TValue> _cache;
@@ -30,12 +31,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (config.DisableCaching)
             {
-                _timeToLiveFactory = key => TimeSpan.Zero;
                 _cache = NullCache<TKey, TValue>.Instance;
             }
             else
             {
-                _timeToLiveFactory = config.TimeToLiveFactory;
+                if (config.TimeToLive.HasValue)
+                    _timeToLive = config.TimeToLive.Value;
+                else
+                    _timeToLiveFactory = config.TimeToLiveFactory;
                 
                 _cache = CacheBuilder.Build(
                     config,
@@ -88,7 +91,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(key, value))
                 {
-                    var timeToLive = _timeToLiveFactory(key);
+                    var timeToLive = _timeToLiveFactory?.Invoke(parameters) ?? _timeToLive;
 
                     if (timeToLive > TimeSpan.Zero)
                     {

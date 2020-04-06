@@ -24,10 +24,11 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
         {
-            return WithTimeToLiveFactory(_ => timeToLive);
+            _config.TimeToLive = timeToLive;
+            return (TConfig)this;
         }
 
-        public TConfig WithTimeToLiveFactory(Func<IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        private protected TConfig WithTimeToLiveFactoryInternal(Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
