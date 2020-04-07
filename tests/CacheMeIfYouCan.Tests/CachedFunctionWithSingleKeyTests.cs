@@ -178,7 +178,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
-        public void SkipCacheGet_SkipCacheSet_WorksForAllCombinations(bool flag1, bool flag2, bool flag3, bool flag4)
+        public void DontGetFromCacheWhen_DontStoreInCacheWhen_WorksForAllCombinations(bool flag1, bool flag2, bool flag3, bool flag4)
         {
             Func<int, int> originalFunction = key => key;
 
@@ -190,16 +190,16 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
             if (flag1)
-                config.SkipCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+                config.DontGetFromCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.SkipCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+                config.DontStoreInCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
-                config.SkipCacheWhen(key => key % 5 == 0);
+                config.DontGetFromCacheWhen(key => key % 5 == 0);
             
             if (flag4)
-                config.SkipCacheWhen((key, value) => key % 7 == 0);
+                config.DontStoreInCacheWhen((key, _) => key % 7 == 0);
 
             var cachedFunction = config.Build();
 
@@ -213,7 +213,7 @@ namespace CacheMeIfYouCan.Tests
                 var currentSetExecutionCount = cache.SetExecutionCount;
 
                 var skipGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
-                var skipSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                var skipSet = flag2 && i % 3 == 0 || flag4 && i % 7 == 0;
                 
                 if (skipGet)
                     currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount);
@@ -232,7 +232,7 @@ namespace CacheMeIfYouCan.Tests
 
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 8, MemberType = typeof(BoolGenerator))]
-        public void SkipLocalCacheWhen_SkipDistributedCacheWhen_WorkAsExpected(
+        public void DontGetFromOrStoreInLocalCacheWhen_DontGetFromOrStoreInDistributedCacheWhen_WorkAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6, bool flag7, bool flag8)
         {
             Func<int, int> originalFunction = key => key;
@@ -247,28 +247,28 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
             
             if (flag1)
-                config.SkipLocalCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+                config.DontGetFromLocalCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.SkipLocalCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+                config.DontStoreInCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
-                config.SkipLocalCacheWhen(key => key % 5 == 0);
+                config.DontGetFromLocalCacheWhen(key => key % 5 == 0);
             
             if (flag4)
-                config.SkipLocalCacheWhen((key, value) => key % 7 == 0);
+                config.DontStoreInLocalCacheWhen((key, _) => key % 7 == 0);
             
             if (flag5)
-                config.SkipDistributedCacheWhen(key => key % 11 == 0, SkipCacheWhen.SkipCacheGet);
+                config.DontGetFromDistributedCacheWhen(key => key % 11 == 0);
 
             if (flag6)
-                config.SkipDistributedCacheWhen(key => key % 13 == 0, SkipCacheWhen.SkipCacheSet);
+                config.DontStoreInDistributedCacheWhen((key, _) => key % 13 == 0);
 
             if (flag7)
-                config.SkipDistributedCacheWhen(key => key % 17 == 0);
+                config.DontGetFromDistributedCacheWhen(key => key % 17 == 0);
             
             if (flag8)
-                config.SkipDistributedCacheWhen((key, value) => key % 19 == 0);
+                config.DontStoreInDistributedCacheWhen((key, _) => key % 19 == 0);
             
             var cachedFunction = config.Build();
             
@@ -319,7 +319,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
-        public void SkipLocalCacheWhen_ForSingleTierCache_WorksTheSameAsUsingSkipCacheWhen(
+        public void DontGetFromOrStoreInLocalCacheWhen_ForSingleTierCache_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4)
         {
             Func<int, int> originalFunction = key => key;
@@ -332,16 +332,16 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
             if (flag1)
-                config.SkipLocalCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+                config.DontGetFromLocalCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.SkipLocalCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+                config.DontStoreInLocalCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
-                config.SkipLocalCacheWhen(key => key % 5 == 0);
+                config.DontGetFromLocalCacheWhen(key => key % 5 == 0);
             
             if (flag4)
-                config.SkipLocalCacheWhen((key, value) => key % 7 == 0);
+                config.DontStoreInLocalCacheWhen((key, _) => key % 7 == 0);
 
             var cachedFunction = config.Build();
 
@@ -376,7 +376,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
-        public void SkipDistributedCacheWhen_ForSingleTierCache_WorksTheSameAsUsingSkipCacheWhen(
+        public void DontGetFromOrStoreInDistributedCacheWhen_ForSingleTierCache_ForSingleTierCache(
             bool flag1, bool flag2, bool flag3, bool flag4)
         {
             Func<int, int> originalFunction = key => key;
@@ -389,16 +389,16 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
             if (flag1)
-                config.SkipDistributedCacheWhen(key => key % 2 == 0, SkipCacheWhen.SkipCacheGet);
+                config.DontGetFromDistributedCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.SkipDistributedCacheWhen(key => key % 3 == 0, SkipCacheWhen.SkipCacheSet);
+                config.DontStoreInDistributedCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
-                config.SkipDistributedCacheWhen(key => key % 5 == 0);
+                config.DontGetFromDistributedCacheWhen(key => key % 5 == 0);
             
             if (flag4)
-                config.SkipDistributedCacheWhen((key, value) => key % 7 == 0);
+                config.DontStoreInDistributedCacheWhen((key, _) => key % 7 == 0);
 
             var cachedFunction = config.Build();
 
@@ -430,7 +430,7 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Fact]
-        public void WithTimeToLiveFactory_NotCalledIfKeyWillSkipCaching()
+        public void WithTimeToLiveFactory_NotCalledIfKeyWillNotBeStoredInCache()
         {
             Func<int, int> originalFunction = key => key;
 
@@ -439,7 +439,7 @@ namespace CacheMeIfYouCan.Tests
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithLocalCache(new MockLocalCache<int, int>())
-                .SkipCacheWhen(k => k % 2 == 0)
+                .DontStoreInCacheWhen((k, _) => k % 2 == 0)
                 .WithTimeToLiveFactory(TimeToLiveFactory)
                 .Build();
 

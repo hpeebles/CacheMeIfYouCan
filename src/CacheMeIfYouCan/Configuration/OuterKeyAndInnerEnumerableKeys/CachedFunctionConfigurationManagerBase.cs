@@ -64,97 +64,73 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig SkipCacheWhen(
-            Func<TOuterKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromCacheWhen(Func<TOuterKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipCacheGetPredicateOuterKeyOnly = _config.SkipCacheGetPredicateOuterKeyOnly.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipCacheSetPredicateOuterKeyOnly = _config.SkipCacheSetPredicateOuterKeyOnly.Or(predicate);
-            
+            _config.SkipCacheGetPredicateOuterKeyOnly = _config.SkipCacheGetPredicateOuterKeyOnly.Or(predicate);
             return (TConfig)this;
         }
         
-        public TConfig SkipCacheWhen(
-            Func<TOuterKey, TInnerKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromCacheWhen(Func<TOuterKey, TInnerKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipCacheGetPredicate = _config.SkipCacheGetPredicate.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or((outerKey, innerKey, value) => predicate(outerKey, innerKey));
-
+            _config.SkipCacheGetPredicate = _config.SkipCacheGetPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig SkipCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
+        public TConfig DontStoreInCacheWhen(Func<TOuterKey, bool> predicate)
+        {
+            _config.SkipCacheSetPredicateOuterKeyOnly = _config.SkipCacheSetPredicateOuterKeyOnly.Or(predicate);
+            return (TConfig)this;
+        }
+        
+        public TConfig DontStoreInCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
         {
             _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig SkipLocalCacheWhen(
-            Func<TOuterKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromLocalCacheWhen(Func<TOuterKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipLocalCacheGetPredicateOuterKeyOnly = _config.SkipLocalCacheGetPredicateOuterKeyOnly.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipLocalCacheSetPredicateOuterKeyOnly = _config.SkipLocalCacheSetPredicateOuterKeyOnly.Or(predicate);
-
+            _config.SkipLocalCacheGetPredicateOuterKeyOnly = _config.SkipLocalCacheGetPredicateOuterKeyOnly.Or(predicate);
             return (TConfig)this;
         }
         
-        public TConfig SkipLocalCacheWhen(
-            Func<TOuterKey, TInnerKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromLocalCacheWhen(Func<TOuterKey, TInnerKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipLocalCacheGetPredicate = _config.SkipLocalCacheGetPredicate.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or((outerKey, innerKey, value) => predicate(outerKey, innerKey));
-
+            _config.SkipLocalCacheGetPredicate = _config.SkipLocalCacheGetPredicate.Or(predicate);
+            return (TConfig)this;
+        }
+        
+        public TConfig DontStoreInLocalCacheWhen(Func<TOuterKey, bool> predicate)
+        {
+            _config.SkipLocalCacheSetPredicateOuterKeyOnly = _config.SkipLocalCacheSetPredicateOuterKeyOnly.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig SkipLocalCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
+        public TConfig DontStoreInLocalCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
         {
             _config.SkipLocalCacheSetPredicate = _config.SkipLocalCacheSetPredicate.Or(predicate);
             return (TConfig)this;
         }
         
-        public TConfig SkipDistributedCacheWhen(
-            Func<TOuterKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromDistributedCacheWhen(Func<TOuterKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipDistributedCacheGetPredicateOuterKeyOnly = _config.SkipDistributedCacheGetPredicateOuterKeyOnly.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipDistributedCacheSetPredicateOuterKeyOnly = _config.SkipDistributedCacheSetPredicateOuterKeyOnly.Or(predicate);
-
+            _config.SkipDistributedCacheGetPredicateOuterKeyOnly = _config.SkipDistributedCacheGetPredicateOuterKeyOnly.Or(predicate);
             return (TConfig)this;
         }
         
-        public TConfig SkipDistributedCacheWhen(
-            Func<TOuterKey, TInnerKey, bool> predicate,
-            SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet)
+        public TConfig DontGetFromDistributedCacheWhen(Func<TOuterKey, TInnerKey, bool> predicate)
         {
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheGet))
-                _config.SkipDistributedCacheGetPredicate = _config.SkipDistributedCacheGetPredicate.Or(predicate);
-
-            if (when.HasFlag(CacheMeIfYouCan.SkipCacheWhen.SkipCacheSet))
-                _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or((outerKey, innerKey, value) => predicate(outerKey, innerKey));
-
+            _config.SkipDistributedCacheGetPredicate = _config.SkipDistributedCacheGetPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig SkipDistributedCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
+        public TConfig DontStoreInDistributedCacheWhen(Func<TOuterKey, bool> predicate)
+        {
+            _config.SkipDistributedCacheSetPredicateOuterKeyOnly = _config.SkipDistributedCacheSetPredicateOuterKeyOnly.Or(predicate);
+            return (TConfig)this;
+        }
+
+        public TConfig DontStoreInDistributedCacheWhen(Func<TOuterKey, TInnerKey, TValue, bool> predicate)
         {
             _config.SkipDistributedCacheSetPredicate = _config.SkipDistributedCacheSetPredicate.Or(predicate);
             return (TConfig)this;

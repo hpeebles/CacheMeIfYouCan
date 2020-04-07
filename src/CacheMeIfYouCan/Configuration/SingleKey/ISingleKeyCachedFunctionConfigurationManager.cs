@@ -10,12 +10,12 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         TConfig WithLocalCache(ILocalCache<TKey, TValue> cache);
         TConfig WithDistributedCache(IDistributedCache<TKey, TValue> cache);
         TConfig DisableCaching(bool disableCaching = true);
-        TConfig SkipCacheWhen(Func<TKey, bool> predicate, SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet);
-        TConfig SkipCacheWhen(Func<TKey, TValue, bool> predicate);
-        TConfig SkipLocalCacheWhen(Func<TKey, bool> predicate, SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet);
-        TConfig SkipLocalCacheWhen(Func<TKey, TValue, bool> predicate);
-        TConfig SkipDistributedCacheWhen(Func<TKey, bool> predicate, SkipCacheWhen when = CacheMeIfYouCan.SkipCacheWhen.SkipCacheGetAndCacheSet);
-        TConfig SkipDistributedCacheWhen(Func<TKey, TValue, bool> predicate);
+        TConfig DontGetFromCacheWhen(Func<TKey, bool> predicate);
+        TConfig DontStoreInCacheWhen(Func<TKey, TValue, bool> predicate);
+        TConfig DontGetFromLocalCacheWhen(Func<TKey, bool> predicate);
+        TConfig DontStoreInLocalCacheWhen(Func<TKey, TValue, bool> predicate);
+        TConfig DontGetFromDistributedCacheWhen(Func<TKey, bool> predicate);
+        TConfig DontStoreInDistributedCacheWhen(Func<TKey, TValue, bool> predicate);
         TConfig OnResult(Action<SuccessfulRequestEvent<TParams, TKey, TValue>> onSuccess = null, Action<ExceptionEvent<TParams, TKey>> onException = null);
     }
 
