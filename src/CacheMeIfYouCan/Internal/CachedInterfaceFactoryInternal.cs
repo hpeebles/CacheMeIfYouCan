@@ -14,11 +14,15 @@ namespace CacheMeIfYouCan.Internal
         
         static CachedInterfaceFactoryInternal()
         {
-            using var snkFileStream = new FileStream("../../CacheMeIfYouCan.snk", FileMode.Open);
-            var snkp = new StrongNameKeyPair(snkFileStream);
+            var thisAssemblyName = Assembly.GetExecutingAssembly().GetName();
+
+            var newAssemblyName = new AssemblyName("CacheMeIfYouCan.CachedInterfaces");
+            newAssemblyName.SetPublicKey(thisAssemblyName.GetPublicKey());
+            newAssemblyName.SetPublicKeyToken(thisAssemblyName.GetPublicKeyToken());
+            newAssemblyName.Version = thisAssemblyName.Version;
             
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(
-                new AssemblyName("CacheMeIfYouCan.CachedInterfaces") { KeyPair = snkp },
+                newAssemblyName,
                 AssemblyBuilderAccess.Run);
             
             ModuleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
