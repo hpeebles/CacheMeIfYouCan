@@ -1,4 +1,6 @@
 # CacheMeIfYouCan
+[![Build Status](https://dev.azure.com/hamishpeebles/CacheMeIfYouCan/_apis/build/status/hpeebles.CacheMeIfYouCan?branchName=master)](https://dev.azure.com/hamishpeebles/CacheMeIfYouCan/_build/latest?definitionId=5&branchName=master)
+[![NuGet version (CacheMeIfYouCan)](https://img.shields.io/nuget/v/CacheMeIfYouCan.svg)](https://www.nuget.org/packages/CacheMeIfYouCan/)
 
 ## Features
 - [Cached Functions](#cached-functions)
