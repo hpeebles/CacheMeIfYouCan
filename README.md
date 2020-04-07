@@ -126,7 +126,7 @@ Func<Task<Configuration>> getConfigurationFunc = ...
 var cachedConfiguration = CachedObjectFactory
     .ConfigureFor(getConfigurationFunc)
     .WithRefreshInterval(TimeSpan.FromMinutes(10))
-	.WithJitter(10) // Use WithJitter if you want the refresh intervals to flucuate slightly
+    .WithJitter(10) // Use WithJitter if you want the refresh intervals to flucuate slightly
     .Build();
 
 cachedConfiguration.Initialize(); // The first access will trigger a call to initialize if not already initialized
