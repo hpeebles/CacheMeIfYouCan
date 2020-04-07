@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,8 +14,11 @@ namespace CacheMeIfYouCan.Internal
         
         static CachedInterfaceFactoryInternal()
         {
+            using var snkFileStream = new FileStream("../../CacheMeIfYouCan.snk", FileMode.Open);
+            var snkp = new StrongNameKeyPair(snkFileStream);
+            
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(
-                new AssemblyName("CacheMeIfYouCan.CachedInterfaces"),
+                new AssemblyName("CacheMeIfYouCan.CachedInterfaces") { KeyPair = snkp },
                 AssemblyBuilderAccess.Run);
             
             ModuleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");

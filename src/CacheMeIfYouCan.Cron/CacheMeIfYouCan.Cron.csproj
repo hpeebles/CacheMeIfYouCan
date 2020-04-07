@@ -9,6 +9,6 @@
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ncrontab" Version="3.3.1" />
+    <PackageReference Include="ncrontab.signed" Version="3.3.2" />
   </ItemGroup>
 </Project>

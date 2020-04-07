@@ -9,6 +9,6 @@
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+    <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
 </Project>

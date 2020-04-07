@@ -11,9 +11,8 @@
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj" />
-    <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj" />
-    <ProjectReference Include="..\..\..\src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj" />
-    <ProjectReference Include="..\..\..\src\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
+    <ProjectReference Include="..\..\src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj" />
+    <ProjectReference Include="..\..\src\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj" />
+    <ProjectReference Include="..\..\src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj" />
   </ItemGroup>
 </Project>
