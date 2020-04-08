@@ -15,8 +15,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly TimeSpan _timeToLive;
         private readonly Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TKey> _keyComparer;
-        private readonly Func<TKey, bool> _skipCacheGetPredicate;
-        private readonly Func<TKey, TValue, bool> _skipCacheSetPredicate;
+        private readonly Func<TParams, bool> _skipCacheGetOuterPredicate;
+        private readonly Func<TParams, TKey, bool> _skipCacheGetInnerPredicate;
+        private readonly Func<TParams, bool> _skipCacheSetOuterPredicate;
+        private readonly Func<TParams, TKey, TValue, bool> _skipCacheSetInnerPredicate;
         private readonly int _maxBatchSize;
         private readonly BatchBehaviour _batchBehaviour;
         private readonly bool _shouldFillMissingKeys;
@@ -47,16 +49,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     _timeToLive = config.TimeToLive.Value;
                 else
                     _timeToLiveFactory = config.TimeToLiveFactory;
-                
+
+                _cache = CacheBuilder.Build(config);
                 _keyComparer = config.KeyComparer ?? EqualityComparer<TKey>.Default;
-                
-                _cache = CacheBuilder.Build(
-                    config,
-                    out var additionalSkipCacheGetPredicate,
-                    out var additionalSkipCacheSetPredicate);
-                
-                _skipCacheGetPredicate = config.SkipCacheGetPredicate.Or(additionalSkipCacheGetPredicate);
-                _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
+                _skipCacheGetOuterPredicate = config.SkipCacheGetOuterPredicate;
+                _skipCacheGetInnerPredicate = config.SkipCacheGetInnerPredicate;
+                _skipCacheSetOuterPredicate = config.SkipCacheSetOuterPredicate;
+                _skipCacheSetInnerPredicate = config.SkipCacheSetInnerPredicate;
             }
 
             if (config.FillMissingKeysConstantValue.IsSet)
@@ -84,14 +83,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var getFromCacheTask = GetFromCache();
+                var getFromCacheTask = GetFromCache(parameters, keysCollection);
 
                 var resultsDictionary = getFromCacheTask.IsCompleted
                     ? getFromCacheTask.Result
                     : await getFromCacheTask.ConfigureAwait(false);
 
                 var cacheHits = resultsDictionary.Count;
-                
+
                 if (cacheHits == keysCollection.Count)
                 {
                     _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
@@ -154,7 +153,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     start,
                     timer.Elapsed,
                     cacheHits));
-                
+
                 return resultsDictionary;
             }
             catch (Exception ex) when (!(_onExceptionAction is null))
@@ -168,66 +167,71 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 throw;
             }
+        }
 
-            async ValueTask<Dictionary<TKey, TValue>> GetFromCache()
+        private async ValueTask<Dictionary<TKey, TValue>> GetFromCache(TParams parameters, IReadOnlyCollection<TKey> keysCollection)
+        {
+            if (_skipCacheGetOuterPredicate?.Invoke(parameters) == true)
+                return new Dictionary<TKey, TValue>(_keyComparer);
+
+            if (_skipCacheGetInnerPredicate is null)
             {
-                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keysCollection.Count);
-                Dictionary<TKey, TValue> resultsFromCache;
+                var task = GetFromCacheInner(keysCollection);
 
+                return task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+            } 
+            
+            var filteredKeys = CacheKeysFilter<TParams, TKey>.Filter(
+                parameters,
+                keysCollection,
+                _skipCacheGetInnerPredicate,
+                out var pooledKeyArray);
+
+            try
+            {
+                if (filteredKeys.Count == 0)
+                    return new Dictionary<TKey, TValue>();
+                
+                var task = GetFromCacheInner(filteredKeys);
+                
+                return task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+            }
+            finally
+            {
+                CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+            }
+            
+            async ValueTask<Dictionary<TKey, TValue>> GetFromCacheInner(IReadOnlyCollection<TKey> keys)
+            {
+                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Count);
                 try
                 {
-                    int countFoundInCache;
-                    if (_skipCacheGetPredicate is null)
-                    {
-                        var task = _cache.GetMany(keysCollection, getFromCacheResultsArray);
+                    var task = _cache.GetMany(keys, getFromCacheResultsArray);
 
-                        countFoundInCache = task.IsCompleted
-                            ? task.Result
-                            : await task.ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        var filteredKeys = CacheKeysFilter<TKey>.Filter(
-                            keysCollection,
-                            _skipCacheGetPredicate,
-                            out var pooledKeyArray);
-
-                        try
-                        {
-                            var task = filteredKeys.Count > 0
-                                ? _cache.GetMany(filteredKeys, getFromCacheResultsArray)
-                                : new ValueTask<int>(0);
-
-                            countFoundInCache = task.IsCompleted
-                                ? task.Result
-                                : await task.ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
-                        }
-                    }
+                    var countFoundInCache = task.IsCompleted
+                        ? task.Result
+                        : await task.ConfigureAwait(false);
 
                     if (countFoundInCache == 0)
+                        return new Dictionary<TKey, TValue>(_keyComparer);
+
+                    var resultsFromCache = new Dictionary<TKey, TValue>(countFoundInCache, _keyComparer);
+                    for (var i = 0; i < countFoundInCache; i++)
                     {
-                        resultsFromCache = new Dictionary<TKey, TValue>(_keyComparer);
+                        var kv = getFromCacheResultsArray[i];
+                        resultsFromCache[kv.Key] = kv.Value;
                     }
-                    else
-                    {
-                        resultsFromCache = new Dictionary<TKey, TValue>(countFoundInCache, _keyComparer);
-                        for (var i = 0; i < countFoundInCache; i++)
-                        {
-                            var kv = getFromCacheResultsArray[i];
-                            resultsFromCache[kv.Key] = kv.Value;
-                        }
-                    }
+
+                    return resultsFromCache;
                 }
                 finally
                 {
                     ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(getFromCacheResultsArray);
                 }
-
-                return resultsFromCache;
             }
         }
 
@@ -273,7 +277,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             
             ValueTask SetInCache()
             {
-                if (_skipCacheSetPredicate is null)
+                if (_skipCacheSetOuterPredicate?.Invoke(parameters) == true)
+                    return default;
+                
+                if (_skipCacheSetInnerPredicate is null)
                 {
                     var timeToLive = _timeToLiveFactory?.Invoke(parameters, keys) ?? _timeToLive;
 
@@ -282,9 +289,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         : _cache.SetMany(valuesFromFuncCollection, timeToLive);
                 }
 
-                var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(
+                var filteredValues = CacheValuesFilter<TParams, TKey, TValue>.Filter(
+                    parameters,
                     valuesFromFuncCollection,
-                    _skipCacheSetPredicate,
+                    _skipCacheSetInnerPredicate,
                     out var pooledArray);
 
                 try

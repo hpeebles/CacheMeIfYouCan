@@ -561,7 +561,7 @@ namespace CacheMeIfYouCan.Tests
 
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
-        public void DontGetFromLocalCacheWhen_DontGetFromDistributedCacheWhen_WorkAsExpected(
+        public void DontGetFromLocalCacheWhen_DontGetFromDistributedCacheWhen_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4)
         {
             // Func always returns 1
@@ -628,7 +628,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 6, MemberType = typeof(BoolGenerator))]
-        public void DontStoreInLocalCacheWhen_DontStoreInDistributedCacheWhen_WorkAsExpected(
+        public void DontStoreInLocalCacheWhen_DontStoreInDistributedCacheWhen_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6)
         {
             Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
@@ -810,7 +810,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
-        public void DontGetFromDistributedCacheWhen_ForSingleTierCache_WorksTheSameAsUsingDontGetFromCache(bool flag1, bool flag2)
+        public void DontGetFromDistributedCacheWhen_ForSingleTierCache_WorksAsExpected(bool flag1, bool flag2)
         {
             // Func always returns 1
             // Cache always returns 2
@@ -859,7 +859,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 3, MemberType = typeof(BoolGenerator))]
-        public void DontStoreInDistributedCache_ForSingleTierCache_WorksTheSameAsUsingDontStoreInCache(
+        public void DontStoreInDistributedCache_ForSingleTierCache_WorksAsExpected(
             bool flag1, bool flag2, bool flag3)
         {
             Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>

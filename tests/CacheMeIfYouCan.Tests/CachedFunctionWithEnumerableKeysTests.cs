@@ -461,16 +461,16 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
             if (flag1)
-                config.DontGetFromCacheWhen(key => key % 2 == 0);
+                config.DontGetFromCacheWhen((_, key) => key % 2 == 0);
 
             if (flag2)
-                config.DontStoreInCacheWhen((key, _) => key % 3 == 0);
+                config.DontStoreInCacheWhen((_, key, __) => key % 3 == 0);
 
             if (flag3)
-                config.DontGetFromCacheWhen(key => key % 5 == 0);
+                config.DontGetFromCacheWhen((_, key) => key % 5 == 0);
             
             if (flag4)
-                config.DontStoreInCacheWhen((key, _) => key % 7 == 0);
+                config.DontStoreInCacheWhen((_, key, __) => key % 7 == 0);
 
             var cachedFunction = config.Build();
 
@@ -500,10 +500,116 @@ namespace CacheMeIfYouCan.Tests
                 previousSetManyExecutionCount = currentSetManyExecutionCount;
             }
         }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void DontGetFromCacheWhen_WithExtraParam_WorksForAllCombinations(bool flag1, bool flag2)
+        {
+            // Func always returns 1
+            // Cache always returns 2
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockLocalCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(1))
+                .DontStoreInCacheWhen(_ => true);
+
+            if (flag1)
+                config.DontGetFromCacheWhen(outerParam => outerParam % 2 == 0);
+
+            if (flag2)
+                config.DontGetFromCacheWhen((_, innerKey) => innerKey % 3 == 0);
+            
+            var cachedFunction = config.Build();
+
+            // Fill cache with 2's
+            cache.SetMany(Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(100));
+
+            var results = new Dictionary<(int OuterKey, int InnerKey), int>();
+            
+            for (var outerParam = 0; outerParam < 10; outerParam++)
+            for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+            {
+                foreach (var (innerKey, value) in cachedFunction(outerParam, Enumerable.Range(10 * innerKeyBatch, 10)))
+                    results[(outerParam, innerKey)] = value;
+            }
+            
+            foreach (var ((outerParam, innerKey), value) in results)
+            {
+                var shouldHaveSkippedCache = flag1 && outerParam % 2 == 0 || flag2 && innerKey % 3 == 0;
+
+                try
+                {
+                    value.Should().Be(shouldHaveSkippedCache ? 1 : 2);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+        }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 3, MemberType = typeof(BoolGenerator))]
+        public void DontStoreInCacheWhen_WithExtraParam_WorksForAllCombinations(bool flag1, bool flag2, bool flag3)
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k, k => 1);
+            };
+
+            var cache = new MockLocalCache<int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromSeconds(100));
+
+            if (flag1)
+                config.DontStoreInCacheWhen(outerParam => outerParam % 2 == 0);
+
+            if (flag2)
+                config.DontStoreInCacheWhen((_, innerKey, __) => innerKey % 3 == 0);
+            
+            if (flag3)
+                config.DontStoreInCacheWhen((_, innerKey, __) => innerKey % 5 == 0);
+            
+            var cachedFunction = config.Build();
+
+            for (var outerParam = 0; outerParam < 10; outerParam++)
+            {
+                for (var innerKeyBatch = 0; innerKeyBatch < 10; innerKeyBatch++)
+                    cachedFunction(outerParam, Enumerable.Range(10 * innerKeyBatch, 10));
+                
+                var valuesInCache = new Dictionary<int, int>();
+                foreach (var (innerKey, value) in cache.GetMany(Enumerable.Range(0, 100).ToList()))
+                    valuesInCache[innerKey] = value;
+                
+                for (var innerKey = 0; innerKey < 100; innerKey++)
+                {
+                    var shouldHaveSkippedCache =
+                        flag1 && outerParam % 2 == 0 ||
+                        flag2 && innerKey % 3 == 0 ||
+                        flag3 && innerKey % 5 == 0;
+
+                    valuesInCache.ContainsKey(innerKey).Should().Be(!shouldHaveSkippedCache);
+                }
+                
+                cache.Clear();
+            }
+        }
 
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 8, MemberType = typeof(BoolGenerator))]
-        public void DontGetFromOrStoreInLocalCacheWhen_DontGetFromOrStoreInDistributedCacheWhen_WorkAsExpected(
+        public void DontGetFromOrStoreInLocalCacheWhen_DontGetFromOrStoreInDistributedCacheWhen_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6, bool flag7, bool flag8)
         {
             Func<IEnumerable<int>, Dictionary<int, int>> originalFunction = keys =>
@@ -731,10 +837,10 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
 
             if (flag1)
-                config.DontStoreInCacheWhen((_, __) => true);
+                config.DontStoreInCacheWhen((_, __, ___) => true);
 
             if (flag2)
-                config.DontStoreInCacheWhen((key, _) => key % 2 == 0);
+                config.DontStoreInCacheWhen((_, key, __) => key % 2 == 0);
 
             var cachedFunction = config.Build();
 

@@ -45,13 +45,13 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return ThisAsTConfig();
         }
 
-        public TConfig DontGetFromCacheWhen(Func<TKey, bool> predicate)
+        public TConfig DontGetFromCacheWhen(Func<TParams, bool> predicate)
         {
             _config.SkipCacheGetPredicate = _config.SkipCacheGetPredicate.Or(predicate);
             return ThisAsTConfig();
         }
         
-        public TConfig DontStoreInCacheWhen(Func<TKey, TValue, bool> predicate)
+        public TConfig DontStoreInCacheWhen(Func<TParams, TValue, bool> predicate)
         {
             _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or(predicate);
             return ThisAsTConfig();

@@ -10,8 +10,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         TConfig WithLocalCache(ILocalCache<TKey, TValue> cache);
         TConfig WithDistributedCache(IDistributedCache<TKey, TValue> cache);
         TConfig DisableCaching(bool disableCaching = true);
-        TConfig DontGetFromCacheWhen(Func<TKey, bool> predicate);
-        TConfig DontStoreInCacheWhen(Func<TKey, TValue, bool> predicate);
+        TConfig DontGetFromCacheWhen(Func<TParams, bool> predicate);
+        TConfig DontStoreInCacheWhen(Func<TParams, TValue, bool> predicate);
         TConfig DontGetFromLocalCacheWhen(Func<TKey, bool> predicate);
         TConfig DontStoreInLocalCacheWhen(Func<TKey, TValue, bool> predicate);
         TConfig DontGetFromDistributedCacheWhen(Func<TKey, bool> predicate);

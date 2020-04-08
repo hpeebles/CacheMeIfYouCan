@@ -63,16 +63,28 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             _config.FillMissingKeysValueFactory = valueFactory;
             return (TConfig)this;
         }
-        
-        public TConfig DontGetFromCacheWhen(Func<TKey, bool> predicate)
+
+        public TConfig DontGetFromCacheWhen(Func<TParams, bool> predicate)
         {
-            _config.SkipCacheGetPredicate = _config.SkipCacheGetPredicate.Or(predicate);
+            _config.SkipCacheGetOuterPredicate = _config.SkipCacheGetOuterPredicate.Or(predicate);
+            return (TConfig)this;
+        }
+        
+        public TConfig DontGetFromCacheWhen(Func<TParams, TKey, bool> predicate)
+        {
+            _config.SkipCacheGetInnerPredicate = _config.SkipCacheGetInnerPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig DontStoreInCacheWhen(Func<TKey, TValue, bool> predicate)
+        public TConfig DontStoreInCacheWhen(Func<TParams, bool> predicate)
         {
-            _config.SkipCacheSetPredicate = _config.SkipCacheSetPredicate.Or(predicate);
+            _config.SkipCacheSetOuterPredicate = _config.SkipCacheGetOuterPredicate.Or(predicate);
+            return (TConfig)this;
+        }
+
+        public TConfig DontStoreInCacheWhen(Func<TParams, TKey, TValue, bool> predicate)
+        {
+            _config.SkipCacheSetInnerPredicate = _config.SkipCacheSetInnerPredicate.Or(predicate);
             return (TConfig)this;
         }
 

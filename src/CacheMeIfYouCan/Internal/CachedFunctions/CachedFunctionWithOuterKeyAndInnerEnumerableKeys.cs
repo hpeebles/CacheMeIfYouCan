@@ -16,10 +16,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly TimeSpan _timeToLive;
         private readonly Func<TParams, IReadOnlyCollection<TInnerKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TInnerKey> _keyComparer;
-        private readonly Func<TOuterKey, bool> _skipCacheGetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, bool> _skipCacheGetPredicate;
-        private readonly Func<TOuterKey, bool> _skipCacheSetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipCacheSetPredicate;
+        private readonly Func<TParams, bool> _skipCacheGetOuterPredicate;
+        private readonly Func<TParams, TInnerKey, bool> _skipCacheGetInnerPredicate;
+        private readonly Func<TParams, bool> _skipCacheSetOuterPredicate;
+        private readonly Func<TParams, TInnerKey, TValue, bool> _skipCacheSetInnerPredicate;
         private readonly int _maxBatchSize;
         private readonly BatchBehaviour _batchBehaviour;
         private readonly bool _shouldFillMissingKeys;
@@ -55,17 +55,11 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 
                 _keyComparer = config.KeyComparer ?? EqualityComparer<TInnerKey>.Default;
                 
-                _cache = CacheBuilder.Build(
-                    config,
-                    out var additionalSkipCacheGetPredicateOuterKeyOnly,
-                    out var additionalSkipCacheGetPredicate,
-                    out var additionalSkipCacheSetPredicateOuterKeyOnly,
-                    out var additionalSkipCacheSetPredicate);
-                
-                _skipCacheGetPredicateOuterKeyOnly = config.SkipCacheGetPredicateOuterKeyOnly.Or(additionalSkipCacheGetPredicateOuterKeyOnly);
-                _skipCacheGetPredicate = config.SkipCacheGetPredicate.Or(additionalSkipCacheGetPredicate);
-                _skipCacheSetPredicateOuterKeyOnly = config.SkipCacheSetPredicateOuterKeyOnly.Or(additionalSkipCacheSetPredicateOuterKeyOnly);
-                _skipCacheSetPredicate = config.SkipCacheSetPredicate.Or(additionalSkipCacheSetPredicate);
+                _cache = CacheBuilder.Build(config);
+                _skipCacheGetOuterPredicate = config.SkipCacheGetOuterPredicate;
+                _skipCacheGetInnerPredicate = config.SkipCacheGetInnerPredicate;
+                _skipCacheSetOuterPredicate = config.SkipCacheSetOuterPredicate;
+                _skipCacheSetInnerPredicate = config.SkipCacheSetInnerPredicate;
             }
             
             if (config.FillMissingKeysConstantValue.IsSet)
@@ -188,7 +182,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             async ValueTask<Dictionary<TInnerKey, TValue>> GetFromCache()
             {
-                if (!(_skipCacheGetPredicateOuterKeyOnly is null) && _skipCacheGetPredicateOuterKeyOnly(outerKey))
+                if (_skipCacheGetOuterPredicate?.Invoke(parameters) == true)
                     return new Dictionary<TInnerKey, TValue>(_keyComparer);
                 
                 var getFromCacheResultsArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeysCollection.Count);
@@ -197,7 +191,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 try
                 {
                     int countFoundInCache;
-                    if (_skipCacheGetPredicate is null)
+                    if (_skipCacheGetInnerPredicate is null)
                     {
                         var task = _cache.GetMany(outerKey, innerKeysCollection, getFromCacheResultsArray);
 
@@ -207,10 +201,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     }
                     else
                     {
-                        var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
-                            outerKey,
+                        var filteredKeys = CacheKeysFilter<TParams, TInnerKey>.Filter(
+                            parameters,
                             innerKeysCollection,
-                            _skipCacheGetPredicate,
+                            _skipCacheGetInnerPredicate,
                             out var pooledArray);
 
                         try
@@ -295,10 +289,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             
             ValueTask SetInCache()
             {
-                if (!(_skipCacheSetPredicateOuterKeyOnly is null) && _skipCacheSetPredicateOuterKeyOnly(outerKey))
+                if (_skipCacheSetOuterPredicate?.Invoke(parameters) == true)
                     return default;
 
-                if (_skipCacheSetPredicate is null)
+                if (_skipCacheSetInnerPredicate is null)
                 {
                     var timeToLive = _timeToLiveFactory?.Invoke(parameters, innerKeys) ?? _timeToLive;
 
@@ -307,10 +301,10 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         : _cache.SetMany(outerKey, valuesFromFuncCollection, timeToLive);
                 }
 
-                var filteredValues = CacheValuesFilter<TOuterKey, TInnerKey, TValue>.Filter(
-                    outerKey,
+                var filteredValues = CacheValuesFilter<TParams, TInnerKey, TValue>.Filter(
+                    parameters,
                     valuesFromFuncCollection,
-                    _skipCacheSetPredicate,
+                    _skipCacheSetInnerPredicate,
                     out var pooledArray);
 
                 try

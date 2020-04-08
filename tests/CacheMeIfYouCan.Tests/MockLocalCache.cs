@@ -6,7 +6,7 @@ namespace CacheMeIfYouCan.Tests
 {
     public class MockLocalCache<TKey, TValue> : ILocalCache<TKey, TValue>
     {
-        private readonly ILocalCache<TKey, TValue> _innerCache = new MemoryCache<TKey, TValue>(k => k.ToString());
+        private ILocalCache<TKey, TValue> _innerCache = new MemoryCache<TKey, TValue>(k => k.ToString());
 
         public int TryGetExecutionCount;
         public int SetExecutionCount;
@@ -96,13 +96,15 @@ namespace CacheMeIfYouCan.Tests
 
             return _innerCache.TryRemove(key, out value);
         }
+        
+        public void Clear() => _innerCache = new MemoryCache<TKey, TValue>(k => k.ToString());
 
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
     }
     
     public class MockLocalCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
     {
-        private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache = new MemoryCache<TOuterKey, TInnerKey, TValue>(k => k.ToString(), k => k.ToString());
+        private ILocalCache<TOuterKey, TInnerKey, TValue> _innerCache = new MemoryCache<TOuterKey, TInnerKey, TValue>(k => k.ToString(), k => k.ToString());
 
         public int GetManyExecutionCount;
         public int SetMany1ExecutionCount;
@@ -178,6 +180,11 @@ namespace CacheMeIfYouCan.Tests
             }
 
             return _innerCache.TryRemove(outerKey, innerKey, out value);
+        }
+
+        public void Clear()
+        {
+            _innerCache = new MemoryCache<TOuterKey, TInnerKey, TValue>(k => k.ToString(), k => k.ToString());
         }
 
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;

@@ -101,7 +101,10 @@ namespace CacheMeIfYouCan.Internal
                 if (_skipLocalCacheGetPredicate is null)
                     return _localCache.GetMany(keys, destination.Span);
 
-                var filteredKeys = CacheKeysFilter<TKey>.Filter(keys, _skipLocalCacheGetPredicate, out var pooledKeyArray);
+                var filteredKeys = CacheKeysFilter<TKey>.Filter(
+                    keys,
+                    _skipLocalCacheGetPredicate,
+                    out var pooledKeyArray);
 
                 try
                 {
@@ -118,15 +121,16 @@ namespace CacheMeIfYouCan.Internal
             async ValueTask<int> GetFromDistributedCache()
             {
                 int countFromDistributedCache;
-                var countRemaining = keys.Count - countFromLocalCache;
-                var pooledValueArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(countRemaining);
-                var valuesMemory = new Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>(pooledValueArray);
+                KeyValuePair<TKey, ValueAndTimeToLive<TValue>>[] pooledValueArray = null;
                 try
                 {
                     if (_skipDistributedCacheGetPredicate is null)
                     {
+                        var countRemaining = keys.Count - countFromLocalCache;
+                        pooledValueArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(countRemaining);
+                        
                         countFromDistributedCache = await _distributedCache
-                            .GetMany(missingKeys, valuesMemory)
+                            .GetMany(missingKeys, pooledValueArray)
                             .ConfigureAwait(false);
                     }
                     else
@@ -141,8 +145,10 @@ namespace CacheMeIfYouCan.Internal
                             if (filteredKeys.Count == 0)
                                 return 0;
 
+                            pooledValueArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(filteredKeys.Count);
+                            
                             countFromDistributedCache = await _distributedCache
-                                .GetMany(filteredKeys, valuesMemory)
+                                .GetMany(filteredKeys, pooledValueArray)
                                 .ConfigureAwait(false);
                         }
                         finally
@@ -152,11 +158,15 @@ namespace CacheMeIfYouCan.Internal
                     }
 
                     if (countFromDistributedCache > 0)
-                        ProcessValuesFromDistributedCache(valuesMemory.Span.Slice(0, countFromDistributedCache));
+                    {
+                        ProcessValuesFromDistributedCache(new ReadOnlySpan<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>(
+                            pooledValueArray, 0, countFromDistributedCache));
+                    }
                 }
                 finally
                 {
-                    ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledValueArray);
+                    if (!(pooledValueArray is null))
+                        ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledValueArray);
                 }
 
                 return countFromLocalCache + countFromDistributedCache;
@@ -188,7 +198,10 @@ namespace CacheMeIfYouCan.Internal
                 }
                 else
                 {
-                    var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(values, _skipLocalCacheSetPredicate, out var pooledArray);
+                    var filteredValues = CacheValuesFilter<TKey, TValue>.Filter(
+                        values,
+                        _skipLocalCacheSetPredicate,
+                        out var pooledArray);
 
                     try
                     {
@@ -237,39 +250,39 @@ namespace CacheMeIfYouCan.Internal
         private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _localCache;
         private readonly IDistributedCache<TOuterKey, TInnerKey, TValue> _distributedCache;
         private readonly IEqualityComparer<TInnerKey> _keyComparer;
-        private readonly Func<TOuterKey, bool> _skipLocalCacheGetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, bool> _skipLocalCacheGetPredicate;
-        private readonly Func<TOuterKey, bool> _skipLocalCacheSetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipLocalCacheSetPredicate;
-        private readonly Func<TOuterKey, bool> _skipDistributedCacheGetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, bool> _skipDistributedCacheGetPredicate;
-        private readonly Func<TOuterKey, bool> _skipDistributedCacheSetPredicateOuterKeyOnly;
-        private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipDistributedCacheSetPredicate;
+        private readonly Func<TOuterKey, bool> _skipLocalCacheGetOuterPredicate;
+        private readonly Func<TOuterKey, TInnerKey, bool> _skipLocalCacheGetInnerPredicate;
+        private readonly Func<TOuterKey, bool> _skipLocalCacheSetOuterPredicate;
+        private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipLocalCacheSetInnerPredicate;
+        private readonly Func<TOuterKey, bool> _skipDistributedCacheGetOuterPredicate;
+        private readonly Func<TOuterKey, TInnerKey, bool> _skipDistributedCacheGetInnerPredicate;
+        private readonly Func<TOuterKey, bool> _skipDistributedCacheSetOuterPredicate;
+        private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipDistributedCacheSetInnerPredicate;
 
         public TwoTierCache(
             ILocalCache<TOuterKey, TInnerKey, TValue> localCache,
             IDistributedCache<TOuterKey, TInnerKey, TValue> distributedCache,
             IEqualityComparer<TInnerKey> keyComparer = null,
-            Func<TOuterKey, bool> skipLocalCacheGetPredicateOuterKeyOnly = null,
-            Func<TOuterKey, TInnerKey, bool> skipLocalCacheGetPredicate = null,
-            Func<TOuterKey, bool> skipLocalCacheSetPredicateOuterKeyOnly = null,
-            Func<TOuterKey, TInnerKey, TValue, bool> skipLocalCacheSetPredicate = null,
-            Func<TOuterKey, bool> skipDistributedCacheGetPredicateOuterKeyOnly = null,
-            Func<TOuterKey, TInnerKey, bool> skipDistributedCacheGetPredicate = null,
-            Func<TOuterKey, bool> skipDistributedCacheSetPredicateOuterKeyOnly = null,
-            Func<TOuterKey, TInnerKey, TValue, bool> skipDistributedCacheSetPredicate = null)
+            Func<TOuterKey, bool> skipLocalCacheGetOuterPredicate = null,
+            Func<TOuterKey, TInnerKey, bool> skipLocalCacheGetInnerPredicate = null,
+            Func<TOuterKey, bool> skipLocalCacheSetOuterPredicate = null,
+            Func<TOuterKey, TInnerKey, TValue, bool> skipLocalCacheSetInnerPredicate = null,
+            Func<TOuterKey, bool> skipDistributedCacheGetOuterPredicate = null,
+            Func<TOuterKey, TInnerKey, bool> skipDistributedCacheGetInnerPredicate = null,
+            Func<TOuterKey, bool> skipDistributedCacheSetOuterPredicate = null,
+            Func<TOuterKey, TInnerKey, TValue, bool> skipDistributedCacheSetInnerPredicate = null)
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
             _keyComparer = keyComparer ?? EqualityComparer<TInnerKey>.Default;
-            _skipLocalCacheGetPredicateOuterKeyOnly = skipLocalCacheGetPredicateOuterKeyOnly;
-            _skipLocalCacheGetPredicate = skipLocalCacheGetPredicate;
-            _skipLocalCacheSetPredicateOuterKeyOnly = skipLocalCacheSetPredicateOuterKeyOnly;
-            _skipLocalCacheSetPredicate = skipLocalCacheSetPredicate;
-            _skipDistributedCacheGetPredicateOuterKeyOnly = skipDistributedCacheGetPredicateOuterKeyOnly;
-            _skipDistributedCacheGetPredicate = skipDistributedCacheGetPredicate;
-            _skipDistributedCacheSetPredicateOuterKeyOnly = skipDistributedCacheSetPredicateOuterKeyOnly;
-            _skipDistributedCacheSetPredicate = skipDistributedCacheSetPredicate;
+            _skipLocalCacheGetOuterPredicate = skipLocalCacheGetOuterPredicate;
+            _skipLocalCacheGetInnerPredicate = skipLocalCacheGetInnerPredicate;
+            _skipLocalCacheSetOuterPredicate = skipLocalCacheSetOuterPredicate;
+            _skipLocalCacheSetInnerPredicate = skipLocalCacheSetInnerPredicate;
+            _skipDistributedCacheGetOuterPredicate = skipDistributedCacheGetOuterPredicate;
+            _skipDistributedCacheGetInnerPredicate = skipDistributedCacheGetInnerPredicate;
+            _skipDistributedCacheSetOuterPredicate = skipDistributedCacheSetOuterPredicate;
+            _skipDistributedCacheSetInnerPredicate = skipDistributedCacheSetInnerPredicate;
         }
         
         public ValueTask<int> GetMany(
@@ -300,19 +313,16 @@ namespace CacheMeIfYouCan.Internal
 
             int GetFromLocalCache()
             {
-                if (!(_skipLocalCacheGetPredicateOuterKeyOnly is null) &&
-                    _skipLocalCacheGetPredicateOuterKeyOnly(outerKey))
-                {
+                if (_skipLocalCacheGetOuterPredicate?.Invoke(outerKey) == true)
                     return 0;
-                }
 
-                if (_skipLocalCacheGetPredicate is null)
+                if (_skipLocalCacheGetInnerPredicate is null)
                     return _localCache.GetMany(outerKey, innerKeys, destination.Span);
                 
                 var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
                     outerKey,
                     innerKeys,
-                    _skipLocalCacheGetPredicate,
+                    _skipLocalCacheGetInnerPredicate,
                     out var pooledKeyArray);
 
                 try
@@ -329,11 +339,8 @@ namespace CacheMeIfYouCan.Internal
             
             async ValueTask<int> GetFromDistributedCache()
             {
-                if (!(_skipDistributedCacheGetPredicateOuterKeyOnly is null) &&
-                    _skipDistributedCacheGetPredicateOuterKeyOnly(outerKey))
-                {
+                if (_skipDistributedCacheGetOuterPredicate?.Invoke(outerKey) == true)
                     return countFromLocalCache;
-                }
 
                 int countFromDistributedCache;
                 var countRemaining = innerKeys.Count - countFromLocalCache;
@@ -341,7 +348,7 @@ namespace CacheMeIfYouCan.Internal
                 var valuesMemory = new Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>(pooledValueArray);
                 try
                 {
-                    if (_skipDistributedCacheGetPredicate is null)
+                    if (_skipDistributedCacheGetInnerPredicate is null)
                     {
                         countFromDistributedCache = await _distributedCache
                             .GetMany(outerKey, missingKeys, valuesMemory)
@@ -352,7 +359,7 @@ namespace CacheMeIfYouCan.Internal
                         var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
                             outerKey,
                             missingKeys,
-                            _skipDistributedCacheGetPredicate,
+                            _skipDistributedCacheGetInnerPredicate,
                             out var pooledKeyArray);
 
                         try
@@ -407,13 +414,10 @@ namespace CacheMeIfYouCan.Internal
 
             void SetInLocalCache()
             {
-                if (!(_skipLocalCacheSetPredicateOuterKeyOnly is null) &&
-                    _skipLocalCacheSetPredicateOuterKeyOnly(outerKey))
-                {
+                if (_skipLocalCacheSetOuterPredicate?.Invoke(outerKey) == true)
                     return;
-                }
                 
-                if (_skipLocalCacheSetPredicate is null)
+                if (_skipLocalCacheSetInnerPredicate is null)
                 {
                     _localCache.SetMany(outerKey, values, timeToLive);
                 }
@@ -422,7 +426,7 @@ namespace CacheMeIfYouCan.Internal
                     var filteredValues = CacheValuesFilter<TOuterKey, TInnerKey, TValue>.Filter(
                         outerKey,
                         values,
-                        _skipLocalCacheSetPredicate,
+                        _skipLocalCacheSetInnerPredicate,
                         out var pooledArray);
 
                     try
@@ -439,13 +443,10 @@ namespace CacheMeIfYouCan.Internal
 
             async ValueTask SetInDistributedCache()
             {
-                if (!(_skipDistributedCacheSetPredicateOuterKeyOnly is null) &&
-                    _skipDistributedCacheSetPredicateOuterKeyOnly(outerKey))
-                {
+                if (_skipDistributedCacheSetOuterPredicate?.Invoke(outerKey) == true)
                     return;
-                }
                 
-                if (_skipDistributedCacheSetPredicate is null)
+                if (_skipDistributedCacheSetInnerPredicate is null)
                 {
                     await _distributedCache
                         .SetMany(outerKey, values, timeToLive)
@@ -456,7 +457,7 @@ namespace CacheMeIfYouCan.Internal
                     var filteredValues = CacheValuesFilter<TOuterKey, TInnerKey, TValue>.Filter(
                         outerKey,
                         values,
-                        _skipDistributedCacheSetPredicate,
+                        _skipDistributedCacheSetInnerPredicate,
                         out var pooledArray);
 
                     try

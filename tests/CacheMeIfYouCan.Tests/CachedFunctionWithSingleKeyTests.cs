@@ -232,7 +232,7 @@ namespace CacheMeIfYouCan.Tests
 
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 8, MemberType = typeof(BoolGenerator))]
-        public void DontGetFromOrStoreInLocalCacheWhen_DontGetFromOrStoreInDistributedCacheWhen_WorkAsExpected(
+        public void DontGetFromOrStoreInLocalCacheWhen_DontGetFromOrStoreInDistributedCacheWhen_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4, bool flag5, bool flag6, bool flag7, bool flag8)
         {
             Func<int, int> originalFunction = key => key;
@@ -250,7 +250,7 @@ namespace CacheMeIfYouCan.Tests
                 config.DontGetFromLocalCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.DontStoreInCacheWhen((key, _) => key % 3 == 0);
+                config.DontStoreInLocalCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
                 config.DontGetFromLocalCacheWhen(key => key % 5 == 0);
@@ -286,9 +286,9 @@ namespace CacheMeIfYouCan.Tests
                 var currentDistributedSetExecutionCount = distributedCache.SetExecutionCount;
 
                 var skipLocalGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
-                var skipLocalSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                var skipLocalSet = flag2 && i % 3 == 0 || flag4 && i % 7 == 0;
                 var skipDistributedGet = flag5 && i % 11 == 0 || flag7 && i % 17 == 0;
-                var skipDistributedSet = flag6 && i % 13 == 0 || flag7 && i % 17 == 0 || flag8 && i % 19 == 0;
+                var skipDistributedSet = flag6 && i % 13 == 0 || flag8 && i % 19 == 0;
                 
                 if (skipLocalGet)
                     currentLocalTryGetExecutionCount.Should().Be(previousLocalTryGetExecutionCount);
@@ -355,7 +355,7 @@ namespace CacheMeIfYouCan.Tests
                 var currentSetExecutionCount = cache.SetExecutionCount;
 
                 var skipGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
-                var skipSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                var skipSet = flag2 && i % 3 == 0 || flag4 && i % 7 == 0;
                 
                 if (skipGet)
                     currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount);
@@ -376,7 +376,7 @@ namespace CacheMeIfYouCan.Tests
         
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 4, MemberType = typeof(BoolGenerator))]
-        public void DontGetFromOrStoreInDistributedCacheWhen_ForSingleTierCache_ForSingleTierCache(
+        public void DontGetFromOrStoreInDistributedCacheWhen_ForSingleTierCache_WorksAsExpected(
             bool flag1, bool flag2, bool flag3, bool flag4)
         {
             Func<int, int> originalFunction = key => key;
@@ -412,7 +412,7 @@ namespace CacheMeIfYouCan.Tests
                 var currentSetExecutionCount = cache.SetExecutionCount;
 
                 var skipGet = flag1 && i % 2 == 0 || flag3 && i % 5 == 0;
-                var skipSet = flag2 && i % 3 == 0 || flag3 && i % 5 == 0 || flag4 && i % 7 == 0;
+                var skipSet = flag2 && i % 3 == 0 || flag4 && i % 7 == 0;
                 
                 if (skipGet)
                     currentTryGetExecutionCount.Should().Be(previousTryGetExecutionCount);
