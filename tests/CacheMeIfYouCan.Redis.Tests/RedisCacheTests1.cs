@@ -20,7 +20,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(false)]
         public void Concurrent_Set_TryGet_AllItemsReturnedSuccessfully(bool useSerializer)
         {
-            var cache = BuildRedisCache(useSerializer: useSerializer);
+            using var cache = BuildRedisCache(useSerializer: useSerializer);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -48,7 +48,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [Fact]
         public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully()
         {
-            var cache = BuildRedisCache();
+            using var cache = BuildRedisCache();
 
             var tasks = Enumerable
                 .Range(1, 5)
@@ -78,7 +78,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [Fact]
         public async Task GetMany_WithSomeKeysNotSet_ReturnsAllKeysWhichHaveValues()
         {
-            var cache = BuildRedisCache();
+            using var cache = BuildRedisCache();
 
             var keys = Enumerable.Range(1, 10).ToList();
             var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i))).ToList();
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(1000)]
         public async Task Set_WithTimeToLive_DataExpiredCorrectly(int timeToLiveMs)
         {
-            var cache = BuildRedisCache();
+            using var cache = BuildRedisCache();
             
             await cache.Set(1, new TestClass(1), TimeSpan.FromMilliseconds(timeToLiveMs));
             (await cache.TryGet(1)).Success.Should().BeTrue();
@@ -110,7 +110,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(1000)]
         public async Task SetMany_WithTimeToLive_DataExpiredCorrectly(int timeToLiveMs)
         {
-            var cache = BuildRedisCache();
+            using var cache = BuildRedisCache();
             
             await cache.SetMany(new[] { new KeyValuePair<int, TestClass>(1, new TestClass(1)) }, TimeSpan.FromMilliseconds(timeToLiveMs));
             (await cache.GetMany(new[] { 1 })).Should().ContainSingle();
@@ -127,7 +127,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(false, false)]
         public void WhenFireAndForgetEnabled_SetOperationsCompleteImmediately(bool setMany, bool useFireAndForget)
         {
-            var cache = BuildRedisCache(useFireAndForget);
+            using var cache = BuildRedisCache(useFireAndForget);
 
             var task = setMany
                 ? cache.Set(1, new TestClass(1), TimeSpan.FromSeconds(1))
@@ -155,7 +155,7 @@ namespace CacheMeIfYouCan.Redis.Tests
         {
             var keyPrefix = Guid.NewGuid().ToString();
             
-            var cache = BuildRedisCache(keyPrefix: keyPrefix, nullValue: nullValue);
+            using var cache = BuildRedisCache(keyPrefix: keyPrefix, nullValue: nullValue);
 
             var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
             var redisDb = connectionMultiplexer.GetDatabase();
