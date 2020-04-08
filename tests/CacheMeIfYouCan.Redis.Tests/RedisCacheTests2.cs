@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Redis.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var keys = Enumerable.Range((10 * i) + j, i).ToList();
+                        var keys = Enumerable.Range((1000 * i) + j, i).ToList();
                         await cache.SetMany(1, keys.Select(k => new KeyValuePair<int, TestClass>(k, new TestClass(k))).ToList(), TimeSpan.FromSeconds(1));
                         var values = await cache.GetMany(1, keys);
                         values.Select(kv => kv.Key).Should().BeEquivalentTo(keys);

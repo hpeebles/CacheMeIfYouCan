@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Redis.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var key = 2 * ((10 * i) + j);
+                        var key = 2 * ((1000 * i) + j);
                         
                         await cache.Set(key, new TestClass(key), TimeSpan.FromSeconds(1));
                         var (success, value) = await cache.TryGet(key);

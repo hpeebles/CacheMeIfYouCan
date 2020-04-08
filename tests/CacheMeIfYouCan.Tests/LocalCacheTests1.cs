@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var key = 2 * ((10 * i) + j);
+                        var key = 2 * ((1000 * i) + j);
                         
                         cache.Set(key, key, TimeSpan.FromSeconds(1));
                         cache.TryGet(key, out var value).Should().BeTrue();
