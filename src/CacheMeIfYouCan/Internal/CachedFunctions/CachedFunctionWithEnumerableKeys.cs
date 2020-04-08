@@ -202,7 +202,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             finally
             {
-                CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+                if (!(pooledKeyArray is null))
+                    CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
             }
             
             async ValueTask<Dictionary<TKey, TValue>> GetFromCacheInner(IReadOnlyCollection<TKey> keys)
@@ -312,7 +313,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 }
                 finally
                 {
-                    CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
+                    if (!(pooledArray is null))
+                        CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
                 }
 
                 return default;

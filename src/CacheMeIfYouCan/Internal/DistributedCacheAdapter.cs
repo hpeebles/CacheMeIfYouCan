@@ -57,7 +57,8 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+                if (!(pooledKeyArray is null))
+                    CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
             }
         }
 
@@ -112,7 +113,8 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
+                if (!(pooledArray is null))
+                    CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
             }
         }
 
@@ -172,7 +174,8 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                CacheKeysFilter<TOuterKey, TInnerKey>.ReturnPooledArray(pooledKeyArray);
+                if (!(pooledKeyArray is null))
+                    CacheKeysFilter<TOuterKey, TInnerKey>.ReturnPooledArray(pooledKeyArray);
             }
         }
 
@@ -235,7 +238,8 @@ namespace CacheMeIfYouCan.Internal
             }
             finally
             {
-                CacheValuesFilter<TOuterKey, TInnerKey, TValue>.ReturnPooledArray(pooledArray);
+                if (!(pooledArray is null))
+                    CacheValuesFilter<TOuterKey, TInnerKey, TValue>.ReturnPooledArray(pooledArray);
             }
         }
 

@@ -219,7 +219,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         }
                         finally
                         {
-                            CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
+                            if (!(pooledArray is null))
+                                CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
                         }
                     }
 
@@ -324,7 +325,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 }
                 finally
                 {
-                    CacheValuesFilter<TInnerKey, TValue>.ReturnPooledArray(pooledArray);
+                    if (!(pooledArray is null))
+                        CacheValuesFilter<TInnerKey, TValue>.ReturnPooledArray(pooledArray);
                 }
 
                 return default;
