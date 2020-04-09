@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Tests.Generators;
 using FluentAssertions;
 using Xunit;
 
@@ -12,12 +13,10 @@ namespace CacheMeIfYouCan.Tests
     public class CacheKeysFilterTests1
     {
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void AllExcluded_WorkAsExpected(bool isArray)
+        [MemberData(nameof(EnumGenerator<CollectionType>.Generate), MemberType = typeof(EnumGenerator<CollectionType>))]
+        public void AllExcluded_WorkAsExpected(CollectionType type)
         {
-            var array = Enumerable.Range(0, 10).ToArray();
-            var input = isArray ? (IReadOnlyCollection<int>) array : new HashSet<int>(array);
+            var input = BuildCollection(type);
 
             var filtered = CacheKeysFilter<int>.Filter(input, _ => true, out var pooledArray);
 
@@ -26,33 +25,30 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void AllIncluded_WorksAsExpected(bool isArray)
+        [MemberData(nameof(EnumGenerator<CollectionType>.Generate), MemberType = typeof(EnumGenerator<CollectionType>))]
+        public void AllIncluded_WorksAsExpected(CollectionType type)
         {
-            var array = Enumerable.Range(0, 10).ToArray();
-            var input = isArray ? (IReadOnlyCollection<int>) array : new HashSet<int>(array);
+            var input = BuildCollection(type);
 
             var filtered = CacheKeysFilter<int>.Filter(input, _ => false, out var pooledArray);
 
-            if (isArray)
+            if (type != CollectionType.Other)
             {
-                filtered.Should().BeSameAs(array);
+                filtered.Should().BeSameAs(input);
                 pooledArray.Should().BeNull();
             }
             else
             {
-                filtered.Should().BeEquivalentTo(array);
+                filtered.Should().BeEquivalentTo(input);
             }
         }
 
         [Theory]
-        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
-        public void SomeIncluded_SomeExcluded_WorksAsExpected(bool isArray, bool firstKeyIsIncluded)
+        [MemberData(nameof(EnumAndBoolGenerator<CollectionType>.Generate), MemberType = typeof(EnumAndBoolGenerator<CollectionType>))]
+        public void SomeIncluded_SomeExcluded_WorksAsExpected(CollectionType type, bool firstKeyIsIncluded)
         {
             var start = firstKeyIsIncluded ? 0 : -1;
-            var array = Enumerable.Range(start, 10).ToArray();
-            var input = isArray ? (IReadOnlyCollection<int>) array : new HashSet<int>(array);
+            var input = BuildCollection(type, start);
 
             var filtered = CacheKeysFilter<int>.Filter(input, k => k % 2 != 0, out _);
 
@@ -60,11 +56,10 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
-        [MemberData(nameof(BoolAndIntGenerator.Generate), 0, 10, MemberType = typeof(BoolAndIntGenerator))]
-        public void OneExcluded_WorksAsExpected(bool isArray, int indexOfExcluded)
+        [MemberData(nameof(EnumAndIntGenerator<CollectionType>.Generate), 0, 10, MemberType = typeof(EnumAndIntGenerator<CollectionType>))]
+        public void OneExcluded_WorksAsExpected(CollectionType type, int indexOfExcluded)
         {
-            var array = Enumerable.Range(0, 10).ToArray();
-            var input = isArray ? (IReadOnlyCollection<int>) array : new HashSet<int>(array);
+            var input = BuildCollection(type);
 
             var filtered = CacheKeysFilter<int>.Filter(input, k => k == indexOfExcluded, out _);
 
@@ -74,17 +69,28 @@ namespace CacheMeIfYouCan.Tests
         }
         
         [Theory]
-        [MemberData(nameof(BoolAndIntGenerator.Generate), 0, 10, MemberType = typeof(BoolAndIntGenerator))]
-        public void OneIncluded_WorksAsExpected(bool isArray, int indexOfIncluded)
+        [MemberData(nameof(EnumAndIntGenerator<CollectionType>.Generate), 0, 10, MemberType = typeof(EnumAndIntGenerator<CollectionType>))]
+        public void OneIncluded_WorksAsExpected(CollectionType type, int indexOfIncluded)
         {
-            var array = Enumerable.Range(0, 10).ToArray();
-            var input = isArray ? (IReadOnlyCollection<int>) array : new HashSet<int>(array);
+            var input = BuildCollection(type);
 
             var filtered = CacheKeysFilter<int>.Filter(input, k => k != indexOfIncluded, out _);
 
             var expected = new[] { indexOfIncluded };
             
             filtered.Should().BeEquivalentTo(expected);
+        }
+
+        private static IReadOnlyCollection<int> BuildCollection(CollectionType type, int start = 0)
+        {
+            var array = Enumerable.Range(start, 10).ToArray();
+
+            return type switch
+            {
+                CollectionType.Array => array,
+                CollectionType.List => array.ToList(),
+                _ => (IReadOnlyCollection<int>)new HashSet<int>(array),
+            };
         }
     }
 }

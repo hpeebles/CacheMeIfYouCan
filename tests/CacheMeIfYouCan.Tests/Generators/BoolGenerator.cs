@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CacheMeIfYouCan.Tests
+namespace CacheMeIfYouCan.Tests.Generators
 {
     public static class BoolGenerator
     {

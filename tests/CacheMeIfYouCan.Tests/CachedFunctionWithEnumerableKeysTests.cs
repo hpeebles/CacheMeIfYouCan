@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
+using CacheMeIfYouCan.Tests.Generators;
 using FluentAssertions;
 using Xunit;
 
