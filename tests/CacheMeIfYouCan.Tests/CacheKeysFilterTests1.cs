@@ -22,9 +22,7 @@ namespace CacheMeIfYouCan.Tests
             var filtered = CacheKeysFilter<int>.Filter(input, _ => true, out var pooledArray);
 
             filtered.Should().BeEmpty();
-
-            if (isArray)
-                pooledArray.Should().BeNull();
+            pooledArray.Should().BeNull();
         }
 
         [Theory]

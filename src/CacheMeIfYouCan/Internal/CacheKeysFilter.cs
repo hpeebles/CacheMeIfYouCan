@@ -13,23 +13,34 @@ namespace CacheMeIfYouCan.Internal
             Func<TKey, bool> keysToSkipPredicate,
             out TKey[] pooledArray)
         {
-            if (keys is IReadOnlyList<TKey> keysList)
-                return FilterIReadOnlyList(keysList, keysToSkipPredicate, out pooledArray);
+            if (keys is TKey[] keysArray)
+                return FilterArray(keysArray, keysToSkipPredicate, out pooledArray);
+
+            pooledArray = null;
             
-            pooledArray = ArrayPool.Rent(keys.Count);
-            
+            var countIncluded = 0;
             var index = 0;
             foreach (var key in keys)
             {
                 if (!keysToSkipPredicate(key))
-                    pooledArray[index++] = key;
+                {
+                    if (pooledArray is null)
+                        pooledArray = ArrayPool.Rent(keys.Count - index);
+
+                    pooledArray[countIncluded++] = key;
+                }
+
+                index++;
             }
 
-            return new ArraySegment<TKey>(pooledArray, 0, index);
+            if (pooledArray is null)
+                return Array.Empty<TKey>();
+
+            return new ArraySegment<TKey>(pooledArray, 0, countIncluded);
         }
 
-        private static IReadOnlyCollection<TKey> FilterIReadOnlyList(
-            IReadOnlyList<TKey> keys,
+        private static IReadOnlyCollection<TKey> FilterArray(
+            TKey[] keys,
             Func<TKey, bool> keysToSkipPredicate,
             out TKey[] pooledArray)
         {
@@ -40,7 +51,7 @@ namespace CacheMeIfYouCan.Internal
             if (skipFirst)
             {
                 var includeAny = false;
-                while (index < keys.Count)
+                while (index < keys.Length)
                 {
                     if (!keysToSkipPredicate(keys[index++]))
                     {
@@ -55,7 +66,7 @@ namespace CacheMeIfYouCan.Internal
                     return Array.Empty<TKey>();
                 }
 
-                var remaining = keys.Count + 1 - index;
+                var remaining = keys.Length + 1 - index;
                 pooledArray = ArrayPool.Rent(remaining);
                 pooledArray[0] = keys[index - 1];
                 outputIndex = 1;
@@ -63,7 +74,7 @@ namespace CacheMeIfYouCan.Internal
             else
             {
                 var skipAny = false;
-                while (index < keys.Count)
+                while (index < keys.Length)
                 {
                     if (keysToSkipPredicate(keys[index++]))
                     {
@@ -78,7 +89,7 @@ namespace CacheMeIfYouCan.Internal
                     return keys;
                 }
 
-                pooledArray = ArrayPool.Rent(keys.Count - 1);
+                pooledArray = ArrayPool.Rent(keys.Length - 1);
                 outputIndex = 0;
                 while (outputIndex < index - 1)
                 {
@@ -87,7 +98,7 @@ namespace CacheMeIfYouCan.Internal
                 }
             }
 
-            while (index < keys.Count)
+            while (index < keys.Length)
             {
                 var next = keys[index++];
                 if (!keysToSkipPredicate(next))
@@ -110,24 +121,35 @@ namespace CacheMeIfYouCan.Internal
             Func<TOuterKey, TInnerKey, bool> keysToSkipPredicate,
             out TInnerKey[] pooledArray)
         {
-            if (keys is IReadOnlyList<TInnerKey> keysList)
-                return FilterIReadOnlyList(outerKey, keysList, keysToSkipPredicate, out pooledArray);
+            if (keys is TInnerKey[] keysArray)
+                return FilterArray(outerKey, keysArray, keysToSkipPredicate, out pooledArray);
             
-            pooledArray = ArrayPool.Rent(keys.Count);
+            pooledArray = null;
             
+            var countIncluded = 0;
             var index = 0;
             foreach (var key in keys)
             {
                 if (!keysToSkipPredicate(outerKey, key))
-                    pooledArray[index++] = key;
+                {
+                    if (pooledArray is null)
+                        pooledArray = ArrayPool.Rent(keys.Count - index);
+
+                    pooledArray[countIncluded++] = key;
+                }
+
+                index++;
             }
 
-            return new ArraySegment<TInnerKey>(pooledArray, 0, index);
+            if (pooledArray is null)
+                return Array.Empty<TInnerKey>();
+
+            return new ArraySegment<TInnerKey>(pooledArray, 0, countIncluded);
         }
         
-        private static IReadOnlyCollection<TInnerKey> FilterIReadOnlyList(
+        private static IReadOnlyCollection<TInnerKey> FilterArray(
             TOuterKey outerKey,
-            IReadOnlyList<TInnerKey> keys,
+            TInnerKey[] keys,
             Func<TOuterKey, TInnerKey, bool> keysToSkipPredicate,
             out TInnerKey[] pooledArray)
         {
@@ -138,7 +160,7 @@ namespace CacheMeIfYouCan.Internal
             if (skipFirst)
             {
                 var includeAny = false;
-                while (index < keys.Count)
+                while (index < keys.Length)
                 {
                     if (!keysToSkipPredicate(outerKey, keys[index++]))
                     {
@@ -153,7 +175,7 @@ namespace CacheMeIfYouCan.Internal
                     return Array.Empty<TInnerKey>();
                 }
 
-                var remaining = keys.Count + 1 - index;
+                var remaining = keys.Length + 1 - index;
                 pooledArray = ArrayPool.Rent(remaining);
                 pooledArray[0] = keys[index - 1];
                 outputIndex = 1;
@@ -161,7 +183,7 @@ namespace CacheMeIfYouCan.Internal
             else
             {
                 var skipAny = false;
-                while (index < keys.Count)
+                while (index < keys.Length)
                 {
                     if (keysToSkipPredicate(outerKey, keys[index++]))
                     {
@@ -176,7 +198,7 @@ namespace CacheMeIfYouCan.Internal
                     return keys;
                 }
 
-                pooledArray = ArrayPool.Rent(keys.Count - 1);
+                pooledArray = ArrayPool.Rent(keys.Length - 1);
                 outputIndex = 0;
                 while (outputIndex < index - 1)
                 {
@@ -185,7 +207,7 @@ namespace CacheMeIfYouCan.Internal
                 }
             }
 
-            while (index < keys.Count)
+            while (index < keys.Length)
             {
                 var next = keys[index++];
                 if (!keysToSkipPredicate(outerKey, next))
