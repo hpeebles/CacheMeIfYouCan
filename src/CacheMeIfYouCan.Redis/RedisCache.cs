@@ -17,9 +17,27 @@ namespace CacheMeIfYouCan.Redis
         private readonly int _dbIndex;
         private readonly CommandFlags _setValueFlags;
         private readonly RedisValueConverter<TValue> _redisValueConverter;
+        private readonly bool _serializeValuesToStreams;
         private bool _disposed;
-        private static readonly IReadOnlyCollection<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> EmptyResults =
-            new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>[0];
+
+        public RedisCache(
+            IConnectionMultiplexer connectionMultiplexer,
+            Func<TKey, RedisKey> keySerializer,
+            ISerializer<TValue> valueSerializer,
+            int dbIndex = 0,
+            bool useFireAndForgetWherePossible = false,
+            RedisKey keyPrefix = default,
+            RedisValue nullValue = default,
+            RecyclableMemoryStreamManager recyclableMemoryStreamManager = default)
+            : this(connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
+        {
+            _redisValueConverter = new RedisValueConverter<TValue>(
+                valueSerializer,
+                recyclableMemoryStreamManager,
+                nullValue);
+            
+            _serializeValuesToStreams = true;
+        }
 
         public RedisCache(
             IConnectionMultiplexer connectionMultiplexer,
@@ -30,29 +48,14 @@ namespace CacheMeIfYouCan.Redis
             bool useFireAndForgetWherePossible = false,
             RedisKey keyPrefix = default,
             RedisValue nullValue = default)
-            : this (connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
+            : this(connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
         {
             _redisValueConverter = new RedisValueConverter<TValue>(
                 valueSerializer,
                 valueDeserializer,
                 nullValue);
-        }
-        
-        public RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
-            Func<TKey, RedisKey> keySerializer,
-            ISerializer<TValue> valueSerializer,
-            int dbIndex = 0,
-            bool useFireAndForgetWherePossible = false,
-            RedisKey keyPrefix = default,
-            RedisValue nullValue = default,
-            RecyclableMemoryStreamManager recyclableMemoryStreamManager = default)
-            : this (connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
-        {
-            _redisValueConverter = new RedisValueConverter<TValue>(
-                valueSerializer,
-                recyclableMemoryStreamManager,
-                nullValue);
+            
+            _serializeValuesToStreams = false;
         }
         
         private RedisCache(IConnectionMultiplexer connectionMultiplexer,
@@ -189,7 +192,10 @@ namespace CacheMeIfYouCan.Redis
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var tasks = ArrayPool<Task>.Shared.Rent(values.Count);
-            var streams = ArrayPool<MemoryStream>.Shared.Rent(values.Count);
+            var streams = _serializeValuesToStreams
+                ? ArrayPool<MemoryStream>.Shared.Rent(values.Count)
+                : null;
+            
             var streamIndex = 0;
             try
             {
@@ -200,7 +206,7 @@ namespace CacheMeIfYouCan.Redis
 
                     var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
 
-                    if (!(stream is null))
+                    if (!(streams is null))
                         streams[streamIndex++] = stream;
                     
                     tasks[i++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
@@ -213,11 +219,15 @@ namespace CacheMeIfYouCan.Redis
             }
             finally
             {
-                for (var i = 0; i < streamIndex; i++)
-                    streams[i].Dispose();
-                
                 ArrayPool<Task>.Shared.Return(tasks);
-                ArrayPool<MemoryStream>.Shared.Return(streams);
+                
+                if (!(streams is null))
+                {
+                    for (var i = 0; i < streamIndex; i++)
+                        streams[i].Dispose();
+                    
+                    ArrayPool<MemoryStream>.Shared.Return(streams);
+                }
             }
         }
 
@@ -244,9 +254,8 @@ namespace CacheMeIfYouCan.Redis
         private readonly CommandFlags _setValueFlags;
         private readonly RedisKey _keySeparator;
         private readonly RedisValueConverter<TValue> _redisValueConverter;
+        private readonly bool _serializeValuesToStreams;
         private bool _disposed;
-        private static readonly IReadOnlyCollection<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> EmptyResults =
-            new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>[0];
 
         public RedisCache(
             IConnectionMultiplexer connectionMultiplexer,
@@ -272,6 +281,8 @@ namespace CacheMeIfYouCan.Redis
                 valueSerializer,
                 recyclableMemoryStreamManager,
                 nullValue);
+
+            _serializeValuesToStreams = true;
         }
         
         public RedisCache(
@@ -298,6 +309,8 @@ namespace CacheMeIfYouCan.Redis
                 valueSerializer,
                 valueDeserializer,
                 nullValue);
+
+            _serializeValuesToStreams = false;
         }
         
         private RedisCache(
@@ -403,7 +416,10 @@ namespace CacheMeIfYouCan.Redis
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
             
             var tasks = ArrayPool<Task>.Shared.Rent(values.Count);
-            var streams = ArrayPool<MemoryStream>.Shared.Rent(values.Count);
+            var streams = _serializeValuesToStreams
+                ? ArrayPool<MemoryStream>.Shared.Rent(values.Count)
+                : null;
+            
             var streamIndex = 0;
             try
             {
@@ -414,7 +430,7 @@ namespace CacheMeIfYouCan.Redis
 
                     var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
 
-                    if (!(stream is null))
+                    if (!(streams is null))
                         streams[streamIndex++] = stream;
 
                     tasks[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
@@ -428,6 +444,14 @@ namespace CacheMeIfYouCan.Redis
             finally
             {
                 ArrayPool<Task>.Shared.Return(tasks);
+                
+                if (!(streams is null))
+                {
+                    for (var i = 0; i < streamIndex; i++)
+                        streams[i].Dispose();
+                    
+                    ArrayPool<MemoryStream>.Shared.Return(streams);
+                }
             }
         }
 
