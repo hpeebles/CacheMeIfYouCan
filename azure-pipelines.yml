@@ -13,6 +13,7 @@ variables:
   pathToCronTestProject: tests/CacheMeIfYouCan.Cron.Tests/CacheMeIfYouCan.Cron.Tests.csproj
   pathToPollyTestProject: tests/CacheMeIfYouCan.Polly.Tests/CacheMeIfYouCan.Polly.Tests.csproj
   pathToRedisTestProject: tests/CacheMeIfYouCan.Redis.Tests/CacheMeIfYouCan.Redis.Tests.csproj
+  pathToSerializersTestProject: tests/CacheMeIfYouCan.Serializers.Tests/CacheMeIfYouCan.Serializers.Tests.csproj
   
 steps:
 - task: DotNetCoreCLI@2
@@ -48,6 +49,13 @@ steps:
   inputs:
     command: test
     projects: $(pathToRedisTestProject)
+    arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
+
+- task: DotNetCoreCLI@2
+  displayName: Test Serializers
+  inputs:
+    command: test
+    projects: $(pathToSerializersTestProject)
     arguments: --configuration $(buildConfiguration) --framework netcoreapp3.1 --no-build
 
 - task: DotNetCoreCLI@2
