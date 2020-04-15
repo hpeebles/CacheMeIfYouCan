@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 namespace CacheMeIfYouCan.Redis
 {
-    public sealed class RedisValueConverter<T>
+    internal sealed class RedisValueConverter<T>
     {
         private readonly Func<T, RedisValue> _serializerFunc;
         private readonly Func<RedisValue, T> _deserializerFunc;
