@@ -254,8 +254,8 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
-        [InlineData(100)]
         [InlineData(250)]
+        [InlineData(500)]
         [InlineData(1000)]
         public void WithTimeToLive_SetsTimeToLiveCorrectly(int timeToLiveMs)
         {

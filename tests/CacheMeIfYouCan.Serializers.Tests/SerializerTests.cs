@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan.Serializers.Tests
         [InlineData("messagepack", false)]
         [InlineData("protobuf", true)]
         [InlineData("protobuf", false)]
-        protected void Serialize_ThenDeserialize_ReturnIsSameAsInput(string serializerName, bool deserializeFromBytes)
+        public void Serialize_ThenDeserialize_ReturnIsSameAsInput(string serializerName, bool deserializeFromBytes)
         {
             var serializer = GetSerializer(serializerName);
             
