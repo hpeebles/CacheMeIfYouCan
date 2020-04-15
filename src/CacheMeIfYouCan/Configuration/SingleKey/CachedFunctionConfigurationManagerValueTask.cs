@@ -61,6 +61,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             return WithTimeToLiveFactoryInternal(timeToLiveFactory);
         }
+
+        public ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> DontGetFromCacheWhen(
+            Func<TParam, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(predicate);
+        }
+        
+        public ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> DontStoreInCacheWhen(
+            Func<TParam, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(predicate);
+        }
         
         public Func<TParam, ValueTask<TValue>> Build() => BuildInternal();
         
@@ -82,6 +94,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             return WithTimeToLiveFactoryInternal(timeToLiveFactory);
         }
+
+        public ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(predicate);
+        }
+        
+        public ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(predicate);
+        }
         
         public Func<TParam, ValueTask<TValue>> Build() => BuildInternal();
     }
@@ -101,6 +125,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2));
+        }
+
+        public CachedFunctionConfigurationManagerValueTask_2Params<TParam1, TParam2, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_2Params<TParam1, TParam2, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, value));
         }
 
         public Func<TParam1, TParam2, ValueTask<TValue>> Build()
@@ -128,6 +164,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3));
         }
         
+        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TParam3, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TParam3, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, value));
+        }
+        
         public Func<TParam1, TParam2, TParam3, ValueTask<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -151,6 +199,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3, t.Item4));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, t.Item4, value));
         }
         
         public Func<TParam1, TParam2, TParam3, TParam4, ValueTask<TValue>> Build()
@@ -178,6 +238,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5));
         }
         
+        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, value));
+        }
+        
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, ValueTask<TValue>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -201,6 +273,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, value));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, ValueTask<TValue>> Build()
@@ -227,6 +311,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7));
         }
+        
+        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, value));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, ValueTask<TValue>> Build()
         {
@@ -251,6 +347,18 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal(t => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(t => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((t, value) => predicate(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8, value));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, ValueTask<TValue>> Build()

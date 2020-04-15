@@ -10,8 +10,6 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         TConfig WithLocalCache(ILocalCache<TKey, TValue> cache);
         TConfig WithDistributedCache(IDistributedCache<TKey, TValue> cache);
         TConfig DisableCaching(bool disableCaching = true);
-        TConfig DontGetFromCacheWhen(Func<TParams, bool> predicate);
-        TConfig DontStoreInCacheWhen(Func<TParams, TValue, bool> predicate);
         TConfig DontGetFromLocalCacheWhen(Func<TKey, bool> predicate);
         TConfig DontStoreInLocalCacheWhen(Func<TKey, TValue, bool> predicate);
         TConfig DontGetFromDistributedCacheWhen(Func<TKey, bool> predicate);
@@ -24,6 +22,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerAsync_1Param_KeySelector<TParam, TValue> :
@@ -37,6 +37,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsync_1Param<TParam, TValue>
     { 
         ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerAsync_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> :
@@ -44,6 +46,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param_KeySelector<TParam, TValue> :
@@ -57,6 +61,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerAsyncCanx_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> :
@@ -64,6 +70,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerSync_1Param_KeySelector<TParam, TValue> :
@@ -77,6 +85,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSync_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerSync_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> :
@@ -84,6 +94,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param_KeySelector<TParam, TValue> :
@@ -97,6 +109,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerSyncCanx_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> :
@@ -104,6 +118,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param_KeySelector<TParam, TValue> :
@@ -117,6 +133,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTask_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerValueTask_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
     
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> :
@@ -124,6 +142,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 
     public interface ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param_KeySelector<TParam, TValue> :
@@ -137,5 +157,7 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         ICachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TValue>
     {
         ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> WithTimeToLiveFactory(Func<TParam, TimeSpan> timeToLiveFactory);
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> DontGetFromCacheWhen(Func<TParam, bool> predicate);
+        ISingleKeyCachedFunctionConfigurationManagerValueTaskCanx_1Param<TParam, TKey, TValue> DontStoreInCacheWhen(Func<TParam, TValue, bool> predicate);
     }
 }

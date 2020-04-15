@@ -64,25 +64,25 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig DontGetFromCacheWhen(Func<TParams, bool> predicate)
+        private protected TConfig DontGetFromCacheWhenInternal(Func<TParams, bool> predicate)
         {
             _config.SkipCacheGetOuterPredicate = _config.SkipCacheGetOuterPredicate.Or(predicate);
             return (TConfig)this;
         }
         
-        public TConfig DontGetFromCacheWhen(Func<TParams, TKey, bool> predicate)
+        private protected TConfig DontGetFromCacheWhenInternal(Func<TParams, TKey, bool> predicate)
         {
             _config.SkipCacheGetInnerPredicate = _config.SkipCacheGetInnerPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig DontStoreInCacheWhen(Func<TParams, bool> predicate)
+        private protected TConfig DontStoreInCacheWhenInternal(Func<TParams, bool> predicate)
         {
             _config.SkipCacheSetOuterPredicate = _config.SkipCacheGetOuterPredicate.Or(predicate);
             return (TConfig)this;
         }
 
-        public TConfig DontStoreInCacheWhen(Func<TParams, TKey, TValue, bool> predicate)
+        private protected TConfig DontStoreInCacheWhenInternal(Func<TParams, TKey, TValue, bool> predicate)
         {
             _config.SkipCacheSetInnerPredicate = _config.SkipCacheSetInnerPredicate.Or(predicate);
             return (TConfig)this;

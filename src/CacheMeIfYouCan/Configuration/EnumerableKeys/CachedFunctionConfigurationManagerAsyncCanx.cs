@@ -83,6 +83,18 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return WithTimeToLiveFactoryInternal((_, keys) => timeToLiveFactory(keys));
         }
 
+        public CachedFunctionConfigurationManagerAsyncCanx<TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((_, k) => predicate(k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx<TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((_, k, v) => predicate(k, v));
+        }
+
         public Func<TKeys, CancellationToken, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -122,6 +134,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return WithTimeToLiveFactoryInternal(timeToLiveFactory);
         }
         
+        public CachedFunctionConfigurationManagerAsyncCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(predicate);
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(predicate);
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(predicate);
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_2Params<TParam, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(predicate);
+        }
+        
         public Func<TParam, TKeys, CancellationToken, Task<TResponse>> Build() => BuildInternal();
     }
     
@@ -149,6 +185,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, keys));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, k, v));
         }
         
         public Func<TParam1, TParam2, TKeys, CancellationToken, Task<TResponse>> Build()
@@ -184,6 +244,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, keys));
         }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, p.Item3, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, k, v));
+        }
 
         public Func<TParam1, TParam2, TParam3, TKeys, CancellationToken, Task<TResponse>> Build()
         {
@@ -217,6 +301,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, keys));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, k, v));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, CancellationToken, Task<TResponse>> Build()
@@ -253,6 +361,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, keys));
         }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, k, v));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, CancellationToken, Task<TResponse>> Build()
         {
@@ -288,6 +420,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, keys));
         }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, k, v));
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, CancellationToken, Task<TResponse>> Build()
         {
@@ -322,6 +478,30 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, keys));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7));
+        }
+
+        public CachedFunctionConfigurationManagerAsyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> DontGetFromCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, bool> predicate)
+        {
+            return DontGetFromCacheWhenInternal((p, k) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7, k));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal(p => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7));
+        }
+        
+        public CachedFunctionConfigurationManagerAsyncCanx_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> DontStoreInCacheWhen(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue, bool> predicate)
+        {
+            return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7, k, v));
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, CancellationToken, Task<TResponse>> Build()

@@ -462,16 +462,16 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1));
 
             if (flag1)
-                config.DontGetFromCacheWhen((_, key) => key % 2 == 0);
+                config.DontGetFromCacheWhen(key => key % 2 == 0);
 
             if (flag2)
-                config.DontStoreInCacheWhen((_, key, __) => key % 3 == 0);
+                config.DontStoreInCacheWhen((key, _) => key % 3 == 0);
 
             if (flag3)
-                config.DontGetFromCacheWhen((_, key) => key % 5 == 0);
+                config.DontGetFromCacheWhen(key => key % 5 == 0);
             
             if (flag4)
-                config.DontStoreInCacheWhen((_, key, __) => key % 7 == 0);
+                config.DontStoreInCacheWhen((key, _) => key % 7 == 0);
 
             var cachedFunction = config.Build();
 
@@ -545,15 +545,7 @@ namespace CacheMeIfYouCan.Tests
             foreach (var ((outerParam, innerKey), value) in results)
             {
                 var shouldHaveSkippedCache = flag1 && outerParam % 2 == 0 || flag2 && innerKey % 3 == 0;
-
-                try
-                {
-                    value.Should().Be(shouldHaveSkippedCache ? 1 : 2);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                value.Should().Be(shouldHaveSkippedCache ? 1 : 2);
             }
         }
         
@@ -838,10 +830,10 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
 
             if (flag1)
-                config.DontStoreInCacheWhen((_, __, ___) => true);
+                config.DontStoreInCacheWhen((_, __) => true);
 
             if (flag2)
-                config.DontStoreInCacheWhen((_, key, __) => key % 2 == 0);
+                config.DontStoreInCacheWhen((key, _) => key % 2 == 0);
 
             var cachedFunction = config.Build();
 
