@@ -11,8 +11,8 @@ namespace CacheMeIfYouCan
             IEqualityComparer<TOuterKey> outerKeyComparer,
             IEqualityComparer<TInnerKey> innerKeyComparer)
         {
-            _outerKeyComparer = outerKeyComparer;
-            _innerKeyComparer = innerKeyComparer;
+            _outerKeyComparer = outerKeyComparer ?? EqualityComparer<TOuterKey>.Default;
+            _innerKeyComparer = innerKeyComparer ?? EqualityComparer<TInnerKey>.Default;
         }
             
         public bool Equals(TupleKey<TOuterKey, TInnerKey> x, TupleKey<TOuterKey, TInnerKey> y)

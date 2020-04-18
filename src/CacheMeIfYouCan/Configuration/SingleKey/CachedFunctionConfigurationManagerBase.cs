@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
@@ -37,6 +38,16 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         {
             _config.DistributedCache = cache;
             return ThisAsTConfig();
+        }
+
+        public TConfig WithMemoryCache(Func<TKey, string> keySerializer = null)
+        {
+            return WithLocalCache(new MemoryCache<TKey, TValue>(keySerializer));
+        }
+
+        public TConfig WithDictionaryCache(IEqualityComparer<TKey> keyComparer = null)
+        {
+            return WithLocalCache(new DictionaryCache<TKey, TValue>(keyComparer));
         }
 
         public TConfig DisableCaching(bool disableCaching = true)

@@ -46,6 +46,24 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig WithMemoryCache(
+            Func<TOuterKey, string> outerKeySerializer = null,
+            Func<TInnerKey, string> innerKeySerializer = null)
+        {
+            return WithLocalCache(new MemoryCache<TOuterKey, TInnerKey, TValue>(
+                outerKeySerializer,
+                innerKeySerializer));
+        }
+
+        public TConfig WithDictionaryCache(
+            IEqualityComparer<TOuterKey> outerKeyComparer = null,
+            IEqualityComparer<TInnerKey> innerKeyComparer = null)
+        {
+            return WithLocalCache(new DictionaryCache<TOuterKey, TInnerKey, TValue>(
+                outerKeyComparer,
+                innerKeyComparer));
+        }
+
         public TConfig DisableCaching(bool disableCaching = true)
         {
             _config.DisableCaching = disableCaching;

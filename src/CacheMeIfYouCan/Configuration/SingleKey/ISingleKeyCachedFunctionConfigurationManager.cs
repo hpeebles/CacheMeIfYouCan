@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Configuration.SingleKey
@@ -9,6 +10,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
         TConfig WithTimeToLive(TimeSpan timeToLive);
         TConfig WithLocalCache(ILocalCache<TKey, TValue> cache);
         TConfig WithDistributedCache(IDistributedCache<TKey, TValue> cache);
+        TConfig WithMemoryCache(Func<TKey, string> keySerializer = null);
+        TConfig WithDictionaryCache(IEqualityComparer<TKey> keyComparer = null);
         TConfig DisableCaching(bool disableCaching = true);
         TConfig DontGetFromLocalCacheWhen(Func<TKey, bool> predicate);
         TConfig DontStoreInLocalCacheWhen(Func<TKey, TValue, bool> predicate);

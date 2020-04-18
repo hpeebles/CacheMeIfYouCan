@@ -10,10 +10,10 @@ namespace CacheMeIfYouCan
         private readonly MemoryCache _memoryCache;
         private readonly Func<TKey, string> _keySerializer;
 
-        public MemoryCache(Func<TKey, string> keySerializer)
+        public MemoryCache(Func<TKey, string> keySerializer = null)
         {
             _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
-            _keySerializer = keySerializer;
+            _keySerializer = keySerializer ?? (k => k.ToString());
         }
 
         public bool TryGet(TKey key, out TValue value)
@@ -80,12 +80,14 @@ namespace CacheMeIfYouCan
         private readonly MemoryCache _memoryCache;
         private readonly Func<TOuterKey, string> _outerKeySerializer;
         private readonly Func<TInnerKey, string> _innerKeySerializer;
-
-        public MemoryCache(Func<TOuterKey, string> outerKeySerializer, Func<TInnerKey, string> innerKeySerializer)
+        
+        public MemoryCache(
+            Func<TOuterKey, string> outerKeySerializer = null,
+            Func<TInnerKey, string> innerKeySerializer = null)
         {
             _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
-            _outerKeySerializer = outerKeySerializer;
-            _innerKeySerializer = innerKeySerializer;
+            _outerKeySerializer = outerKeySerializer ?? (k => k.ToString());
+            _innerKeySerializer = innerKeySerializer ?? (k => k.ToString());
         }
         
         public int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination)

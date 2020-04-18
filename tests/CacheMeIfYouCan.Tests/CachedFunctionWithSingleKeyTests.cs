@@ -12,8 +12,10 @@ namespace CacheMeIfYouCan.Tests
 {
     public partial class CachedFunctionWithSingleKeyTests
     {
-        [Fact]
-        public void Concurrent_CorrectValueIsReturned()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Concurrent_CorrectValueIsReturned(bool useMemoryCache)
         {
             var delay = TimeSpan.FromMilliseconds(100);
             
@@ -23,11 +25,16 @@ namespace CacheMeIfYouCan.Tests
                 return i;
             };
 
-            var cachedFunction = CachedFunctionFactory
+            var config = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
-                .WithLocalCache(new MemoryCache<int, int>(i => i.ToString()))
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .Build();
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (useMemoryCache)
+                config.WithMemoryCache();
+            else
+                config.WithDictionaryCache();
+            
+            var cachedFunction = config.Build();
 
             var timer = Stopwatch.StartNew();
             

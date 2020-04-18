@@ -46,6 +46,16 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig WithMemoryCache(Func<TKey, string> keySerializer = null)
+        {
+            return WithLocalCache(new MemoryCache<TKey, TValue>(keySerializer));
+        }
+
+        public TConfig WithDictionaryCache(IEqualityComparer<TKey> keyComparer = null)
+        {
+            return WithLocalCache(new DictionaryCache<TKey, TValue>(keyComparer));
+        }
+
         public TConfig DisableCaching(bool disableCaching = true)
         {
             _config.DisableCaching = disableCaching;

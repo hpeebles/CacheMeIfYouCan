@@ -9,14 +9,14 @@ namespace CacheMeIfYouCan
         ILocalCache<TKey, TValue>, IDisposable
     {
         public DictionaryCache()
-            : this(EqualityComparer<TKey>.Default)
+            : this(null)
         { }
         
-        public DictionaryCache(IEqualityComparer<TKey> keyComparer)
+        public DictionaryCache(IEqualityComparer<TKey> keyComparer = null)
             : base(keyComparer, TimeSpan.FromSeconds(10))
         { }
         
-        public DictionaryCache(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
+        internal DictionaryCache(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
             : base(keyComparer, keyExpiryProcessorInterval)
         { }
 
@@ -73,14 +73,16 @@ namespace CacheMeIfYouCan
         { }
         
         public DictionaryCache(
-            IEqualityComparer<TOuterKey> outerKeyComparer,
-            IEqualityComparer<TInnerKey> innerKeyComparer)
+            IEqualityComparer<TOuterKey> outerKeyComparer = null,
+            IEqualityComparer<TInnerKey> innerKeyComparer = null)
             : base(
-                new TupleKeyComparer<TOuterKey, TInnerKey>(outerKeyComparer, innerKeyComparer),
+                new TupleKeyComparer<TOuterKey, TInnerKey>(
+                    outerKeyComparer,
+                    innerKeyComparer),
                 TimeSpan.FromSeconds(10))
         {
-            _outerKeyComparer = outerKeyComparer;
-            _innerKeyComparer = innerKeyComparer;
+            _outerKeyComparer = outerKeyComparer ?? EqualityComparer<TOuterKey>.Default;
+            _innerKeyComparer = innerKeyComparer ?? EqualityComparer<TInnerKey>.Default;
         }
         
         public int GetMany(

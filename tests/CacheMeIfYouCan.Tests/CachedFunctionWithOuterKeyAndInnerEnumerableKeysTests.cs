@@ -14,8 +14,10 @@ namespace CacheMeIfYouCan.Tests
 {
     public partial class CachedFunctionWithOuterKeyAndInnerEnumerableKeysTests
     {
-        [Fact]
-        public void Concurrent_CorrectValuesAreReturned()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Concurrent_CorrectValuesAreReturned(bool useMemoryCache)
         {
             var delay = TimeSpan.FromMilliseconds(100);
             
@@ -25,13 +27,18 @@ namespace CacheMeIfYouCan.Tests
                 return innerKeys.ToDictionary(k => k, k => outerKey + k);
             };
 
-            var cachedFunction = CachedFunctionFactory
+            var config = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .UseFirstParamAsOuterCacheKey()
-                .WithLocalCache(new MockLocalCache<int, int, int>())
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .Build();
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (useMemoryCache)
+                config.WithMemoryCache();
+            else
+                config.WithDictionaryCache();
+            
+            var cachedFunction = config.Build();
 
             var timer = Stopwatch.StartNew();
             
