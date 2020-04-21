@@ -2,6 +2,8 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
+using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -21,18 +23,30 @@ namespace CacheMeIfYouCan.Internal
             _skipCacheSetPredicate = skipCacheSetPredicate;
         }
 
-        public async ValueTask<(bool Success, TValue Value)> TryGet(TKey key)
+        public bool LocalCacheEnabled { get; } = false;
+        public bool DistributedCacheEnabled { get; } = true;
+
+        public async ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key)
         {
+            var flags = SingleKeyCacheGetFlags.DistributedCache_Enabled;
+
             if (_skipCacheGetPredicate?.Invoke(key) == true)
-                return default;
+            {
+                flags |= SingleKeyCacheGetFlags.DistributedCache_Skipped;
+                return (false, default, flags.ToStats());
+            }
+
+            flags |= SingleKeyCacheGetFlags.DistributedCache_KeyRequested;
             
             var (success, valueAndTimeToLive) = await _innerCache
                 .TryGet(key)
                 .ConfigureAwait(false);
 
-            return success
-                ? (true, valueAndTimeToLive.Value)
-                : default;
+            if (!success)
+                return (false, default, flags.ToStats());
+
+            flags |= SingleKeyCacheGetFlags.DistributedCache_Hit;
+            return (true, valueAndTimeToLive.Value, flags.ToStats());
         }
 
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive)

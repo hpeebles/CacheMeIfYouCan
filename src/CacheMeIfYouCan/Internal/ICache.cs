@@ -2,12 +2,17 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Internal
 {
     internal interface ICache<TKey, TValue>
     {
-        ValueTask<(bool Success, TValue Value)> TryGet(TKey key);
+        bool LocalCacheEnabled { get; }
+        
+        bool DistributedCacheEnabled { get; }
+        
+        ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key);
 
         ValueTask Set(TKey key, TValue value, TimeSpan timeToLive);
 

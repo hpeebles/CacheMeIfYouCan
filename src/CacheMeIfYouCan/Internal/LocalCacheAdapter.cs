@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
+using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -19,17 +21,29 @@ namespace CacheMeIfYouCan.Internal
             _skipCacheGetPredicate = skipCacheGetPredicate;
             _skipCacheSetPredicate = skipCacheSetPredicate;
         }
+        
+        public bool LocalCacheEnabled { get; } = true;
+        public bool DistributedCacheEnabled { get; } = false;
 
-        public ValueTask<(bool Success, TValue Value)> TryGet(TKey key)
+        public ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key)
         {
+            var flags = SingleKeyCacheGetFlags.LocalCache_Enabled;
+
             if (_skipCacheGetPredicate?.Invoke(key) == true)
-                return default;
+            {
+                flags |= SingleKeyCacheGetFlags.LocalCache_Skipped;
+                return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((false, default, flags.ToStats()));
+            }
+
+            flags |= SingleKeyCacheGetFlags.LocalCache_KeyRequested;
             
             var success = _innerCache.TryGet(key, out var value);
 
-            return success
-                ? new ValueTask<(bool, TValue)>((true, value))
-                : default;
+            if (!success)
+                return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((false, default, flags.ToStats()));
+
+            flags |= SingleKeyCacheGetFlags.LocalCache_Hit;
+            return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((true, value, flags.ToStats()));
         }
 
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive)

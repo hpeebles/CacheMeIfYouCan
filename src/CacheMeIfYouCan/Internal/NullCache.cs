@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -10,7 +11,9 @@ namespace CacheMeIfYouCan.Internal
         
         public static readonly NullCache<TKey, TValue> Instance = new NullCache<TKey, TValue>();
         
-        public ValueTask<(bool Success, TValue Value)> TryGet(TKey key) => default;
+        public bool LocalCacheEnabled { get; } = false;
+        public bool DistributedCacheEnabled { get; } = false;
+        public ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key) => default;
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive) => default;
         public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination) => default;
         public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive) => default;

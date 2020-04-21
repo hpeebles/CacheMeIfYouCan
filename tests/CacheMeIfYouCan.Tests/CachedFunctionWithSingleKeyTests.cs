@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -516,7 +517,7 @@ namespace CacheMeIfYouCan.Tests
                 lastSuccess.Value.Should().Be(-1);
                 lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
-                lastSuccess.WasCached.Should().Be(wasCached);
+                lastSuccess.CacheStats.CacheHit.Should().Be(wasCached);
             }
 
             void CheckException()
@@ -527,6 +528,80 @@ namespace CacheMeIfYouCan.Tests
                 lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
                 lastException.Exception.Message.Should().Be(exceptionMessage);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public void CacheStats_PopulatedCorrectly(bool localCacheEnabled, bool distributedCacheEnabled)
+        {
+            SingleKeyCacheGetStats lastCacheStats = default;
+
+            Func<int, int> originalFunction = key => key;
+
+            var config = CachedFunctionFactory.ConfigureFor(originalFunction)
+                .WithTimeToLive(TimeSpan.FromMinutes(1))
+                .OnResult(r => lastCacheStats = r.CacheStats)
+                .DontGetFromCacheWhen(k => k == 1)
+                .DontGetFromLocalCacheWhen(k => k == 2)
+                .DontGetFromDistributedCacheWhen(k => k == 3);
+
+            if (localCacheEnabled)
+            {
+                var localCache = new MockLocalCache<int, int>();
+                localCache.Set(4, 4, TimeSpan.FromMinutes(1));
+
+                config.WithLocalCache(localCache);
+            }
+
+            if (distributedCacheEnabled)
+            {
+                var distributedCache = new MockDistributedCache<int, int>();
+                distributedCache.Set(4, 4, TimeSpan.FromMinutes(1));
+                distributedCache.Set(5, 5, TimeSpan.FromMinutes(1));
+
+                config.WithDistributedCache(distributedCache);
+            }
+
+            var cachedFunction = config.Build();
+
+            var cacheEnabled = localCacheEnabled || distributedCacheEnabled;
+
+            for (var i = 1; i <= 5; i++)
+            {
+                cachedFunction(i).Should().Be(i);
+
+                VerifyCacheStats(i);
+            }
+
+            void VerifyCacheStats(int key)
+            {
+                var localCacheKeyRequested = localCacheEnabled && key != 1 && key != 2;
+                var localCacheHit = localCacheEnabled && key == 4;
+
+                var distributedCacheKeyRequested = distributedCacheEnabled && !localCacheHit && key != 1 && key != 3;
+                var distributedCacheHit = distributedCacheKeyRequested && (key == 4 || key == 5);
+
+                var cacheKeyRequested = localCacheKeyRequested || distributedCacheKeyRequested;
+                var cacheHit = localCacheHit || distributedCacheHit;
+                
+                lastCacheStats.CacheEnabled.Should().Be(cacheEnabled);
+                lastCacheStats.CacheKeyRequested.Should().Be(cacheKeyRequested);
+                lastCacheStats.CacheSkipped.Should().Be(cacheEnabled && !cacheKeyRequested);
+                lastCacheStats.CacheHit.Should().Be(cacheHit);
+                lastCacheStats.CacheMiss.Should().Be(cacheKeyRequested && !cacheHit);
+                
+                lastCacheStats.LocalCacheEnabled.Should().Be(localCacheEnabled);
+                lastCacheStats.LocalCacheKeyRequested.Should().Be(localCacheKeyRequested);
+                lastCacheStats.LocalCacheSkipped.Should().Be(localCacheEnabled && !localCacheKeyRequested);
+                lastCacheStats.LocalCacheHit.Should().Be(localCacheHit);
+                lastCacheStats.LocalCacheMiss.Should().Be(localCacheKeyRequested && !localCacheHit);
+                
+                lastCacheStats.DistributedCacheEnabled.Should().Be(distributedCacheEnabled);
+                lastCacheStats.DistributedCacheKeyRequested.Should().Be(distributedCacheKeyRequested);
+                lastCacheStats.DistributedCacheSkipped.Should().Be(distributedCacheEnabled && !localCacheHit && !distributedCacheKeyRequested);
+                lastCacheStats.DistributedCacheHit.Should().Be(distributedCacheHit);
+                lastCacheStats.DistributedCacheMiss.Should().Be(distributedCacheKeyRequested && !distributedCacheHit);
             }
         }
     }

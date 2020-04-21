@@ -1,4 +1,5 @@
 ﻿using System;
+using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
 {
@@ -10,14 +11,14 @@ namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
             TValue value,
             DateTime start,
             TimeSpan duration,
-            bool wasCached)
+            SingleKeyCacheGetStats cacheStats)
         {
             Parameters = parameters;
             Key = key;
             Value = value;
             Start = start;
             Duration = duration;
-            WasCached = wasCached;
+            CacheStats = cacheStats;
         }
 
         public TParams Parameters { get; }
@@ -25,6 +26,6 @@ namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
         public TValue Value { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public bool WasCached { get; }
+        public SingleKeyCacheGetStats CacheStats { get; }
     }
 }

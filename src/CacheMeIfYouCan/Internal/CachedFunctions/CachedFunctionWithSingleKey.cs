@@ -18,6 +18,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TKey, TValue> _cache;
         private readonly Action<SuccessfulRequestEvent<TParams, TKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TKey>> _onExceptionAction;
+        private readonly SingleKeyCacheGetStats _cacheStatsIfSkipped;
 
         public CachedFunctionWithSingleKey(
             Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
@@ -44,6 +45,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 _skipCacheGetPredicate = config.SkipCacheGetPredicate;
                 _skipCacheSetPredicate = config.SkipCacheSetPredicate;
             }
+
+            _cacheStatsIfSkipped = GetCacheStatsIfSkipped();
         }
 
         public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
@@ -51,6 +54,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             var start = DateTime.UtcNow;
             var timer = Stopwatch.StartNew();
             TKey key = default;
+            SingleKeyCacheGetStats cacheStats;
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -61,10 +65,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 {
                     var tryGetTask = _cache.TryGet(key);
 
-                    var (success, valueFromCache) = tryGetTask.IsCompleted
+                    var (success, valueFromCache, cacheStatsInner) = tryGetTask.IsCompleted
                         ? tryGetTask.Result
                         : await tryGetTask.ConfigureAwait(false);
 
+                    cacheStats = cacheStatsInner;
+                    
                     if (success)
                     {
                         _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
@@ -73,10 +79,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                             valueFromCache,
                             start,
                             timer.Elapsed,
-                            true));
+                            cacheStats));
 
                         return valueFromCache;
                     }
+                }
+                else
+                {
+                    cacheStats = _cacheStatsIfSkipped;
                 }
 
                 var getFromFuncTask = _originalFunction(parameters, cancellationToken);
@@ -104,7 +114,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     value,
                     start,
                     timer.Elapsed,
-                    false));
+                    cacheStats));
 
                 return value;
             }
@@ -119,6 +129,18 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 throw;
             }
+        }
+
+        private SingleKeyCacheGetStats GetCacheStatsIfSkipped()
+        {
+            SingleKeyCacheGetFlags flags = default;
+            if (_cache.LocalCacheEnabled)
+                flags |= SingleKeyCacheGetFlags.LocalCache_Enabled | SingleKeyCacheGetFlags.LocalCache_Skipped;
+
+            if (_cache.DistributedCacheEnabled)
+                flags |= SingleKeyCacheGetFlags.DistributedCache_Enabled | SingleKeyCacheGetFlags.DistributedCache_Skipped;
+
+            return flags.ToStats();
         }
     }
 }

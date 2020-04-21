@@ -2,6 +2,8 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
+using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -32,33 +34,52 @@ namespace CacheMeIfYouCan.Internal
             _skipDistributedCacheGetPredicate = skipDistributedCacheGetPredicate;
             _skipDistributedCacheSetPredicate = skipDistributedCacheSetPredicate;
         }
+        
+        public bool LocalCacheEnabled { get; } = true;
+        public bool DistributedCacheEnabled { get; } = true;
 
-        public ValueTask<(bool Success, TValue Value)> TryGet(TKey key)
+        public ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key)
         {
+            var flags = SingleKeyCacheGetFlags.LocalCache_Enabled | SingleKeyCacheGetFlags.DistributedCache_Enabled;
+            
             if (_skipLocalCacheGetPredicate is null || !_skipLocalCacheGetPredicate(key))
             {
+                flags |= SingleKeyCacheGetFlags.LocalCache_KeyRequested;
+
                 if (_localCache.TryGet(key, out var value))
-                    return new ValueTask<(bool Success, TValue Value)>((true, value));
+                {
+                    flags |= SingleKeyCacheGetFlags.LocalCache_Hit;
+                    return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((true, value, flags.ToStats()));
+                }
+            }
+            else
+            {
+                flags |= SingleKeyCacheGetFlags.LocalCache_Skipped;
             }
 
             if (_skipDistributedCacheGetPredicate is null || !_skipDistributedCacheGetPredicate(key))
-                return new ValueTask<(bool Success, TValue Value)>(GetFromDistributedCache());
+                return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>(GetFromDistributedCache());
 
-            return default;
+            flags |= SingleKeyCacheGetFlags.DistributedCache_Skipped;
+            return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((false, default, flags.ToStats()));
 
-            async Task<(bool, TValue)> GetFromDistributedCache()
+            async Task<(bool, TValue, SingleKeyCacheGetStats)> GetFromDistributedCache()
             {
+                flags |= SingleKeyCacheGetFlags.DistributedCache_KeyRequested;
+                
                 var (success, valueAndTimeToLive) = await _distributedCache
                     .TryGet(key)
                     .ConfigureAwait(false);
 
-                if (success)
-                {
-                    if (_skipLocalCacheSetPredicate is null || !_skipLocalCacheSetPredicate(key, valueAndTimeToLive.Value))
-                        _localCache.Set(key, valueAndTimeToLive.Value, valueAndTimeToLive.TimeToLive);
-                }
+                if (!success)
+                    return (false, default, flags.ToStats());
+                
+                flags |= SingleKeyCacheGetFlags.DistributedCache_Hit;
+                    
+                if (_skipLocalCacheSetPredicate is null || !_skipLocalCacheSetPredicate(key, valueAndTimeToLive.Value))
+                    _localCache.Set(key, valueAndTimeToLive.Value, valueAndTimeToLive.TimeToLive);
 
-                return (success, valueAndTimeToLive);
+                return (true, valueAndTimeToLive, flags.ToStats());
             }
         }
 

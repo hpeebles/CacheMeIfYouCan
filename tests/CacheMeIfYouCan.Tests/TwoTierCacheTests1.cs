@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Tests
 
             for (var i = 1; i <= 100; i++)
             {
-                var (success, value) = twoTierCache.TryGet(i).Result;
+                var (success, value, _) = twoTierCache.TryGet(i).Result;
                 success.Should().BeTrue();
                 value.Should().Be(i);
 
@@ -61,7 +61,7 @@ namespace CacheMeIfYouCan.Tests
 
             for (var i = 1; i <= 100; i++)
             {
-                var (success, value) = twoTierCache.TryGet(i).Result;
+                var (success, value, _) = twoTierCache.TryGet(i).Result;
                 success.Should().BeTrue();
                 value.Should().Be(i);
                 localCache.SetExecutionCount.Should().Be(i);
