@@ -11,14 +11,14 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
             Dictionary<TKey, TValue> values,
             DateTime start,
             TimeSpan duration,
-            int cacheHits)
+            CacheGetManyStats cacheStats)
         {
             Parameters = parameters;
             Keys = keys;
             Values = values;
             Start = start;
             Duration = duration;
-            CacheHits = cacheHits;
+            CacheStats = cacheStats;
         }
         
         public TParams Parameters { get; }
@@ -26,7 +26,6 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
         public Dictionary<TKey, TValue> Values { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public int CacheHits { get; }
-        public int CacheMisses => Keys.Count - CacheHits;
+        public CacheGetManyStats CacheStats { get; }
     }
 }

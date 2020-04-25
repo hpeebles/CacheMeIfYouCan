@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Internal
@@ -26,17 +25,17 @@ namespace CacheMeIfYouCan.Internal
         public bool LocalCacheEnabled { get; } = false;
         public bool DistributedCacheEnabled { get; } = true;
 
-        public async ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key)
+        public async ValueTask<(bool Success, TValue Value, CacheGetStats Stats)> TryGet(TKey key)
         {
-            var flags = SingleKeyCacheGetFlags.DistributedCache_Enabled;
+            var flags = CacheGetFlags.DistributedCache_Enabled;
 
             if (_skipCacheGetPredicate?.Invoke(key) == true)
             {
-                flags |= SingleKeyCacheGetFlags.DistributedCache_Skipped;
+                flags |= CacheGetFlags.DistributedCache_Skipped;
                 return (false, default, flags.ToStats());
             }
 
-            flags |= SingleKeyCacheGetFlags.DistributedCache_KeyRequested;
+            flags |= CacheGetFlags.DistributedCache_KeyRequested;
             
             var (success, valueAndTimeToLive) = await _innerCache
                 .TryGet(key)
@@ -45,7 +44,7 @@ namespace CacheMeIfYouCan.Internal
             if (!success)
                 return (false, default, flags.ToStats());
 
-            flags |= SingleKeyCacheGetFlags.DistributedCache_Hit;
+            flags |= CacheGetFlags.DistributedCache_Hit;
             return (true, valueAndTimeToLive.Value, flags.ToStats());
         }
 
@@ -56,55 +55,68 @@ namespace CacheMeIfYouCan.Internal
                 : new ValueTask(_innerCache.Set(key, value, timeToLive));
         }
 
-        public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
+        public ValueTask<CacheGetManyStats> GetMany(IReadOnlyCollection<TKey> keys, int cacheKeysSKipped,
+            Memory<KeyValuePair<TKey, TValue>> destination)
         {
             if (_skipCacheGetPredicate is null)
-                return GetManyImpl(keys, destination);
+                return GetManyImpl(keys);
 
             var filteredKeys = CacheKeysFilter<TKey>.Filter(keys, _skipCacheGetPredicate, out var pooledKeyArray);
 
             try
             {
-                return filteredKeys.Count == 0
-                    ? default
-                    : GetManyImpl(filteredKeys, destination);
+                if (filteredKeys.Count == 0)
+                {
+                    var cacheStats = new CacheGetManyStats(
+                        cacheKeysRequested: keys.Count,
+                        cacheKeysSkipped: cacheKeysSKipped,
+                        distributedCacheEnabled: true,
+                        distributedCacheKeysSkipped: keys.Count);
+
+                    return new ValueTask<CacheGetManyStats>(cacheStats);
+                }
+
+                return GetManyImpl(filteredKeys);
             }
             finally
             {
                 if (!(pooledKeyArray is null))
                     CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
             }
-        }
 
-        private async ValueTask<int> GetManyImpl(
-            IReadOnlyCollection<TKey> keys,
-            Memory<KeyValuePair<TKey, TValue>> destination)
-        {
-            var pooledArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(keys.Count);
-
-            try
+            async ValueTask<CacheGetManyStats> GetManyImpl(IReadOnlyCollection<TKey> keysToGetFromCache)
             {
-                var countFound = await _innerCache
-                    .GetMany(keys, pooledArray)
-                    .ConfigureAwait(false);
+                var pooledArray = ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(keysToGetFromCache.Count);
 
-                if (countFound > 0)
-                    CopyResultsToDestination(countFound);
-
-                return countFound;
-            }
-            finally
-            {
-                ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledArray);
-            }
-
-            void CopyResultsToDestination(int countFound)
-            {
-                var span = destination.Span;
-                for (var i = 0; i <= countFound; i++)
+                try
                 {
-                    var kv = pooledArray[i];
-                    span[i] = new KeyValuePair<TKey, TValue>(kv.Key, kv.Value);
+                    var countFound = await _innerCache
+                        .GetMany(keysToGetFromCache, pooledArray)
+                        .ConfigureAwait(false);
+
+                    if (countFound > 0)
+                        CopyResultsToDestination(countFound);
+
+                    return new CacheGetManyStats(
+                        cacheKeysRequested: keys.Count,
+                        cacheKeysSkipped: cacheKeysSKipped,
+                        distributedCacheEnabled: true,
+                        distributedCacheKeysSkipped: keys.Count - keysToGetFromCache.Count,
+                        distributedCacheHits: countFound);
+                }
+                finally
+                {
+                    ArrayPool<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>>.Shared.Return(pooledArray);
+                }
+
+                void CopyResultsToDestination(int countFound)
+                {
+                    var span = destination.Span;
+                    for (var i = 0; i <= countFound; i++)
+                    {
+                        var kv = pooledArray[i];
+                        span[i] = new KeyValuePair<TKey, TValue>(kv.Key, kv.Value);
+                    }
                 }
             }
         }

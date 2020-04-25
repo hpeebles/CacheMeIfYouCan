@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Internal
@@ -25,25 +24,25 @@ namespace CacheMeIfYouCan.Internal
         public bool LocalCacheEnabled { get; } = true;
         public bool DistributedCacheEnabled { get; } = false;
 
-        public ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key)
+        public ValueTask<(bool Success, TValue Value, CacheGetStats Stats)> TryGet(TKey key)
         {
-            var flags = SingleKeyCacheGetFlags.LocalCache_Enabled;
+            var flags = CacheGetFlags.LocalCache_Enabled;
 
             if (_skipCacheGetPredicate?.Invoke(key) == true)
             {
-                flags |= SingleKeyCacheGetFlags.LocalCache_Skipped;
-                return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((false, default, flags.ToStats()));
+                flags |= CacheGetFlags.LocalCache_Skipped;
+                return new ValueTask<(bool, TValue, CacheGetStats)>((false, default, flags.ToStats()));
             }
 
-            flags |= SingleKeyCacheGetFlags.LocalCache_KeyRequested;
+            flags |= CacheGetFlags.LocalCache_KeyRequested;
             
             var success = _innerCache.TryGet(key, out var value);
 
             if (!success)
-                return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((false, default, flags.ToStats()));
+                return new ValueTask<(bool, TValue, CacheGetStats)>((false, default, flags.ToStats()));
 
-            flags |= SingleKeyCacheGetFlags.LocalCache_Hit;
-            return new ValueTask<(bool, TValue, SingleKeyCacheGetStats)>((true, value, flags.ToStats()));
+            flags |= CacheGetFlags.LocalCache_Hit;
+            return new ValueTask<(bool, TValue, CacheGetStats)>((true, value, flags.ToStats()));
         }
 
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive)
@@ -54,11 +53,26 @@ namespace CacheMeIfYouCan.Internal
             return default;
         }
 
-        public ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination)
+        public ValueTask<CacheGetManyStats> GetMany(
+            IReadOnlyCollection<TKey> keys,
+            int cacheKeysSkipped,
+            Memory<KeyValuePair<TKey, TValue>> destination)
         {
+            int countFound;
+            CacheGetManyStats stats;
             if (_skipCacheGetPredicate is null)
-                return new ValueTask<int>(_innerCache.GetMany(keys, destination.Span));
-            
+            {
+                countFound = _innerCache.GetMany(keys, destination.Span);
+                stats = new CacheGetManyStats(
+                    cacheKeysRequested: keys.Count,
+                    cacheKeysSkipped: cacheKeysSkipped,
+                    localCacheEnabled: true,
+                    localCacheKeysSkipped: 0,
+                    localCacheHits: countFound);
+                
+                return new ValueTask<CacheGetManyStats>(stats);
+            }
+
             var filteredKeys = CacheKeysFilter<TKey>.Filter(
                 keys,
                 _skipCacheGetPredicate,
@@ -66,15 +80,24 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                return filteredKeys.Count == 0
-                    ? default
-                    : new ValueTask<int>(_innerCache.GetMany(filteredKeys, destination.Span));
+                countFound = filteredKeys.Count == 0
+                    ? 0
+                    : _innerCache.GetMany(filteredKeys, destination.Span);
             }
             finally
             {
                 if (!(pooledKeyArray is null))
                     CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
             }
+            
+            stats = new CacheGetManyStats(
+                cacheKeysRequested: keys.Count,
+                cacheKeysSkipped: cacheKeysSkipped,
+                localCacheEnabled: true,
+                localCacheKeysSkipped: keys.Count - filteredKeys.Count,
+                localCacheHits: countFound);
+            
+            return new ValueTask<CacheGetManyStats>(stats);
         }
 
         public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)

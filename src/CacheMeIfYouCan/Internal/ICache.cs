@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 
 namespace CacheMeIfYouCan.Internal
 {
@@ -12,11 +11,11 @@ namespace CacheMeIfYouCan.Internal
         
         bool DistributedCacheEnabled { get; }
         
-        ValueTask<(bool Success, TValue Value, SingleKeyCacheGetStats Stats)> TryGet(TKey key);
+        ValueTask<(bool Success, TValue Value, CacheGetStats Stats)> TryGet(TKey key);
 
         ValueTask Set(TKey key, TValue value, TimeSpan timeToLive);
 
-        ValueTask<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, TValue>> destination);
+        ValueTask<CacheGetManyStats> GetMany(IReadOnlyCollection<TKey> keys, int cacheKeysSkipped, Memory<KeyValuePair<TKey, TValue>> destination);
 
         ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
     }
@@ -39,12 +38,12 @@ namespace CacheMeIfYouCan.Internal
             {
                 var memory = new Memory<KeyValuePair<TKey, TValue>>(pooledArray);
                 
-                var countFoundTask = cache.GetMany(keys, memory);
+                var countFoundTask = cache.GetMany(keys, 0, memory);
 
                 if (!countFoundTask.IsCompleted)
                     await countFoundTask.ConfigureAwait(false);
 
-                return memory.Slice(0, countFoundTask.Result).ToArray();
+                return memory.Slice(0, countFoundTask.Result.CacheHits).ToArray();
             }
             finally
             {

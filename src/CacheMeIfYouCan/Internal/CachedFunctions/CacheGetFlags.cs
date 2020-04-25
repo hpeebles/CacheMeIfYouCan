@@ -5,7 +5,7 @@ using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
 namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
     [Flags]
-    internal enum SingleKeyCacheGetFlags : byte
+    internal enum CacheGetFlags : byte
     {
         LocalCache_Enabled = 0b_0001,
         LocalCache_KeyRequested = 0b_0010,
@@ -17,12 +17,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         DistributedCache_Hit = 0b_1000_0000
     }
 
-    internal static class SingleKeyCacheGetFlagsExtensions
+    internal static class CacheGetFlagsExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SingleKeyCacheGetStats ToStats(this SingleKeyCacheGetFlags flags)
+        public static CacheGetStats ToStats(this CacheGetFlags flags)
         {
-            return new SingleKeyCacheGetStats(flags);
+            return new CacheGetStats(flags);
         }
     }
 }

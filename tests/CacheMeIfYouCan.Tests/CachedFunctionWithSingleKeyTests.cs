@@ -535,7 +535,7 @@ namespace CacheMeIfYouCan.Tests
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
         public void CacheStats_PopulatedCorrectly(bool localCacheEnabled, bool distributedCacheEnabled)
         {
-            SingleKeyCacheGetStats lastCacheStats = default;
+            CacheGetStats lastCacheStats = default;
 
             Func<int, int> originalFunction = key => key;
 

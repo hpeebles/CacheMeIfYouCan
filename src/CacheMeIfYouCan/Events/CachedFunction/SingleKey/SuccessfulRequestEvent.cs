@@ -11,7 +11,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
             TValue value,
             DateTime start,
             TimeSpan duration,
-            SingleKeyCacheGetStats cacheStats)
+            CacheGetStats cacheStats)
         {
             Parameters = parameters;
             Key = key;
@@ -26,6 +26,6 @@ namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
         public TValue Value { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
-        public SingleKeyCacheGetStats CacheStats { get; }
+        public CacheGetStats CacheStats { get; }
     }
 }

@@ -18,7 +18,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TKey, TValue> _cache;
         private readonly Action<SuccessfulRequestEvent<TParams, TKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TKey>> _onExceptionAction;
-        private readonly SingleKeyCacheGetStats _cacheStatsIfSkipped;
+        private readonly CacheGetStats _cacheStatsIfSkipped;
+        private readonly bool _cacheEnabled;
 
         public CachedFunctionWithSingleKey(
             Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
@@ -47,6 +48,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
 
             _cacheStatsIfSkipped = GetCacheStatsIfSkipped();
+            _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
         }
 
         public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
@@ -54,14 +56,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             var start = DateTime.UtcNow;
             var timer = Stopwatch.StartNew();
             TKey key = default;
-            SingleKeyCacheGetStats cacheStats;
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 key = _keySelector(parameters);
 
-                if (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(parameters))
+                CacheGetStats cacheStats;
+                if (_cacheEnabled && (_skipCacheGetPredicate is null || !_skipCacheGetPredicate(parameters)))
                 {
                     var tryGetTask = _cache.TryGet(key);
 
@@ -95,7 +97,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     ? getFromFuncTask.Result
                     : await getFromFuncTask.ConfigureAwait(false);
 
-                if (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(parameters, value))
+                if (_cacheEnabled && (_skipCacheSetPredicate is null || !_skipCacheSetPredicate(parameters, value)))
                 {
                     var timeToLive = _timeToLiveFactory?.Invoke(parameters) ?? _timeToLive;
 
@@ -131,14 +133,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        private SingleKeyCacheGetStats GetCacheStatsIfSkipped()
+        private CacheGetStats GetCacheStatsIfSkipped()
         {
-            SingleKeyCacheGetFlags flags = default;
+            CacheGetFlags flags = default;
             if (_cache.LocalCacheEnabled)
-                flags |= SingleKeyCacheGetFlags.LocalCache_Enabled | SingleKeyCacheGetFlags.LocalCache_Skipped;
+                flags |= CacheGetFlags.LocalCache_Enabled | CacheGetFlags.LocalCache_Skipped;
 
             if (_cache.DistributedCacheEnabled)
-                flags |= SingleKeyCacheGetFlags.DistributedCache_Enabled | SingleKeyCacheGetFlags.DistributedCache_Skipped;
+                flags |= CacheGetFlags.DistributedCache_Enabled | CacheGetFlags.DistributedCache_Skipped;
 
             return flags.ToStats();
         }
