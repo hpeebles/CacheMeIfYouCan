@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys;
@@ -29,6 +30,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
         private readonly Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> _onExceptionAction;
+        private readonly bool _cacheEnabled;
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
             Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
@@ -73,6 +75,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 _shouldFillMissingKeys = true;
                 _fillMissingKeysValueFactory = config.FillMissingKeysValueFactory;
             }
+
+            _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
         }
 
         public async ValueTask<Dictionary<TInnerKey, TValue>> GetMany(
@@ -90,15 +94,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 outerKey = _keySelector(parameters);
 
-                var getFromCacheTask = GetFromCache();
+                var getFromCacheTask = GetFromCache(parameters, outerKey, innerKeysCollection);
 
-                var resultsDictionary = getFromCacheTask.IsCompleted
+                var (resultsDictionary, cacheStats) = getFromCacheTask.IsCompleted
                     ? getFromCacheTask.Result
                     : await getFromCacheTask.ConfigureAwait(false);
 
-                var cacheHits = resultsDictionary.Count;
-                
-                if (cacheHits == innerKeysCollection.Count)
+                if (cacheStats.CacheHits == innerKeysCollection.Count)
                 {
                     _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
                         parameters,
@@ -107,12 +109,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         resultsDictionary,
                         start,
                         timer.Elapsed,
-                        cacheHits));
-                    
+                        cacheStats));
+
                     return resultsDictionary;
                 }
 
-                var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
+                var missingKeys =
+                    MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
 
                 if (missingKeys.Count < _maxBatchSize)
                 {
@@ -155,7 +158,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     if (!(tasks is null))
                         await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
                 }
-                
+
                 _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
                     parameters,
                     outerKey,
@@ -163,7 +166,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     resultsDictionary,
                     start,
                     timer.Elapsed,
-                    cacheHits));
+                    cacheStats));
 
                 return resultsDictionary;
             }
@@ -179,71 +182,89 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 throw;
             }
+        }
 
-            async ValueTask<Dictionary<TInnerKey, TValue>> GetFromCache()
+        private async ValueTask<(Dictionary<TInnerKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCache(
+            TParams parameters, TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeysCollection)
+        {
+            if (!_cacheEnabled)
+                return (new Dictionary<TInnerKey, TValue>(_keyComparer), default);
+
+            if (_skipCacheGetOuterPredicate?.Invoke(parameters) == true)
+                return GetResultIfAllKeysSkipped();
+
+            if (_skipCacheGetInnerPredicate is null)
             {
-                if (_skipCacheGetOuterPredicate?.Invoke(parameters) == true)
-                    return new Dictionary<TInnerKey, TValue>(_keyComparer);
-                
-                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeysCollection.Count);
-                Dictionary<TInnerKey, TValue> resultsFromCache;
+                var task = GetFromCacheInner(innerKeysCollection, 0);
 
+                return task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+            }
+
+            var filteredKeys = CacheKeysFilter<TParams, TInnerKey>.Filter(
+                parameters,
+                innerKeysCollection,
+                _skipCacheGetInnerPredicate,
+                out var pooledKeyArray);
+
+            try
+            {
+                if (filteredKeys.Count == 0)
+                    return GetResultIfAllKeysSkipped();
+
+                var task = GetFromCacheInner(filteredKeys, innerKeysCollection.Count - filteredKeys.Count);
+
+                return task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+            }
+            finally
+            {
+                if (!(pooledKeyArray is null))
+                    CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledKeyArray);
+            }
+
+            (Dictionary<TInnerKey, TValue>, CacheGetManyStats) GetResultIfAllKeysSkipped()
+            {
+                var cacheStats = new CacheGetManyStats(
+                    cacheKeysRequested: 0,
+                    cacheKeysSkipped: innerKeysCollection.Count,
+                    localCacheEnabled: _cache.LocalCacheEnabled,
+                    distributedCacheEnabled: _cache.DistributedCacheEnabled);
+
+                return (new Dictionary<TInnerKey, TValue>(_keyComparer), cacheStats);
+            }
+
+            async ValueTask<(Dictionary<TInnerKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCacheInner(
+                IReadOnlyCollection<TInnerKey> keys, int cacheKeysSkipped)
+            {
+                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(keys.Count);
                 try
                 {
-                    int countFoundInCache;
-                    if (_skipCacheGetInnerPredicate is null)
-                    {
-                        var task = _cache.GetMany(outerKey, innerKeysCollection, getFromCacheResultsArray);
+                    var task = _cache.GetMany(outerKey, keys, cacheKeysSkipped, getFromCacheResultsArray);
 
-                        countFoundInCache = task.IsCompleted
-                            ? task.Result
-                            : await task.ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        var filteredKeys = CacheKeysFilter<TParams, TInnerKey>.Filter(
-                            parameters,
-                            innerKeysCollection,
-                            _skipCacheGetInnerPredicate,
-                            out var pooledArray);
+                    var cacheStats = task.IsCompleted
+                        ? task.Result
+                        : await task.ConfigureAwait(false);
 
-                        try
-                        {
-                            var task = filteredKeys.Count > 0
-                                ? _cache.GetMany(outerKey, filteredKeys, getFromCacheResultsArray)
-                                : new ValueTask<int>(0);
-
-                            countFoundInCache = task.IsCompleted
-                                ? task.Result
-                                : await task.ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            if (!(pooledArray is null))
-                                CacheKeysFilter<TInnerKey>.ReturnPooledArray(pooledArray);
-                        }
-                    }
-
+                    var countFoundInCache = cacheStats.CacheHits;
                     if (countFoundInCache == 0)
+                        return (new Dictionary<TInnerKey, TValue>(_keyComparer), cacheStats);
+
+                    var resultsFromCache = new Dictionary<TInnerKey, TValue>(countFoundInCache, _keyComparer);
+                    for (var i = 0; i < countFoundInCache; i++)
                     {
-                        resultsFromCache = new Dictionary<TInnerKey, TValue>(_keyComparer);
+                        var kv = getFromCacheResultsArray[i];
+                        resultsFromCache[kv.Key] = kv.Value;
                     }
-                    else
-                    {
-                        resultsFromCache = new Dictionary<TInnerKey, TValue>(countFoundInCache, _keyComparer);
-                        for (var i = 0; i < countFoundInCache; i++)
-                        {
-                            var kv = getFromCacheResultsArray[i];
-                            resultsFromCache[kv.Key] = kv.Value;
-                        }
-                    }
+
+                    return (resultsFromCache, cacheStats);
                 }
                 finally
                 {
                     ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(getFromCacheResultsArray);
                 }
-
-                return resultsFromCache;
             }
         }
 
@@ -290,7 +311,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             
             ValueTask SetInCache()
             {
-                if (_skipCacheSetOuterPredicate?.Invoke(parameters) == true)
+                if (!_cacheEnabled || _skipCacheSetOuterPredicate?.Invoke(parameters) == true)
                     return default;
 
                 if (_skipCacheSetInnerPredicate is null)

@@ -68,5 +68,15 @@ namespace CacheMeIfYouCan
                 ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
             }
         }
+        
+        public static void Set<TOuterKey, TInnerKey, TValue>(
+            this ILocalCache<TOuterKey, TInnerKey, TValue> cache,
+            TOuterKey outerKey,
+            TInnerKey innerKey,
+            TValue value,
+            TimeSpan timeToLive)
+        {
+            cache.SetMany(outerKey, new[] { new KeyValuePair<TInnerKey, TValue>(innerKey , value) }, timeToLive);
+        }
     }
 }

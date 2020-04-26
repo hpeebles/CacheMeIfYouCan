@@ -30,7 +30,8 @@ namespace CacheMeIfYouCan.Internal
     
     internal static class CacheValuesFilter<TParams, TInnerKey, TValue>
     {
-        private static readonly ArrayPool<KeyValuePair<TInnerKey, TValue>> ArrayPool = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared;
+        private static readonly ArrayPool<KeyValuePair<TInnerKey, TValue>> ArrayPool1 = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared;
+        private static readonly ArrayPool<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> ArrayPool2 = ArrayPool<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>.Shared;
         
         public static ArraySegment<KeyValuePair<TInnerKey, TValue>> Filter(
             TParams outerParams,
@@ -38,7 +39,7 @@ namespace CacheMeIfYouCan.Internal
             Func<TParams, TInnerKey, TValue, bool> valuesToSkipPredicate,
             out KeyValuePair<TInnerKey, TValue>[] pooledArray)
         {
-            pooledArray = ArrayPool.Rent(values.Count);
+            pooledArray = ArrayPool1.Rent(values.Count);
             
             var index = 0;
             foreach (var kv in values)
@@ -50,6 +51,26 @@ namespace CacheMeIfYouCan.Internal
             return new ArraySegment<KeyValuePair<TInnerKey, TValue>>(pooledArray, 0, index);
         }
         
-        public static void ReturnPooledArray(KeyValuePair<TInnerKey, TValue>[] pooledArray) => ArrayPool.Return(pooledArray);
+        public static void ReturnPooledArray(KeyValuePair<TInnerKey, TValue>[] pooledArray) => ArrayPool1.Return(pooledArray);
+        
+        public static ArraySegment<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> Filter(
+            TParams outerParams,
+            ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values,
+            Func<TParams, TInnerKey, TValue, bool> valuesToSkipPredicate,
+            out KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>[] pooledArray)
+        {
+            pooledArray = ArrayPool2.Rent(values.Length);
+            
+            var index = 0;
+            foreach (var kv in values)
+            {
+                if (!valuesToSkipPredicate(outerParams, kv.Key, kv.Value))
+                    pooledArray[index++] = kv;
+            }
+            
+            return new ArraySegment<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>(pooledArray, 0, index);
+        }
+        
+        public static void ReturnPooledArray(KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>[] pooledArray) => ArrayPool2.Return(pooledArray);
     }
 }

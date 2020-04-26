@@ -172,7 +172,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
         }
 
-        private async ValueTask<(Dictionary<TKey, TValue> Result, CacheGetManyStats CacheStats)> GetFromCache(TParams parameters, IReadOnlyCollection<TKey> keysCollection)
+        private async ValueTask<(Dictionary<TKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCache(
+            TParams parameters, IReadOnlyCollection<TKey> keysCollection)
         {
             if (!_cacheEnabled)
                 return (new Dictionary<TKey, TValue>(_keyComparer), default);

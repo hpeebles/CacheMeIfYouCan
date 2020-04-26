@@ -24,9 +24,13 @@ namespace CacheMeIfYouCan.Internal
         
         public static readonly NullCache<TOuterKey, TInnerKey, TValue> Instance = new NullCache<TOuterKey, TInnerKey, TValue>();
         
-        public ValueTask<int> GetMany(
+        public bool LocalCacheEnabled => false;
+        public bool DistributedCacheEnabled => false;
+        
+        public ValueTask<CacheGetManyStats> GetMany(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
+            int cacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             return default;

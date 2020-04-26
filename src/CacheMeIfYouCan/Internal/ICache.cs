@@ -22,7 +22,11 @@ namespace CacheMeIfYouCan.Internal
 
     internal interface ICache<in TOuterKey, TInnerKey, TValue>
     {
-        ValueTask<int> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Memory<KeyValuePair<TInnerKey, TValue>> destination);
+        bool LocalCacheEnabled { get; }
+        
+        bool DistributedCacheEnabled { get; }
+        
+        ValueTask<CacheGetManyStats> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, int cacheKeysSkipped, Memory<KeyValuePair<TInnerKey, TValue>> destination);
 
         ValueTask SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
     }
@@ -61,11 +65,11 @@ namespace CacheMeIfYouCan.Internal
             {
                 var memory = new Memory<KeyValuePair<TInnerKey, TValue>>(pooledArray);
 
-                var countFound = await cache
-                    .GetMany(outerKey, innerKeys, memory)
+                var cacheStats = await cache
+                    .GetMany(outerKey, innerKeys, 0, memory)
                     .ConfigureAwait(false);
 
-                return memory.Slice(0, countFound).ToArray();
+                return memory.Slice(0, cacheStats.CacheHits).ToArray();
             }
             finally
             {

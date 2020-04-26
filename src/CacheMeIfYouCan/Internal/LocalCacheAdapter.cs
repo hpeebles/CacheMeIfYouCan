@@ -59,18 +59,18 @@ namespace CacheMeIfYouCan.Internal
             Memory<KeyValuePair<TKey, TValue>> destination)
         {
             int countFound;
-            CacheGetManyStats stats;
+            CacheGetManyStats cacheStats;
             if (_skipCacheGetPredicate is null)
             {
                 countFound = _innerCache.GetMany(keys, destination.Span);
-                stats = new CacheGetManyStats(
+                cacheStats = new CacheGetManyStats(
                     cacheKeysRequested: keys.Count,
                     cacheKeysSkipped: cacheKeysSkipped,
                     localCacheEnabled: true,
                     localCacheKeysSkipped: 0,
                     localCacheHits: countFound);
                 
-                return new ValueTask<CacheGetManyStats>(stats);
+                return new ValueTask<CacheGetManyStats>(cacheStats);
             }
 
             var filteredKeys = CacheKeysFilter<TKey>.Filter(
@@ -90,14 +90,14 @@ namespace CacheMeIfYouCan.Internal
                     CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
             }
             
-            stats = new CacheGetManyStats(
+            cacheStats = new CacheGetManyStats(
                 cacheKeysRequested: keys.Count,
                 cacheKeysSkipped: cacheKeysSkipped,
                 localCacheEnabled: true,
                 localCacheKeysSkipped: keys.Count - filteredKeys.Count,
                 localCacheHits: countFound);
             
-            return new ValueTask<CacheGetManyStats>(stats);
+            return new ValueTask<CacheGetManyStats>(cacheStats);
         }
 
         public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
@@ -150,17 +150,41 @@ namespace CacheMeIfYouCan.Internal
             _skipCacheSetInnerPredicate = skipCacheSetInnerPredicate;
         }
 
-        public ValueTask<int> GetMany(
+        public bool LocalCacheEnabled => true;
+        public bool DistributedCacheEnabled => false;
+
+        public ValueTask<CacheGetManyStats> GetMany(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
+            int cacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
+            CacheGetManyStats cacheStats;
             if (_skipCacheGetOuterPredicate?.Invoke(outerKey) == true)
-                return default;
+            {
+                cacheStats = new CacheGetManyStats(
+                    cacheKeysRequested: innerKeys.Count,
+                    cacheKeysSkipped: cacheKeysSkipped,
+                    localCacheEnabled: true,
+                    localCacheKeysSkipped: innerKeys.Count);
 
+                return new ValueTask<CacheGetManyStats>(cacheStats);
+            }
+
+            int countFound;
             if (_skipCacheGetInnerPredicate is null)
-                return new ValueTask<int>(_innerCache.GetMany(outerKey, innerKeys, destination.Span));
-            
+            {
+                countFound = _innerCache.GetMany(outerKey, innerKeys, destination.Span);
+                cacheStats = new CacheGetManyStats(
+                    cacheKeysRequested: innerKeys.Count,
+                    cacheKeysSkipped: cacheKeysSkipped,
+                    localCacheEnabled: true,
+                    localCacheKeysSkipped: 0,
+                    localCacheHits: countFound);
+
+                return new ValueTask<CacheGetManyStats>(cacheStats);
+            }
+
             var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
                 outerKey,
                 innerKeys,
@@ -169,15 +193,24 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                return filteredKeys.Count == 0
-                    ? default
-                    : new ValueTask<int>(_innerCache.GetMany(outerKey, filteredKeys, destination.Span));
+                countFound = filteredKeys.Count == 0
+                    ? 0
+                    : _innerCache.GetMany(outerKey, filteredKeys, destination.Span);
             }
             finally
             {
                 if (!(pooledKeyArray is null))
                     CacheKeysFilter<TOuterKey, TInnerKey>.ReturnPooledArray(pooledKeyArray);
             }
+            
+            cacheStats = new CacheGetManyStats(
+                cacheKeysRequested: innerKeys.Count,
+                cacheKeysSkipped: cacheKeysSkipped,
+                localCacheEnabled: true,
+                localCacheKeysSkipped: innerKeys.Count - filteredKeys.Count,
+                localCacheHits: countFound);
+            
+            return new ValueTask<CacheGetManyStats>(cacheStats);
         }
 
         public ValueTask SetMany(

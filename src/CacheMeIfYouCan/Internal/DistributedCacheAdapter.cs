@@ -55,7 +55,9 @@ namespace CacheMeIfYouCan.Internal
                 : new ValueTask(_innerCache.Set(key, value, timeToLive));
         }
 
-        public ValueTask<CacheGetManyStats> GetMany(IReadOnlyCollection<TKey> keys, int cacheKeysSKipped,
+        public ValueTask<CacheGetManyStats> GetMany(
+            IReadOnlyCollection<TKey> keys,
+            int cacheKeysSkipped,
             Memory<KeyValuePair<TKey, TValue>> destination)
         {
             if (_skipCacheGetPredicate is null)
@@ -69,7 +71,7 @@ namespace CacheMeIfYouCan.Internal
                 {
                     var cacheStats = new CacheGetManyStats(
                         cacheKeysRequested: keys.Count,
-                        cacheKeysSkipped: cacheKeysSKipped,
+                        cacheKeysSkipped: cacheKeysSkipped,
                         distributedCacheEnabled: true,
                         distributedCacheKeysSkipped: keys.Count);
 
@@ -99,7 +101,7 @@ namespace CacheMeIfYouCan.Internal
 
                     return new CacheGetManyStats(
                         cacheKeysRequested: keys.Count,
-                        cacheKeysSkipped: cacheKeysSKipped,
+                        cacheKeysSkipped: cacheKeysSkipped,
                         distributedCacheEnabled: true,
                         distributedCacheKeysSkipped: keys.Count - keysToGetFromCache.Count,
                         distributedCacheHits: countFound);
@@ -175,16 +177,28 @@ namespace CacheMeIfYouCan.Internal
             _skipCacheSetInnerPredicate = skipCacheSetInnerPredicate;
         }
 
-        public ValueTask<int> GetMany(
+        public bool LocalCacheEnabled => false;
+        public bool DistributedCacheEnabled => true;
+
+        public ValueTask<CacheGetManyStats> GetMany(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
+            int cacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             if (_skipCacheGetOuterPredicate?.Invoke(outerKey) == true)
-                return default;
+            {
+                var cacheStats = new CacheGetManyStats(
+                    cacheKeysRequested: innerKeys.Count,
+                    cacheKeysSkipped: cacheKeysSkipped,
+                    distributedCacheEnabled: true,
+                    distributedCacheKeysSkipped: innerKeys.Count);
+
+                return new ValueTask<CacheGetManyStats>(cacheStats);
+            }
 
             if (_skipCacheGetInnerPredicate is null)
-                return GetManyImpl(outerKey, innerKeys, destination);
+                return GetManyImpl(outerKey, innerKeys, cacheKeysSkipped, 0, destination);
             
             var filteredKeys = CacheKeysFilter<TOuterKey, TInnerKey>.Filter(
                 outerKey,
@@ -194,9 +208,18 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                return filteredKeys.Count == 0
-                    ? default
-                    : GetManyImpl(outerKey, filteredKeys, destination);
+                if (filteredKeys.Count == 0)
+                {
+                    var cacheStats = new CacheGetManyStats(
+                        cacheKeysRequested: innerKeys.Count,
+                        cacheKeysSkipped: cacheKeysSkipped,
+                        distributedCacheEnabled: true,
+                        distributedCacheKeysSkipped: innerKeys.Count);
+
+                    return new ValueTask<CacheGetManyStats>(cacheStats);
+                }
+
+                return GetManyImpl(outerKey, filteredKeys, cacheKeysSkipped, innerKeys.Count - filteredKeys.Count, destination);
             }
             finally
             {
@@ -205,9 +228,11 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        private async ValueTask<int> GetManyImpl(
+        private async ValueTask<CacheGetManyStats> GetManyImpl(
             TOuterKey outerKey,
             IReadOnlyCollection<TInnerKey> innerKeys,
+            int cacheKeysSkipped,
+            int distributedCacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             var pooledArray = ArrayPool<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>>.Shared.Rent(innerKeys.Count);
@@ -221,7 +246,12 @@ namespace CacheMeIfYouCan.Internal
                 if (countFound > 0)
                     CopyResultsToDestination(countFound);
                 
-                return countFound;
+                return new CacheGetManyStats(
+                    cacheKeysRequested: innerKeys.Count + distributedCacheKeysSkipped,
+                    cacheKeysSkipped: cacheKeysSkipped,
+                    distributedCacheEnabled: true,
+                    distributedCacheKeysSkipped: distributedCacheKeysSkipped,
+                    distributedCacheHits: countFound);
             }
             finally
             {
