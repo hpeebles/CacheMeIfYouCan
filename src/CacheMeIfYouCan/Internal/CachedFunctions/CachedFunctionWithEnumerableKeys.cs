@@ -107,46 +107,57 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     return resultsDictionary;
                 }
 
-                var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(keysCollection, resultsDictionary);
+                var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(
+                    keysCollection,
+                    resultsDictionary,
+                    out var pooledMissingKeysArray);
 
-                if (missingKeys.Count < _maxBatchSize)
+                try
                 {
-                    var getValuesFromFuncTask = GetValuesFromFunc(
-                        parameters,
-                        missingKeys,
-                        cancellationToken,
-                        resultsDictionary);
-
-                    if (!getValuesFromFuncTask.IsCompletedSuccessfully)
-                        await getValuesFromFuncTask.ConfigureAwait(false);
-                }
-                else
-                {
-                    var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
-
-                    Task[] tasks = null;
-                    var resultsDictionaryLock = new object();
-                    var tasksIndex = 0;
-                    for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                    if (missingKeys.Count < _maxBatchSize)
                     {
                         var getValuesFromFuncTask = GetValuesFromFunc(
                             parameters,
-                            batches[batchIndex],
+                            missingKeys,
                             cancellationToken,
-                            resultsDictionary,
-                            resultsDictionaryLock);
+                            resultsDictionary);
 
-                        if (getValuesFromFuncTask.IsCompletedSuccessfully)
-                            continue;
-
-                        if (tasks is null)
-                            tasks = new Task[batches.Length - batchIndex];
-
-                        tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                        if (!getValuesFromFuncTask.IsCompletedSuccessfully)
+                            await getValuesFromFuncTask.ConfigureAwait(false);
                     }
+                    else
+                    {
+                        var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
 
-                    if (!(tasks is null))
-                        await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                        Task[] tasks = null;
+                        var resultsDictionaryLock = new object();
+                        var tasksIndex = 0;
+                        for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                        {
+                            var getValuesFromFuncTask = GetValuesFromFunc(
+                                parameters,
+                                batches[batchIndex],
+                                cancellationToken,
+                                resultsDictionary,
+                                resultsDictionaryLock);
+
+                            if (getValuesFromFuncTask.IsCompletedSuccessfully)
+                                continue;
+
+                            if (tasks is null)
+                                tasks = new Task[batches.Length - batchIndex];
+
+                            tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                        }
+
+                        if (!(tasks is null))
+                            await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (!(pooledMissingKeysArray is null))
+                        ArrayPool<TKey>.Shared.Return(pooledMissingKeysArray);
                 }
 
                 _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(

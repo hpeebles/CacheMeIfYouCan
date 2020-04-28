@@ -54,16 +54,15 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     _timeToLive = config.TimeToLive.Value;
                 else
                     _timeToLiveFactory = config.TimeToLiveFactory;
-                
-                _keyComparer = config.KeyComparer ?? EqualityComparer<TInnerKey>.Default;
-                
+
                 _cache = CacheBuilder.Build(config);
+                _keyComparer = config.KeyComparer ?? EqualityComparer<TInnerKey>.Default;
                 _skipCacheGetOuterPredicate = config.SkipCacheGetOuterPredicate;
                 _skipCacheGetInnerPredicate = config.SkipCacheGetInnerPredicate;
                 _skipCacheSetOuterPredicate = config.SkipCacheSetOuterPredicate;
                 _skipCacheSetInnerPredicate = config.SkipCacheSetInnerPredicate;
             }
-            
+
             if (config.FillMissingKeysConstantValue.IsSet)
             {
                 _shouldFillMissingKeys = true;
@@ -75,7 +74,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 _shouldFillMissingKeys = true;
                 _fillMissingKeysValueFactory = config.FillMissingKeysValueFactory;
             }
-
+            
             _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
         }
 
@@ -114,49 +113,59 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     return resultsDictionary;
                 }
 
-                var missingKeys =
-                    MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(innerKeysCollection, resultsDictionary);
+                var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(
+                    innerKeysCollection,
+                    resultsDictionary,
+                    out var pooledMissingKeysArray);
 
-                if (missingKeys.Count < _maxBatchSize)
+                try
                 {
-                    var getValuesFromFuncTask = GetValuesFromFunc(
-                        parameters,
-                        outerKey,
-                        missingKeys,
-                        cancellationToken,
-                        resultsDictionary);
-
-                    if (!getValuesFromFuncTask.IsCompletedSuccessfully)
-                        await getValuesFromFuncTask.ConfigureAwait(false);
-                }
-                else
-                {
-                    var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
-
-                    Task[] tasks = null;
-                    var resultsDictionaryLock = new object();
-                    var tasksIndex = 0;
-                    for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                    if (missingKeys.Count < _maxBatchSize)
                     {
                         var getValuesFromFuncTask = GetValuesFromFunc(
                             parameters,
                             outerKey,
-                            batches[batchIndex],
+                            missingKeys,
                             cancellationToken,
-                            resultsDictionary,
-                            resultsDictionaryLock);
+                            resultsDictionary);
 
-                        if (getValuesFromFuncTask.IsCompletedSuccessfully)
-                            continue;
-
-                        if (tasks is null)
-                            tasks = new Task[batches.Length - batchIndex];
-
-                        tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                        if (!getValuesFromFuncTask.IsCompletedSuccessfully)
+                            await getValuesFromFuncTask.ConfigureAwait(false);
                     }
+                    else
+                    {
+                        var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
 
-                    if (!(tasks is null))
-                        await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                        Task[] tasks = null;
+                        var resultsDictionaryLock = new object();
+                        var tasksIndex = 0;
+                        for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                        {
+                            var getValuesFromFuncTask = GetValuesFromFunc(
+                                parameters,
+                                outerKey,
+                                batches[batchIndex],
+                                cancellationToken,
+                                resultsDictionary,
+                                resultsDictionaryLock);
+
+                            if (getValuesFromFuncTask.IsCompletedSuccessfully)
+                                continue;
+
+                            if (tasks is null)
+                                tasks = new Task[batches.Length - batchIndex];
+
+                            tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
+                        }
+
+                        if (!(tasks is null))
+                            await Task.WhenAll(new ArraySegment<Task>(tasks, 0, tasksIndex)).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (!(pooledMissingKeysArray is null))
+                        ArrayPool<TInnerKey>.Shared.Return(pooledMissingKeysArray);
                 }
 
                 _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
