@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
@@ -17,7 +18,7 @@ namespace CacheMeIfYouCan
         #region TryGet
         public async Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -60,7 +61,7 @@ namespace CacheMeIfYouCan
         #region Set
         public async Task Set(TKey key, TValue value, TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -103,7 +104,7 @@ namespace CacheMeIfYouCan
             ReadOnlyMemory<TKey> keys,
             Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -147,7 +148,7 @@ namespace CacheMeIfYouCan
         #region SetMany
         public async Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -199,7 +200,7 @@ namespace CacheMeIfYouCan
             ReadOnlyMemory<TInnerKey> innerKeys,
             Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -248,7 +249,7 @@ namespace CacheMeIfYouCan
             ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {

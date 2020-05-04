@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             CancellationToken cancellationToken)
         {
             var start = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
+            var timer = StopwatchStruct.StartNew();
             TOuterKey outerKey = default;
             var innerKeysMemory = innerKeys.ToReadOnlyMemory(out var pooledKeysArray);
             try

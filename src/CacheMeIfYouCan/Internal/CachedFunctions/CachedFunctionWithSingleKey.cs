@@ -54,7 +54,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
         {
             var start = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
+            var timer = StopwatchStruct.StartNew();
             TKey key = default;
             try
             {

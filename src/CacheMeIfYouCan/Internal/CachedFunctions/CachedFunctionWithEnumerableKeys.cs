@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             CancellationToken cancellationToken)
         {
             var start = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
+            var timer = StopwatchStruct.StartNew();
             var keysMemory = keys.ToReadOnlyMemory(out var pooledKeysArray);
             try
             {

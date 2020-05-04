@@ -89,7 +89,7 @@ namespace CacheMeIfYouCan.Internal
             }
 
             var start = DateTime.UtcNow;
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
             
             try
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
 {
@@ -16,7 +17,7 @@ namespace CacheMeIfYouCan
         #region TryGet
         public bool TryGet(TKey key, out TValue value)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -58,7 +59,7 @@ namespace CacheMeIfYouCan
         #region Set
         public void Set(TKey key, TValue value, TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -97,7 +98,7 @@ namespace CacheMeIfYouCan
         #region GetMany
         public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -139,7 +140,7 @@ namespace CacheMeIfYouCan
         #region SetMany
         public void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -176,7 +177,7 @@ namespace CacheMeIfYouCan
         #region TryRemove
         public bool TryRemove(TKey key, out TValue value)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -231,7 +232,7 @@ namespace CacheMeIfYouCan
             ReadOnlySpan<TInnerKey> innerKeys,
             Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -278,7 +279,7 @@ namespace CacheMeIfYouCan
             ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -319,7 +320,7 @@ namespace CacheMeIfYouCan
             TOuterKey outerKey,
             ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {
@@ -361,7 +362,7 @@ namespace CacheMeIfYouCan
         #region TryRemove
         public bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value)
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = StopwatchStruct.StartNew();
 
             try
             {

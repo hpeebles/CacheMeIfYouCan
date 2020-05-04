@@ -90,7 +90,7 @@ namespace CacheMeIfYouCan.Internal
             if (sourceVersion <= Volatile.Read(ref _sourceVersion))
                 return;
 
-            var timer = Stopwatch.StartNew();
+            var timer = StopwatchStruct.StartNew();
             try
             {
                 var valueTask = _map(sourceValue);

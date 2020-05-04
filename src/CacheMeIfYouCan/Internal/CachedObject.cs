@@ -232,7 +232,7 @@ namespace CacheMeIfYouCan.Internal
                             }
                         }
 
-                        var stopwatch = Stopwatch.StartNew();
+                        var stopwatch = StopwatchStruct.StartNew();
                         try
                         {
                             var updatedValue = await _updateValueFunc(_value, next.Input, cts.Token).ConfigureAwait(false);
@@ -417,7 +417,7 @@ namespace CacheMeIfYouCan.Internal
                 }
 
                 var start = DateTime.UtcNow;
-                var stopwatch = Stopwatch.StartNew();
+                var stopwatch = StopwatchStruct.StartNew();
                 try
                 {
                     _cts.Token.ThrowIfCancellationRequested();
