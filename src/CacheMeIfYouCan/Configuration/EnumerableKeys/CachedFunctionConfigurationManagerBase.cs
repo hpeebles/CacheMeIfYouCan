@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         private readonly CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue> _config =
             new CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue>();
         
-        private Func<IReadOnlyCollection<TKey>, TRequest> _requestConverter;
+        private Func<ReadOnlyMemory<TKey>, TRequest> _requestConverter;
         private Func<Dictionary<TKey, TValue>, TResponse> _responseConverter;
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
-        private protected TConfig WithTimeToLiveFactoryInternal(Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+        private protected TConfig WithTimeToLiveFactoryInternal(Func<TParams, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig WithRequestConverter(Func<IReadOnlyCollection<TKey>, TRequest> requestConverter)
+        public TConfig WithRequestConverter(Func<ReadOnlyMemory<TKey>, TRequest> requestConverter)
         {
             _requestConverter = requestConverter;
             return (TConfig)this;
@@ -157,7 +157,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
-        private protected Func<IReadOnlyCollection<TKey>, TRequest> GetRequestConverter()
+        private protected Func<ReadOnlyMemory<TKey>, TRequest> GetRequestConverter()
         {
             return _requestConverter ?? DefaultRequestConverterResolver.Get<TKey, TRequest>(_config.KeyComparer);
         }
@@ -168,7 +168,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         private protected CachedFunctionWithEnumerableKeys<TParams, TKey, TValue> BuildCachedFunction(
-            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
+            Func<TParams, ReadOnlyMemory<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction)
         {
             return new CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>(originalFunction, _config);
         }

@@ -50,7 +50,7 @@ namespace CacheMeIfYouCan.Tests
             _innerCache.Set(key, value, timeToLive);
         }
 
-        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
@@ -63,7 +63,7 @@ namespace CacheMeIfYouCan.Tests
             var countFound = _innerCache.GetMany(keys, destination);
             
             var hits = countFound;
-            var misses = keys.Count - countFound;
+            var misses = keys.Length - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
@@ -71,7 +71,7 @@ namespace CacheMeIfYouCan.Tests
             return countFound;
         }
 
-        public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
@@ -116,7 +116,7 @@ namespace CacheMeIfYouCan.Tests
 
         public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlySpan<TInnerKey> innerKeys,
             Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
@@ -130,7 +130,7 @@ namespace CacheMeIfYouCan.Tests
             var countFound = _innerCache.GetMany(outerKey, innerKeys, destination);
             
             var hits = countFound;
-            var misses = innerKeys.Count - countFound;
+            var misses = innerKeys.Length - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
@@ -140,7 +140,7 @@ namespace CacheMeIfYouCan.Tests
 
         public void SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             Interlocked.Increment(ref SetMany1ExecutionCount);

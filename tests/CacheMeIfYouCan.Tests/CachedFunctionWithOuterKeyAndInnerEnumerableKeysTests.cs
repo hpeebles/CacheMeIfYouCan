@@ -144,7 +144,7 @@ namespace CacheMeIfYouCan.Tests
             }
             
             var cachedFunction = config
-                .WithRequestConverter(k => new SortedSet<int>(k))
+                .WithRequestConverter(k => new SortedSet<int>(k.ToArray()))
                 .Build();
 
             var results = cachedFunction(0, new SortedSet<int>(Enumerable.Range(0, 100)));
@@ -493,7 +493,7 @@ namespace CacheMeIfYouCan.Tests
 
             // Fill cache with 2's
             for (var outerKey = 0; outerKey < 10; outerKey++)
-                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1));
+                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2).ToArray(), TimeSpan.FromSeconds(1));
 
             var results = new Dictionary<(int OuterKey, int InnerKey), int>();
             
@@ -551,7 +551,7 @@ namespace CacheMeIfYouCan.Tests
 
             for (var outerKey = 0; outerKey < 10; outerKey++)
             {
-                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()))
+                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToArray()))
                     valuesInCache[(outerKey, innerKey)] = value;
             }
 
@@ -608,8 +608,8 @@ namespace CacheMeIfYouCan.Tests
             // Fill local cache with 2's and distributed cache with 3's
             for (var outerKey = 0; outerKey < 10; outerKey++)
             {
-                localCache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1));
-                distributedCache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 3), TimeSpan.FromSeconds(1));
+                localCache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2).ToArray(), TimeSpan.FromSeconds(1));
+                distributedCache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 3).ToArray(), TimeSpan.FromSeconds(1));
             }
             
             var results = new Dictionary<(int OuterKey, int InnerKey), int>();
@@ -686,10 +686,10 @@ namespace CacheMeIfYouCan.Tests
 
             for (var outerKey = 0; outerKey < 10; outerKey++)
             {
-                foreach (var (innerKey, value) in localCache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()))
+                foreach (var (innerKey, value) in localCache.GetMany(outerKey, Enumerable.Range(0, 100).ToArray()))
                     valuesInLocalCache[(outerKey, innerKey)] = value;
                 
-                foreach (var (innerKey, value) in distributedCache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()).Result)
+                foreach (var (innerKey, value) in distributedCache.GetMany(outerKey, Enumerable.Range(0, 100).ToArray()).Result)
                     valuesInDistributedCache[(outerKey, innerKey)] = value;
             }
 
@@ -741,7 +741,7 @@ namespace CacheMeIfYouCan.Tests
 
             // Fill cache with 2's
             for (var outerKey = 0; outerKey < 10; outerKey++)
-                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1));
+                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2).ToArray(), TimeSpan.FromSeconds(1));
 
             var results = new Dictionary<(int OuterKey, int InnerKey), int>();
             
@@ -800,7 +800,7 @@ namespace CacheMeIfYouCan.Tests
 
             for (var outerKey = 0; outerKey < 10; outerKey++)
             {
-                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()))
+                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToArray()))
                     valuesInCache[(outerKey, innerKey)] = value;
             }
 
@@ -846,7 +846,7 @@ namespace CacheMeIfYouCan.Tests
 
             // Fill cache with 2's
             for (var outerKey = 0; outerKey < 10; outerKey++)
-                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(1)).Wait();
+                cache.SetMany(outerKey, Enumerable.Range(0, 100).ToDictionary(j => j, j => 2).ToArray(), TimeSpan.FromSeconds(1)).Wait();
 
             var results = new Dictionary<(int OuterKey, int InnerKey), int>();
             
@@ -905,7 +905,7 @@ namespace CacheMeIfYouCan.Tests
 
             for (var outerKey = 0; outerKey < 10; outerKey++)
             {
-                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToList()).Result)
+                foreach (var (innerKey, value) in cache.GetMany(outerKey, Enumerable.Range(0, 100).ToArray()).Result)
                     valuesInCache[(outerKey, innerKey)] = value;
             }
 
@@ -938,7 +938,7 @@ namespace CacheMeIfYouCan.Tests
                 .UseFirstParamAsOuterCacheKey()
                 .WithLocalCache(cache)
                 .DontGetFromCacheWhen(x => true)
-                .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
+                .WithTimeToLiveFactory((outerKey, innerKeys) => ValidateTimeToLiveFactoryKeys(outerKey, innerKeys.ToArray()));
 
             if (flag1)
                 config.DontStoreInCacheWhen(outerKey => outerKey % 2 == 0);
@@ -1042,7 +1042,7 @@ namespace CacheMeIfYouCan.Tests
                 var now = DateTime.UtcNow;
                 lastSuccess.Parameters.Should().Be("abc");
                 lastSuccess.OuterKey.Should().Be("abc");
-                lastSuccess.InnerKeys.Should().BeEquivalentTo(keys);
+                lastSuccess.InnerKeys.ToArray().Should().BeEquivalentTo(keys);
                 lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
                 lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
@@ -1054,7 +1054,7 @@ namespace CacheMeIfYouCan.Tests
                 var now = DateTime.UtcNow;
                 lastException.Parameters.Should().Be("abc");
                 lastException.OuterKey.Should().Be("abc");
-                lastException.InnerKeys.Should().BeEquivalentTo(keys);
+                lastException.InnerKeys.ToArray().Should().BeEquivalentTo(keys);
                 lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
                 lastException.Exception.Message.Should().Be(exceptionMessage);

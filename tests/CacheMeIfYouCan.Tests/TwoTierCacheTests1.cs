@@ -78,22 +78,22 @@ namespace CacheMeIfYouCan.Tests
 
             var twoTierCache = new TwoTierCache<int, int>(localCache, distributedCache, EqualityComparer<int>.Default);
 
-            twoTierCache.GetMany(Enumerable.Range(0, 100).ToList()).Result.Should().BeEmpty();
+            twoTierCache.GetMany(Enumerable.Range(0, 100).ToArray()).Result.Should().BeEmpty();
             localCache.GetManyExecutionCount.Should().Be(1);
             distributedCache.GetManyExecutionCount.Should().Be(1);
             
-            twoTierCache.SetMany(Enumerable.Range(0, 50).Select(i => new KeyValuePair<int, int>(i, i)).ToList(), TimeSpan.FromSeconds(1));
+            twoTierCache.SetMany(Enumerable.Range(0, 50).Select(i => new KeyValuePair<int, int>(i, i)).ToArray(), TimeSpan.FromSeconds(1));
             localCache.SetManyExecutionCount.Should().Be(1);
             distributedCache.SetManyExecutionCount.Should().Be(1);
 
-            var results1 = twoTierCache.GetMany(Enumerable.Range(0, 100).ToList()).Result;
+            var results1 = twoTierCache.GetMany(Enumerable.Range(0, 100).ToArray()).Result;
             results1.Select(kv => kv.Key).Should().BeEquivalentTo(Enumerable.Range(0, 50));
             foreach (var (key, value) in results1)
                 value.Should().Be(key);
             localCache.GetManyExecutionCount.Should().Be(2);
             distributedCache.GetManyExecutionCount.Should().Be(2);
             
-            var results2 = twoTierCache.GetMany(Enumerable.Range(0, 50).ToList()).Result;
+            var results2 = twoTierCache.GetMany(Enumerable.Range(0, 50).ToArray()).Result;
             results2.Select(kv => kv.Key).Should().BeEquivalentTo(Enumerable.Range(0, 50));
             foreach (var (key, value) in results2)
                 value.Should().Be(key);
@@ -111,12 +111,12 @@ namespace CacheMeIfYouCan.Tests
             var twoTierCache = new TwoTierCache<int, int>(localCache, distributedCache, EqualityComparer<int>.Default);
 
             distributedCache
-                .SetMany(Enumerable.Range(0, 50).Select(i => new KeyValuePair<int, int>(i, i)).ToList(), TimeSpan.FromSeconds(1))
+                .SetMany(Enumerable.Range(0, 50).Select(i => new KeyValuePair<int, int>(i, i)).ToArray(), TimeSpan.FromSeconds(1))
                 .Wait();
             
             distributedCache.SetManyExecutionCount.Should().Be(1);
 
-            var values1 = twoTierCache.GetMany(Enumerable.Range(0, 100).ToList()).Result;
+            var values1 = twoTierCache.GetMany(Enumerable.Range(0, 100).ToArray()).Result;
 
             values1.Select(kv => kv.Key).Should().BeEquivalentTo(Enumerable.Range(0, 50));
 
@@ -124,7 +124,7 @@ namespace CacheMeIfYouCan.Tests
             localCache.SetExecutionCount.Should().Be(50);
             distributedCache.GetManyExecutionCount.Should().Be(1);
 
-            var values2 = twoTierCache.GetMany(Enumerable.Range(0, 50).ToList()).Result;
+            var values2 = twoTierCache.GetMany(Enumerable.Range(0, 50).ToArray()).Result;
             values2.Select(kv => kv.Key).Should().BeEquivalentTo(Enumerable.Range(0, 50));
 
             localCache.GetManyExecutionCount.Should().Be(2);

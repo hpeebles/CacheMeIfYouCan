@@ -1,55 +1,40 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace CacheMeIfYouCan.Internal
 {
     internal static class BatchingHelper
     {
-        public static T[][] Batch<T>(
-            IReadOnlyCollection<T> values,
+        public static int[] GetBatchSizes(
+            int valuesCount,
             int maxBatchSize,
             BatchBehaviour batchBehaviour)
         {
-            var batchCount = ((values.Count - 1) / maxBatchSize) + 1;
-            var batches = new T[batchCount][];
+            var batchCount = ((valuesCount - 1) / maxBatchSize) + 1;
+            var batchSizes = new int[batchCount];
 
             if (batchBehaviour == BatchBehaviour.FillBatchesEvenly)
             {
-                var averageBatchSize = (double)values.Count / batchCount;
+                var averageBatchSize = (double)valuesCount / batchCount;
                 var totalAllocated = 0;
                 for (var index = 0; index < batchCount - 1; index++)
                 {
                     var nextBatchSize = (int)(averageBatchSize * (index + 1)) - totalAllocated;
-                    batches[index] = new T[nextBatchSize];
+                    batchSizes[index] = nextBatchSize;
                     totalAllocated += nextBatchSize;
                 }
 
-                var finalBatchSize = values.Count - totalAllocated;
-                batches[batchCount - 1] = new T[finalBatchSize];
+                var finalBatchSize = valuesCount - totalAllocated;
+                batchSizes[batchCount - 1] = finalBatchSize;
             }
             else
             {
                 for (var index = 0; index < batchCount - 1; index++)
-                    batches[index] = new T[maxBatchSize];
+                    batchSizes[index] = maxBatchSize;
 
-                var finalBatchSize = values.Count - ((batchCount - 1) * maxBatchSize);
-                batches[batchCount - 1] = new T[finalBatchSize];
-            }
-            
-            var currentBatchIndex = 0;
-            var currentBatch = batches[0];
-            var indexWithinBatch = 0;
-            foreach (var value in values)
-            {
-                if (indexWithinBatch == currentBatch.Length)
-                {
-                    currentBatch = batches[++currentBatchIndex];
-                    indexWithinBatch = 0;
-                }
-                
-                currentBatch[indexWithinBatch++] = value;
+                var finalBatchSize = valuesCount - ((batchCount - 1) * maxBatchSize);
+                batchSizes[batchCount - 1] = finalBatchSize;
             }
 
-            return batches;
+            return batchSizes;
         }
     }
 }

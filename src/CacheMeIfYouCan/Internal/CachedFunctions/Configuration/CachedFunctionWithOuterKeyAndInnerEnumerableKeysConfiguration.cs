@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
     internal sealed class CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue>
         : CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfigurationBase<TOuterKey, TInnerKey, TValue>
     {
-        public Func<TParams, IReadOnlyCollection<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
+        public Func<TParams, ReadOnlyMemory<TInnerKey>, TimeSpan> TimeToLiveFactory { get; set; }
         public Func<TParams, bool> SkipCacheGetOuterPredicate { get; set; }
         public Func<TParams, TInnerKey, bool> SkipCacheGetInnerPredicate { get; set; }
         public Func<TParams, bool> SkipCacheSetOuterPredicate { get; set; }

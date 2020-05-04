@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan
         #endregion
         
         #region GetMany
-        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -121,13 +121,13 @@ namespace CacheMeIfYouCan
         }
 
         protected virtual void OnGetManyCompletedSuccessfully(
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlySpan<TKey> keys,
             ReadOnlySpan<KeyValuePair<TKey, TValue>> values,
             TimeSpan duration)
         { }
 
         protected virtual void OnGetManyException(
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlySpan<TKey> keys,
             TimeSpan duration,
             Exception exception,
             out bool exceptionHandled)
@@ -137,7 +137,7 @@ namespace CacheMeIfYouCan
         #endregion
 
         #region SetMany
-        public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -157,13 +157,13 @@ namespace CacheMeIfYouCan
         }
 
         protected virtual void OnSetManyCompletedSuccessfully(
-            IReadOnlyCollection<KeyValuePair<TKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TKey, TValue>> values,
             TimeSpan timeToLive,
             TimeSpan duration)
         { }
 
         protected virtual void OnSetManyException(
-            IReadOnlyCollection<KeyValuePair<TKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TKey, TValue>> values,
             TimeSpan timeToLive,
             TimeSpan duration,
             Exception exception,
@@ -228,7 +228,7 @@ namespace CacheMeIfYouCan
         #region GetMany
         public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlySpan<TInnerKey> innerKeys,
             Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -256,14 +256,14 @@ namespace CacheMeIfYouCan
 
         protected virtual void OnGetManyCompletedSuccessfully(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlySpan<TInnerKey> innerKeys,
             ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan duration)
         { }
 
         protected virtual void OnGetManyException(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlySpan<TInnerKey> innerKeys,
             TimeSpan duration,
             Exception exception,
             out bool exceptionHandled)
@@ -275,7 +275,7 @@ namespace CacheMeIfYouCan
         #region SetMany
         public void SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -297,14 +297,14 @@ namespace CacheMeIfYouCan
 
         protected virtual void OnSetManyCompletedSuccessfully(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive,
             TimeSpan duration)
         { }
 
         protected virtual void OnSetManyException(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive,
             TimeSpan duration,
             Exception exception,

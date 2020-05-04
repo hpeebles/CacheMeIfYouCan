@@ -119,7 +119,7 @@ namespace CacheMeIfYouCan.Redis
         }
 
         public async Task<int> GetMany(
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlyMemory<TKey> keys,
             Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
@@ -127,25 +127,33 @@ namespace CacheMeIfYouCan.Redis
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
             var valuesFoundCount = 0;
-            var tasks = ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Rent(keys.Count);
+            
+            var tasks = CreateTasks(out var pooledTasksArray);
 
             try
             {
-                var i = 0;
-                foreach (var key in keys)
-                    tasks[i++] = GetSingle(key);
-
                 await Task
-                    .WhenAll(new ArraySegment<Task<(TKey, RedisValueWithExpiry)>>(tasks, 0, keys.Count))
+                    .WhenAll(tasks)
                     .ConfigureAwait(false);
-
+                
                 return valuesFoundCount == 0
                     ? 0
                     : CopyResultsToDestinationArray();
             }
             finally
             {
-                ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Return(tasks);
+                ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Return(pooledTasksArray);
+            }
+            
+            IReadOnlyCollection<Task<(TKey, RedisValueWithExpiry)>> CreateTasks(out Task<(TKey, RedisValueWithExpiry)>[] pooledArray)
+            {
+                pooledArray = ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Rent(keys.Length);
+                
+                var i = 0;
+                foreach (var innerKey in keys.Span)
+                    pooledArray[i++] = GetSingle(innerKey);
+
+                return new ArraySegment<Task<(TKey, RedisValueWithExpiry)>>(pooledArray, 0, keys.Length);
             }
 
             async Task<(TKey, RedisValueWithExpiry)> GetSingle(TKey key)
@@ -185,49 +193,55 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
-        public async Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public async Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             CheckDisposed();
             
             var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
 
-            var tasks = ArrayPool<Task>.Shared.Rent(values.Count);
-            var streams = _serializeValuesToStreams
-                ? ArrayPool<MemoryStream>.Shared.Rent(values.Count)
+            var pooledTasksArray = ArrayPool<Task>.Shared.Rent(values.Length);
+            var toDispose = _serializeValuesToStreams
+                ? ArrayPool<IDisposable>.Shared.Rent(values.Length)
                 : null;
+
+            var tasks = CreateTasks();
             
-            var streamIndex = 0;
             try
             {
-                var i = 0;
-                foreach (var kv in values)
-                {
-                    var redisKey = _keySerializer(kv.Key);
-
-                    var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
-
-                    if (!(streams is null))
-                        streams[streamIndex++] = stream;
-                    
-                    tasks[i++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
-                }
-
-                var waitForAllTasksTask = Task.WhenAll(new ArraySegment<Task>(tasks, 0, values.Count));
+                var waitForAllTasksTask = Task.WhenAll(tasks);
 
                 if (!waitForAllTasksTask.IsCompleted)
                     await waitForAllTasksTask.ConfigureAwait(false);
             }
             finally
             {
-                ArrayPool<Task>.Shared.Return(tasks);
+                ArrayPool<Task>.Shared.Return(pooledTasksArray);
                 
-                if (!(streams is null))
+                if (!(toDispose is null))
                 {
-                    for (var i = 0; i < streamIndex; i++)
-                        streams[i].Dispose();
+                    for (var i = 0; i < values.Length; i++)
+                        toDispose[i].Dispose();
                     
-                    ArrayPool<MemoryStream>.Shared.Return(streams);
+                    ArrayPool<IDisposable>.Shared.Return(toDispose);
                 }
+            }
+            
+            IReadOnlyCollection<Task> CreateTasks()
+            {
+                var index = 0;
+                foreach (var kv in values.Span)
+                {
+                    var redisKey = _keySerializer(kv.Key);
+
+                    var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
+
+                    if (!(toDispose is null))
+                        toDispose[index] = stream;
+                    
+                    pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
+                }
+                
+                return new ArraySegment<Task>(pooledTasksArray, 0, index);
             }
         }
 
@@ -334,7 +348,7 @@ namespace CacheMeIfYouCan.Redis
         
         public async Task<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
@@ -344,25 +358,33 @@ namespace CacheMeIfYouCan.Redis
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
 
             var valuesFoundCount = 0;
-            var tasks = ArrayPool<Task<(TInnerKey, RedisValueWithExpiry)>>.Shared.Rent(innerKeys.Count);
+            
+            var tasks = CreateTasks(out var pooledTasksArray);
 
             try
             {
-                var i = 0;
-                foreach (var innerKey in innerKeys)
-                    tasks[i++] = GetSingle(innerKey);
-
                 await Task
-                    .WhenAll(new ArraySegment<Task<(TInnerKey, RedisValueWithExpiry)>>(tasks, 0, innerKeys.Count))
+                    .WhenAll(tasks)
                     .ConfigureAwait(false);
-
+                
                 return valuesFoundCount == 0
                     ? 0
                     : CopyResultsToDestinationArray();
             }
             finally
             {
-                ArrayPool<Task<(TInnerKey, RedisValueWithExpiry)>>.Shared.Return(tasks);
+                ArrayPool<Task<(TInnerKey, RedisValueWithExpiry)>>.Shared.Return(pooledTasksArray);
+            }
+
+            IReadOnlyCollection<Task<(TInnerKey, RedisValueWithExpiry)>> CreateTasks(out Task<(TInnerKey, RedisValueWithExpiry)>[] pooledArray)
+            {
+                pooledArray = ArrayPool<Task<(TInnerKey, RedisValueWithExpiry)>>.Shared.Rent(innerKeys.Length);
+                
+                var i = 0;
+                foreach (var innerKey in innerKeys.Span)
+                    pooledArray[i++] = GetSingle(innerKey);
+
+                return new ArraySegment<Task<(TInnerKey, RedisValueWithExpiry)>>(pooledArray, 0, innerKeys.Length);
             }
 
             async Task<(TInnerKey, RedisValueWithExpiry)> GetSingle(TInnerKey innerKey)
@@ -383,9 +405,9 @@ namespace CacheMeIfYouCan.Redis
             {
                 var span = destination.Span;
                 var index = 0;
-                foreach (var task in tasks)
+                for (var taskIndex = 0; taskIndex < innerKeys.Length; taskIndex++)
                 {
-                    var (key, fromRedis) = task.Result;
+                    var (key, fromRedis) = pooledTasksArray[taskIndex].Result;
 
                     if (fromRedis.Value.IsNull)
                         continue;
@@ -406,7 +428,7 @@ namespace CacheMeIfYouCan.Redis
 
         public async Task SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             CheckDisposed();
@@ -415,43 +437,50 @@ namespace CacheMeIfYouCan.Redis
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
             
-            var tasks = ArrayPool<Task>.Shared.Rent(values.Count);
-            var streams = _serializeValuesToStreams
-                ? ArrayPool<MemoryStream>.Shared.Rent(values.Count)
+            var pooledTasksArray = ArrayPool<Task>.Shared.Rent(values.Length);
+            var toDispose = _serializeValuesToStreams
+                ? ArrayPool<IDisposable>.Shared.Rent(values.Length)
                 : null;
             
             var streamIndex = 0;
             try
             {
-                var index = 0;
-                foreach (var kv in values)
-                {
-                    var redisKey = redisKeyPrefix.Append(_innerKeySerializer(kv.Key));
+                var tasks = CreateTasks();
 
-                    var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
-
-                    if (!(streams is null))
-                        streams[streamIndex++] = stream;
-
-                    tasks[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
-                }
-
-                var waitForAllTasksTask = Task.WhenAll(new ArraySegment<Task>(tasks, 0, values.Count));
+                var waitForAllTasksTask = Task.WhenAll(tasks);
 
                 if (!waitForAllTasksTask.IsCompleted)
                     await waitForAllTasksTask.ConfigureAwait(false);
             }
             finally
             {
-                ArrayPool<Task>.Shared.Return(tasks);
+                ArrayPool<Task>.Shared.Return(pooledTasksArray);
                 
-                if (!(streams is null))
+                if (!(toDispose is null))
                 {
                     for (var i = 0; i < streamIndex; i++)
-                        streams[i].Dispose();
+                        toDispose[i].Dispose();
                     
-                    ArrayPool<MemoryStream>.Shared.Return(streams);
+                    ArrayPool<IDisposable>.Shared.Return(toDispose);
                 }
+            }
+
+            IReadOnlyCollection<Task> CreateTasks()
+            {
+                var index = 0;
+                foreach (var kv in values.Span)
+                {
+                    var redisKey = redisKeyPrefix.Append(_innerKeySerializer(kv.Key));
+
+                    var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
+
+                    if (!(toDispose is null))
+                        toDispose[streamIndex++] = stream;
+
+                    pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
+                }
+                
+                return new ArraySegment<Task>(pooledTasksArray, 0, index);
             }
         }
 

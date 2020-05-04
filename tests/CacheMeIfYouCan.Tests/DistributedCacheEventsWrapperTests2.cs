@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().Be(1);
-                successfulResults.Last().Item2.Should().BeSameAs(innerKeys);
+                successfulResults.Last().Item2.Should().BeEquivalentTo(innerKeys);
                 successfulResults.Last().Item3.ToArray().Select(kv => kv.Key).Should().BeEquivalentTo(2);
                 successfulResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -67,7 +67,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 failedResults.Should().ContainSingle();
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(innerKeys);
+                failedResults.Last().Item2.Should().BeEquivalentTo(innerKeys);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
             else
@@ -84,7 +84,7 @@ namespace CacheMeIfYouCan.Tests
                 await action().ConfigureAwait(false);
                 failedResults.Should().HaveCount(2);
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(innerKeys);
+                failedResults.Last().Item2.Should().BeEquivalentTo(innerKeys);
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
             else
@@ -130,7 +130,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 successfulResults.Should().ContainSingle();
                 successfulResults.Last().Item1.Should().Be(1);
-                successfulResults.Last().Item2.Should().BeSameAs(values);
+                successfulResults.Last().Item2.Should().BeEquivalentTo(values);
                 successfulResults.Last().Item3.Should().Be(TimeSpan.FromSeconds(1));
                 successfulResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -146,7 +146,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 failedResults.Should().ContainSingle();
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(values);
+                failedResults.Last().Item2.Should().BeEquivalentTo(values);
                 failedResults.Last().Item3.Should().Be(TimeSpan.FromSeconds(1));
                 failedResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -164,7 +164,7 @@ namespace CacheMeIfYouCan.Tests
                 await action().ConfigureAwait(false);
                 failedResults.Should().HaveCount(2);
                 failedResults.Last().Item1.Should().Be(1);
-                failedResults.Last().Item2.Should().BeSameAs(values);
+                failedResults.Last().Item2.Should().BeEquivalentTo(values);
                 failedResults.Last().Item3.Should().Be(TimeSpan.FromSeconds(1));
                 failedResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }

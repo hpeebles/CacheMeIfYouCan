@@ -7,7 +7,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
     {
         internal SuccessfulRequestEvent(
             TParams parameters,
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlyMemory<TKey> keys,
             Dictionary<TKey, TValue> values,
             DateTime start,
             TimeSpan duration,
@@ -22,7 +22,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
         }
         
         public TParams Parameters { get; }
-        public IReadOnlyCollection<TKey> Keys { get; }
+        public ReadOnlyMemory<TKey> Keys { get; }
         public Dictionary<TKey, TValue> Values { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }

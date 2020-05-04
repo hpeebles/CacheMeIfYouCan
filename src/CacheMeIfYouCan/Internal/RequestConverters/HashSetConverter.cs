@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace CacheMeIfYouCan.Internal.RequestConverters
 {
@@ -11,9 +13,17 @@ namespace CacheMeIfYouCan.Internal.RequestConverters
             _keyComparer = keyComparer;
         }
 
-        public HashSet<TKey> Convert(IReadOnlyCollection<TKey> keys)
+        public HashSet<TKey> Convert(ReadOnlyMemory<TKey> keys)
         {
-            return new HashSet<TKey>(keys, _keyComparer);
+            if (MemoryMarshal.TryGetArray(keys, out var arraySegment))
+                return new HashSet<TKey>(arraySegment, _keyComparer);
+            
+            var hashSet = new HashSet<TKey>(_keyComparer);
+
+            foreach (var key in keys.Span)
+                hashSet.Add(key);
+
+            return hashSet;
         }
     }
 }

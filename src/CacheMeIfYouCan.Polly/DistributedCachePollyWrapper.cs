@@ -45,14 +45,14 @@ namespace CacheMeIfYouCan.Polly
                 : _setPolicy.ExecuteAsync(() => _innerCache.Set(key, value, timeToLive));
         }
 
-        public Task<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
+        public Task<int> GetMany(ReadOnlyMemory<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             return _getManyPolicy is null
                 ? _innerCache.GetMany(keys, destination)
                 : _getManyPolicy.ExecuteAsync(() => _innerCache.GetMany(keys, destination));
         }
 
-        public Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             return _setManyPolicy is null
                 ? _innerCache.SetMany(values, timeToLive)
@@ -85,7 +85,7 @@ namespace CacheMeIfYouCan.Polly
 
         public Task<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             return _getManyPolicy is null
@@ -95,7 +95,7 @@ namespace CacheMeIfYouCan.Polly
 
         public Task SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             return _setManyPolicy is null

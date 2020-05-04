@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal.CachedFunctions;
@@ -54,7 +55,7 @@ namespace CacheMeIfYouCan.Internal
         }
 
         public ValueTask<CacheGetManyStats> GetMany(
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlyMemory<TKey> keys,
             int cacheKeysSkipped,
             Memory<KeyValuePair<TKey, TValue>> destination)
         {
@@ -62,9 +63,9 @@ namespace CacheMeIfYouCan.Internal
             CacheGetManyStats cacheStats;
             if (_skipCacheGetPredicate is null)
             {
-                countFound = _innerCache.GetMany(keys, destination.Span);
+                countFound = _innerCache.GetMany(keys.Span, destination.Span);
                 cacheStats = new CacheGetManyStats(
-                    cacheKeysRequested: keys.Count,
+                    cacheKeysRequested: keys.Length,
                     cacheKeysSkipped: cacheKeysSkipped,
                     localCacheEnabled: true,
                     localCacheKeysSkipped: 0,
@@ -80,31 +81,31 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                countFound = filteredKeys.Count == 0
+                countFound = filteredKeys.Length == 0
                     ? 0
-                    : _innerCache.GetMany(filteredKeys, destination.Span);
+                    : _innerCache.GetMany(filteredKeys.Span, destination.Span);
             }
             finally
             {
                 if (!(pooledKeyArray is null))
-                    CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+                    ArrayPool<TKey>.Shared.Return(pooledKeyArray);
             }
             
             cacheStats = new CacheGetManyStats(
-                cacheKeysRequested: keys.Count,
+                cacheKeysRequested: keys.Length,
                 cacheKeysSkipped: cacheKeysSkipped,
                 localCacheEnabled: true,
-                localCacheKeysSkipped: keys.Count - filteredKeys.Count,
+                localCacheKeysSkipped: keys.Length - filteredKeys.Length,
                 localCacheHits: countFound);
             
             return new ValueTask<CacheGetManyStats>(cacheStats);
         }
 
-        public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public ValueTask SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             if (_skipCacheSetPredicate is null)
             {
-                _innerCache.SetMany(values, timeToLive);
+                _innerCache.SetMany(values.Span, timeToLive);
                 return default;
             }
 
@@ -115,13 +116,13 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                if (filteredValues.Count > 0)
-                    _innerCache.SetMany(filteredValues, timeToLive);
+                if (filteredValues.Length > 0)
+                    _innerCache.SetMany(filteredValues.Span, timeToLive);
             }
             finally
             {
                 if (!(pooledArray is null))
-                    CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
+                    ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(pooledArray);
             }
 
             return default;
@@ -155,7 +156,7 @@ namespace CacheMeIfYouCan.Internal
 
         public ValueTask<CacheGetManyStats> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             int cacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
@@ -163,10 +164,10 @@ namespace CacheMeIfYouCan.Internal
             if (_skipCacheGetOuterPredicate?.Invoke(outerKey) == true)
             {
                 cacheStats = new CacheGetManyStats(
-                    cacheKeysRequested: innerKeys.Count,
+                    cacheKeysRequested: innerKeys.Length,
                     cacheKeysSkipped: cacheKeysSkipped,
                     localCacheEnabled: true,
-                    localCacheKeysSkipped: innerKeys.Count);
+                    localCacheKeysSkipped: innerKeys.Length);
 
                 return new ValueTask<CacheGetManyStats>(cacheStats);
             }
@@ -174,9 +175,9 @@ namespace CacheMeIfYouCan.Internal
             int countFound;
             if (_skipCacheGetInnerPredicate is null)
             {
-                countFound = _innerCache.GetMany(outerKey, innerKeys, destination.Span);
+                countFound = _innerCache.GetMany(outerKey, innerKeys.Span, destination.Span);
                 cacheStats = new CacheGetManyStats(
-                    cacheKeysRequested: innerKeys.Count,
+                    cacheKeysRequested: innerKeys.Length,
                     cacheKeysSkipped: cacheKeysSkipped,
                     localCacheEnabled: true,
                     localCacheKeysSkipped: 0,
@@ -193,21 +194,21 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                countFound = filteredKeys.Count == 0
+                countFound = filteredKeys.Length == 0
                     ? 0
-                    : _innerCache.GetMany(outerKey, filteredKeys, destination.Span);
+                    : _innerCache.GetMany(outerKey, filteredKeys.Span, destination.Span);
             }
             finally
             {
                 if (!(pooledKeyArray is null))
-                    CacheKeysFilter<TOuterKey, TInnerKey>.ReturnPooledArray(pooledKeyArray);
+                    ArrayPool<TInnerKey>.Shared.Return(pooledKeyArray);
             }
             
             cacheStats = new CacheGetManyStats(
-                cacheKeysRequested: innerKeys.Count,
+                cacheKeysRequested: innerKeys.Length,
                 cacheKeysSkipped: cacheKeysSkipped,
                 localCacheEnabled: true,
-                localCacheKeysSkipped: innerKeys.Count - filteredKeys.Count,
+                localCacheKeysSkipped: innerKeys.Length - filteredKeys.Length,
                 localCacheHits: countFound);
             
             return new ValueTask<CacheGetManyStats>(cacheStats);
@@ -215,7 +216,7 @@ namespace CacheMeIfYouCan.Internal
 
         public ValueTask SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             if (_skipCacheSetOuterPredicate?.Invoke(outerKey) == true)
@@ -223,7 +224,7 @@ namespace CacheMeIfYouCan.Internal
 
             if (_skipCacheSetInnerPredicate is null)
             {
-                _innerCache.SetMany(outerKey, values, timeToLive);
+                _innerCache.SetMany(outerKey, values.Span, timeToLive);
                 return default;
             }
             
@@ -235,13 +236,13 @@ namespace CacheMeIfYouCan.Internal
 
             try
             {
-                if (filteredValues.Count > 0)
-                    _innerCache.SetMany(outerKey, filteredValues, timeToLive);
+                if (filteredValues.Length > 0)
+                    _innerCache.SetMany(outerKey, filteredValues.Span, timeToLive);
             }
             finally
             {
                 if (!(pooledArray is null))
-                    CacheValuesFilter<TOuterKey, TInnerKey, TValue>.ReturnPooledArray(pooledArray);
+                    ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
             }
 
             return default;

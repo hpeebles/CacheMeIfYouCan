@@ -11,9 +11,9 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 {
     internal sealed class CachedFunctionWithEnumerableKeys<TParams, TKey, TValue>
     {
-        private readonly Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> _originalFunction;
+        private readonly Func<TParams, ReadOnlyMemory<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> _originalFunction;
         private readonly TimeSpan _timeToLive;
-        private readonly Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> _timeToLiveFactory;
+        private readonly Func<TParams, ReadOnlyMemory<TKey>, TimeSpan> _timeToLiveFactory;
         private readonly IEqualityComparer<TKey> _keyComparer;
         private readonly Func<TParams, bool> _skipCacheGetOuterPredicate;
         private readonly Func<TParams, TKey, bool> _skipCacheGetInnerPredicate;
@@ -31,7 +31,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly bool _cacheEnabled;
 
         public CachedFunctionWithEnumerableKeys(
-            Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
+            Func<TParams, ReadOnlyMemory<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
             CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue> config)
         {
             _originalFunction = originalFunction;
@@ -81,24 +81,22 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         {
             var start = DateTime.UtcNow;
             var timer = Stopwatch.StartNew();
-            var keysCollection = keys.ToReadOnlyCollection();
+            var keysMemory = keys.ToReadOnlyMemory(out var pooledKeysArray);
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var getFromCacheTask = GetFromCache(parameters, keysCollection);
+                var getFromCacheTask = GetFromCache(parameters, keysMemory);
 
                 var (resultsDictionary, cacheStats) = getFromCacheTask.IsCompleted
                     ? getFromCacheTask.Result
                     : await getFromCacheTask.ConfigureAwait(false);
 
-                var cacheHits = resultsDictionary.Count;
-
-                if (cacheHits == keysCollection.Count)
+                if (cacheStats.CacheHits == keysMemory.Length)
                 {
                     _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
                         parameters,
-                        keysCollection,
+                        keysMemory,
                         resultsDictionary,
                         start,
                         timer.Elapsed,
@@ -108,13 +106,13 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 }
 
                 var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(
-                    keysCollection,
+                    keysMemory,
                     resultsDictionary,
                     out var pooledMissingKeysArray);
 
                 try
                 {
-                    if (missingKeys.Count < _maxBatchSize)
+                    if (missingKeys.Length < _maxBatchSize)
                     {
                         var getValuesFromFuncTask = GetValuesFromFunc(
                             parameters,
@@ -127,16 +125,22 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     }
                     else
                     {
-                        var batches = BatchingHelper.Batch(missingKeys, _maxBatchSize, _batchBehaviour);
+                        var batchSizes = BatchingHelper.GetBatchSizes(missingKeys.Length, _maxBatchSize, _batchBehaviour);
 
                         Task[] tasks = null;
                         var resultsDictionaryLock = new object();
                         var tasksIndex = 0;
-                        for (var batchIndex = 0; batchIndex < batches.Length; batchIndex++)
+                        var totalKeysBatchedCount = 0;
+                        for (var batchIndex = 0; batchIndex < batchSizes.Length; batchIndex++)
                         {
+                            var keysStartIndex = totalKeysBatchedCount;
+                            var batchSize = batchSizes[batchIndex];
+
+                            totalKeysBatchedCount += batchSize;
+
                             var getValuesFromFuncTask = GetValuesFromFunc(
                                 parameters,
-                                batches[batchIndex],
+                                keysMemory.Slice(keysStartIndex, batchSize),
                                 cancellationToken,
                                 resultsDictionary,
                                 resultsDictionaryLock);
@@ -145,7 +149,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                                 continue;
 
                             if (tasks is null)
-                                tasks = new Task[batches.Length - batchIndex];
+                                tasks = new Task[batchSizes.Length - batchIndex];
 
                             tasks[tasksIndex++] = getValuesFromFuncTask.AsTask();
                         }
@@ -162,7 +166,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TKey, TValue>(
                     parameters,
-                    keysCollection,
+                    keysMemory,
                     resultsDictionary,
                     start,
                     timer.Elapsed,
@@ -174,17 +178,22 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 _onExceptionAction?.Invoke(new ExceptionEvent<TParams, TKey>(
                     parameters,
-                    keysCollection,
+                    keysMemory,
                     start,
                     timer.Elapsed,
                     ex));
 
                 throw;
             }
+            finally
+            {
+                if (!(pooledKeysArray is null))
+                    ArrayPool<TKey>.Shared.Return(pooledKeysArray);
+            }
         }
 
         private async ValueTask<(Dictionary<TKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCache(
-            TParams parameters, IReadOnlyCollection<TKey> keysCollection)
+            TParams parameters, ReadOnlyMemory<TKey> keys)
         {
             if (!_cacheEnabled)
                 return (new Dictionary<TKey, TValue>(_keyComparer), default);
@@ -194,25 +203,25 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             if (_skipCacheGetInnerPredicate is null)
             {
-                var task = GetFromCacheInner(keysCollection, 0);
+                var task = GetFromCacheInner(keys, 0);
 
                 return task.IsCompleted
                     ? task.Result
                     : await task.ConfigureAwait(false);
-            } 
+            }
             
             var filteredKeys = CacheKeysFilter<TParams, TKey>.Filter(
                 parameters,
-                keysCollection,
+                keys,
                 _skipCacheGetInnerPredicate,
                 out var pooledKeyArray);
 
             try
             {
-                if (filteredKeys.Count == 0)
+                if (filteredKeys.Length == 0)
                     return GetResultIfAllKeysSkipped();
 
-                var task = GetFromCacheInner(filteredKeys, keysCollection.Count - filteredKeys.Count);
+                var task = GetFromCacheInner(filteredKeys, keys.Length - filteredKeys.Length);
                 
                 return task.IsCompleted
                     ? task.Result
@@ -221,54 +230,50 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             finally
             {
                 if (!(pooledKeyArray is null))
-                    CacheKeysFilter<TKey>.ReturnPooledArray(pooledKeyArray);
+                    ArrayPool<TKey>.Shared.Return(pooledKeyArray);
             }
 
             (Dictionary<TKey, TValue>, CacheGetManyStats) GetResultIfAllKeysSkipped()
             {
                 var cacheStats = new CacheGetManyStats(
                     cacheKeysRequested: 0,
-                    cacheKeysSkipped: keysCollection.Count,
+                    cacheKeysSkipped: keys.Length,
                     localCacheEnabled: _cache.LocalCacheEnabled,
                     distributedCacheEnabled: _cache.DistributedCacheEnabled);
                 
                 return (new Dictionary<TKey, TValue>(_keyComparer), cacheStats);
             }
             
-            async ValueTask<(Dictionary<TKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCacheInner(IReadOnlyCollection<TKey> keys, int cacheKeysSkipped)
+            async ValueTask<(Dictionary<TKey, TValue> Results, CacheGetManyStats CacheStats)> GetFromCacheInner(
+                ReadOnlyMemory<TKey> keys, int cacheKeysSkipped)
             {
-                var getFromCacheResultsArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Count);
-                try
+                using var getFromCacheResultsMemoryOwner = MemoryPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Length);
+                var getFromCacheResultsMemory = getFromCacheResultsMemoryOwner.Memory;
+
+                var task = _cache.GetMany(keys, cacheKeysSkipped, getFromCacheResultsMemory);
+
+                var cacheStats = task.IsCompleted
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+
+                var countFoundInCache = cacheStats.CacheHits;
+                if (countFoundInCache == 0)
+                    return (new Dictionary<TKey, TValue>(_keyComparer), cacheStats);
+
+                var resultsFromCache = new Dictionary<TKey, TValue>(countFoundInCache, _keyComparer);
+                for (var i = 0; i < countFoundInCache; i++)
                 {
-                    var task = _cache.GetMany(keys, cacheKeysSkipped, getFromCacheResultsArray);
-
-                    var cacheStats = task.IsCompleted
-                        ? task.Result
-                        : await task.ConfigureAwait(false);
-
-                    var countFoundInCache = cacheStats.CacheHits;
-                    if (countFoundInCache == 0)
-                        return (new Dictionary<TKey, TValue>(_keyComparer), cacheStats);
-
-                    var resultsFromCache = new Dictionary<TKey, TValue>(countFoundInCache, _keyComparer);
-                    for (var i = 0; i < countFoundInCache; i++)
-                    {
-                        var kv = getFromCacheResultsArray[i];
-                        resultsFromCache[kv.Key] = kv.Value;
-                    }
-
-                    return (resultsFromCache, cacheStats);
+                    var kv = getFromCacheResultsMemory.Span[i];
+                    resultsFromCache[kv.Key] = kv.Value;
                 }
-                finally
-                {
-                    ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(getFromCacheResultsArray);
-                }
+
+                return (resultsFromCache, cacheStats);
             }
         }
 
         private async ValueTask GetValuesFromFunc(
             TParams parameters,
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlyMemory<TKey> keys,
             CancellationToken cancellationToken,
             Dictionary<TKey, TValue> resultsDictionary,
             object resultsDictionaryLock = null)
@@ -280,32 +285,47 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 : await getValuesFromFuncTask.ConfigureAwait(false);
 
             if (_shouldFillMissingKeys)
-                valuesFromFunc = FillMissingKeys(keys, valuesFromFunc);
+                valuesFromFunc = FillMissingKeys(keys.Span, valuesFromFunc);
             
             if (valuesFromFunc is null)
                 return;
 
-            var valuesFromFuncCollection = valuesFromFunc.ToReadOnlyCollection();
-            if (valuesFromFuncCollection.Count == 0)
+            var valuesFromFuncMemory = valuesFromFunc.ToReadOnlyMemory(out var pooledArray);
+            if (valuesFromFuncMemory.Length == 0)
                 return;
 
-            var setInCacheTask = SetInCache();
+            try
+            {
+                var setInCacheTask = SetInCache();
 
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            var lockTaken = false;
-            if (!(resultsDictionaryLock is null))
-                Monitor.TryEnter(resultsDictionaryLock, ref lockTaken);
-            
-            foreach (var kv in valuesFromFuncCollection)
-                resultsDictionary[kv.Key] = kv.Value;
+                cancellationToken.ThrowIfCancellationRequested();
 
-            if (lockTaken)
-                Monitor.Exit(resultsDictionaryLock);
-            
-            if (!setInCacheTask.IsCompleted)
-                await setInCacheTask.ConfigureAwait(false);
-            
+                var lockTaken = false;
+                if (!(resultsDictionaryLock is null))
+                    Monitor.TryEnter(resultsDictionaryLock, ref lockTaken);
+
+                CopyResultsToDictionary(valuesFromFuncMemory.Span, resultsDictionary);
+
+                if (lockTaken)
+                    Monitor.Exit(resultsDictionaryLock);
+
+                if (!setInCacheTask.IsCompleted)
+                    await setInCacheTask.ConfigureAwait(false);
+            }
+            finally
+            {
+                if (!(pooledArray is null))
+                    ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(pooledArray);
+            }
+
+            static void CopyResultsToDictionary(
+                ReadOnlySpan<KeyValuePair<TKey, TValue>> values,
+                Dictionary<TKey, TValue> dictionary)
+            {
+                foreach (var kv in values)
+                    dictionary[kv.Key] = kv.Value;
+            }
+
             ValueTask SetInCache()
             {
                 if (!_cacheEnabled || _skipCacheSetOuterPredicate?.Invoke(parameters) == true)
@@ -317,24 +337,42 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                     return timeToLive == TimeSpan.Zero
                         ? default
-                        : _cache.SetMany(valuesFromFuncCollection, timeToLive);
+                        : _cache.SetMany(valuesFromFuncMemory, timeToLive);
                 }
 
                 var filteredValues = CacheValuesFilter<TParams, TKey, TValue>.Filter(
                     parameters,
-                    valuesFromFuncCollection,
+                    valuesFromFuncMemory,
                     _skipCacheSetInnerPredicate,
                     out var pooledArray);
 
                 try
                 {
-                    if (filteredValues.Count > 0)
+                    if (filteredValues.Length > 0)
                     {
-                        var filteredKeys = filteredValues.Count == keys.Count
-                            ? keys
-                            : new ReadOnlyCollectionKeyValuePairKeys<TKey, TValue>(filteredValues);
-                        
-                        var timeToLive = _timeToLiveFactory?.Invoke(parameters, filteredKeys) ?? _timeToLive;
+                        TimeSpan timeToLive;
+                        if (_timeToLiveFactory is null)
+                        {
+                            timeToLive = _timeToLive;
+                        }
+                        else
+                        {
+                            var pooledKeysArray = ArrayPool<TKey>.Shared.Rent(filteredValues.Length);
+                            var span = filteredValues.Span;
+                            for (var i = 0; i < span.Length; i++)
+                                pooledKeysArray[i] = span[i].Key;
+
+                            try
+                            {
+                                timeToLive = _timeToLiveFactory(
+                                    parameters,
+                                    new ReadOnlyMemory<TKey>(pooledKeysArray, 0, span.Length));
+                            }
+                            finally
+                            {
+                                ArrayPool<TKey>.Shared.Return(pooledKeysArray);
+                            }
+                        }
 
                         return timeToLive == TimeSpan.Zero
                             ? default
@@ -344,7 +382,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 finally
                 {
                     if (!(pooledArray is null))
-                        CacheValuesFilter<TKey, TValue>.ReturnPooledArray(pooledArray);
+                        ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(pooledArray);
                 }
 
                 return default;
@@ -352,12 +390,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
 
         private Dictionary<TKey, TValue> FillMissingKeys(
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlySpan<TKey> keys,
             IEnumerable<KeyValuePair<TKey, TValue>> valuesFromFunc)
         {
             if (!(valuesFromFunc is Dictionary<TKey, TValue> valuesDictionary && valuesDictionary.Comparer.Equals(_keyComparer)))
             {
-                valuesDictionary = new Dictionary<TKey, TValue>(keys.Count, _keyComparer);
+                valuesDictionary = new Dictionary<TKey, TValue>(keys.Length, _keyComparer);
 
                 if (!(valuesFromFunc is null))
                 {

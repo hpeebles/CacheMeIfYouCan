@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         private readonly CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue> _config =
             new CachedFunctionWithOuterKeyAndInnerEnumerableKeysConfiguration<TParams, TOuterKey, TInnerKey, TValue>();
 
-        private Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> _requestConverter;
+        private Func<ReadOnlyMemory<TInnerKey>, TInnerKeys> _requestConverter;
         private Func<Dictionary<TInnerKey, TValue>, TResponse> _responseConverter;
 
         public TConfig WithTimeToLive(TimeSpan timeToLive)
@@ -28,7 +28,8 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
         
-        private protected TConfig WithTimeToLiveFactoryInternal(Func<TParams, IReadOnlyCollection<TInnerKey>, TimeSpan> timeToLiveFactory)
+        private protected TConfig WithTimeToLiveFactoryInternal(
+            Func<TParams, ReadOnlyMemory<TInnerKey>, TimeSpan> timeToLiveFactory)
         {
             _config.TimeToLiveFactory = timeToLiveFactory;
             return (TConfig)this;
@@ -177,7 +178,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
 
-        public TConfig WithRequestConverter(Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> requestConverter)
+        public TConfig WithRequestConverter(Func<ReadOnlyMemory<TInnerKey>, TInnerKeys> requestConverter)
         {
             _requestConverter = requestConverter;
             return (TConfig)this;
@@ -189,7 +190,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             return (TConfig)this;
         }
         
-        private protected Func<IReadOnlyCollection<TInnerKey>, TInnerKeys> GetRequestConverter()
+        private protected Func<ReadOnlyMemory<TInnerKey>, TInnerKeys> GetRequestConverter()
         {
             return _requestConverter ?? DefaultRequestConverterResolver.Get<TInnerKey, TInnerKeys>(_config.KeyComparer);
         }
@@ -200,7 +201,7 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         }
 
         private protected CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue> BuildCachedFunction(
-            Func<TParams, IReadOnlyCollection<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
+            Func<TParams, ReadOnlyMemory<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
             Func<TParams, TOuterKey> keySelector)
         {
             return new CachedFunctionWithOuterKeyAndInnerEnumerableKeys<TParams, TOuterKey, TInnerKey, TValue>(

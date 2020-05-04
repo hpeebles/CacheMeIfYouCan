@@ -73,8 +73,8 @@ namespace CacheMeIfYouCan.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var keys = Enumerable.Range((10 * i) + j, i).ToList();
-                        cache.SetMany(keys.Select(k => new KeyValuePair<int, int>(k, k)).ToList(), TimeSpan.FromSeconds(1));
+                        var keys = Enumerable.Range((10 * i) + j, i).ToArray();
+                        cache.SetMany(keys.Select(k => new KeyValuePair<int, int>(k, k)).ToArray(), TimeSpan.FromSeconds(1));
                         var values = cache.GetMany(keys);
                         values.Select(kv => kv.Key).Should().BeEquivalentTo(keys);
                         values.Select(kv => kv.Value).Should().BeEquivalentTo(keys);

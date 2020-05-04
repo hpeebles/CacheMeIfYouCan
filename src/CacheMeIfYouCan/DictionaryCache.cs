@@ -34,11 +34,11 @@ namespace CacheMeIfYouCan
             SetImpl(key, value, timeToLive);
         }
 
-        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
             CheckDisposed();
 
-            if (destination.Length < keys.Count)
+            if (destination.Length < keys.Length)
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
             var countFound = 0;
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan
             return countFound;
         }
 
-        public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             CheckDisposed();
 
@@ -87,12 +87,12 @@ namespace CacheMeIfYouCan
         
         public int GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlySpan<TInnerKey> innerKeys,
             Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
             CheckDisposed();
 
-            if (destination.Length < innerKeys.Count)
+            if (destination.Length < innerKeys.Length)
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
             
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
@@ -113,7 +113,7 @@ namespace CacheMeIfYouCan
 
         public void SetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values,
+            ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive)
         {
             CheckDisposed();

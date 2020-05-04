@@ -8,7 +8,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
         internal SuccessfulRequestEvent(
             TParams parameters,
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             Dictionary<TInnerKey, TValue> values,
             DateTime start,
             TimeSpan duration,
@@ -25,7 +25,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
         
         public TParams Parameters { get; }
         public TOuterKey OuterKey { get; }
-        public IReadOnlyCollection<TInnerKey> InnerKeys { get; }
+        public ReadOnlyMemory<TInnerKey> InnerKeys { get; }
         public Dictionary<TInnerKey, TValue> Values { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }

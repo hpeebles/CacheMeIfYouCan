@@ -35,9 +35,9 @@ namespace CacheMeIfYouCan
             _memoryCache.Set(_keySerializer(key), value, DateTimeOffset.UtcNow.Add(timeToLive));
         }
 
-        public int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
+        public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
         {
-            if (destination.Length < keys.Count) 
+            if (destination.Length < keys.Length) 
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
             
             var countFound = 0;
@@ -52,7 +52,7 @@ namespace CacheMeIfYouCan
             return countFound;
         }
 
-        public void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             var expirationDate = DateTimeOffset.UtcNow.Add(timeToLive);
             
@@ -90,9 +90,9 @@ namespace CacheMeIfYouCan
             _innerKeySerializer = innerKeySerializer ?? (k => k.ToString());
         }
         
-        public int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination)
+        public int GetMany(TOuterKey outerKey, ReadOnlySpan<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination)
         {
-            if (destination.Length < innerKeys.Count)
+            if (destination.Length < innerKeys.Length)
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
             var outerKeyString = _outerKeySerializer(outerKey);
@@ -109,7 +109,7 @@ namespace CacheMeIfYouCan
             return countFound;
         }
 
-        public void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
+        public void SetMany(TOuterKey outerKey, ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 

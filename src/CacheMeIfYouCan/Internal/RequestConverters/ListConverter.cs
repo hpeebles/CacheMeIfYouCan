@@ -1,13 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Internal.RequestConverters
 {
     internal sealed class ListConverter<TKey> : IRequestConverter<TKey, List<TKey>>
     {
-        public List<TKey> Convert(IReadOnlyCollection<TKey> keys)
+        public List<TKey> Convert(ReadOnlyMemory<TKey> keys)
         {
-            return keys.ToList();
+            var list = new List<TKey>(keys.Length);
+            
+            foreach (var key in keys.Span)
+                list.Add(key);
+
+            return list;
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
 {
@@ -7,7 +6,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
     {
         internal ExceptionEvent(
             TParams parameters,
-            IReadOnlyCollection<TKey> keys,
+            ReadOnlyMemory<TKey> keys,
             DateTime start,
             TimeSpan duration,
             Exception exception)
@@ -20,7 +19,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
         }
         
         public TParams Parameters { get; }
-        public IReadOnlyCollection<TKey> Keys { get; }
+        public ReadOnlyMemory<TKey> Keys { get; }
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public Exception Exception { get; }

@@ -144,7 +144,7 @@ namespace CacheMeIfYouCan.Tests
             }
             
             var cachedFunction = config
-                .WithRequestConverter(k => new SortedSet<int>(k))
+                .WithRequestConverter(k => new SortedSet<int>(k.ToArray()))
                 .Build();
 
             var results = cachedFunction(new SortedSet<int>(Enumerable.Range(0, 100)));
@@ -307,7 +307,7 @@ namespace CacheMeIfYouCan.Tests
                 .ConfigureFor(originalFunction)
                 .WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .WithLocalCache(cache)
-                .WithTimeToLiveFactory(keys => TimeSpan.FromMilliseconds(keys.First()))
+                .WithTimeToLiveFactory(keys => TimeSpan.FromMilliseconds(keys.Span[0]))
                 .Build();
 
             foreach (var key in new[] { 250, 500, 1000 })
@@ -538,7 +538,7 @@ namespace CacheMeIfYouCan.Tests
             var cachedFunction = config.Build();
 
             // Fill cache with 2's
-            cache.SetMany(Enumerable.Range(0, 100).ToDictionary(j => j, j => 2), TimeSpan.FromSeconds(100));
+            cache.SetMany(Enumerable.Range(0, 100).ToDictionary(j => j, j => 2).ToArray(), TimeSpan.FromSeconds(100));
 
             var results = new Dictionary<(int OuterKey, int InnerKey), int>();
             
@@ -590,7 +590,7 @@ namespace CacheMeIfYouCan.Tests
                     cachedFunction(outerParam, Enumerable.Range(10 * innerKeyBatch, 10));
                 
                 var valuesInCache = new Dictionary<int, int>();
-                foreach (var (innerKey, value) in cache.GetMany(Enumerable.Range(0, 100).ToList()))
+                foreach (var (innerKey, value) in cache.GetMany(Enumerable.Range(0, 100).ToArray()))
                     valuesInCache[innerKey] = value;
                 
                 for (var innerKey = 0; innerKey < 100; innerKey++)
@@ -834,7 +834,7 @@ namespace CacheMeIfYouCan.Tests
                 .WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .WithLocalCache(cache)
                 .DontGetFromCacheWhen(_ => true)
-                .WithTimeToLiveFactory(ValidateTimeToLiveFactoryKeys);
+                .WithTimeToLiveFactory(keys => ValidateTimeToLiveFactoryKeys(keys.ToArray()));
 
             if (flag1)
                 config.DontStoreInCacheWhen((_, __) => true);
@@ -934,7 +934,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 var now = DateTime.UtcNow;
                 lastSuccess.Parameters.Should().Be("abc");
-                lastSuccess.Keys.Should().BeEquivalentTo(keys);
+                lastSuccess.Keys.ToArray().Should().BeEquivalentTo(keys);
                 lastSuccess.Values.Should().BeEquivalentTo(expectedResponse);
                 lastSuccess.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastSuccess.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
@@ -945,7 +945,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 var now = DateTime.UtcNow;
                 lastException.Parameters.Should().Be("abc");
-                lastException.Keys.Should().BeEquivalentTo(keys);
+                lastException.Keys.ToArray().Should().BeEquivalentTo(keys);
                 lastException.Start.Should().BeWithin(TimeSpan.FromMilliseconds(100)).Before(now);
                 lastException.Duration.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
                 lastException.Exception.Message.Should().Be(exceptionMessage);

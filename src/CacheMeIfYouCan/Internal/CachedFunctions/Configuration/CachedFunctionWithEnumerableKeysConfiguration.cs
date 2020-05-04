@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
 
 namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
 {
     internal sealed class CachedFunctionWithEnumerableKeysConfiguration<TParams, TKey, TValue> : CachedFunctionConfigurationBase<TKey, TValue>
     {
-        public Func<TParams, IReadOnlyCollection<TKey>, TimeSpan> TimeToLiveFactory { get; set; }
+        public Func<TParams, ReadOnlyMemory<TKey>, TimeSpan> TimeToLiveFactory { get; set; }
         public Func<TParams, bool> SkipCacheGetOuterPredicate { get; set; }
         public Func<TParams, TKey, bool> SkipCacheGetInnerPredicate { get; set; }
         public Func<TParams, bool> SkipCacheSetOuterPredicate { get; set; }

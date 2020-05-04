@@ -205,7 +205,7 @@ namespace CacheMeIfYouCan.Tests
             if (flag1)
             {
                 successfulResults.Should().ContainSingle();
-                successfulResults.Last().Item1.Should().BeSameAs(keys);
+                successfulResults.Last().Item1.Should().BeEquivalentTo(keys);
                 successfulResults.Last().Item2.Select(kv => kv.Key).Should().BeEquivalentTo(1);
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -220,7 +220,7 @@ namespace CacheMeIfYouCan.Tests
             if (flag2)
             {
                 failedResults.Should().ContainSingle();
-                failedResults.Last().Item1.Should().BeSameAs(keys);
+                failedResults.Last().Item1.Should().BeEquivalentTo(keys);
                 failedResults.Last().Item2.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
             else
@@ -236,7 +236,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 await action().ConfigureAwait(false);
                 failedResults.Should().HaveCount(2);
-                failedResults.Last().Item1.Should().BeSameAs(keys);
+                failedResults.Last().Item1.Should().BeEquivalentTo(keys);
                 failedResults.Last().Item2.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
             else
@@ -281,7 +281,7 @@ namespace CacheMeIfYouCan.Tests
             if (flag1)
             {
                 successfulResults.Should().ContainSingle();
-                successfulResults.Last().Item1.Should().BeSameAs(values);
+                successfulResults.Last().Item1.Should().BeEquivalentTo(values);
                 successfulResults.Last().Item2.Should().Be(TimeSpan.FromSeconds(1));
                 successfulResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -296,7 +296,7 @@ namespace CacheMeIfYouCan.Tests
             if (flag2)
             {
                 failedResults.Should().ContainSingle();
-                failedResults.Last().Item1.Should().BeSameAs(values);
+                failedResults.Last().Item1.Should().BeEquivalentTo(values);
                 failedResults.Last().Item2.Should().Be(TimeSpan.FromSeconds(1));
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }
@@ -313,7 +313,7 @@ namespace CacheMeIfYouCan.Tests
             {
                 await action().ConfigureAwait(false);
                 failedResults.Should().HaveCount(2);
-                failedResults.Last().Item1.Should().BeSameAs(values);
+                failedResults.Last().Item1.Should().BeEquivalentTo(values);
                 failedResults.Last().Item2.Should().Be(TimeSpan.FromSeconds(1));
                 failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
             }

@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 
 namespace CacheMeIfYouCan.Internal.RequestConverters
 {
     internal sealed class ArrayConverter<TKey> : IRequestConverter<TKey, TKey[]>
     {
-        public TKey[] Convert(IReadOnlyCollection<TKey> keys)
+        public TKey[] Convert(ReadOnlyMemory<TKey> keys)
         {
             return keys.ToArray();
         }

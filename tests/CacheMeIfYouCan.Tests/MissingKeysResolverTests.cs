@@ -19,7 +19,7 @@ namespace CacheMeIfYouCan.Tests
                 new Dictionary<int, int>(),
                 out var pooledArray);
 
-            missingKeys.Should().BeSameAs(inputKeys);
+            missingKeys.ToArray().Should().BeEquivalentTo(inputKeys);
             pooledArray.Should().BeNull();
         }
         
@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Tests
                 dictionary,
                 out var pooledArray);
 
-            missingKeys.Should().BeEquivalentTo(inputKeys.Except(dictionary.Keys));
+            missingKeys.ToArray().Should().BeEquivalentTo(inputKeys.Except(dictionary.Keys));
             pooledArray.Should().NotBeNull();
         }
         
@@ -71,13 +71,13 @@ namespace CacheMeIfYouCan.Tests
                 dictionary,
                 out _);
 
-            missingKeys.Should().BeEquivalentTo(inputKeys.Except(dictionary.Keys));
+            missingKeys.ToArray().Should().BeEquivalentTo(inputKeys.Except(dictionary.Keys));
         }
 
         [Theory]
         [InlineData(1)]
         [InlineData(100)]
-        public void DictionaryContainsAllKeysInInput_ReturnsNull(int inputKeysCount)
+        public void DictionaryContainsAllKeysInInput_ReturnsEmpty(int inputKeysCount)
         {
             var inputKeys = Enumerable.Range(0, inputKeysCount).ToArray();
 
@@ -85,7 +85,7 @@ namespace CacheMeIfYouCan.Tests
 
             var missingKeys = MissingKeysResolver<int, int>.GetMissingKeys(inputKeys, dictionary, out var pooledArray);
 
-            missingKeys.Should().BeNull();
+            missingKeys.IsEmpty.Should().BeTrue();
             pooledArray.Should().BeNull();
         }
     }

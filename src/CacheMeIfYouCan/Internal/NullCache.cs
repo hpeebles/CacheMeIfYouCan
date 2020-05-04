@@ -14,8 +14,8 @@ namespace CacheMeIfYouCan.Internal
         public bool DistributedCacheEnabled { get; } = false;
         public ValueTask<(bool Success, TValue Value, CacheGetStats Stats)> TryGet(TKey key) => default;
         public ValueTask Set(TKey key, TValue value, TimeSpan timeToLive) => default;
-        public ValueTask<CacheGetManyStats> GetMany(IReadOnlyCollection<TKey> keys, int cacheKeysSkipped, Memory<KeyValuePair<TKey, TValue>> destination) => default;
-        public ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive) => default;
+        public ValueTask<CacheGetManyStats> GetMany(ReadOnlyMemory<TKey> keys, int cacheKeysSkipped, Memory<KeyValuePair<TKey, TValue>> destination) => default;
+        public ValueTask SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive) => default;
     }
     
     internal sealed class NullCache<TOuterKey, TInnerKey, TValue> : ICache<TOuterKey, TInnerKey, TValue>
@@ -29,14 +29,17 @@ namespace CacheMeIfYouCan.Internal
         
         public ValueTask<CacheGetManyStats> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             int cacheKeysSkipped,
             Memory<KeyValuePair<TInnerKey, TValue>> destination)
         {
             return default;
         }
 
-        public ValueTask SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
+        public ValueTask SetMany(
+            TOuterKey outerKey,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values,
+            TimeSpan timeToLive)
         {
             return default;
         }

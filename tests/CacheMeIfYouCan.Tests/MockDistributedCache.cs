@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,7 +52,7 @@ namespace CacheMeIfYouCan.Tests
             return Task.CompletedTask;
         }
 
-        public Task<int> GetMany(IReadOnlyCollection<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
+        public Task<int> GetMany(ReadOnlyMemory<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
             
@@ -63,9 +62,9 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
             
-            var resultsArray = new KeyValuePair<TKey, (TValue, DateTime)>[keys.Count];
+            var resultsArray = new KeyValuePair<TKey, (TValue, DateTime)>[keys.Length];
             
-            var countFound = _innerCache.GetMany(keys, resultsArray);
+            var countFound = _innerCache.GetMany(keys.Span, resultsArray);
 
             for (var i = 0; i < countFound; i++)
             {
@@ -75,7 +74,7 @@ namespace CacheMeIfYouCan.Tests
             }
             
             var hits = countFound;
-            var misses = keys.Count - countFound;
+            var misses = keys.Length - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
@@ -83,7 +82,7 @@ namespace CacheMeIfYouCan.Tests
             return Task.FromResult(hits);
         }
 
-        public Task SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
+        public Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
@@ -93,7 +92,14 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
             
-            _innerCache.SetMany(values.ToDictionary(kv => kv.Key, kv => (kv.Value, DateTime.UtcNow + timeToLive)), timeToLive);
+            var valuesInner = new KeyValuePair<TKey, (TValue, DateTime)>[values.Length];
+            for (var i = 0; i < values.Length; i++)
+            {
+                var (key, value) = values.Span[i];
+                valuesInner[i] = new KeyValuePair<TKey, (TValue, DateTime)>(key, (value, DateTime.UtcNow + timeToLive));
+            }
+            
+            _innerCache.SetMany(valuesInner, timeToLive);
             
             return Task.CompletedTask;
         }
@@ -113,7 +119,7 @@ namespace CacheMeIfYouCan.Tests
 
         public Task<int> GetMany(
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys,
+            ReadOnlyMemory<TInnerKey> innerKeys,
             Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             Interlocked.Increment(ref GetManyExecutionCount);
@@ -124,9 +130,9 @@ namespace CacheMeIfYouCan.Tests
                 throw new Exception();
             }
 
-            var resultsArray = new KeyValuePair<TInnerKey, (TValue, DateTime)>[innerKeys.Count];
+            var resultsArray = new KeyValuePair<TInnerKey, (TValue, DateTime)>[innerKeys.Length];
             
-            var countFound = _innerCache.GetMany(outerKey, innerKeys, resultsArray);
+            var countFound = _innerCache.GetMany(outerKey, innerKeys.Span, resultsArray);
 
             for (var i = 0; i < countFound; i++)
             {
@@ -138,7 +144,7 @@ namespace CacheMeIfYouCan.Tests
             }
             
             var hits = countFound;
-            var misses = innerKeys.Count - countFound;
+            var misses = innerKeys.Length - countFound;
 
             if (hits > 0) Interlocked.Add(ref HitsCount, hits);
             if (misses > 0) Interlocked.Add(ref MissesCount, misses);
@@ -146,7 +152,9 @@ namespace CacheMeIfYouCan.Tests
             return Task.FromResult(hits);
         }
 
-        public Task SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
+        public Task SetMany(
+            TOuterKey outerKey,
+            ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
@@ -155,8 +163,15 @@ namespace CacheMeIfYouCan.Tests
                 _throwExceptionOnNextAction = false;
                 throw new Exception();
             }
+
+            var valuesInner = new KeyValuePair<TInnerKey, (TValue, DateTime)>[values.Length];
+            for (var i = 0; i < values.Length; i++)
+            {
+                var (key, value) = values.Span[i];
+                valuesInner[i] = new KeyValuePair<TInnerKey, (TValue, DateTime)>(key, (value, DateTime.UtcNow + timeToLive));
+            }
             
-            _innerCache.SetMany(outerKey, values.ToDictionary(kv => kv.Key, kv => (kv.Value, DateTime.UtcNow + timeToLive)), timeToLive);
+            _innerCache.SetMany(outerKey, valuesInner, timeToLive);
 
             return Task.CompletedTask;
         }

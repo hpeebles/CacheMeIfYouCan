@@ -6,8 +6,8 @@ namespace CacheMeIfYouCan.Internal
 {
     internal static class MissingKeysResolver<TKey, TValue>
     {
-        public static IReadOnlyCollection<TKey> GetMissingKeys(
-            IReadOnlyCollection<TKey> keys,
+        public static ReadOnlyMemory<TKey> GetMissingKeys(
+            ReadOnlyMemory<TKey> keys,
             Dictionary<TKey, TValue> dictionary,
             out TKey[] pooledArray)
         {
@@ -17,50 +17,41 @@ namespace CacheMeIfYouCan.Internal
                 return keys;
             }
 
-            if (dictionary.Count < keys.Count)
-            {
-                var missingKeys = ArrayPool<TKey>.Shared.Rent(keys.Count - dictionary.Count);
-                var keysFound = 0;
-                var missingKeyIndex = 0;
-                foreach (var key in keys)
-                {
-                    if (dictionary.ContainsKey(key))
-                    {
-                        keysFound++;
-                        continue;
-                    }
+            var span = keys.Span;
+            var missingKeys = dictionary.Count < keys.Length
+                ? ArrayPool<TKey>.Shared.Rent(keys.Length - dictionary.Count)
+                : null;
 
-                    if (missingKeyIndex == missingKeys.Length)
-                    {
-                        // This will only happen if 'dictionary' contains keys that are not also contained in 'keys'  
-                        var newArrayLength = Math.Min(missingKeys.Length * 2, keys.Count - keysFound);
-                        var newArray = ArrayPool<TKey>.Shared.Rent(newArrayLength);
-                        Array.Copy(missingKeys, newArray, missingKeys.Length);
-                        ArrayPool<TKey>.Shared.Return(missingKeys);
-                        missingKeys = newArray;
-                    }
-                    missingKeys[missingKeyIndex++] = key;
-                }
-                
-                pooledArray = missingKeys;
-                return new ArraySegment<TKey>(pooledArray, 0, missingKeyIndex);
-            }
-
-            List<TKey> missingKeysList = null;
-            foreach (var key in keys)
+            var keysFound = 0;
+            var missingKeyIndex = 0;
+            foreach (var key in span)
             {
                 if (dictionary.ContainsKey(key))
+                {
+                    keysFound++;
                     continue;
-                
-                // This will only happen if 'dictionary' contains keys that are not also contained in 'keys'
-                if (missingKeysList is null)
-                    missingKeysList = new List<TKey>();
+                }
 
-                missingKeysList.Add(key);
+                // These conditions will only be true if 'dictionary' contains keys that are not also contained in 'keys'
+                if (missingKeys is null)
+                    missingKeys = ArrayPool<TKey>.Shared.Rent(16);
+                else if (missingKeyIndex == missingKeys.Length)
+                    GrowArray(ref missingKeys, keys.Length - keysFound);
+
+                missingKeys[missingKeyIndex++] = key;
             }
 
-            pooledArray = null;
-            return missingKeysList;
+            pooledArray = missingKeys;
+            return new ReadOnlyMemory<TKey>(pooledArray, 0, missingKeyIndex);
+        }
+
+        private static void GrowArray(ref TKey[] array, int maxSize)
+        {
+            var newArrayLength = Math.Min(array.Length * 2, maxSize);
+            var newArray = ArrayPool<TKey>.Shared.Rent(newArrayLength);
+            Array.Copy(array, newArray, array.Length);
+            ArrayPool<TKey>.Shared.Return(array);
+            array = newArray;
         }
     }
 }

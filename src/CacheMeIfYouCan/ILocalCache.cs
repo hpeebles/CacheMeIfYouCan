@@ -10,18 +10,18 @@ namespace CacheMeIfYouCan
 
         void Set(TKey key, TValue value, TimeSpan timeToLive);
 
-        int GetMany(IReadOnlyCollection<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination);
+        int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination);
 
-        void SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
+        void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
 
         bool TryRemove(TKey key, out TValue value);
     }
 
     public interface ILocalCache<in TOuterKey, TInnerKey, TValue>
     {
-        int GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination);
+        int GetMany(TOuterKey outerKey, ReadOnlySpan<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination);
         
-        void SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+        void SetMany(TOuterKey outerKey, ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
 
         void SetManyWithVaryingTimesToLive(TOuterKey outerKey, ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
 
@@ -32,41 +32,27 @@ namespace CacheMeIfYouCan
     {
         public static KeyValuePair<TKey, TValue>[] GetMany<TKey, TValue>(
             this ILocalCache<TKey, TValue> cache,
-            IReadOnlyCollection<TKey> keys)
+            ReadOnlySpan<TKey> keys)
         {
-            var pooledArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Count);
-            try
-            {
-                var span = new Span<KeyValuePair<TKey, TValue>>(pooledArray);
+            using var memoryOwner = MemoryPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Length);
+            var span = memoryOwner.Memory.Span;
+            
+            var countFound = cache.GetMany(keys, span);
 
-                var countFound = cache.GetMany(keys, span);
-
-                return span.Slice(0, countFound).ToArray();
-            }
-            finally
-            {
-                ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(pooledArray);
-            }
+            return span.Slice(0, countFound).ToArray();
         }
         
         public static KeyValuePair<TInnerKey, TValue>[] GetMany<TOuterKey, TInnerKey, TValue>(
             this ILocalCache<TOuterKey, TInnerKey, TValue> cache,
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            ReadOnlySpan<TInnerKey> innerKeys)
         {
-            var pooledArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeys.Count);
-            try
-            {
-                var span = new Span<KeyValuePair<TInnerKey, TValue>>(pooledArray);
+            using var memoryOwner = MemoryPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeys.Length);
+            var span = memoryOwner.Memory.Span;
+            
+            var countFound = cache.GetMany(outerKey, innerKeys, span);
 
-                var countFound = cache.GetMany(outerKey, innerKeys, span);
-
-                return span.Slice(0, countFound).ToArray();
-            }
-            finally
-            {
-                ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
-            }
+            return span.Slice(0, countFound).ToArray();
         }
         
         public static void Set<TOuterKey, TInnerKey, TValue>(

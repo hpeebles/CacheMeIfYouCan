@@ -44,7 +44,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             }
         }
 
-        private Func<TParams, IReadOnlyCollection<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
+        private Func<TParams, ReadOnlyMemory<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> ConvertFunction()
         {
             var requestConverter = GetRequestConverter();
 
@@ -52,11 +52,10 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             
             ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>> Get(
                 TParams parameters,
-                IReadOnlyCollection<TKey> keys,
+                ReadOnlyMemory<TKey> keys,
                 CancellationToken cancellationToken)
             {
-                if (!(keys is TKeys typedRequest))
-                    typedRequest = requestConverter(keys);
+                var typedRequest = requestConverter(keys);
 
                 return new ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>(_originalFunction(parameters, typedRequest));
             }
@@ -74,7 +73,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         { }
 
         public CachedFunctionConfigurationManagerSync<TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((_, keys) => timeToLiveFactory(keys));
         }
@@ -125,7 +124,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_2Params<TParam, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal(timeToLiveFactory);
         }
@@ -178,7 +177,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, keys));
         }
@@ -236,7 +235,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, TParam3, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, TParam3, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, keys));
         }
@@ -294,7 +293,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, TParam3, TParam4, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, TParam3, TParam4, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, keys));
         }
@@ -352,7 +351,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, TParam3, TParam4, TParam5, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, keys));
         }
@@ -410,7 +409,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, keys));
         }
@@ -468,7 +467,7 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         }
 
         public CachedFunctionConfigurationManagerSync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> WithTimeToLiveFactory(
-            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, IReadOnlyCollection<TKey>, TimeSpan> timeToLiveFactory)
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, ReadOnlyMemory<TKey>, TimeSpan> timeToLiveFactory)
         {
             return WithTimeToLiveFactoryInternal((t, keys) => timeToLiveFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, keys));
         }

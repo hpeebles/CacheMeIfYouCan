@@ -28,8 +28,8 @@ namespace CacheMeIfYouCan.Redis.Tests
                 {
                     for (var j = 0; j < 100; j++)
                     {
-                        var keys = Enumerable.Range((1000 * i) + j, i).ToList();
-                        await cache.SetMany(1, keys.Select(k => new KeyValuePair<int, TestClass>(k, new TestClass(k))).ToList(), TimeSpan.FromSeconds(1));
+                        var keys = Enumerable.Range((1000 * i) + j, i).ToArray();
+                        await cache.SetMany(1, keys.Select(k => new KeyValuePair<int, TestClass>(k, new TestClass(k))).ToArray(), TimeSpan.FromSeconds(1));
                         var values = await cache.GetMany(1, keys);
                         values.Select(kv => kv.Key).Should().BeEquivalentTo(keys);
                         foreach (var (key, value) in values)
@@ -52,8 +52,8 @@ namespace CacheMeIfYouCan.Redis.Tests
         {
             var cache = BuildRedisCache();
 
-            var keys = Enumerable.Range(1, 10).ToList();
-            var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i))).ToList();
+            var keys = Enumerable.Range(1, 10).ToArray();
+            var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i))).ToArray();
 
             await cache.SetMany(1, values, TimeSpan.FromSeconds(1));
 

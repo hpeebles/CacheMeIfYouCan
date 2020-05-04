@@ -15,9 +15,9 @@ namespace CacheMeIfYouCan.Internal
 
         ValueTask Set(TKey key, TValue value, TimeSpan timeToLive);
 
-        ValueTask<CacheGetManyStats> GetMany(IReadOnlyCollection<TKey> keys, int cacheKeysSkipped, Memory<KeyValuePair<TKey, TValue>> destination);
+        ValueTask<CacheGetManyStats> GetMany(ReadOnlyMemory<TKey> keys, int cacheKeysSkipped, Memory<KeyValuePair<TKey, TValue>> destination);
 
-        ValueTask SetMany(IReadOnlyCollection<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
+        ValueTask SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
     }
 
     internal interface ICache<in TOuterKey, TInnerKey, TValue>
@@ -26,55 +26,40 @@ namespace CacheMeIfYouCan.Internal
         
         bool DistributedCacheEnabled { get; }
         
-        ValueTask<CacheGetManyStats> GetMany(TOuterKey outerKey, IReadOnlyCollection<TInnerKey> innerKeys, int cacheKeysSkipped, Memory<KeyValuePair<TInnerKey, TValue>> destination);
+        ValueTask<CacheGetManyStats> GetMany(TOuterKey outerKey, ReadOnlyMemory<TInnerKey> innerKeys, int cacheKeysSkipped, Memory<KeyValuePair<TInnerKey, TValue>> destination);
 
-        ValueTask SetMany(TOuterKey outerKey, IReadOnlyCollection<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+        ValueTask SetMany(TOuterKey outerKey, ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
     }
 
     internal static class ICacheExtensions
     {
         public static async ValueTask<KeyValuePair<TKey, TValue>[]> GetMany<TKey, TValue>(
             this ICache<TKey, TValue> cache,
-            IReadOnlyCollection<TKey> keys)
+            ReadOnlyMemory<TKey> keys)
         {
-            var pooledArray = ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Count);
-            try
-            {
-                var memory = new Memory<KeyValuePair<TKey, TValue>>(pooledArray);
-                
-                var countFoundTask = cache.GetMany(keys, 0, memory);
+            using var memoryOwner = MemoryPool<KeyValuePair<TKey, TValue>>.Shared.Rent(keys.Length);
+            var memory = memoryOwner.Memory;
+            var countFoundTask = cache.GetMany(keys, 0, memory);
 
-                if (!countFoundTask.IsCompleted)
-                    await countFoundTask.ConfigureAwait(false);
+            if (!countFoundTask.IsCompleted)
+                await countFoundTask.ConfigureAwait(false);
 
-                return memory.Slice(0, countFoundTask.Result.CacheHits).ToArray();
-            }
-            finally
-            {
-                ArrayPool<KeyValuePair<TKey, TValue>>.Shared.Return(pooledArray);
-            }
+            return memory.Slice(0, countFoundTask.Result.CacheHits).ToArray();
         }
 
         public static async ValueTask<KeyValuePair<TInnerKey, TValue>[]> GetMany<TOuterKey, TInnerKey, TValue>(
             this ICache<TOuterKey, TInnerKey, TValue> cache,
             TOuterKey outerKey,
-            IReadOnlyCollection<TInnerKey> innerKeys)
+            ReadOnlyMemory<TInnerKey> innerKeys)
         {
-            var pooledArray = ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeys.Count);
-            try
-            {
-                var memory = new Memory<KeyValuePair<TInnerKey, TValue>>(pooledArray);
+            using var memoryOwner = MemoryPool<KeyValuePair<TInnerKey, TValue>>.Shared.Rent(innerKeys.Length);
+            var memory = memoryOwner.Memory;
 
-                var cacheStats = await cache
-                    .GetMany(outerKey, innerKeys, 0, memory)
-                    .ConfigureAwait(false);
+            var cacheStats = await cache
+                .GetMany(outerKey, innerKeys, 0, memory)
+                .ConfigureAwait(false);
 
-                return memory.Slice(0, cacheStats.CacheHits).ToArray();
-            }
-            finally
-            {
-                ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
-            }
+            return memory.Slice(0, cacheStats.CacheHits).ToArray();
         }
     }
 }
