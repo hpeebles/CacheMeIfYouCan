@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 
 namespace CacheMeIfYouCan.Benchmarks
@@ -60,12 +61,13 @@ namespace CacheMeIfYouCan.Benchmarks
 #else
             BenchmarkRunner.Run<CachedFunctionWithEnumerableKeys>(ManualConfig
                 .Create(DefaultConfig.Instance)
+                .With(Job.MediumRun.WithLaunchCount(1))
                 .With(MemoryDiagnoser.Default));
 #endif
         }
         
-         [Benchmark]
-         public ValueTask<Dictionary<int, int>> OneHit() => _func(_oneHit);
+        [Benchmark]
+        public ValueTask<Dictionary<int, int>> OneHit() => _func(_oneHit);
         
         [Benchmark]
         public ValueTask<Dictionary<int, int>> OneMiss() => _func(_oneMiss);
@@ -82,7 +84,7 @@ namespace CacheMeIfYouCan.Benchmarks
         [Benchmark]
         public ValueTask<Dictionary<int, int>> OneHundredHitsAndOneHundredMisses() => _func(_oneHundredHitsAndOneHundredMisses);
 
-        private ValueTask<Dictionary<int, int>> OriginalFunc(List<int> list)
+        private ValueTask<Dictionary<int, int>> OriginalFunc(IList<int> list)
         {
             return list.Count switch
             {
@@ -110,16 +112,18 @@ namespace CacheMeIfYouCan.Benchmarks
 BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
 Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 .NET Core SDK=3.1.100
-  [Host]     : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
-  DefaultJob : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+  [Host]    : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+  MediumRun : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
 
+Job=MediumRun  IterationCount=15  LaunchCount=1
+WarmupCount=10
 
-|                            Method |        Mean |     Error |      StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------------------------------- |------------:|----------:|------------:|-------:|-------:|------:|----------:|
-|                            OneHit |    408.6 ns |   8.09 ns |    10.52 ns | 0.0405 |      - |     - |     256 B |
-|                           OneMiss |    941.7 ns |  14.25 ns |    11.90 ns | 0.0610 | 0.0153 |     - |     384 B |
-|                  OneHitAndOneMiss |  1,136.9 ns |  21.76 ns |    19.29 ns | 0.0763 | 0.0191 |     - |     488 B |
-|                    OneHundredHits |  9,377.1 ns |  92.48 ns |    86.51 ns | 0.3662 |      - |     - |    2336 B |
-|                  OneHundredMisses | 36,046.4 ns | 731.10 ns | 1,280.46 ns | 1.7090 | 0.4272 |     - |   10752 B |
-| OneHundredHitsAndOneHundredMisses | 47,393.8 ns | 927.26 ns | 1,574.56 ns | 1.7090 | 0.4272 |     - |   10960 B |
+|                            Method |        Mean |       Error |    StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------------------------------- |------------:|------------:|----------:|-------:|-------:|------:|----------:|
+|                            OneHit |    661.3 ns |    26.55 ns |  24.83 ns | 0.0458 |      - |     - |     288 B |
+|                           OneMiss |  1,275.5 ns |    11.57 ns |  10.82 ns | 0.0687 | 0.0172 |     - |     432 B |
+|                  OneHitAndOneMiss |  1,380.0 ns |    10.72 ns |  10.02 ns | 0.0687 | 0.0172 |     - |     432 B |
+|                    OneHundredHits |  3,424.3 ns |    38.47 ns |  35.98 ns | 0.3738 | 0.0038 |     - |    2368 B |
+|                  OneHundredMisses | 24,222.4 ns | 1,091.25 ns | 967.36 ns | 1.7090 | 0.5493 |     - |   10882 B |
+| OneHundredHitsAndOneHundredMisses | 27,798.6 ns |   871.19 ns | 772.29 ns | 1.2207 | 0.0305 |     - |    7704 B |
 */

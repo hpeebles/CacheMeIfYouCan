@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Internal
             };
         }
 
-        protected bool TryGetImpl(TKey key, out TValue value)
+        protected bool TryGetImpl(TKey key, DateTime now, out TValue value)
         {
             while (true)
             {
@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Internal
                 // value has been removed from the dictionary and reused, so restart the loop and try again.
                 var version = valueAndExpiry.Version;
 
-                if (valueAndExpiry.ExpiryTicks > DateTime.UtcNow.Ticks)
+                if (valueAndExpiry.ExpiryTicks > now.Ticks)
                 {
                     value = valueAndExpiry.Value;
                     if (valueAndExpiry.Version == version)
@@ -84,13 +84,13 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive)
+        protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive, DateTime now)
         {
             var valueAndExpiry = _valueAndExpiryPool.Rent();
 
             Interlocked.Increment(ref valueAndExpiry.Version);
             
-            var expiryTicks = DateTime.UtcNow.Add(timeToLive).Ticks;
+            var expiryTicks = now.Add(timeToLive).Ticks;
             
             valueAndExpiry.Value = value;
             valueAndExpiry.ExpiryTicks = expiryTicks;
@@ -149,7 +149,7 @@ namespace CacheMeIfYouCan.Internal
             while (_keysToBePutIntoExpiryHeapReader.TryRead(out var keyAndExpiry))
             {
                 if (keyAndExpiry.ExpiryTicks < nowTicks)
-                    RemoveExpiredKey(keyAndExpiry);
+                    RemoveExpiredKey(keyAndExpiry, nowTicks);
                 else
                     _keysToExpireHeap.Add(keyAndExpiry);
             }
@@ -159,16 +159,16 @@ namespace CacheMeIfYouCan.Internal
                 nextPeek.ExpiryTicks < nowTicks &&
                 _keysToExpireHeap.TryTake(out var next))
             {
-                RemoveExpiredKey(next);
+                RemoveExpiredKey(next, nowTicks);
             }
 
             _keyExpiryProcessorTimer.Change((int)_keyExpiryProcessorInterval.TotalMilliseconds, -1);
         }
 
-        private void RemoveExpiredKey(KeyAndExpiry keyAndExpiry)
+        private void RemoveExpiredKey(KeyAndExpiry keyAndExpiry, long nowTicks)
         {
             if (_values.TryGetValue(keyAndExpiry.Key, out var valueAndExpiry) &&
-                valueAndExpiry.ExpiryTicks < DateTime.UtcNow.Ticks)
+                valueAndExpiry.ExpiryTicks < nowTicks)
             {
                 var kvp = new KeyValuePair<TKey, ValueAndExpiry>(keyAndExpiry.Key, valueAndExpiry);
 

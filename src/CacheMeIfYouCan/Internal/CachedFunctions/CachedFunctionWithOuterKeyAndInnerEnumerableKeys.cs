@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys;
@@ -31,6 +32,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> _onExceptionAction;
         private readonly bool _cacheEnabled;
+        private readonly bool _measurementsEnabled;
 
         public CachedFunctionWithOuterKeyAndInnerEnumerableKeys(
             Func<TParams, ReadOnlyMemory<TInnerKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TInnerKey, TValue>>>> originalFunction,
@@ -76,6 +78,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             
             _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
+            _measurementsEnabled = _onSuccessAction != null || _onExceptionAction != null;
         }
 
         public async ValueTask<Dictionary<TInnerKey, TValue>> GetMany(
@@ -83,8 +86,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             IEnumerable<TInnerKey> innerKeys,
             CancellationToken cancellationToken)
         {
-            var start = DateTime.UtcNow;
-            var timer = StopwatchStruct.StartNew();
+            var (start, timer) = GetDateAndTimer();
             TOuterKey outerKey = default;
             var innerKeysMemory = innerKeys.ToReadOnlyMemory(out var pooledKeysArray);
             try
@@ -431,6 +433,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
 
             return valuesDictionary;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private (DateTime Start, StopwatchStruct Timer) GetDateAndTimer()
+        {
+            return _measurementsEnabled
+                ? (DateTime.UtcNow, StopwatchStruct.StartNew())
+                : (default, default);
         }
     }
 }

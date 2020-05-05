@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.SingleKey;
@@ -20,6 +21,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Action<ExceptionEvent<TParams, TKey>> _onExceptionAction;
         private readonly CacheGetStats _cacheStatsIfSkipped;
         private readonly bool _cacheEnabled;
+        private readonly bool _measurementsEnabled;
 
         public CachedFunctionWithSingleKey(
             Func<TParams, CancellationToken, ValueTask<TValue>> originalFunction,
@@ -49,12 +51,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
             _cacheStatsIfSkipped = GetCacheStatsIfSkipped();
             _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
+            _measurementsEnabled = _onSuccessAction != null || _onExceptionAction != null;
         }
 
         public async ValueTask<TValue> Get(TParams parameters, CancellationToken cancellationToken)
         {
-            var start = DateTime.UtcNow;
-            var timer = StopwatchStruct.StartNew();
+            var (start, timer) = GetDateAndTimer();
             TKey key = default;
             try
             {
@@ -143,6 +145,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 flags |= CacheGetFlags.DistributedCache_Enabled | CacheGetFlags.DistributedCache_Skipped;
 
             return flags.ToStats();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private (DateTime Start, StopwatchStruct Timer) GetDateAndTimer()
+        {
+            return _measurementsEnabled
+                ? (DateTime.UtcNow, StopwatchStruct.StartNew())
+                : (default, default);
         }
     }
 }

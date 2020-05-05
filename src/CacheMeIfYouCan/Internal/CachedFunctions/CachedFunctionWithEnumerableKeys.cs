@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys;
@@ -29,6 +30,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Action<SuccessfulRequestEvent<TParams, TKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TKey>> _onExceptionAction;
         private readonly bool _cacheEnabled;
+        private readonly bool _measurementsEnabled;
 
         public CachedFunctionWithEnumerableKeys(
             Func<TParams, ReadOnlyMemory<TKey>, CancellationToken, ValueTask<IEnumerable<KeyValuePair<TKey, TValue>>>> originalFunction,
@@ -72,6 +74,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             
             _cacheEnabled = _cache.LocalCacheEnabled || _cache.DistributedCacheEnabled;
+            _measurementsEnabled = _onSuccessAction != null || _onExceptionAction != null;
         }
 
         public async ValueTask<Dictionary<TKey, TValue>> GetMany(
@@ -79,8 +82,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             IEnumerable<TKey> keys,
             CancellationToken cancellationToken)
         {
-            var start = DateTime.UtcNow;
-            var timer = StopwatchStruct.StartNew();
+            var (start, timer) = GetDateAndTimer();
             var keysMemory = keys.ToReadOnlyMemory(out var pooledKeysArray);
             try
             {
@@ -417,6 +419,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
 
             return valuesDictionary;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private (DateTime Start, StopwatchStruct Timer) GetDateAndTimer()
+        {
+            return _measurementsEnabled
+                ? (DateTime.UtcNow, StopwatchStruct.StartNew())
+                : (default, default);
         }
     }
 }
