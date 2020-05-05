@@ -125,9 +125,10 @@ namespace CacheMeIfYouCan
         {
             var outerKeyString = _outerKeySerializer(outerKey);
 
+            var now = DateTimeOffset.UtcNow;
             foreach (var kv in values)
             {
-                var expirationDate = DateTimeOffset.UtcNow.Add(kv.Value.TimeToLive);
+                var expirationDate = now.Add(kv.Value.TimeToLive);
 
                 _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value.Value, expirationDate);
             }
