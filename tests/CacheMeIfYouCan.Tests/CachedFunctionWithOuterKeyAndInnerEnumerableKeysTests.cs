@@ -232,35 +232,32 @@ namespace CacheMeIfYouCan.Tests
             results.Keys.Should().BeEquivalentTo(Enumerable.Range(0, 100));
         }
 
-        [Theory]
-        [InlineData(100, true)]
-        [InlineData(500, false)]
-        public async Task WithCancellationToken_ThrowsIfCancelled(int cancelAfter, bool shouldThrow)
+        [Fact]
+        public async Task WithCancellationToken_CancellationPropagatesToUnderlyingFunction()
         {
-            var delay = TimeSpan.FromMilliseconds(200);
+            var wasCancelled = false;
             
             Func<int, IEnumerable<int>, CancellationToken, Task<Dictionary<int, int>>> originalFunction = async (outerKey, innerKeys, cancellationToken) =>
             {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-                return innerKeys.ToDictionary(k => k, k => outerKey + k);
+                cancellationToken.Register(() => wasCancelled = true);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ConfigureAwait(false);
+                return innerKeys.ToDictionary(k => k);
             };
 
             var cachedFunction = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
-                .UseFirstParamAsOuterCacheKey()
-                .WithLocalCache(new MockLocalCache<int, int, int>())
+                .WithLocalCache(new MemoryCache<int, int>(i => i.ToString()))
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
 
-            var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
             
-            Func<Task<Dictionary<int, int>>> func = () => cachedFunction(0, new[] { 1 }, cancellationTokenSource.Token);
+            Func<Task<Dictionary<int, int>>> func = () => cachedFunction(1, new[] { 1 }, cancellationTokenSource.Token);
 
-            if (shouldThrow)
-                await func.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
-            else
-                await func.Should().NotThrowAsync().ConfigureAwait(false);
+            await func.Should().ThrowExactlyAsync<TaskCanceledException>().ConfigureAwait(false);
+
+            wasCancelled.Should().BeTrue();
         }
 
         [Theory]

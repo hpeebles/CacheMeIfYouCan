@@ -67,17 +67,16 @@ namespace CacheMeIfYouCan.Tests
             }
         }
 
-        [Theory]
-        [InlineData(100, true)]
-        [InlineData(500, false)]
-        public async Task WithCancellationToken_ThrowsIfCancelled(int cancelAfter, bool shouldThrow)
+        [Fact]
+        public async Task WithCancellationToken_CancellationPropagatesToUnderlyingFunction()
         {
-            var delay = TimeSpan.FromMilliseconds(200);
+            var wasCancelled = false;
             
-            Func<int, CancellationToken, Task<int>> originalFunction = async (i, cancellationToken) =>
+            Func<int, CancellationToken, Task<int>> originalFunction = async (key, cancellationToken) =>
             {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-                return i;
+                cancellationToken.Register(() => wasCancelled = true);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ConfigureAwait(false);
+                return key;
             };
 
             var cachedFunction = CachedFunctionFactory
@@ -86,14 +85,13 @@ namespace CacheMeIfYouCan.Tests
                 .WithTimeToLive(TimeSpan.FromSeconds(1))
                 .Build();
 
-            var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
             
             Func<Task<int>> func = () => cachedFunction(1, cancellationTokenSource.Token);
 
-            if (shouldThrow)
-                await func.Should().ThrowAsync<OperationCanceledException>().ConfigureAwait(false);
-            else
-                await func.Should().NotThrowAsync().ConfigureAwait(false);
+            await func.Should().ThrowExactlyAsync<TaskCanceledException>().ConfigureAwait(false);
+
+            wasCancelled.Should().BeTrue();
         }
 
         [Theory]
