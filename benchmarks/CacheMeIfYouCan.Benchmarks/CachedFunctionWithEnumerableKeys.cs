@@ -12,19 +12,19 @@ namespace CacheMeIfYouCan.Benchmarks
 {
     public class CachedFunctionWithEnumerableKeys
     {
-        private readonly Func<List<int>, ValueTask<Dictionary<int, int>>> _func;
-        private readonly List<int> _oneHit = Enumerable.Range(0, 1).ToList();
-        private readonly List<int> _oneMiss = Enumerable.Range(100, 1).ToList();
-        private readonly List<int> _oneHitAndOneMiss = Enumerable.Range(99, 2).ToList();
-        private readonly List<int> _oneHundredHits = Enumerable.Range(0, 100).ToList();
-        private readonly List<int> _oneHundredMisses = Enumerable.Range(100, 100).ToList();
-        private readonly List<int> _oneHundredHitsAndOneHundredMisses = Enumerable.Range(0, 200).ToList();
-        private readonly ValueTask<Dictionary<int, int>> _oneHitResults;
-        private readonly ValueTask<Dictionary<int, int>> _oneMissResults;
-        private readonly ValueTask<Dictionary<int, int>> _oneHitAndOneMissResults;
-        private readonly ValueTask<Dictionary<int, int>> _oneHundredHitsResults;
-        private readonly ValueTask<Dictionary<int, int>> _oneHundredMissesResults;
-        private readonly ValueTask<Dictionary<int, int>> _oneHundredHitsAndOneHundredMissesResults;
+        private readonly Func<IList<int>, ValueTask<Dictionary<int, int>>> _func;
+        private readonly IList<int> _oneHit = Enumerable.Range(0, 1).ToArray();
+        private readonly IList<int> _oneMiss = Enumerable.Range(100, 1).ToArray();
+        private readonly IList<int> _oneHitAndOneMiss = Enumerable.Range(99, 2).ToArray();
+        private readonly IList<int> _oneHundredHits = Enumerable.Range(0, 100).ToArray();
+        private readonly IList<int> _oneHundredMisses = Enumerable.Range(100, 100).ToArray();
+        private readonly IList<int> _oneHundredHitsAndOneHundredMisses = Enumerable.Range(0, 200).ToArray();
+        private readonly Dictionary<int, int> _oneHitResults;
+        private readonly Dictionary<int, int> _oneMissResults;
+        private readonly Dictionary<int, int> _oneHitAndOneMissResults;
+        private readonly Dictionary<int, int> _oneHundredHitsResults;
+        private readonly Dictionary<int, int> _oneHundredMissesResults;
+        private readonly Dictionary<int, int> _oneHundredHitsAndOneHundredMissesResults;
 
         public CachedFunctionWithEnumerableKeys()
         {
@@ -40,8 +40,8 @@ namespace CacheMeIfYouCan.Benchmarks
                 cache.Set(i, i, TimeSpan.FromHours(1));
             
             _func = CachedFunctionFactory
-                .ConfigureFor((List<int> x) => OriginalFunc(x))
-                .WithEnumerableKeys<List<int>, Dictionary<int, int>, int, int>()
+                .ConfigureFor((IList<int> x) => OriginalFunc(x))
+                .WithEnumerableKeys<IList<int>, Dictionary<int, int>, int, int>()
                 .WithTimeToLive(TimeSpan.FromTicks(1))
                 .WithLocalCache(cache)
                 .Build();
@@ -86,22 +86,24 @@ namespace CacheMeIfYouCan.Benchmarks
 
         private ValueTask<Dictionary<int, int>> OriginalFunc(IList<int> list)
         {
-            return list.Count switch
+            var dictionary = list.Count switch
             {
                 1 => (list[0] == 0 ? _oneHitResults : _oneMissResults),
                 2 => _oneHitAndOneMissResults,
                 100 => (list[0] == 0 ? _oneHundredHitsResults : _oneHundredMissesResults),
                 _ => _oneHundredHitsAndOneHundredMissesResults
             };
+            
+            return new ValueTask<Dictionary<int, int>>(new Dictionary<int, int>(dictionary));
         }
         
-        private static ValueTask<Dictionary<int, int>> BuildResults(List<int> list)
+        private static Dictionary<int, int> BuildResults(IList<int> list)
         {
             var values = new Dictionary<int, int>(list.Count);
             foreach (var i in list)
                 values.Add(i, i);
             
-            return new ValueTask<Dictionary<int, int>>(values);
+            return values;
         }
     }
 }
@@ -118,12 +120,12 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 Job=MediumRun  IterationCount=15  LaunchCount=1
 WarmupCount=10
 
-|                            Method |        Mean |       Error |    StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------------------------------- |------------:|------------:|----------:|-------:|-------:|------:|----------:|
-|                            OneHit |    661.3 ns |    26.55 ns |  24.83 ns | 0.0458 |      - |     - |     288 B |
-|                           OneMiss |  1,275.5 ns |    11.57 ns |  10.82 ns | 0.0687 | 0.0172 |     - |     432 B |
-|                  OneHitAndOneMiss |  1,380.0 ns |    10.72 ns |  10.02 ns | 0.0687 | 0.0172 |     - |     432 B |
-|                    OneHundredHits |  3,424.3 ns |    38.47 ns |  35.98 ns | 0.3738 | 0.0038 |     - |    2368 B |
-|                  OneHundredMisses | 24,222.4 ns | 1,091.25 ns | 967.36 ns | 1.7090 | 0.5493 |     - |   10882 B |
-| OneHundredHitsAndOneHundredMisses | 27,798.6 ns |   871.19 ns | 772.29 ns | 1.2207 | 0.0305 |     - |    7704 B |
+|                            Method |        Mean |       Error |      StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------------------------------- |------------:|------------:|------------:|-------:|-------:|------:|----------:|
+|                            OneHit |    503.5 ns |     2.37 ns |     2.22 ns | 0.0391 |      - |     - |     248 B |
+|                           OneMiss |  1,038.2 ns |    11.43 ns |    10.13 ns | 0.0496 | 0.0267 |     - |     312 B |
+|                  OneHitAndOneMiss |  1,145.6 ns |    22.14 ns |    20.71 ns | 0.0744 | 0.0210 |     - |     478 B |
+|                    OneHundredHits |  2,817.1 ns |    37.80 ns |    31.57 ns | 0.3700 | 0.0038 |     - |    2328 B |
+|                  OneHundredMisses | 22,109.1 ns | 1,137.74 ns | 1,008.58 ns | 0.8240 | 0.3052 |     - |    9396 B |
+| OneHundredHitsAndOneHundredMisses | 27,115.2 ns |   819.68 ns |   684.47 ns | 2.0142 | 0.6104 |     - |   12656 B |
 */

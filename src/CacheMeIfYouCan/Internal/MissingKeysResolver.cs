@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Internal
                 if (missingKeys is null)
                     missingKeys = ArrayPool<TKey>.Shared.Rent(16);
                 else if (missingKeyIndex == missingKeys.Length)
-                    ArrayUtilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
+                    Utilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
 
                 missingKeys[missingKeyIndex++] = key;
             }
@@ -53,7 +53,7 @@ namespace CacheMeIfYouCan.Internal
             Dictionary<TKey, TValue> dictionaryReturned,
             out TKey[] pooledArray)
         {
-            if (dictionaryReturned.Count == 0)
+            if (dictionaryReturned is null || dictionaryReturned.Count == 0)
             {
                 pooledArray = null;
                 return inputKeys;
@@ -78,7 +78,7 @@ namespace CacheMeIfYouCan.Internal
                 if (missingKeys is null)
                     missingKeys = ArrayPool<TKey>.Shared.Rent(16);
                 else if (missingKeyIndex == missingKeys.Length)
-                    ArrayUtilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
+                    Utilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
 
                 missingKeys[missingKeyIndex++] = key;
             }
