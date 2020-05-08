@@ -11,8 +11,8 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ConcurrentDictionary<TKey, ValueAndExpiry> _values;
         private readonly MinHeap<KeyAndExpiry> _keysToExpireHeap;
-        private readonly ObjectPool<ValueAndExpiry> _valueAndExpiryPool;
-        private readonly ObjectPool<KeyAndExpiry> _keyAndExpiryPool;
+        private readonly HighCapacityObjectPool<ValueAndExpiry> _valueAndExpiryPool;
+        private readonly HighCapacityObjectPool<KeyAndExpiry> _keyAndExpiryPool;
         private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryHeapReader;
         private readonly ChannelWriter<KeyAndExpiry> _keysToBePutIntoExpiryHeapWriter;
         private readonly TimeSpan _keyExpiryProcessorInterval;
@@ -23,8 +23,8 @@ namespace CacheMeIfYouCan.Internal
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
             _keysToExpireHeap = new MinHeap<KeyAndExpiry>(KeyAndExpiryComparer.Instance);
-            _valueAndExpiryPool = new ObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
-            _keyAndExpiryPool = new ObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
+            _valueAndExpiryPool = new HighCapacityObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
+            _keyAndExpiryPool = new HighCapacityObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
             
             var keysToBePutIntoExpiryHeapChannel = Channel.CreateUnbounded<KeyAndExpiry>(new UnboundedChannelOptions
             {
@@ -86,7 +86,7 @@ namespace CacheMeIfYouCan.Internal
 
         protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive, DateTime now)
         {
-            var valueAndExpiry = _valueAndExpiryPool.Rent();
+            var valueAndExpiry = _valueAndExpiryPool.Get();
 
             Interlocked.Increment(ref valueAndExpiry.Version);
             
@@ -115,7 +115,7 @@ namespace CacheMeIfYouCan.Internal
                 }
             }
 
-            var keyAndExpiry = _keyAndExpiryPool.Rent();
+            var keyAndExpiry = _keyAndExpiryPool.Get();
 
             keyAndExpiry.Key = key;
             keyAndExpiry.ExpiryTicks = expiryTicks;
@@ -217,8 +217,8 @@ namespace CacheMeIfYouCan.Internal
         internal class DebugInfo
         {
             public ConcurrentDictionary<TKey, ValueAndExpiry> Values;
-            public ObjectPool<ValueAndExpiry> ValueAndExpiryPool;
-            public ObjectPool<KeyAndExpiry> KeyAndExpiryPool;
+            public HighCapacityObjectPool<ValueAndExpiry> ValueAndExpiryPool;
+            public HighCapacityObjectPool<KeyAndExpiry> KeyAndExpiryPool;
         }
     }
 }

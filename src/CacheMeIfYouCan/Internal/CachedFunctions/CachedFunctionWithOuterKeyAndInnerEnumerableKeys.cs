@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -228,7 +226,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 parameters,
                 innerKeys,
                 _skipCacheGetInnerPredicate,
-                out var pooledKeyArray);
+                out var pooledFilteredKeysArray);
 
             try
             {
@@ -243,8 +241,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
             finally
             {
-                if (!(pooledKeyArray is null))
-                    ArrayPool<TInnerKey>.Shared.Return(pooledKeyArray);
+                if (!(pooledFilteredKeysArray is null))
+                    ArrayPool<TInnerKey>.Shared.Return(pooledFilteredKeysArray);
             }
 
             (Dictionary<TInnerKey, TValue>, CacheGetManyStats) GetResultIfAllKeysSkipped()
@@ -359,7 +357,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     parameters,
                     valuesFromFuncMemory,
                     _skipCacheSetInnerPredicate,
-                    out var pooledArray);
+                    out var pooledFilteredValuesArray);
 
                 try
                 {
@@ -396,8 +394,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                 }
                 finally
                 {
-                    if (!(pooledArray is null))
-                        ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
+                    if (!(pooledFilteredValuesArray is null))
+                        ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledFilteredValuesArray);
                 }
 
                 return default;

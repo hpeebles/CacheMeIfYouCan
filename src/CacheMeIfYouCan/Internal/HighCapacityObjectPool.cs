@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
+using Microsoft.Extensions.ObjectPool;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal sealed class ObjectPool<T> where T : class
+    internal sealed class HighCapacityObjectPool<T> : ObjectPool<T> where T : class
     {
         private readonly Func<T> _factory;
         private readonly ChannelReader<T> _reader;
         private readonly ChannelWriter<T> _writer;
         private T _firstItem;
 
-        public ObjectPool(Func<T> factory, int capacity)
+        public HighCapacityObjectPool(Func<T> factory, int capacity)
         {
             if (capacity <= 1)
                 throw new ArgumentOutOfRangeException(nameof(capacity));
@@ -26,7 +27,7 @@ namespace CacheMeIfYouCan.Internal
             _writer = channel.Writer;
         }
         
-        public T Rent()
+        public override T Get()
         {
             var firstItem = _firstItem;
             if (!(firstItem is null) && Interlocked.CompareExchange(ref _firstItem, null, firstItem) == firstItem)
@@ -37,7 +38,7 @@ namespace CacheMeIfYouCan.Internal
                 : _factory();
         }
 
-        public void Return(T item)
+        public override void Return(T item)
         {
             if (_firstItem is null && Interlocked.CompareExchange(ref _firstItem, item, null) == null)
                 return;

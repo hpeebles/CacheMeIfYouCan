@@ -4,39 +4,39 @@ using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Internal
 {
-    internal static class MissingKeysResolver<TKey, TValue>
+    internal static class MissingKeysResolver<TKey>
     {
         public static ReadOnlyMemory<TKey> GetMissingKeys(
-            ReadOnlyMemory<TKey> keys,
-            Dictionary<TKey, TValue> dictionary,
+            ReadOnlyMemory<TKey> inputKeys,
+            HashSet<TKey> keysReturned,
             out TKey[] pooledArray)
         {
-            if (dictionary.Count == 0)
+            if (keysReturned.Count == 0)
             {
                 pooledArray = null;
-                return keys;
+                return inputKeys;
             }
 
-            var span = keys.Span;
-            var missingKeys = dictionary.Count < keys.Length
-                ? ArrayPool<TKey>.Shared.Rent(keys.Length - dictionary.Count)
+            var span = inputKeys.Span;
+            var missingKeys = keysReturned.Count < inputKeys.Length
+                ? ArrayPool<TKey>.Shared.Rent(inputKeys.Length - keysReturned.Count)
                 : null;
 
             var keysFound = 0;
             var missingKeyIndex = 0;
             foreach (var key in span)
             {
-                if (dictionary.ContainsKey(key))
+                if (keysReturned.Contains(key))
                 {
                     keysFound++;
                     continue;
                 }
 
-                // These conditions will only be true if 'dictionary' contains keys that are not also contained in 'keys'
+                // These conditions will only be true if 'keysReturned' contains keys that are not in 'inputKeys'
                 if (missingKeys is null)
                     missingKeys = ArrayPool<TKey>.Shared.Rent(16);
                 else if (missingKeyIndex == missingKeys.Length)
-                    GrowArray(ref missingKeys, keys.Length - keysFound);
+                    ArrayUtilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
 
                 missingKeys[missingKeyIndex++] = key;
             }
@@ -44,14 +44,47 @@ namespace CacheMeIfYouCan.Internal
             pooledArray = missingKeys;
             return new ReadOnlyMemory<TKey>(pooledArray, 0, missingKeyIndex);
         }
+    }
 
-        private static void GrowArray(ref TKey[] array, int maxSize)
+    internal static class MissingKeysResolver<TKey, TValue>
+    {
+        public static ReadOnlyMemory<TKey> GetMissingKeys(
+            ReadOnlyMemory<TKey> inputKeys,
+            Dictionary<TKey, TValue> dictionaryReturned,
+            out TKey[] pooledArray)
         {
-            var newArrayLength = Math.Min(array.Length * 2, maxSize);
-            var newArray = ArrayPool<TKey>.Shared.Rent(newArrayLength);
-            Array.Copy(array, newArray, array.Length);
-            ArrayPool<TKey>.Shared.Return(array);
-            array = newArray;
+            if (dictionaryReturned.Count == 0)
+            {
+                pooledArray = null;
+                return inputKeys;
+            }
+
+            var span = inputKeys.Span;
+            var missingKeys = dictionaryReturned.Count < inputKeys.Length
+                ? ArrayPool<TKey>.Shared.Rent(inputKeys.Length - dictionaryReturned.Count)
+                : null;
+
+            var keysFound = 0;
+            var missingKeyIndex = 0;
+            foreach (var key in span)
+            {
+                if (dictionaryReturned.ContainsKey(key))
+                {
+                    keysFound++;
+                    continue;
+                }
+
+                // These conditions will only be true if 'dictionaryReturned' contains keys that are not in 'inputKeys'
+                if (missingKeys is null)
+                    missingKeys = ArrayPool<TKey>.Shared.Rent(16);
+                else if (missingKeyIndex == missingKeys.Length)
+                    ArrayUtilities.GrowPooledArray(ref missingKeys, inputKeys.Length - keysFound);
+
+                missingKeys[missingKeyIndex++] = key;
+            }
+
+            pooledArray = missingKeys;
+            return new ReadOnlyMemory<TKey>(pooledArray, 0, missingKeyIndex);
         }
     }
 }

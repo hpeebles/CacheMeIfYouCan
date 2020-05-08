@@ -10,11 +10,11 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ILocalCache<TKey, TValue> _localCache;
         private readonly IDistributedCache<TKey, TValue> _distributedCache;
-        private readonly IEqualityComparer<TKey> _keyComparer;
         private readonly Func<TKey, bool> _skipLocalCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipLocalCacheSetPredicate;
         private readonly Func<TKey, bool> _skipDistributedCacheGetPredicate;
         private readonly Func<TKey, TValue, bool> _skipDistributedCacheSetPredicate;
+        private readonly CollectionPool<HashSet<TKey>, TKey> _hashSetPool;
 
         public TwoTierCache(
             ILocalCache<TKey, TValue> localCache,
@@ -27,11 +27,13 @@ namespace CacheMeIfYouCan.Internal
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
-            _keyComparer = keyComparer ?? EqualityComparer<TKey>.Default;
             _skipLocalCacheGetPredicate = skipLocalCacheGetPredicate;
             _skipLocalCacheSetPredicate = skipLocalCacheSetPredicate;
             _skipDistributedCacheGetPredicate = skipDistributedCacheGetPredicate;
             _skipDistributedCacheSetPredicate = skipDistributedCacheSetPredicate;
+            
+            keyComparer ??= EqualityComparer<TKey>.Default;
+            _hashSetPool = new CollectionPool<HashSet<TKey>, TKey>(_ => new HashSet<TKey>(keyComparer));
         }
         
         public bool LocalCacheEnabled { get; } = true;
@@ -101,35 +103,39 @@ namespace CacheMeIfYouCan.Internal
             var localCacheKeysSkipped = 0;
             var countFromLocalCache = GetFromLocalCache();
 
-            Dictionary<TKey, TValue> resultsDictionary;
+            ReadOnlyMemory<TKey> missingKeys;
+            TKey[] pooledMissingKeysArray;
             if (countFromLocalCache == 0)
             {
-                resultsDictionary = new Dictionary<TKey, TValue>(_keyComparer);
+                missingKeys = keys;
+                pooledMissingKeysArray = null;
             }
             else
             {
-                resultsDictionary = new Dictionary<TKey, TValue>(countFromLocalCache, _keyComparer);
+                var keysFound = _hashSetPool.Rent(countFromLocalCache);
                 foreach (var item in destination.Span.Slice(0, countFromLocalCache))
-                    resultsDictionary[item.Key] = item.Value;
-            }
+                    keysFound.Add(item.Key);
+                
+                missingKeys = MissingKeysResolver<TKey>.GetMissingKeys(
+                    keys,
+                    keysFound,
+                    out pooledMissingKeysArray);
+                
+                _hashSetPool.Return(keysFound);
+                
+                if (missingKeys.Length == 0)
+                {
+                    // if missingKeys is empty, then pooledMissingKeysArray will also be null, so no need to return it
+                    var cacheStats = new CacheGetManyStats(
+                        cacheKeysRequested: keys.Length,
+                        cacheKeysSkipped: cacheKeysSkipped,
+                        localCacheEnabled: true,
+                        distributedCacheEnabled: true,
+                        localCacheKeysSkipped: localCacheKeysSkipped,
+                        localCacheHits: countFromLocalCache);
 
-            var missingKeys = MissingKeysResolver<TKey, TValue>.GetMissingKeys(
-                keys,
-                resultsDictionary,
-                out var pooledMissingKeysArray);
-
-            if (missingKeys.Length == 0)
-            {
-                // if missingKeys is empty, then pooledMissingKeysArray will also be null, so no need to return it
-                var cacheStats = new CacheGetManyStats(
-                    cacheKeysRequested: keys.Length,
-                    cacheKeysSkipped: cacheKeysSkipped,
-                    localCacheEnabled: true,
-                    distributedCacheEnabled: true,
-                    localCacheKeysSkipped: localCacheKeysSkipped,
-                    localCacheHits: countFromLocalCache);
-
-                return new ValueTask<CacheGetManyStats>(cacheStats);
+                    return new ValueTask<CacheGetManyStats>(cacheStats);
+                }
             }
 
             return GetFromDistributedCache();
@@ -323,7 +329,6 @@ namespace CacheMeIfYouCan.Internal
     {
         private readonly ILocalCache<TOuterKey, TInnerKey, TValue> _localCache;
         private readonly IDistributedCache<TOuterKey, TInnerKey, TValue> _distributedCache;
-        private readonly IEqualityComparer<TInnerKey> _keyComparer;
         private readonly Func<TOuterKey, bool> _skipLocalCacheGetOuterPredicate;
         private readonly Func<TOuterKey, TInnerKey, bool> _skipLocalCacheGetInnerPredicate;
         private readonly Func<TOuterKey, bool> _skipLocalCacheSetOuterPredicate;
@@ -332,6 +337,7 @@ namespace CacheMeIfYouCan.Internal
         private readonly Func<TOuterKey, TInnerKey, bool> _skipDistributedCacheGetInnerPredicate;
         private readonly Func<TOuterKey, bool> _skipDistributedCacheSetOuterPredicate;
         private readonly Func<TOuterKey, TInnerKey, TValue, bool> _skipDistributedCacheSetInnerPredicate;
+        private readonly CollectionPool<HashSet<TInnerKey>, TInnerKey> _hashSetPool;
 
         public TwoTierCache(
             ILocalCache<TOuterKey, TInnerKey, TValue> localCache,
@@ -348,7 +354,6 @@ namespace CacheMeIfYouCan.Internal
         {
             _localCache = localCache ?? throw new ArgumentNullException(nameof(localCache));
             _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
-            _keyComparer = keyComparer ?? EqualityComparer<TInnerKey>.Default;
             _skipLocalCacheGetOuterPredicate = skipLocalCacheGetOuterPredicate;
             _skipLocalCacheGetInnerPredicate = skipLocalCacheGetInnerPredicate;
             _skipLocalCacheSetOuterPredicate = skipLocalCacheSetOuterPredicate;
@@ -357,6 +362,9 @@ namespace CacheMeIfYouCan.Internal
             _skipDistributedCacheGetInnerPredicate = skipDistributedCacheGetInnerPredicate;
             _skipDistributedCacheSetOuterPredicate = skipDistributedCacheSetOuterPredicate;
             _skipDistributedCacheSetInnerPredicate = skipDistributedCacheSetInnerPredicate;
+            
+            keyComparer ??= EqualityComparer<TInnerKey>.Default;
+            _hashSetPool = new CollectionPool<HashSet<TInnerKey>, TInnerKey>(_ => new HashSet<TInnerKey>(keyComparer));
         }
 
         public bool LocalCacheEnabled => true;
@@ -370,18 +378,6 @@ namespace CacheMeIfYouCan.Internal
         {
             var (countFromLocalCache, localCacheKeysSkipped) = GetFromLocalCache();
 
-            Dictionary<TInnerKey, TValue> resultsDictionary;
-            if (countFromLocalCache == 0)
-            {
-                resultsDictionary = new Dictionary<TInnerKey, TValue>(_keyComparer);
-            }
-            else
-            {
-                resultsDictionary = new Dictionary<TInnerKey, TValue>(countFromLocalCache, _keyComparer);
-                foreach (var item in destination.Span.Slice(0, countFromLocalCache))
-                    resultsDictionary[item.Key] = item.Value;
-            }
-            
             if (_skipDistributedCacheGetOuterPredicate?.Invoke(outerKey) == true)
             {
                 var cacheStats = new CacheGetManyStats(
@@ -396,23 +392,39 @@ namespace CacheMeIfYouCan.Internal
                 return new ValueTask<CacheGetManyStats>(cacheStats);
             }
 
-            var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(
-                innerKeys,
-                resultsDictionary,
-                out var pooledMissingKeysArray);
-
-            if (missingKeys.Length == 0)
+            ReadOnlyMemory<TInnerKey> missingKeys;
+            TInnerKey[] pooledMissingKeysArray;
+            if (countFromLocalCache == 0)
             {
-                // if missingKeys is empty, then pooledMissingKeysArray will also be null, so no need to return it
-                var cacheStats = new CacheGetManyStats(
-                    cacheKeysRequested: innerKeys.Length,
-                    cacheKeysSkipped: cacheKeysSkipped,
-                    localCacheEnabled: true,
-                    distributedCacheEnabled: true,
-                    localCacheKeysSkipped: localCacheKeysSkipped,
-                    localCacheHits: countFromLocalCache);
+                missingKeys = innerKeys;
+                pooledMissingKeysArray = null;
+            }
+            else
+            {
+                var keysFound = _hashSetPool.Rent(countFromLocalCache);
+                foreach (var item in destination.Span.Slice(0, countFromLocalCache))
+                    keysFound.Add(item.Key);
                 
-                return new ValueTask<CacheGetManyStats>(cacheStats);
+                missingKeys = MissingKeysResolver<TInnerKey>.GetMissingKeys(
+                    innerKeys,
+                    keysFound,
+                    out pooledMissingKeysArray);
+                
+                _hashSetPool.Return(keysFound);
+
+                if (missingKeys.Length == 0)
+                {
+                    // if missingKeys is empty, then pooledMissingKeysArray will also be null, so no need to return it
+                    var cacheStats = new CacheGetManyStats(
+                        cacheKeysRequested: innerKeys.Length,
+                        cacheKeysSkipped: cacheKeysSkipped,
+                        localCacheEnabled: true,
+                        distributedCacheEnabled: true,
+                        localCacheKeysSkipped: localCacheKeysSkipped,
+                        localCacheHits: countFromLocalCache);
+                
+                    return new ValueTask<CacheGetManyStats>(cacheStats);
+                }
             }
             
             return GetFromDistributedCache();
