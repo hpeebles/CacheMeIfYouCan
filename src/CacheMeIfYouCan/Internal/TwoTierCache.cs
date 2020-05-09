@@ -33,7 +33,7 @@ namespace CacheMeIfYouCan.Internal
             _skipDistributedCacheSetPredicate = skipDistributedCacheSetPredicate;
             
             keyComparer ??= EqualityComparer<TKey>.Default;
-            _hashSetPool = new CollectionPool<HashSet<TKey>, TKey>(_ => new HashSet<TKey>(keyComparer));
+            _hashSetPool = new CollectionPool<HashSet<TKey>, TKey>(_ => new HashSet<TKey>(keyComparer), 3);
         }
         
         public bool LocalCacheEnabled { get; } = true;
@@ -364,7 +364,7 @@ namespace CacheMeIfYouCan.Internal
             _skipDistributedCacheSetInnerPredicate = skipDistributedCacheSetInnerPredicate;
             
             keyComparer ??= EqualityComparer<TInnerKey>.Default;
-            _hashSetPool = new CollectionPool<HashSet<TInnerKey>, TInnerKey>(_ => new HashSet<TInnerKey>(keyComparer));
+            _hashSetPool = new CollectionPool<HashSet<TInnerKey>, TInnerKey>(_ => new HashSet<TInnerKey>(keyComparer), 3);
         }
 
         public bool LocalCacheEnabled => true;

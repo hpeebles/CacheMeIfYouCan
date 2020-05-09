@@ -10,10 +10,10 @@ namespace CacheMeIfYouCan.Internal
         private readonly DefaultObjectPool<TCollection>[] _buckets = new DefaultObjectPool<TCollection>[BucketCount];
         private const int BucketCount = 17;
         
-        public CollectionPool(Func<int, TCollection> factory)
+        public CollectionPool(Func<int, TCollection> factory, int countPerBucket)
         {
             _factory = factory;
-            Initialize();
+            Initialize(countPerBucket);
         }
 
         public TCollection Rent(int minCapacity)
@@ -42,14 +42,14 @@ namespace CacheMeIfYouCan.Internal
             return 32 - BitOperations.LeadingZeroCount(bits);
         }
         
-        private void Initialize()
+        private void Initialize(int countPerBucket)
         {
             const int minCapacity = 16;
             for (var i = 0; i < BucketCount; i++)
             {
                 var capacity = minCapacity << i;
                 var policy = new PooledCollectionPolicy(() => _factory(capacity));
-                _buckets[i] = new DefaultObjectPool<TCollection>(policy);
+                _buckets[i] = new DefaultObjectPool<TCollection>(policy, countPerBucket);
             }
         }
 
