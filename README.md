@@ -139,18 +139,18 @@ var configuration = cachedConfiguration.Value;
 
 Cached function with single key using DictionaryCache -
 
-|    Method |     Mean |    Error |   StdDev |   Median |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------- |---------:|---------:|---------:|---------:|-------:|-------:|------:|----------:|
-|  CacheHit | 144.1 ns |  1.84 ns |  1.63 ns | 143.9 ns |      - |      - |     - |         - |
-| CacheMiss | 425.3 ns | 28.46 ns | 83.92 ns | 381.6 ns | 0.0048 | 0.0014 |     - |      32 B |
+|    Method |      Mean |     Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------- |----------:|----------:|---------:|-------:|-------:|------:|----------:|
+|  CacheHit |  89.02 ns |  0.591 ns | 0.553 ns |      - |      - |     - |         - |
+| CacheMiss | 269.76 ns | 11.085 ns | 9.827 ns | 0.0043 | 0.0014 |     - |      28 B |
 
 Cached function with enumerable keys using DictionaryCache -
 
-|                            Method |        Mean |     Error |      StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------------------------------- |------------:|----------:|------------:|-------:|-------:|------:|----------:|
-|                            OneHit |    408.6 ns |   8.09 ns |    10.52 ns | 0.0405 |      - |     - |     256 B |
-|                           OneMiss |    941.7 ns |  14.25 ns |    11.90 ns | 0.0610 | 0.0153 |     - |     384 B |
-|                  OneHitAndOneMiss |  1,136.9 ns |  21.76 ns |    19.29 ns | 0.0763 | 0.0191 |     - |     488 B |
-|                    OneHundredHits |  9,377.1 ns |  92.48 ns |    86.51 ns | 0.3662 |      - |     - |    2336 B |
-|                  OneHundredMisses | 36,046.4 ns | 731.10 ns | 1,280.46 ns | 1.7090 | 0.4272 |     - |   10752 B |
-| OneHundredHitsAndOneHundredMisses | 47,393.8 ns | 927.26 ns | 1,574.56 ns | 1.7090 | 0.4272 |     - |   10960 B |
+|                            Method |        Mean |     Error |    StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------------------------------- |------------:|----------:|----------:|-------:|-------:|------:|----------:|
+|                            OneHit |    437.7 ns |   5.68 ns |   5.32 ns | 0.0391 |      - |     - |     248 B |
+|                           OneMiss |    914.4 ns |  10.82 ns |   9.59 ns | 0.0467 | 0.0086 |     - |     298 B |
+|                  OneHitAndOneMiss |    996.7 ns |  14.98 ns |  14.01 ns | 0.0782 | 0.0191 |     - |     496 B |
+|                    OneHundredHits |  2,613.0 ns |  18.27 ns |  16.19 ns | 0.3700 | 0.0038 |     - |    2328 B |
+|                  OneHundredMisses | 21,696.7 ns | 982.24 ns | 870.73 ns | 0.8240 | 0.2747 |     - |    5302 B |
+| OneHundredHitsAndOneHundredMisses | 26,992.5 ns | 996.80 ns | 883.64 ns | 1.9531 | 0.8240 |     - |   12296 B |
