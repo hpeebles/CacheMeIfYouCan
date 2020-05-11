@@ -120,12 +120,12 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 Job=MediumRun  IterationCount=15  LaunchCount=1
 WarmupCount=10
 
-|                            Method |        Mean |       Error |      StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------------------------------- |------------:|------------:|------------:|-------:|-------:|------:|----------:|
-|                            OneHit |    503.5 ns |     2.37 ns |     2.22 ns | 0.0391 |      - |     - |     248 B |
-|                           OneMiss |  1,038.2 ns |    11.43 ns |    10.13 ns | 0.0496 | 0.0267 |     - |     312 B |
-|                  OneHitAndOneMiss |  1,145.6 ns |    22.14 ns |    20.71 ns | 0.0744 | 0.0210 |     - |     478 B |
-|                    OneHundredHits |  2,817.1 ns |    37.80 ns |    31.57 ns | 0.3700 | 0.0038 |     - |    2328 B |
-|                  OneHundredMisses | 22,109.1 ns | 1,137.74 ns | 1,008.58 ns | 0.8240 | 0.3052 |     - |    9396 B |
-| OneHundredHitsAndOneHundredMisses | 27,115.2 ns |   819.68 ns |   684.47 ns | 2.0142 | 0.6104 |     - |   12656 B |
+|                            Method |        Mean |     Error |    StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------------------------------- |------------:|----------:|----------:|-------:|-------:|------:|----------:|
+|                            OneHit |    437.7 ns |   5.68 ns |   5.32 ns | 0.0391 |      - |     - |     248 B |
+|                           OneMiss |    914.4 ns |  10.82 ns |   9.59 ns | 0.0467 | 0.0086 |     - |     298 B |
+|                  OneHitAndOneMiss |    996.7 ns |  14.98 ns |  14.01 ns | 0.0782 | 0.0191 |     - |     496 B |
+|                    OneHundredHits |  2,613.0 ns |  18.27 ns |  16.19 ns | 0.3700 | 0.0038 |     - |    2328 B |
+|                  OneHundredMisses | 21,696.7 ns | 982.24 ns | 870.73 ns | 0.8240 | 0.2747 |     - |    5302 B |
+| OneHundredHitsAndOneHundredMisses | 26,992.5 ns | 996.80 ns | 883.64 ns | 1.9531 | 0.8240 |     - |   12296 B |
 */

@@ -61,8 +61,8 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 Job=MediumRun  IterationCount=15  LaunchCount=1
 WarmupCount=10
 
-|    Method |     Mean |    Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|---------- |---------:|---------:|---------:|-------:|-------:|------:|----------:|
-|  CacheHit | 153.2 ns |  1.48 ns |  1.39 ns |      - |      - |     - |         - |
-| CacheMiss | 388.6 ns | 11.86 ns | 10.51 ns | 0.0048 | 0.0014 |     - |      32 B |
+|    Method |      Mean |     Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|---------- |----------:|----------:|---------:|-------:|-------:|------:|----------:|
+|  CacheHit |  89.02 ns |  0.591 ns | 0.553 ns |      - |      - |     - |         - |
+| CacheMiss | 269.76 ns | 11.085 ns | 9.827 ns | 0.0043 | 0.0014 |     - |      28 B |
 */

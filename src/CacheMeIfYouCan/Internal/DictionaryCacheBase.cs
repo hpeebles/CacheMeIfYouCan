@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Internal
             };
         }
 
-        protected bool TryGetImpl(TKey key, DateTime now, out TValue value)
+        protected bool TryGetImpl(TKey key, long nowTicks, out TValue value)
         {
             while (true)
             {
@@ -69,7 +69,7 @@ namespace CacheMeIfYouCan.Internal
                 // value has been removed from the dictionary and reused, so restart the loop and try again.
                 var version = valueAndExpiry.Version;
 
-                if (valueAndExpiry.ExpiryTicks > now.Ticks)
+                if (valueAndExpiry.ExpiryTicks > nowTicks)
                 {
                     value = valueAndExpiry.Value;
                     if (valueAndExpiry.Version == version)
@@ -84,13 +84,13 @@ namespace CacheMeIfYouCan.Internal
             }
         }
 
-        protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive, DateTime now)
+        protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive, long nowTicks)
         {
             var valueAndExpiry = _valueAndExpiryPool.Get();
 
             Interlocked.Increment(ref valueAndExpiry.Version);
             
-            var expiryTicks = now.Add(timeToLive).Ticks;
+            var expiryTicks = nowTicks + (long)timeToLive.TotalMilliseconds;
             
             valueAndExpiry.Value = value;
             valueAndExpiry.ExpiryTicks = expiryTicks;
@@ -126,7 +126,7 @@ namespace CacheMeIfYouCan.Internal
         protected bool RemoveImpl(TKey key, out TValue value)
         {
             if (!_values.TryRemove(key, out var valueAndExpiry) ||
-                valueAndExpiry.ExpiryTicks < DateTime.UtcNow.Ticks)
+                valueAndExpiry.ExpiryTicks < TicksHelper.GetTicks64())
             {
                 value = default;
                 return false;
@@ -144,7 +144,7 @@ namespace CacheMeIfYouCan.Internal
         
         private void ProcessKeyExpiryDates()
         {
-            var nowTicks = DateTime.UtcNow.Ticks;
+            var nowTicks = TicksHelper.GetTicks64();
             
             while (_keysToBePutIntoExpiryHeapReader.TryRead(out var keyAndExpiry))
             {

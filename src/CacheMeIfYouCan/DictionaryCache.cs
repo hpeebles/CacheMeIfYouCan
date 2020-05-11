@@ -24,14 +24,14 @@ namespace CacheMeIfYouCan
         {
             CheckDisposed();
 
-            return TryGetImpl(key, DateTime.UtcNow, out value);
+            return TryGetImpl(key, TicksHelper.GetTicks64(), out value);
         }
 
         public void Set(TKey key, TValue value, TimeSpan timeToLive)
         {
             CheckDisposed();
 
-            SetImpl(key, value, timeToLive, DateTime.UtcNow);
+            SetImpl(key, value, timeToLive, TicksHelper.GetTicks64());
         }
 
         public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
@@ -42,10 +42,10 @@ namespace CacheMeIfYouCan
                 throw Errors.LocalCache_DestinationArrayTooSmall(nameof(destination));
 
             var countFound = 0;
-            var now = DateTime.UtcNow;
+            var nowTicks = TicksHelper.GetTicks64();
             foreach (var key in keys)
             {
-                if (TryGetImpl(key, now, out var value))
+                if (TryGetImpl(key, nowTicks, out var value))
                     destination[countFound++] = new KeyValuePair<TKey, TValue>(key, value);
             }
 
@@ -56,9 +56,9 @@ namespace CacheMeIfYouCan
         {
             CheckDisposed();
 
-            var now = DateTime.UtcNow;
+            var nowTicks = TicksHelper.GetTicks64();
             foreach (var value in values)
-                SetImpl(value.Key, value.Value, timeToLive, now);
+                SetImpl(value.Key, value.Value, timeToLive, nowTicks);
         }
 
         public bool TryRemove(TKey key, out TValue value) => RemoveImpl(key, out value);
@@ -100,14 +100,14 @@ namespace CacheMeIfYouCan
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
             
             var countFound = 0;
-            var now = DateTime.UtcNow;
+            var nowTicks = TicksHelper.GetTicks64();
             foreach (var innerKey in innerKeys)
             {
                 var innerKeyHashCode = _innerKeyComparer.GetHashCode(innerKey);
 
                 var hashCode = GetCombinedHashCode(outerKeyHashCode, innerKeyHashCode);
 
-                if (TryGetImpl(new TupleKey<TOuterKey, TInnerKey>(outerKey, innerKey, hashCode), now, out var value))
+                if (TryGetImpl(new TupleKey<TOuterKey, TInnerKey>(outerKey, innerKey, hashCode), nowTicks, out var value))
                     destination[countFound++] = new KeyValuePair<TInnerKey, TValue>(innerKey, value);
             }
 
@@ -123,7 +123,7 @@ namespace CacheMeIfYouCan
 
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
 
-            var now = DateTime.UtcNow;
+            var nowTicks = TicksHelper.GetTicks64();
             foreach (var kv in values)
             {
                 var innerKeyHashCode = _innerKeyComparer.GetHashCode(kv.Key);
@@ -133,7 +133,7 @@ namespace CacheMeIfYouCan
                     kv.Key,
                     GetCombinedHashCode(outerKeyHashCode, innerKeyHashCode));
 
-                SetImpl(key, kv.Value, timeToLive, now);
+                SetImpl(key, kv.Value, timeToLive, nowTicks);
             }
         }
 
@@ -145,7 +145,7 @@ namespace CacheMeIfYouCan
 
             var outerKeyHashCode = _outerKeyComparer.GetHashCode(outerKey);
 
-            var now = DateTime.UtcNow;
+            var nowTicks = TicksHelper.GetTicks64();
             foreach (var value in values)
             {
                 var innerKeyHashCode = _innerKeyComparer.GetHashCode(value.Key);
@@ -155,7 +155,7 @@ namespace CacheMeIfYouCan
                     value.Key,
                     GetCombinedHashCode(outerKeyHashCode, innerKeyHashCode));
 
-                SetImpl(key, value.Value.Value, value.Value.TimeToLive, now);
+                SetImpl(key, value.Value.Value, value.Value.TimeToLive, nowTicks);
             }
         }
 
