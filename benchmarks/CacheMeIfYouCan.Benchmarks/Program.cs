@@ -11,11 +11,17 @@ namespace CacheMeIfYouCan.Benchmarks
 
             switch (benchmarkId)
             {
+                case 0:
+                    CachedFunctionWithSingleKey.Run();
+                    break;
                 case 1:
                     CachedFunctionWithEnumerableKeys.Run();
                     break;
+                case 2:
+                    LocalCaches.Run();
+                    break;
                 default:
-                    CachedFunctionWithSingleKey.Run();
+                    Console.WriteLine("No benchmarks found with Id - " + benchmarkId);
                     break;
             }
         }
