@@ -55,7 +55,7 @@ namespace CacheMeIfYouCan.Tests
             for (var i = 0; i < 100; i++)
                 cache.Set(i, i, TimeSpan.FromMilliseconds(1));
             
-            Thread.Sleep(TimeSpan.FromSeconds(1.5));
+            Thread.Sleep(TimeSpan.FromSeconds(3));
 
             var debugInfo = cache.GetDebugInfo();
 
@@ -81,7 +81,7 @@ namespace CacheMeIfYouCan.Tests
             for (var i = 0; i < maxItemsInRecycleQueue * 2; i++)
                 cache.Set(i, i, TimeSpan.FromMilliseconds(1));
             
-            Thread.Sleep(TimeSpan.FromSeconds(1.5));
+            Thread.Sleep(TimeSpan.FromSeconds(3));
 
             var debugInfo = cache.GetDebugInfo();
 
