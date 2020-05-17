@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 
@@ -12,7 +13,6 @@ namespace CacheMeIfYouCan.Internal
         private readonly ConcurrentDictionary<TKey, ValueAndExpiry> _values;
         private readonly MinHeap<KeyAndExpiry> _keysToExpireHeap;
         private readonly HighCapacityObjectPool<ValueAndExpiry> _valueAndExpiryPool;
-        private readonly HighCapacityObjectPool<KeyAndExpiry> _keyAndExpiryPool;
         private readonly ChannelReader<KeyAndExpiry> _keysToBePutIntoExpiryHeapReader;
         private readonly ChannelWriter<KeyAndExpiry> _keysToBePutIntoExpiryHeapWriter;
         private readonly TimeSpan _keyExpiryProcessorInterval;
@@ -24,7 +24,6 @@ namespace CacheMeIfYouCan.Internal
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
             _keysToExpireHeap = new MinHeap<KeyAndExpiry>(KeyAndExpiryComparer.Instance);
             _valueAndExpiryPool = new HighCapacityObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
-            _keyAndExpiryPool = new HighCapacityObjectPool<KeyAndExpiry>(() => new KeyAndExpiry(), 1000);
             
             var keysToBePutIntoExpiryHeapChannel = Channel.CreateUnbounded<KeyAndExpiry>(new UnboundedChannelOptions
             {
@@ -46,8 +45,7 @@ namespace CacheMeIfYouCan.Internal
             return new DebugInfo
             {
                 Values = _values,
-                ValueAndExpiryPool = _valueAndExpiryPool,
-                KeyAndExpiryPool = _keyAndExpiryPool
+                ValueAndExpiryPool = _valueAndExpiryPool
             };
         }
 
@@ -86,39 +84,42 @@ namespace CacheMeIfYouCan.Internal
 
         protected void SetImpl(TKey key, TValue value, TimeSpan timeToLive, long nowTicks)
         {
-            var valueAndExpiry = _valueAndExpiryPool.Get();
+            var valueAndExpiryToAdd = _valueAndExpiryPool.Get();
 
-            Interlocked.Increment(ref valueAndExpiry.Version);
+            Interlocked.Increment(ref valueAndExpiryToAdd.Version);
             
             var expiryTicks = nowTicks + (long)timeToLive.TotalMilliseconds;
             
-            valueAndExpiry.Value = value;
-            valueAndExpiry.ExpiryTicks = expiryTicks;
+            valueAndExpiryToAdd.Value = value;
+            valueAndExpiryToAdd.ExpiryTicks = expiryTicks;
 
             while (true)
             {
-                // If a value already exists at this key then we want to update this value and recycle the old value.
-                // This means we need to do a TryGetValue, if successful we then do a TryUpdate where the update only
-                // succeeds if the value is still the same. We can then queue up the old value to be recycled. This is
-                // so that the values we recycle are guaranteed to no longer be in the dictionary
-                if (_values.TryGetValue(key, out var existingValueAndExpiry))
-                {
-                    if (_values.TryUpdate(key, valueAndExpiry, existingValueAndExpiry))
-                    {
-                        _valueAndExpiryPool.Return(existingValueAndExpiry);
-                        break;
-                    }
-                }
-                else if (_values.TryAdd(key, valueAndExpiry))
-                {
+                var valueFromCache = _values.GetOrAdd(key, valueAndExpiryToAdd);
+
+                // If the value was added, we are done
+                if (valueFromCache == valueAndExpiryToAdd)
                     break;
-                }
+                
+                // Otherwise we need to update the value, but because we want to recycle the previous value, we need to
+                // ensure the update only happens if the value stored is still the one we already have a reference to
+                if (!_values.TryUpdate(key, valueAndExpiryToAdd, valueFromCache))
+                    continue;
+                
+                // The key is already in the expiry queue, so we only need to re-add it if the new value expires before
+                // the previous value. Otherwise, when the old expiry date is reached the key will be checked and a new
+                // item will be put in the queue with the new expiry date
+                var addKeyAndExpiry = expiryTicks < valueFromCache.ExpiryTicks;
+                
+                _valueAndExpiryPool.Return(valueFromCache);
+
+                if (addKeyAndExpiry)
+                    break;
+
+                return;
             }
 
-            var keyAndExpiry = _keyAndExpiryPool.Get();
-
-            keyAndExpiry.Key = key;
-            keyAndExpiry.ExpiryTicks = expiryTicks;
+            var keyAndExpiry = new KeyAndExpiry(key, expiryTicks);
 
             _keysToBePutIntoExpiryHeapWriter.TryWrite(keyAndExpiry);
         }
@@ -145,10 +146,11 @@ namespace CacheMeIfYouCan.Internal
         private void ProcessKeyExpiryDates()
         {
             var nowTicks = TicksHelper.GetTicks64();
+            var nowTicksDividedBy1024 = (int)(nowTicks >> 10);
             
             while (_keysToBePutIntoExpiryHeapReader.TryRead(out var keyAndExpiry))
             {
-                if (keyAndExpiry.ExpiryTicks < nowTicks)
+                if (keyAndExpiry.ExpiryTicksDividedBy1024 < nowTicksDividedBy1024)
                     RemoveExpiredKey(keyAndExpiry, nowTicks);
                 else
                     _keysToExpireHeap.Add(keyAndExpiry);
@@ -156,7 +158,7 @@ namespace CacheMeIfYouCan.Internal
 
             while (
                 _keysToExpireHeap.TryPeek(out var nextPeek) &&
-                nextPeek.ExpiryTicks < nowTicks &&
+                nextPeek.ExpiryTicksDividedBy1024 < nowTicksDividedBy1024 &&
                 _keysToExpireHeap.TryTake(out var next))
             {
                 RemoveExpiredKey(next, nowTicks);
@@ -167,16 +169,20 @@ namespace CacheMeIfYouCan.Internal
 
         private void RemoveExpiredKey(KeyAndExpiry keyAndExpiry, long nowTicks)
         {
-            if (_values.TryGetValue(keyAndExpiry.Key, out var valueAndExpiry) &&
-                valueAndExpiry.ExpiryTicks < nowTicks)
+            if (!_values.TryGetValue(keyAndExpiry.Key, out var valueAndExpiry))
+                return;
+            
+            if (valueAndExpiry.ExpiryTicks < nowTicks)
             {
                 var kvp = new KeyValuePair<TKey, ValueAndExpiry>(keyAndExpiry.Key, valueAndExpiry);
 
                 if (((ICollection<KeyValuePair<TKey, ValueAndExpiry>>) _values).Remove(kvp))
                     _valueAndExpiryPool.Return(valueAndExpiry);
             }
-
-            _keyAndExpiryPool.Return(keyAndExpiry);
+            else
+            {
+                _keysToExpireHeap.Add(new KeyAndExpiry(keyAndExpiry.Key, valueAndExpiry.ExpiryTicks));
+            }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -193,10 +199,21 @@ namespace CacheMeIfYouCan.Internal
             public volatile int Version;
         }
 
-        internal class KeyAndExpiry
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        internal readonly struct KeyAndExpiry
         {
-            public TKey Key;
-            public long ExpiryTicks;
+            public KeyAndExpiry(TKey key, long expiryTicks)
+                : this(key, (int)(expiryTicks >> 10) + 1)
+            { }
+            
+            public KeyAndExpiry(TKey key, int expiryTicksDividedBy1024)
+            {
+                Key = key;
+                ExpiryTicksDividedBy1024 = expiryTicksDividedBy1024;
+            }
+            
+            public readonly TKey Key;
+            public readonly int ExpiryTicksDividedBy1024;
         }
 
         private sealed class KeyAndExpiryComparer : IComparer<KeyAndExpiry>
@@ -207,10 +224,7 @@ namespace CacheMeIfYouCan.Internal
 
             public int Compare(KeyAndExpiry x, KeyAndExpiry y)
             {
-                if (x is null || y is null)
-                    return 0;
-
-                return x.ExpiryTicks.CompareTo(y.ExpiryTicks);
+                return x.ExpiryTicksDividedBy1024.CompareTo(y.ExpiryTicksDividedBy1024);
             }
         }
 
@@ -218,7 +232,6 @@ namespace CacheMeIfYouCan.Internal
         {
             public ConcurrentDictionary<TKey, ValueAndExpiry> Values;
             public HighCapacityObjectPool<ValueAndExpiry> ValueAndExpiryPool;
-            public HighCapacityObjectPool<KeyAndExpiry> KeyAndExpiryPool;
         }
     }
 }

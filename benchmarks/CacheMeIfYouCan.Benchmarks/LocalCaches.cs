@@ -80,21 +80,21 @@ namespace CacheMeIfYouCan.Benchmarks
 
 BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
 Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
-.NET Core SDK=5.0.100-preview.3.20216.6
+.NET Core SDK=5.0.100-preview.5.20251.2
   [Host]    : .NET Core 3.1.4 (CoreCLR 4.700.20.20201, CoreFX 4.700.20.22101), X64 RyuJIT
   MediumRun : .NET Core 3.1.4 (CoreCLR 4.700.20.20201, CoreFX 4.700.20.22101), X64 RyuJIT
 
 Job=MediumRun  IterationCount=15  LaunchCount=1
 WarmupCount=10
 
-|                  Method |         Mean |        Error |       StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|------------------------ |-------------:|-------------:|-------------:|-------:|-------:|------:|----------:|
-|         MemoryCache_Get |    200.56 ns |     0.569 ns |     0.532 ns | 0.0050 |      - |     - |      32 B |
-|     DictionaryCache_Get |     17.14 ns |     0.269 ns |     0.252 ns |      - |      - |     - |         - |
-|         MemoryCache_Set |  1,108.79 ns |     4.575 ns |     4.280 ns | 0.4263 | 0.0010 |     - |    2680 B |
-|     DictionaryCache_Set |    189.54 ns |    34.113 ns |    31.909 ns | 0.0050 | 0.0017 |     - |      32 B |
-|     MemoryCache_GetMany | 22,315.86 ns |    50.916 ns |    42.517 ns | 0.9460 |      - |     - |    6080 B |
-| DictionaryCache_GetMany |  1,258.49 ns |    10.630 ns |     9.423 ns |      - |      - |     - |         - |
-|     MemoryCache_SetMany | 72,257.57 ns |   206.137 ns |   182.735 ns | 7.2021 | 0.6104 |     - |   45280 B |
-| DictionaryCache_SetMany | 18,156.89 ns | 3,047.234 ns | 2,850.385 ns | 0.4883 | 0.1526 |     - |    3200 B |
+|                  Method |         Mean |      Error |     StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|------------------------ |-------------:|-----------:|-----------:|-------:|-------:|------:|----------:|
+|         MemoryCache_Get |    188.56 ns |   1.996 ns |   1.770 ns | 0.0050 |      - |     - |      32 B |
+|     DictionaryCache_Get |     15.71 ns |   0.146 ns |   0.137 ns |      - |      - |     - |         - |
+|         MemoryCache_Set |  1,079.78 ns |   6.498 ns |   5.760 ns | 0.4263 | 0.0010 |     - |    2680 B |
+|     DictionaryCache_Set |     74.78 ns |   0.306 ns |   0.286 ns |      - |      - |     - |         - |
+|     MemoryCache_GetMany | 21,828.41 ns | 239.081 ns | 223.636 ns | 0.9460 |      - |     - |    6080 B |
+| DictionaryCache_GetMany |  1,211.71 ns |  23.959 ns |  21.239 ns |      - |      - |     - |         - |
+|     MemoryCache_SetMany | 70,520.24 ns | 408.412 ns | 382.029 ns | 7.2021 | 0.6104 |     - |   45280 B |
+| DictionaryCache_SetMany |  7,043.26 ns |  15.640 ns |  14.630 ns |      - |      - |     - |         - |
 */
