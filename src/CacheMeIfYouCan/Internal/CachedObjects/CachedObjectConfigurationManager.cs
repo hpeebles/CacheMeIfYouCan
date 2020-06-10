@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Events.CachedObject;
 
-namespace CacheMeIfYouCan.Internal
+namespace CacheMeIfYouCan.Internal.CachedObjects
 {
     internal class CachedObjectConfigurationManager<T> :
         ICachedObjectConfigurationManager<T>,
@@ -72,11 +72,30 @@ namespace CacheMeIfYouCan.Internal
             
             return this;
         }
-
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(
-            Func<T, TUpdateFuncInput, CancellationToken, Task<T>> updateValueFunc)
+        
+        public IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithUpdates<TUpdates>(
+            Func<T, TUpdates> getUpdatesFunc,
+            Func<T, TUpdates, T> applyUpdatesFunc)
         {
-            return new CachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput>(_getValueFunc, updateValueFunc)
+            return WithUpdatesAsync(
+                v => Task.FromResult(getUpdatesFunc(v)),
+                (v, u) => Task.FromResult(applyUpdatesFunc(v, u)));
+        }
+        
+        public IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithUpdatesAsync<TUpdates>(
+            Func<T, Task<TUpdates>> getUpdatesFunc,
+            Func<T, TUpdates, Task<T>> applyUpdatesFunc)
+        {
+            return WithUpdatesAsync(
+                (v, _) => getUpdatesFunc(v),
+                (v, u, _) => applyUpdatesFunc(v, u));
+        }
+
+        public IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithUpdatesAsync<TUpdates>(
+            Func<T, CancellationToken, Task<TUpdates>> getUpdatesFunc,
+            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
+        {
+            return new IncrementalCachedObjectConfigurationManager<T, TUpdates>(_getValueFunc, getUpdatesFunc, applyUpdatesFunc)
             {
                 _refreshValueFuncTimeout = _refreshValueFuncTimeout,
                 _refreshInterval = _refreshInterval,
@@ -88,29 +107,38 @@ namespace CacheMeIfYouCan.Internal
             };
         }
 
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, CancellationToken, T> updateValueFunc)
+        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithUpdates<TUpdates>(
+            Func<T, TUpdates, T> applyUpdatesFunc)
         {
-            return WithUpdates<TUpdateFuncInput>((current, input, cancellationToken) =>
-                Task.FromResult(updateValueFunc(current, input, cancellationToken)));
+            return WithUpdatesAsync<TUpdates>((v, u) => Task.FromResult(applyUpdatesFunc(v, u)));
+        }
+        
+        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithUpdatesAsync<TUpdates>(
+            Func<T, TUpdates, Task<T>> applyUpdatesFunc)
+        {
+            return WithUpdatesAsync<TUpdates>((v, u, _) => applyUpdatesFunc(v, u));
         }
 
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, Task<T>> updateValueFunc)
+        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithUpdatesAsync<TUpdates>(
+            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
         {
-            return WithUpdates<TUpdateFuncInput>((current, input, cancellationToken) =>
-                updateValueFunc(current, input));
-        }
-
-        public ICachedObjectWithUpdatesConfigurationManager<T, TUpdateFuncInput> WithUpdates<TUpdateFuncInput>(Func<T, TUpdateFuncInput, T> updateValueFunc)
-        {
-            return WithUpdates<TUpdateFuncInput>((current, input, cancellationToken) =>
-                Task.FromResult(updateValueFunc(current, input)));
+            return new UpdateableCachedObjectConfigurationManager<T, TUpdates>(_getValueFunc, applyUpdatesFunc)
+            {
+                _refreshValueFuncTimeout = _refreshValueFuncTimeout,
+                _refreshInterval = _refreshInterval,
+                _refreshIntervalFactory = _refreshIntervalFactory,
+                _onInitializedAction = _onInitializedAction,
+                _onDisposedAction = _onDisposedAction,
+                _onValueRefreshedAction = _onValueRefreshedAction,
+                _onValueRefreshExceptionAction = _onValueRefreshExceptionAction
+            };
         }
 
         public ICachedObject<T> Build()
         {
             var refreshIntervalFactory = GetRefreshIntervalFactory();
             
-            var cachedObject = new CachedObject<T, Unit>(
+            var cachedObject = new CachedObject<T>(
                 _getValueFunc,
                 refreshIntervalFactory,
                 _refreshValueFuncTimeout);

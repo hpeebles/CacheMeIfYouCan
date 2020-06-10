@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Events.CachedObject;
 using FluentAssertions;
 using Xunit;
@@ -11,14 +12,20 @@ namespace CacheMeIfYouCan.Tests
 {
     public class CachedObjectTests
     {
+        protected virtual ICachedObject<T> BuildCachedObject<T>(ICachedObjectConfigurationManager<T> config)
+        {
+            return config.Build();
+        }
+        
         [Fact]
         public void Initialize_WhenCalledMultipleTimesConcurrently_ExecutesOnce()
         {
             var executionCount = 0;
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMinutes(1));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             var tasks = Enumerable
                 .Range(0, 10)
@@ -40,10 +47,11 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void Value_IfCalledWhenNotInitialized_WillInitializeValue()
         {
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMinutes(1));
+
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.State.Should().Be(CachedObjectState.PendingInitialization);
             var value = cachedObject.Value;
@@ -58,12 +66,13 @@ namespace CacheMeIfYouCan.Tests
             var values = new List<DateTime>();
             
             var countdown = new CountdownEvent(5);
-            
-            using var cachedObject = CachedObjectFactory
-                .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
 
+            var config = CachedObjectFactory
+                .ConfigureFor(GetValue)
+                .WithRefreshInterval(TimeSpan.FromSeconds(1));
+
+            using var cachedObject = BuildCachedObject(config);
+            
             cachedObject.Initialize();
             
             countdown.Wait();
@@ -90,11 +99,12 @@ namespace CacheMeIfYouCan.Tests
         public void Initialize_IfFails_CanBeCalledAgain()
         {
             var count = 0;
-            
-            using var cachedObject = CachedObjectFactory
+
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromSeconds(1));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             Action action = () => cachedObject.Initialize();
 
@@ -119,10 +129,11 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task Status_UpdatedCorrectly()
         {
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMinutes(1));
+                
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.State.Should().Be(CachedObjectState.PendingInitialization);
             
@@ -149,10 +160,11 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnceDisposed_RefreshValueFuncStopsBeingCalled()
         {
             var executionCount = 0;
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(50));
+                
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -179,10 +191,11 @@ namespace CacheMeIfYouCan.Tests
         public async Task Version_UpdatedEachTimeValueIsRefreshed()
         {
             var executionCount = 0;
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(50));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Version.Should().Be(0);
             cachedObject.Initialize();
@@ -204,10 +217,11 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void OnceDisposed_ThrowsObjectDisposedExceptionIfAccessed()
         {
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(50));
+                
+            using var cachedObject = BuildCachedObject(config);
             
             cachedObject.Initialize();
             cachedObject.Dispose();
@@ -224,10 +238,11 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void InitializeAsync_IfAlreadyInitialized_ReturnsCompletedTask()
         {
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(50));
+            
+            using var cachedObject = BuildCachedObject(config);
             
             cachedObject.Initialize();
 
@@ -240,11 +255,12 @@ namespace CacheMeIfYouCan.Tests
         {
             var isFirstAttempt = true;
             
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
                 .WithRefreshInterval(TimeSpan.FromMilliseconds(50))
-                .WithRefreshValueFuncTimeout(TimeSpan.FromMilliseconds(100))
-                .Build();
+                .WithRefreshValueFuncTimeout(TimeSpan.FromMilliseconds(100));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             Func<Task> func = () => cachedObject.InitializeAsync();
             await func.Should().ThrowAsync<TaskCanceledException>();
@@ -272,10 +288,11 @@ namespace CacheMeIfYouCan.Tests
         {
             var signal = new ManualResetEventSlim();
             
-            using var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(1));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             await cachedObject.InitializeAsync().ConfigureAwait(false);
 
@@ -304,13 +321,13 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void WithJitter_CausesRefreshIntervalToFluctuate()
         {
-            var fastRefreshEvent = new ManualResetEventSlim();
-            var slowRefreshEvent = new ManualResetEventSlim();
+            using var fastRefreshEvent = new ManualResetEventSlim();
+            using var slowRefreshEvent = new ManualResetEventSlim();
 
             var lastRefresh = DateTime.MinValue;
             var averageRefreshInterval = TimeSpan.FromSeconds(1);
 
-            using var cachedObject = CachedObjectFactory.ConfigureFor(() =>
+            var config = CachedObjectFactory.ConfigureFor(() =>
                 {
                     var now = DateTime.UtcNow;
 
@@ -328,8 +345,9 @@ namespace CacheMeIfYouCan.Tests
                     return now;
                 })
                 .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .WithJitter(99)
-                .Build();
+                .WithJitter(99);
+            
+            using var cachedObject = BuildCachedObject(config);
             
             cachedObject.Initialize();
 
@@ -344,14 +362,14 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnInitialized_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var signal = new ManualResetEventSlim();
+            using var signal = new ManualResetEventSlim();
             
             var config = CachedObjectFactory.ConfigureFor(() => DateTime.UtcNow);
             
             if (addedPreBuilding)
                 config.OnInitialized(_ => signal.Set());
 
-            var cachedObject = config.Build();
+            using var cachedObject = BuildCachedObject(config);
 
             if (!addedPreBuilding)
                 cachedObject.OnInitialized += (_, __) => signal.Set();
@@ -368,14 +386,14 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public async Task OnDisposed_ActionCalledAsExpected(bool addedPreBuilding)
         {
-            var signal = new ManualResetEventSlim();
+            using var signal = new ManualResetEventSlim();
             
             var config = CachedObjectFactory.ConfigureFor(() => DateTime.UtcNow);
             
             if (addedPreBuilding)
                 config.OnDisposed(_ => signal.Set());
 
-            var cachedObject = config.Build();
+            using var cachedObject = BuildCachedObject(config);
 
             if (!addedPreBuilding)
                 cachedObject.OnDisposed += (_, __) => signal.Set();
@@ -395,7 +413,7 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnValueRefreshed_ActionCalledAsExpected(bool addedPreBuilding)
         {
             var events = new List<ValueRefreshedEvent<DateTime>>();
-            var countdown = new CountdownEvent(10);
+            using var countdown = new CountdownEvent(10);
             
             var config = CachedObjectFactory.ConfigureFor(async () =>
                 {
@@ -407,7 +425,7 @@ namespace CacheMeIfYouCan.Tests
             if (addedPreBuilding)
                 config.OnValueRefresh(Action);
 
-            var cachedObject = config.Build();
+            using var cachedObject = BuildCachedObject(config);
 
             if (!addedPreBuilding)
                 cachedObject.OnValueRefreshed += (_, e) => Action(e);
@@ -455,7 +473,7 @@ namespace CacheMeIfYouCan.Tests
         public async Task OnValueRefreshException_ActionCalledAsExpected(bool addedPreBuilding)
         {
             var events = new List<ValueRefreshExceptionEvent<DateTime>>();
-            var countdown = new CountdownEvent(10);
+            using var countdown = new CountdownEvent(10);
             var first = true;
             
             var config = CachedObjectFactory.ConfigureFor(async () =>
@@ -473,7 +491,7 @@ namespace CacheMeIfYouCan.Tests
             if (addedPreBuilding)
                 config.OnValueRefresh(onException: Action);
 
-            var cachedObject = config.Build();
+            using var cachedObject = BuildCachedObject(config);
 
             if (!addedPreBuilding)
                 cachedObject.OnValueRefreshException += (_, e) => Action(e);
@@ -510,10 +528,11 @@ namespace CacheMeIfYouCan.Tests
         {
             var disposable = new DisposableClass();
 
-            var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(() => disposable)
-                .WithRefreshInterval(TimeSpan.FromSeconds(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromSeconds(1));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -531,10 +550,11 @@ namespace CacheMeIfYouCan.Tests
         {
             var executionCount = 0;
             
-            var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMinutes(1));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -560,10 +580,11 @@ namespace CacheMeIfYouCan.Tests
         {
             var executionCount = 0;
             
-            var cachedObject = CachedObjectFactory
+            var config = CachedObjectFactory
                 .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMilliseconds(500))
-                .Build();
+                .WithRefreshInterval(TimeSpan.FromMilliseconds(500));
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -608,10 +629,9 @@ namespace CacheMeIfYouCan.Tests
         {
             var refreshValueFuncCancelled = false;
             
-            var cachedObject = CachedObjectFactory
-                .ConfigureFor(GetValue)
-                .WithRefreshInterval(TimeSpan.FromMinutes(1))
-                .Build();
+            var config = CachedObjectFactory.ConfigureFor(GetValue);
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -666,9 +686,9 @@ namespace CacheMeIfYouCan.Tests
         {
             var executionCount = 0;
 
-            var cachedObject = CachedObjectFactory
-                .ConfigureFor(GetValue)
-                .Build();
+            var config = CachedObjectFactory.ConfigureFor(GetValue);
+            
+            using var cachedObject = BuildCachedObject(config);
 
             cachedObject.Initialize();
 
@@ -702,225 +722,6 @@ namespace CacheMeIfYouCan.Tests
                 await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
                 Interlocked.Increment(ref executionCount);
                 return DateTime.UtcNow;
-            }
-        }
-
-        [Fact]
-        public void WithUpdateFunc_ValueIsUpdatedCorrectly()
-        {
-            var cachedObject = CachedObjectFactory
-                .ConfigureFor(() => 1)
-                .WithUpdates<int>((current, input) => current + input)
-                .Build();
-
-            cachedObject.Value.Should().Be(1);
-
-            for (var i = 2; i < 100; i++)
-            {
-                cachedObject.UpdateValue(1);
-                cachedObject.Value.Should().Be(i);
-                cachedObject.Version.Should().Be(i);
-            }
-        }
-
-        [Fact]
-        public async Task UpdateAsync_RefreshValueAsync_UnderlyingTasksAlwaysRunOneAtATime()
-        {
-            var concurrentExecutions = 0;
-            
-            var cachedObject = CachedObjectFactory
-                .ConfigureFor(RefreshValue)
-                .WithUpdates<int>(UpdateValue)
-                .Build();
-
-            cachedObject.Initialize();
-
-            var tasks = Enumerable
-                .Range(0, 10)
-                .SelectMany(_ => new[] { cachedObject.UpdateValueAsync(1), cachedObject.RefreshValueAsync() })
-                .ToList();
-
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-             
-            async Task<int> RefreshValue()
-            {
-                if (Interlocked.Increment(ref concurrentExecutions) > 1)
-                    throw new Exception();
-                
-                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
-
-                Interlocked.Decrement(ref concurrentExecutions);
-
-                return 0;
-            }
-
-            async Task<int> UpdateValue(int current, int input)
-            {
-                if (Interlocked.Increment(ref concurrentExecutions) > 1)
-                    throw new Exception();
-                
-                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
-
-                Interlocked.Decrement(ref concurrentExecutions);
-
-                return current + input;
-            }
-        }
-        
-        [Fact]
-        public async Task UpdateAsync_RefreshValueAsync_RefreshesTakePriority()
-        {
-            var lockObj = new object();
-            
-            var cachedObject = CachedObjectFactory
-                .ConfigureFor(RefreshValue)
-                .WithUpdates<int>(UpdateValue)
-                .Build();
-
-            cachedObject.Initialize();
-            
-            var tasksInOrderOfCompletion = new List<(Task Task, bool IsRefresh)>();
-            
-            var updates = Enumerable.Range(0, 10).Select(_ => RunTask(cachedObject.UpdateValueAsync(1), false)).ToList();
-            var refreshes = Enumerable.Range(0, 10).Select(_ => RunTask(cachedObject.RefreshValueAsync(), true)).ToList();
-
-            await Task.WhenAll(updates.Concat(refreshes)).ConfigureAwait(false);
-
-            for (var i = 0; i < 20; i++)
-            {
-                if (i == 0)
-                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeFalse();
-                else if (i <= 10)
-                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeTrue();
-                else
-                    tasksInOrderOfCompletion[i].IsRefresh.Should().BeFalse();
-            }
-            
-            Task RunTask(Task task, bool isRefresh)
-            {
-                return task.ContinueWith(t =>
-                {
-                    lock (lockObj)
-                        tasksInOrderOfCompletion.Add((t, isRefresh));
-                });
-            }
-                
-            static async Task<int> RefreshValue()
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
-
-                return 0;
-            }
-
-            static async Task<int> UpdateValue(int current, int input)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(50)).ConfigureAwait(false);
-
-                return current + input;
-            }
-        }
-        
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task OnValueUpdated_ActionCalledAsExpected(bool addedPreBuilding)
-        {
-            var events = new List<ValueUpdatedEvent<int, int>>();
-            
-            var config = CachedObjectFactory
-                .ConfigureFor(() => 1)
-                .WithUpdates<int>(async (current, input) =>
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
-                    return current + input;
-                });
-
-            if (addedPreBuilding)
-                config.OnValueUpdate(events.Add);
-
-            var cachedObject = config.Build();
-
-            if (!addedPreBuilding)
-                cachedObject.OnValueUpdated += (_, e) => events.Add(e);
-
-            var start = DateTime.UtcNow;
-            
-            await cachedObject.InitializeAsync();
-
-            var previousValue = cachedObject.Value;
-            
-            for (var i = 0; i < 10; i++)
-            {
-                cachedObject.UpdateValue(i);
-
-                events.Should().HaveCount(i + 1);
-                
-                var e = events[i];
-                e.NewValue.Should().Be(previousValue + i);
-                e.PreviousValue.Should().Be(previousValue);
-                e.UpdateFuncInput.Should().Be(i);
-                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
-                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
-                e.Version.Should().Be(i + 2);
-
-                previousValue += i;
-            }
-        }
-        
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task OnValueUpdateException_ActionCalledAsExpected(bool addedPreBuilding)
-        {
-            var events = new List<ValueUpdateExceptionEvent<int, int>>();
-            var updateIndex = 0;
-            
-            var config = CachedObjectFactory
-                .ConfigureFor(() => 1)
-                .WithUpdates<int>(async (current, input) =>
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
-                    
-                    if (updateIndex++ % 2 == 1)
-                        throw new Exception("error!");
-
-                    return current + input;
-                });
-
-            if (addedPreBuilding)
-                config.OnValueUpdate(onException: events.Add);
-
-            var cachedObject = config.Build();
-
-            if (!addedPreBuilding)
-                cachedObject.OnValueUpdateException += (_, e) => events.Add(e);
-
-            var start = DateTime.UtcNow;
-            
-            cachedObject.Initialize();
-
-            var expectedValue = 1;
-            
-            Func<Task> func = () => cachedObject.UpdateValueAsync(1);
-
-            for (var i = 0; i < 10; i++)
-            {
-                if (i % 2 == 0)
-                {
-                    await func.Should().NotThrowAsync();
-                    expectedValue++;
-                    continue;
-                }
-
-                await func.Should().ThrowAsync<Exception>();
-
-                var e = events[(i - 1) / 2];
-                e.Exception.Message.Should().Be("error!");
-                e.CurrentValue.Should().Be(expectedValue);
-                e.UpdateFuncInput.Should().Be(1);
-                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
-                e.DateOfPreviousSuccessfulRefresh.Should().BeCloseTo(start, TimeSpan.FromMilliseconds(100));
-                e.Version.Should().Be(1 + ((i + 1) / 2));
             }
         }
     }

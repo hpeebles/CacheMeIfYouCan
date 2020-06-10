@@ -14,11 +14,11 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public void ValueIsMappedFromSourceCorrectly(bool async)
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .Build();
 
-            var mapped = async
+            using var mapped = async
                 ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
                 : source.Map(x => -x);
 
@@ -30,13 +30,13 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public void ValueIsUpdatedEachTimeSourceIsRefreshed(bool async)
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .Build();
 
-            var signal = new AutoResetEvent(false);
+            using var signal = new AutoResetEvent(false);
             
-            var mapped = async
+            using var mapped = async
                 ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
                 : source.Map(x => -x);
 
@@ -59,14 +59,14 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(false)]
         public void ValueIsUpdatedEachTimeSourceIsUpdated(bool async)
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow.Ticks)
                 .WithUpdates<bool>((_, __) => DateTime.UtcNow.Ticks)
                 .Build();
 
-            var signal = new AutoResetEvent(false);
+            using var signal = new AutoResetEvent(false);
             
-            var mapped = async
+            using var mapped = async
                 ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x))
                 : source.Map(x => -x);
 
@@ -84,14 +84,44 @@ namespace CacheMeIfYouCan.Tests
             }
         }
         
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void FunctionProvidedToMapSourceUpdates_ValueIsUpdatedEachTimeSourceIsUpdated(bool async)
+        {
+            using var source = CachedObjectFactory
+                .ConfigureFor(() => 1)
+                .WithUpdates<int>((current, updates) => current + updates)
+                .Build();
+
+            using var signal = new AutoResetEvent(false);
+            
+            using var mapped = async
+                ? source.MapAsync(x => Task.Delay(TimeSpan.FromMilliseconds(20)).ContinueWith(_ => -x), (current, sourceValue, updates) => Task.FromResult(current + updates))
+                : source.Map(x => -x, (current, sourceValue, updates) => current + updates);
+
+            mapped.Initialize();
+            mapped.OnValueUpdated += (_, __) => signal.Set();
+            
+            for (var i = 0; i < 10; i++)
+            {
+                source.UpdateValue(i);
+
+                signal.WaitOne(TimeSpan.FromSeconds(1)).Should().BeTrue();
+                
+                mapped.Version.Should().Be(i + 2);
+                mapped.Value.Should().Be(source.Value - 2);
+            }
+        }
+        
         [Fact]
         public async Task InitializationIsDeferredUntilRequired()
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .Build();
 
-            var mapped = source.Map(x => DateTime.UtcNow);
+            using var mapped = source.Map(x => DateTime.UtcNow);
 
             DateTime dateOfSourceInitialization = default;
             DateTime dateOfDestinationInitialization = default;
@@ -114,7 +144,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void MappedCachedObjectsCanBeChained()
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .Build();
 
@@ -143,7 +173,7 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void DisposePropagatesToAllChildren()
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .Build();
 
@@ -171,13 +201,13 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public void IfMappingFunctionThrowsException_LaterUpdatesAreStillProcessed()
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .Build();
 
             var count = 0;
 
-            var mapped = source.Map(x =>
+            using var mapped = source.Map(x =>
             {
                 if (count++ % 2 == 1)
                     throw new Exception();
@@ -185,12 +215,18 @@ namespace CacheMeIfYouCan.Tests
                 return x;
             });
 
+            using var signal = new AutoResetEvent(false);
+
             mapped.Initialize();
-            
+            mapped.OnValueRefreshed += (_, __) => signal.Set();
+            mapped.OnValueRefreshException += (_, __) => signal.Set();
+
             for (var i = 0; i < 10; i++)
             {
                 source.RefreshValue();
 
+                signal.WaitOne(TimeSpan.FromSeconds(1)).Should().BeTrue();
+                
                 if (i % 2 == 0)
                     mapped.Value.Should().BeBefore(source.Value);
                 else
@@ -201,13 +237,13 @@ namespace CacheMeIfYouCan.Tests
         [Fact]
         public async Task MultipleConcurrentCallsToInitialize_MappingFunctionCalledOnce()
         {
-            var source = CachedObjectFactory
+            using var source = CachedObjectFactory
                 .ConfigureFor(() => DateTime.UtcNow)
                 .Build();
 
             var executions = 0;
             
-            var mapped = source.Map(x =>
+            using var mapped = source.Map(x =>
             {
                 Interlocked.Increment(ref executions);
                 Thread.Sleep(TimeSpan.FromSeconds(1));

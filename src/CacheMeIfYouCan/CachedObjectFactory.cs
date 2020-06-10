@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration;
 using CacheMeIfYouCan.Internal;
+using CacheMeIfYouCan.Internal.CachedObjects;
 
 namespace CacheMeIfYouCan
 {

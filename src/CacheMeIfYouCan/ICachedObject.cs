@@ -21,4 +21,14 @@ namespace CacheMeIfYouCan
         event EventHandler<ValueRefreshedEvent<T>> OnValueRefreshed;
         event EventHandler<ValueRefreshExceptionEvent<T>> OnValueRefreshException;
     }
+
+    public interface ICachedObject<T, TUpdates> : ICachedObject<T>
+    {
+        new ICachedObject<TOut, TUpdates> Map<TOut>(Func<T, TOut> map);
+        new ICachedObject<TOut, TUpdates> MapAsync<TOut>(Func<T, Task<TOut>> map);
+        ICachedObject<TOut, TUpdates> Map<TOut>(Func<T, TOut> map, Func<TOut, T, TUpdates, TOut> mapUpdatesFunc);
+        ICachedObject<TOut, TUpdates> MapAsync<TOut>(Func<T, Task<TOut>> map, Func<TOut, T, TUpdates, Task<TOut>> mapUpdatesFunc);
+        event EventHandler<ValueUpdatedEvent<T, TUpdates>> OnValueUpdated;
+        event EventHandler<ValueUpdateExceptionEvent<T, TUpdates>> OnValueUpdateException;
+    }
 }
