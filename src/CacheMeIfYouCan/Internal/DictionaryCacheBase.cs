@@ -18,7 +18,15 @@ namespace CacheMeIfYouCan.Internal
         private readonly TimeSpan _keyExpiryProcessorInterval;
         private readonly Timer _keyExpiryProcessorTimer;
         private int _disposed;
-        
+
+        public int Count => _values.Count;
+
+        public void Clear()
+        {
+            _keysToExpireHeap.Clear();
+            _values.Clear();
+        }
+
         private protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
             _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);

@@ -7,13 +7,22 @@ namespace CacheMeIfYouCan
 {
     public sealed class MemoryCache<TKey, TValue> : ILocalCache<TKey, TValue>
     {
-        private readonly MemoryCache _memoryCache;
+        private MemoryCache _memoryCache;
         private readonly Func<TKey, string> _keySerializer;
 
         public MemoryCache(Func<TKey, string> keySerializer = null)
         {
             _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
             _keySerializer = keySerializer ?? (k => k.ToString());
+        }
+
+        public int Count => (int)_memoryCache.GetCount();
+
+        public void Clear()
+        {
+            var memoryCache = _memoryCache;
+            _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
+            memoryCache.Dispose();
         }
 
         public bool TryGet(TKey key, out TValue value)
@@ -77,7 +86,7 @@ namespace CacheMeIfYouCan
     
     public sealed class MemoryCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
     {
-        private readonly MemoryCache _memoryCache;
+        private MemoryCache _memoryCache;
         private readonly Func<TOuterKey, string> _outerKeySerializer;
         private readonly Func<TInnerKey, string> _innerKeySerializer;
         
@@ -88,6 +97,15 @@ namespace CacheMeIfYouCan
             _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
             _outerKeySerializer = outerKeySerializer ?? (k => k.ToString());
             _innerKeySerializer = innerKeySerializer ?? (k => k.ToString());
+        }
+
+        public int Count => (int)_memoryCache.GetCount();
+        
+        public void Clear()
+        {
+            var memoryCache = _memoryCache;
+            _memoryCache = new MemoryCache(Guid.NewGuid().ToString());
+            memoryCache.Dispose();
         }
         
         public int GetMany(TOuterKey outerKey, ReadOnlySpan<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination)

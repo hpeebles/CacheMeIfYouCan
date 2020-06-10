@@ -74,12 +74,53 @@ namespace CacheMeIfYouCan.Tests
                 cache.TryRemove(0, i, out _).Should().BeFalse();
             }
         }
+        
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Count_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            cache.Count.Should().Be(0);
+
+            for (var i = 1; i < 10; i++)
+            {
+                cache.Set(0, i, i, TimeSpan.FromSeconds(1));
+                cache.Count.Should().Be(i);
+            }
+            
+            for (var i = 9; i > 0; i--)
+            {
+                cache.Count.Should().Be(i);
+                cache.TryRemove(0, i, out _).Should().BeTrue();
+            }
+
+            cache.Count.Should().Be(0);
+        }
+        
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Clear_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            for (var i = 1; i < 10; i++)
+                cache.Set(0, i, i, TimeSpan.FromSeconds(1));
+
+            cache.Clear();
+            cache.Count.Should().Be(0);
+            
+            for (var i = 1; i < 10; i++)
+                cache.GetMany(0, new[] { i }).Should().BeEmpty();
+        }
 
         private static ILocalCache<int, int, int> BuildCache(string cacheName)
         {
             return cacheName switch
             {
-                MemoryCache => (ILocalCache<int, int, int>) new MemoryCache<int, int, int>(k => k.ToString(), k => k.ToString()),
+                MemoryCache => new MemoryCache<int, int, int>(k => k.ToString(), k => k.ToString()),
                 DictionaryCache => new DictionaryCache<int, int, int>(),
                 _ => throw new Exception($"No! Stop being silly! {cacheName} is not valid cache name")
             };

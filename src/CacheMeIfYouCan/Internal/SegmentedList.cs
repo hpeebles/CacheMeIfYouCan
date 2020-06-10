@@ -27,6 +27,7 @@ namespace CacheMeIfYouCan.Internal
         }
 
         public int Count => _count;
+        public void Clear() => _segments.Clear();
 
         public T this[int index]
         {

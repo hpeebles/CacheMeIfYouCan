@@ -48,6 +48,8 @@ namespace CacheMeIfYouCan.Internal
             return true;
         }
 
+        public void Clear() => _list.Clear();
+
         private void BubbleUp(int childIndex)
         {
             while (childIndex > 0)

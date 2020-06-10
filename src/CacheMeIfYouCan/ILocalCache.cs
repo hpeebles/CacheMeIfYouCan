@@ -6,25 +6,22 @@ namespace CacheMeIfYouCan
 {
     public interface ILocalCache<TKey, TValue>
     {
+        int Count { get; }
+        void Clear();
         bool TryGet(TKey key, out TValue value);
-
         void Set(TKey key, TValue value, TimeSpan timeToLive);
-
         int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination);
-
         void SetMany(ReadOnlySpan<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
-
         bool TryRemove(TKey key, out TValue value);
     }
 
     public interface ILocalCache<in TOuterKey, TInnerKey, TValue>
     {
+        int Count { get; }
+        void Clear();
         int GetMany(TOuterKey outerKey, ReadOnlySpan<TInnerKey> innerKeys, Span<KeyValuePair<TInnerKey, TValue>> destination);
-        
         void SetMany(TOuterKey outerKey, ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
-
         void SetManyWithVaryingTimesToLive(TOuterKey outerKey, ReadOnlySpan<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> values);
-
         bool TryRemove(TOuterKey outerKey, TInnerKey innerKey, out TValue value);
     }
 

@@ -102,6 +102,47 @@ namespace CacheMeIfYouCan.Tests
             }
         }
 
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Count_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            cache.Count.Should().Be(0);
+
+            for (var i = 1; i < 10; i++)
+            {
+                cache.Set(i, i, TimeSpan.FromSeconds(1));
+                cache.Count.Should().Be(i);
+            }
+            
+            for (var i = 9; i > 0; i--)
+            {
+                cache.Count.Should().Be(i);
+                cache.TryRemove(i, out _).Should().BeTrue();
+            }
+
+            cache.Count.Should().Be(0);
+        }
+        
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void Clear_WorksAsExpected(string cacheName)
+        {
+            var cache = BuildCache(cacheName);
+
+            for (var i = 1; i < 10; i++)
+                cache.Set(i, i, TimeSpan.FromSeconds(1));
+
+            cache.Clear();
+            cache.Count.Should().Be(0);
+            
+            for (var i = 1; i < 10; i++)
+                cache.TryGet(i, out _).Should().BeFalse();
+        }
+
         private static ILocalCache<int, int> BuildCache(string cacheName)
         {
             return cacheName switch

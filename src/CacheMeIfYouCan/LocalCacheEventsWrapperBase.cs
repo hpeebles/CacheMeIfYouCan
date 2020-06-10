@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using CacheMeIfYouCan.Internal;
 
 namespace CacheMeIfYouCan
@@ -13,6 +12,9 @@ namespace CacheMeIfYouCan
         {
             _innerCache = innerCache;
         }
+
+        public int Count => _innerCache.Count;
+        public void Clear() => _innerCache.Clear();
         
         #region TryGet
         public bool TryGet(TKey key, out TValue value)
@@ -225,6 +227,9 @@ namespace CacheMeIfYouCan
         {
             _innerCache = innerCache;
         }
+
+        public int Count => _innerCache.Count;
+        public void Clear() => _innerCache.Clear();
 
         #region GetMany
         public int GetMany(
