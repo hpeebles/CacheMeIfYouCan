@@ -16,17 +16,23 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
         private readonly Func<T, TUpdates, CancellationToken, Task<T>> _applyUpdatesFunc;
         private TimeSpan? _updateInterval;
         private Func<TimeSpan> _updateIntervalFactory;
+        private Action<IIncrementalCachedObject<T, TUpdates>> _onInitializedAction;
+        private Action<IIncrementalCachedObject<T, TUpdates>> _onDisposedAction;
         private Action<ValueUpdatedEvent<T, TUpdates>> _onValueUpdatedAction;
         private Action<ValueUpdateExceptionEvent<T, TUpdates>> _onValueUpdateExceptionAction;
 
         public IncrementalCachedObjectConfigurationManager(
             Func<CancellationToken, Task<T>> getValueFunc,
             Func<T, CancellationToken, Task<TUpdates>> getUpdatesFunc,
-            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
+            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc,
+            Action<IIncrementalCachedObject<T, TUpdates>> onInitializedAction,
+            Action<IIncrementalCachedObject<T, TUpdates>> onDisposedAction)
             : base(getValueFunc)
         {
             _getUpdatesFunc = getUpdatesFunc;
             _applyUpdatesFunc = applyUpdatesFunc;
+            _onInitializedAction = onInitializedAction;
+            _onDisposedAction = onDisposedAction;
         }
 
         public new IIncrementalCachedObjectConfigurationManager_WithRefreshInterval<T, TUpdates> WithRefreshInterval(TimeSpan refreshInterval)
@@ -59,15 +65,15 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             return this;
         }
 
-        public new IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<ICachedObject<T>> action)
+        public IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<IIncrementalCachedObject<T, TUpdates>> action)
         {
-            base.OnInitialized(action);
+            _onInitializedAction += action;
             return this;
         }
 
-        public new IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<ICachedObject<T>> action)
+        public IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<IIncrementalCachedObject<T, TUpdates>> action)
         {
-            base.OnDisposed(action);
+            _onDisposedAction += action;
             return this;
         }
 
@@ -100,16 +106,16 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
 
         IIncrementalCachedObjectConfigurationManager<T, TUpdates> IIncrementalCachedObjectConfigurationManager_WithUpdateInterval<T, TUpdates>.WithJitter(double jitterPercentage)
         {
-                if (jitterPercentage < 0 || jitterPercentage >= 100)
-                    throw new ArgumentOutOfRangeException(nameof(jitterPercentage));
+            if (jitterPercentage < 0 || jitterPercentage >= 100)
+                throw new ArgumentOutOfRangeException(nameof(jitterPercentage));
 
-                if (!_updateInterval.HasValue)
-                    throw new InvalidOperationException($"You can only use {nameof(IIncrementalCachedObjectConfigurationManager_WithUpdateInterval<T, TUpdates>.WithJitter)} after first using {nameof(WithUpdateInterval)}");
-            
-                var jitterHandler = new JitterHandler(_updateInterval.Value, jitterPercentage);
+            if (!_updateInterval.HasValue)
+                throw new InvalidOperationException($"You can only use {nameof(IIncrementalCachedObjectConfigurationManager_WithUpdateInterval<T, TUpdates>.WithJitter)} after first using {nameof(WithUpdateInterval)}");
+        
+            var jitterHandler = new JitterHandler(_updateInterval.Value, jitterPercentage);
 
-                SetUpdateIntervalFactory(() => jitterHandler.GetNext());
-                return this;
+            SetUpdateIntervalFactory(() => jitterHandler.GetNext());
+            return this;
         }
 
         public new IIncrementalCachedObject<T, TUpdates> Build()
@@ -125,8 +131,8 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
                 updateIntervalFactory,
                 _refreshValueFuncTimeout);
 
-            AddOnInitializedAction(cachedObject);
-            AddOnDisposedAction(cachedObject);
+            AddOnInitializedAction(cachedObject, _onInitializedAction);
+            AddOnDisposedAction(cachedObject, _onDisposedAction);
             AddOnValueRefreshedActions(cachedObject);
             AddOnValueUpdatedActions(cachedObject);
             

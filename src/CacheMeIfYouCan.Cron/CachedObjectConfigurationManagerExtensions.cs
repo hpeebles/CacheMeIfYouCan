@@ -13,51 +13,93 @@ namespace CacheMeIfYouCan.Cron
             string cronExpression,
             bool includingSeconds = false)
         {
+            var scheduler = BuildScheduler(cronExpression, includingSeconds);
+
+            config.OnInitialized(c => scheduler.Start(() => c.RefreshValueAsync()));
+            config.OnDisposed(c => scheduler.Dispose());
+            
+            return config;
+        }
+        
+        public static IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithRefreshSchedule<T, TUpdates>(
+            this IIncrementalCachedObjectConfigurationManager<T, TUpdates> config,
+            string cronExpression,
+            bool includingSeconds = false)
+        {
+            var scheduler = BuildScheduler(cronExpression, includingSeconds);
+
+            config.OnInitialized(c => scheduler.Start(() => c.RefreshValueAsync()));
+            config.OnDisposed(c => scheduler.Dispose());
+            
+            return config;
+        }
+
+        public static IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithRefreshSchedule<T, TUpdates>(
+            this IUpdateableCachedObjectConfigurationManager<T, TUpdates> config,
+            string cronExpression,
+            bool includingSeconds = false)
+        {
+            var scheduler = BuildScheduler(cronExpression, includingSeconds);
+
+            config.OnInitialized(c => scheduler.Start(() => c.RefreshValueAsync()));
+            config.OnDisposed(c => scheduler.Dispose());
+            
+            return config;
+        }
+        
+        public static IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithUpdateSchedule<T, TUpdates>(
+            this IIncrementalCachedObjectConfigurationManager<T, TUpdates> config,
+            string cronExpression,
+            bool includingSeconds = false)
+        {
+            var scheduler = BuildScheduler(cronExpression, includingSeconds);
+
+            config.OnInitialized(c => scheduler.Start(() => c.UpdateValueAsync()));
+            config.OnDisposed(c => scheduler.Dispose());
+            
+            return config;
+        }
+
+        private static Scheduler BuildScheduler(string cronExpression, bool includingSeconds)
+        {
             var options = new CrontabSchedule.ParseOptions();
             if (includingSeconds)
                 options.IncludingSeconds = true;
             
             var schedule = CrontabSchedule.Parse(cronExpression, options);
             
-            var scheduler = new CachedObjectRefreshScheduler<T>(schedule);
-
-            config.OnInitialized(c => scheduler.Start(c));
-            config.OnDisposed(c => scheduler.Dispose());
-            
-            return config;
+            return new Scheduler(schedule);
         }
 
-        private class CachedObjectRefreshScheduler<T> : IDisposable
+        private sealed class Scheduler : IDisposable
         {
             private readonly CrontabSchedule _schedule;
-            private ICachedObject<T> _cachedObject;
+            private Func<Task> _job;
             private Timer _timer;
-            private Action _updateTimer;
 
-            public CachedObjectRefreshScheduler(CrontabSchedule schedule)
+            public Scheduler(CrontabSchedule schedule)
             {
                 _schedule = schedule;
             }
 
-            public void Start(ICachedObject<T> cachedObject)
+            public void Start(Func<Task> job)
             {
-                _cachedObject = cachedObject;
-                _timer = new Timer(async _ => await RunUpdate());
-                _updateTimer = UpdateTimer;
-                _updateTimer();
+                _job = job;
+                _timer = new Timer(_ => RunJob());
+                UpdateTimer();
             }
 
             public void Dispose() => _timer.Dispose();
 
-            private async Task RunUpdate()
+            private async Task RunJob()
             {
                 try
                 {
-                    await _cachedObject.RefreshValueAsync().ConfigureAwait(false);
+                    await _job().ConfigureAwait(false);
                 }
                 finally
                 {
-                    _updateTimer.Invoke();
+                    UpdateTimer();
                 }
             }
             

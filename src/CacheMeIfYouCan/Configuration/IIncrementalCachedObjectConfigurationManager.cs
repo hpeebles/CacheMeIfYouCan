@@ -10,8 +10,8 @@ namespace CacheMeIfYouCan.Configuration
         IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithRefreshValueFuncTimeout(TimeSpan timeout);
         IIncrementalCachedObjectConfigurationManager_WithUpdateInterval<T, TUpdates> WithUpdateInterval(TimeSpan updateInterval);
         IIncrementalCachedObjectConfigurationManager<T, TUpdates> WithUpdateIntervalFactory(Func<TimeSpan> updateIntervalFactory);
-        IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<ICachedObject<T>> action);
-        IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<ICachedObject<T>> action);
+        IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<IIncrementalCachedObject<T, TUpdates>> action);
+        IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<IIncrementalCachedObject<T, TUpdates>> action);
         IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnValueRefresh(Action<ValueRefreshedEvent<T>> onSuccess = null, Action<ValueRefreshExceptionEvent<T>> onException = null);
         IIncrementalCachedObjectConfigurationManager<T, TUpdates> OnValueUpdate(Action<ValueUpdatedEvent<T, TUpdates>> onSuccess = null, Action<ValueUpdateExceptionEvent<T, TUpdates>> onException = null);
         IIncrementalCachedObject<T, TUpdates> Build();

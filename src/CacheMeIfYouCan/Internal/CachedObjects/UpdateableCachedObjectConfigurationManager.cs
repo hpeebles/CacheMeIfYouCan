@@ -12,15 +12,21 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
         IUpdateableCachedObjectConfigurationManager_WithRefreshInterval<T, TUpdates>
     {
         private readonly Func<T, TUpdates, CancellationToken, Task<T>> _applyUpdatesFunc;
+        private Action<IUpdateableCachedObject<T, TUpdates>> _onInitializedAction;
+        private Action<IUpdateableCachedObject<T, TUpdates>> _onDisposedAction;
         private Action<ValueUpdatedEvent<T, TUpdates>> _onValueUpdatedAction;
         private Action<ValueUpdateExceptionEvent<T, TUpdates>> _onValueUpdateExceptionAction;
 
         public UpdateableCachedObjectConfigurationManager(
             Func<CancellationToken, Task<T>> getValueFunc,
-            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
+            Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc,
+            Action<IUpdateableCachedObject<T, TUpdates>> onInitializedAction,
+            Action<IUpdateableCachedObject<T, TUpdates>> onDisposedAction)
             : base(getValueFunc)
         {
             _applyUpdatesFunc = applyUpdatesFunc;
+            _onInitializedAction = onInitializedAction;
+            _onDisposedAction = onDisposedAction;
         }
 
         public new IUpdateableCachedObjectConfigurationManager_WithRefreshInterval<T, TUpdates> WithRefreshInterval(TimeSpan refreshInterval)
@@ -41,20 +47,15 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             return this;
         }
 
-        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithUpdateIntervalFactory(Func<TimeSpan> updateIntervalFactory)
+        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<IUpdateableCachedObject<T, TUpdates>> action)
         {
-            throw new NotImplementedException();
-        }
-
-        public new IUpdateableCachedObjectConfigurationManager<T, TUpdates> OnInitialized(Action<ICachedObject<T>> action)
-        {
-            base.OnInitialized(action);
+            _onInitializedAction += action;
             return this;
         }
 
-        public new IUpdateableCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<ICachedObject<T>> action)
+        public IUpdateableCachedObjectConfigurationManager<T, TUpdates> OnDisposed(Action<IUpdateableCachedObject<T, TUpdates>> action)
         {
-            base.OnDisposed(action);
+            _onDisposedAction += action;
             return this;
         }
 
@@ -95,8 +96,8 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
                 refreshIntervalFactory,
                 _refreshValueFuncTimeout);
 
-            AddOnInitializedAction(cachedObject);
-            AddOnDisposedAction(cachedObject);
+            AddOnInitializedAction(cachedObject, _onInitializedAction);
+            AddOnDisposedAction(cachedObject, _onDisposedAction);
             AddOnValueRefreshedActions(cachedObject);
             AddOnValueUpdatedActions(cachedObject);
             

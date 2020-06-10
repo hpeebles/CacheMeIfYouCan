@@ -61,8 +61,8 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
         }
         
         public ICachedObjectConfigurationManager<T> OnValueRefresh(
-            Action<ValueRefreshedEvent<T>> onSuccess,
-            Action<ValueRefreshExceptionEvent<T>> onException)
+            Action<ValueRefreshedEvent<T>> onSuccess = null,
+            Action<ValueRefreshExceptionEvent<T>> onException = null)
         {
             if (!(onSuccess is null))
                 _onValueRefreshedAction += onSuccess;
@@ -95,13 +95,16 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             Func<T, CancellationToken, Task<TUpdates>> getUpdatesFunc,
             Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
         {
-            return new IncrementalCachedObjectConfigurationManager<T, TUpdates>(_getValueFunc, getUpdatesFunc, applyUpdatesFunc)
+            return new IncrementalCachedObjectConfigurationManager<T, TUpdates>(
+                _getValueFunc,
+                getUpdatesFunc,
+                applyUpdatesFunc,
+                _onInitializedAction,
+                _onDisposedAction)
             {
                 _refreshValueFuncTimeout = _refreshValueFuncTimeout,
                 _refreshInterval = _refreshInterval,
                 _refreshIntervalFactory = _refreshIntervalFactory,
-                _onInitializedAction = _onInitializedAction,
-                _onDisposedAction = _onDisposedAction,
                 _onValueRefreshedAction = _onValueRefreshedAction,
                 _onValueRefreshExceptionAction = _onValueRefreshExceptionAction
             };
@@ -122,13 +125,15 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
         public IUpdateableCachedObjectConfigurationManager<T, TUpdates> WithUpdatesAsync<TUpdates>(
             Func<T, TUpdates, CancellationToken, Task<T>> applyUpdatesFunc)
         {
-            return new UpdateableCachedObjectConfigurationManager<T, TUpdates>(_getValueFunc, applyUpdatesFunc)
+            return new UpdateableCachedObjectConfigurationManager<T, TUpdates>(
+                _getValueFunc,
+                applyUpdatesFunc,
+                _onInitializedAction,
+                _onDisposedAction)
             {
                 _refreshValueFuncTimeout = _refreshValueFuncTimeout,
                 _refreshInterval = _refreshInterval,
                 _refreshIntervalFactory = _refreshIntervalFactory,
-                _onInitializedAction = _onInitializedAction,
-                _onDisposedAction = _onDisposedAction,
                 _onValueRefreshedAction = _onValueRefreshedAction,
                 _onValueRefreshExceptionAction = _onValueRefreshExceptionAction
             };
@@ -143,8 +148,8 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
                 refreshIntervalFactory,
                 _refreshValueFuncTimeout);
 
-            AddOnInitializedAction(cachedObject);
-            AddOnDisposedAction(cachedObject);
+            AddOnInitializedAction(cachedObject, _onInitializedAction);
+            AddOnDisposedAction(cachedObject, _onDisposedAction);
             AddOnValueRefreshedActions(cachedObject);
             
             return cachedObject;
@@ -164,7 +169,7 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             return this;
         }
 
-        protected Func<TimeSpan> GetRefreshIntervalFactory()
+        private protected Func<TimeSpan> GetRefreshIntervalFactory()
         {
             var refreshIntervalFactory = _refreshIntervalFactory;
             if (refreshIntervalFactory is null && _refreshInterval.HasValue)
@@ -176,23 +181,25 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             return refreshIntervalFactory;
         }
         
-        protected void AddOnInitializedAction(ICachedObject<T> cachedObject)
+        private protected void AddOnInitializedAction<TCachedObject>(TCachedObject cachedObject, Action<TCachedObject> onInitializedAction)
+            where TCachedObject : ICachedObject<T>
         {
-            if (_onInitializedAction is null)
+            if (onInitializedAction is null)
                 return;
 
-            cachedObject.OnInitialized += (obj, _) => _onInitializedAction((ICachedObject<T>)obj);
+            cachedObject.OnInitialized += (obj, _) => onInitializedAction((TCachedObject)obj);
         }
         
-        protected void AddOnDisposedAction(ICachedObject<T> cachedObject)
+        private protected void AddOnDisposedAction<TCachedObject>(TCachedObject cachedObject, Action<TCachedObject> onDisposedAction)
+            where TCachedObject : ICachedObject<T>
         {
-            if (_onDisposedAction is null)
+            if (onDisposedAction is null)
                 return;
 
-            cachedObject.OnDisposed += (obj, _) => _onDisposedAction((ICachedObject<T>)obj);
+            cachedObject.OnDisposed += (obj, _) => onDisposedAction((TCachedObject)obj);
         }
 
-        protected void AddOnValueRefreshedActions(ICachedObject<T> cachedObject)
+        private protected void AddOnValueRefreshedActions(ICachedObject<T> cachedObject)
         {
             if (!(_onValueRefreshedAction is null))
                 cachedObject.OnValueRefreshed += (_, e) => _onValueRefreshedAction(e);
