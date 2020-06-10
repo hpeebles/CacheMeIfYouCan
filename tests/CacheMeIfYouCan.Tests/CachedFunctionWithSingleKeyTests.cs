@@ -91,6 +91,9 @@ namespace CacheMeIfYouCan.Tests
 
             await func.Should().ThrowExactlyAsync<TaskCanceledException>().ConfigureAwait(false);
 
+            // Give the cancellation token time to complete the callback
+            await Task.Delay(TimeSpan.FromMilliseconds(10)).ConfigureAwait(false);
+            
             wasCancelled.Should().BeTrue();
         }
 
