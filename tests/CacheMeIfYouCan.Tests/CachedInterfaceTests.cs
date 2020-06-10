@@ -131,6 +131,30 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Fact]
+        public void WorksWithUpTo8Parameters()
+        {
+            var originalImpl = new MultiParamImpl();
+
+            var cachedInterface = CachedInterfaceFactory.For<IMultiParam>(originalImpl)
+                .Configure<int, int, int, int>(
+                    x => x.GetAsync3,
+                    c => c.WithCacheKey((p1, p2, p3) => p1))
+                .Configure<int, int, int, int, IEnumerable<int>, Dictionary<int, int>>(
+                    x => x.GetMultiSyncCanx5,
+                    c => c.WithEnumerableKeys<int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>())
+                .Configure<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>>(
+                    x => x.GetMultiValueTask8,
+                    c => c
+                        .WithEnumerableKeys<int, int, int, int, int, int, int, IEnumerable<int>, Dictionary<int, int>, int, int>()
+                        .WithOuterCacheKey((p1, p2, p3, p4, p5, p6, p7) => p1))
+                .Build();
+
+            cachedInterface.GetAsync3(1, 2, 3).Result.Should().Be(6);
+            cachedInterface.GetMultiSyncCanx5(1, 2, 3, 4, new[] { 5 }, CancellationToken.None).Single().Should().Be(new KeyValuePair<int, int>(5, 15));
+            cachedInterface.GetMultiValueTask8(1, 2, 3, 4, 5, 6, 7, new[] { 8 }).Result.Single().Should().Be(new KeyValuePair<int, int>(8, 36));
+        }
+
+        [Fact]
         public void IfAnyMethodsNotConfigured_ThrowsException()
         {
             var originalImpl = new DummySingleKeyInterfaceImpl();
@@ -205,5 +229,30 @@ namespace CacheMeIfYouCan.Tests
         public Dictionary<int, int> GetSyncCanx(int outerKey, IEnumerable<int> innerKeys, CancellationToken cancellationToken) => innerKeys.ToDictionary(k => k);
         public ValueTask<Dictionary<int, int>> GetValueTask(int outerKey, IEnumerable<int> innerKeys) => new ValueTask<Dictionary<int, int>>(innerKeys.ToDictionary(k => k));
         public ValueTask<Dictionary<int, int>> GetValueTaskCanx(int outerKey, IEnumerable<int> innerKeys, CancellationToken cancellationToken) => new ValueTask<Dictionary<int, int>>(innerKeys.ToDictionary(k => k));
+    }
+
+    public interface IMultiParam
+    {
+        Task<int> GetAsync3(int p1, int p2, int p3);
+        Dictionary<int, int> GetMultiSyncCanx5(int p1, int p2, int p3, int p4, IEnumerable<int> p5, CancellationToken cancellationToken);
+        ValueTask<Dictionary<int, int>> GetMultiValueTask8(int p1, int p2, int p3, int p4, int p5, int p6, int p7, IEnumerable<int> p8);
+    }
+
+    public class MultiParamImpl : IMultiParam
+    {
+        public Task<int> GetAsync3(int p1, int p2, int p3)
+        {
+            return Task.FromResult(p1 + p2 + p3);
+        }
+
+        public Dictionary<int, int> GetMultiSyncCanx5(int p1, int p2, int p3, int p4, IEnumerable<int> p5, CancellationToken cancellationToken)
+        {
+            return p5.ToDictionary(p => p, p => p1 + p2 + p3 + p4 + p);
+        }
+
+        public ValueTask<Dictionary<int, int>> GetMultiValueTask8(int p1, int p2, int p3, int p4, int p5, int p6, int p7, IEnumerable<int> p8)
+        {
+            return new ValueTask<Dictionary<int, int>>(p8.ToDictionary(p => p, p => p1 + p2 + p3 + p4 + p5 + p6 + p7 + p));
+        }
     }
 }

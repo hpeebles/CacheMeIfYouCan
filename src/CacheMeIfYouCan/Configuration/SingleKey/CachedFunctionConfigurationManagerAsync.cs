@@ -111,7 +111,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_2Params<TParam1, TParam2, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2), TKey, TValue, CachedFunctionConfigurationManagerAsync_2Params<TParam1, TParam2, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2), TKey, TValue, CachedFunctionConfigurationManagerAsync_2Params<TParam1, TParam2, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_2Params<TParam1, TParam2, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_2Params(
             Func<TParam1, TParam2, Task<TValue>> originalFunction,
@@ -148,7 +149,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TParam3, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3), TKey, TValue, CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TParam3, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3), TKey, TValue, CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TParam3, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TParam3, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_3Params(
             Func<TParam1, TParam2, TParam3, Task<TValue>> originalFunction,
@@ -185,7 +187,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4), TKey, TValue, CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4), TKey, TValue, CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TParam4, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TParam4, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_4Params(
             Func<TParam1, TParam2, TParam3, TParam4, Task<TValue>> originalFunction,
@@ -222,7 +225,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue, CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5), TKey, TValue, CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TParam5, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_5Params(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, Task<TValue>> originalFunction,
@@ -259,7 +263,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue, CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6), TKey, TValue, CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_6Params(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, Task<TValue>> originalFunction,
@@ -296,7 +301,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue, CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7), TKey, TValue, CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_7Params(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, Task<TValue>> originalFunction,
@@ -333,7 +339,8 @@ namespace CacheMeIfYouCan.Configuration.SingleKey
     }
     
     public sealed class CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>
-        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue, CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>>
+        : CachedFunctionConfigurationManagerAsyncBase<(TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8), TKey, TValue, CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TKey, TValue>>,
+            ICachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TValue>
     {
         internal CachedFunctionConfigurationManagerAsync_8Params(
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, Task<TValue>> originalFunction,
