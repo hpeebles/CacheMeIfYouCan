@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Events.CachedFunction.EnumerableKeys
 {
-    public readonly struct ExceptionEvent<TParams, TKey>
+    public sealed class ExceptionEvent<TParams, TKey>
     {
         internal ExceptionEvent(
             TParams parameters,

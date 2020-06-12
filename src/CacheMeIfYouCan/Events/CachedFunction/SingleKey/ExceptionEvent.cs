@@ -2,7 +2,7 @@
 
 namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
 {
-    public readonly struct ExceptionEvent<TParams, TKey>
+    public sealed class ExceptionEvent<TParams, TKey>
     {
         internal ExceptionEvent(TParams parameters, TKey key, DateTime start, TimeSpan duration, Exception exception)
         {

@@ -3,7 +3,7 @@ using CacheMeIfYouCan.Internal.CachedFunctions;
 
 namespace CacheMeIfYouCan.Events.CachedFunction.SingleKey
 {
-    public readonly struct SuccessfulRequestEvent<TParams, TKey, TValue>
+    public sealed class SuccessfulRequestEvent<TParams, TKey, TValue>
     {
         internal SuccessfulRequestEvent(
             TParams parameters,

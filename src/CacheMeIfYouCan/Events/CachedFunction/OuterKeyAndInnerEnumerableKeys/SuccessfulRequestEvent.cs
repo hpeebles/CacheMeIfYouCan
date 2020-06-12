@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
 {
-    public readonly struct SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>
+    public sealed class SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>
     {
         internal SuccessfulRequestEvent(
             TParams parameters,
