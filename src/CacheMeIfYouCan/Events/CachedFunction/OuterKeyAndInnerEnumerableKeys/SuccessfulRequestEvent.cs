@@ -12,7 +12,8 @@ namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
             Dictionary<TInnerKey, TValue> values,
             DateTime start,
             TimeSpan duration,
-            CacheGetManyStats cacheStats)
+            CacheGetManyStats cacheStats,
+            int countExcluded)
         {
             Parameters = parameters;
             OuterKey = outerKey;
@@ -21,6 +22,7 @@ namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
             Start = start;
             Duration = duration;
             CacheStats = cacheStats;
+            CountExcluded = countExcluded;
         }
         
         public TParams Parameters { get; }
@@ -30,5 +32,6 @@ namespace CacheMeIfYouCan.Events.CachedFunction.OuterKeyAndInnerEnumerableKeys
         public DateTime Start { get; }
         public TimeSpan Duration { get; }
         public CacheGetManyStats CacheStats { get; }
+        public int CountExcluded { get; }
     }
 }

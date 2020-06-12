@@ -461,13 +461,15 @@ namespace CacheMeIfYouCan.Tests
             };
 
             var cache = new MockLocalCache<int, int>();
+            SuccessfulRequestEvent<Unit, int, int> result = null;
 
             var config = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .WithLocalCache(cache)
                 .WithTimeToLive(TimeSpan.FromMinutes(1))
-                .FilterResponseToWhere((k, v) => v % 2 == 0);
+                .FilterResponseToWhere((k, v) => v % 2 == 0)
+                .OnResult(r => result = r);
 
             var cachedFunction = config.Build();
 
@@ -476,6 +478,7 @@ namespace CacheMeIfYouCan.Tests
 
             values.Keys.Should().BeEquivalentTo(keys.Where(k => k % 2 == 0));
             cache.GetMany(keys).Select(kv => kv.Key).Should().BeEquivalentTo(keys);
+            result.CountExcluded.Should().Be(keys.Length / 2);
         }
         
         [Theory]

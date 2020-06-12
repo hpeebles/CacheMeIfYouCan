@@ -102,18 +102,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     : await getFromCacheTask.ConfigureAwait(false);
 
                 if (cacheStats.CacheHits == innerKeysMemory.Length)
-                {
-                    _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
-                        parameters,
-                        outerKey,
-                        innerKeysMemory,
-                        resultsDictionary,
-                        start,
-                        timer.Elapsed,
-                        cacheStats));
-
-                    return FinalizeResults(resultsDictionary);
-                }
+                    return FinalizeResults(resultsDictionary, cacheStats);
 
                 var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(
                     innerKeysMemory,
@@ -179,16 +168,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         ArrayPool<TInnerKey>.Shared.Return(pooledMissingKeysArray);
                 }
 
-                _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
-                    parameters,
-                    outerKey,
-                    innerKeysMemory,
-                    resultsDictionary,
-                    start,
-                    timer.Elapsed,
-                    cacheStats));
-
-                return FinalizeResults(resultsDictionary);
+                return FinalizeResults(resultsDictionary, cacheStats);
             }
             catch (Exception ex) when (!(_onExceptionAction is null))
             {
@@ -206,6 +186,25 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             {
                 if (!(pooledKeysArray is null))
                     ArrayPool<TInnerKey>.Shared.Return(pooledKeysArray);
+            }
+
+            Dictionary<TInnerKey, TValue> FinalizeResults(
+                Dictionary<TInnerKey, TValue> resultsDictionary,
+                CacheGetManyStats cacheStats)
+            {
+                resultsDictionary = FilterResults(resultsDictionary, out var countExcluded);
+                    
+                _onSuccessAction?.Invoke(new SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>(
+                    parameters,
+                    outerKey,
+                    innerKeysMemory,
+                    resultsDictionary,
+                    start,
+                    timer.Elapsed,
+                    cacheStats,
+                    countExcluded));
+
+                return resultsDictionary;
             }
         }
 
@@ -484,19 +483,27 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Dictionary<TInnerKey, TValue> FinalizeResults(Dictionary<TInnerKey, TValue> results)
+        private Dictionary<TInnerKey, TValue> FilterResults(Dictionary<TInnerKey, TValue> results, out int countExcluded)
         {
-            return _filterResponsePredicate is null
-                ? results
-                : FilterResults();
-
-            Dictionary<TInnerKey, TValue> FilterResults()
+            if (_filterResponsePredicate is null)
             {
+                countExcluded = 0;
+                return results;
+            }
+            
+            return FilterResultsInner(out countExcluded);
+
+            Dictionary<TInnerKey, TValue> FilterResultsInner(out int countExcluded)
+            {
+                countExcluded = 0;
                 var filter = _filterResponsePredicate;
                 foreach (var kv in results)
                 {
                     if (!filter(kv.Key, kv.Value))
+                    {
+                        countExcluded++;
                         results.Remove(kv.Key);
+                    }
                 }
 
                 return results;
