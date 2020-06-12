@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         public bool DisableCaching { get; set; }
         public (bool IsSet, TValue Value) FillMissingKeysConstantValue { get; set; }
         public Func<TOuterKey, TInnerKey, TValue> FillMissingKeysValueFactory { get; set; }
+        public Func<TInnerKey, TValue, bool> FilterResponsePredicate { get; set; }
         public Func<TOuterKey, bool> SkipLocalCacheGetOuterPredicate { get; set; }
         public Func<TOuterKey, TInnerKey, bool> SkipLocalCacheGetInnerPredicate { get; set; }
         public Func<TOuterKey, bool> SkipLocalCacheSetOuterPredicate { get; set; }

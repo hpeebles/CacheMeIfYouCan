@@ -74,6 +74,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return (TConfig)this;
         }
 
+        public TConfig FilterResponseToWhere(Func<TKey, TValue, bool> predicate)
+        {
+            _config.FilterResponsePredicate = predicate;
+            return (TConfig)this;
+        }
+
         private protected TConfig DontGetFromCacheWhenInternal(Func<TParams, bool> predicate)
         {
             _config.SkipCacheGetOuterPredicate = _config.SkipCacheGetOuterPredicate.Or(predicate);

@@ -463,6 +463,33 @@ namespace CacheMeIfYouCan.Tests
             }
         }
         
+        [Fact]
+        public void FilterResponseToWhere_WorksAsExpected()
+        {
+            Func<int, IEnumerable<int>, Dictionary<int, int>> originalFunction = (outerKey, innerKeys) =>
+            {
+                return innerKeys.ToDictionary(k => k);
+            };
+
+            var cache = new MockLocalCache<int, int, int>();
+
+            var config = CachedFunctionFactory
+                .ConfigureFor(originalFunction)
+                .WithEnumerableKeys<int, IEnumerable<int>, Dictionary<int, int>, int, int>()
+                .UseFirstParamAsOuterCacheKey()
+                .WithLocalCache(cache)
+                .WithTimeToLive(TimeSpan.FromMinutes(1))
+                .FilterResponseToWhere((k, v) => v % 2 == 0);
+
+            var cachedFunction = config.Build();
+
+            var keys = Enumerable.Range(0, 10).ToArray();
+            var values = cachedFunction(0, keys);
+
+            values.Keys.Should().BeEquivalentTo(keys.Where(k => k % 2 == 0));
+            cache.GetMany(0, keys).Select(kv => kv.Key).Should().BeEquivalentTo(keys);
+        }
+        
         [Theory]
         [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
         public void DontGetFromCacheWhen_WorksForAllCombinations(bool flag1, bool flag2)

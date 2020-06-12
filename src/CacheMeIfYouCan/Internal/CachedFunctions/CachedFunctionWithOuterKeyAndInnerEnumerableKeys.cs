@@ -26,6 +26,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly bool _shouldFillMissingKeysWithConstantValue;
         private readonly TValue _fillMissingKeysConstantValue;
         private readonly Func<TOuterKey, TInnerKey, TValue> _fillMissingKeysValueFactory;
+        private readonly Func<TInnerKey, TValue, bool> _filterResponsePredicate;
         private readonly ICache<TOuterKey, TInnerKey, TValue> _cache;
         private readonly Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> _onSuccessAction;
         private readonly Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> _onExceptionAction;
@@ -43,6 +44,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             _batchBehaviour = config.BatchBehaviour;
             _onSuccessAction = config.OnSuccessAction;
             _onExceptionAction = config.OnExceptionAction;
+            _filterResponsePredicate = config.FilterResponsePredicate;
 
             if (config.DisableCaching)
             {
@@ -110,7 +112,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                         timer.Elapsed,
                         cacheStats));
 
-                    return resultsDictionary;
+                    return FinalizeResults(resultsDictionary);
                 }
 
                 var missingKeys = MissingKeysResolver<TInnerKey, TValue>.GetMissingKeys(
@@ -186,7 +188,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     timer.Elapsed,
                     cacheStats));
 
-                return resultsDictionary;
+                return FinalizeResults(resultsDictionary);
             }
             catch (Exception ex) when (!(_onExceptionAction is null))
             {
@@ -479,6 +481,26 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             }
 
             return valuesDictionary;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Dictionary<TInnerKey, TValue> FinalizeResults(Dictionary<TInnerKey, TValue> results)
+        {
+            return _filterResponsePredicate is null
+                ? results
+                : FilterResults();
+
+            Dictionary<TInnerKey, TValue> FilterResults()
+            {
+                var filter = _filterResponsePredicate;
+                foreach (var kv in results)
+                {
+                    if (!filter(kv.Key, kv.Value))
+                        results.Remove(kv.Key);
+                }
+
+                return results;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
