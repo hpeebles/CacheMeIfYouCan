@@ -511,7 +511,7 @@ namespace CacheMeIfYouCan.Tests
                 var e = events[index];
                 e.Exception.Message.Should().Be("error!");
                 e.CurrentValue.Should().Be(firstValue);
-                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
+                e.Duration.Should().BePositive().And.BeGreaterThan(TimeSpan.FromMilliseconds(50)).And.BeLessThan(TimeSpan.FromSeconds(1));
                 e.Version.Should().Be(1);
             }
             
