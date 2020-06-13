@@ -229,7 +229,7 @@ namespace CacheMeIfYouCan.Tests
                 e.Exception.Message.Should().Be("error!");
                 e.CurrentValue.Should().Be(expectedValue);
                 e.Updates.Should().Be(1);
-                e.Duration.Should().BePositive().And.BeLessThan(TimeSpan.FromMilliseconds(200));
+                e.Duration.Should().BePositive().And.BeGreaterThan(TimeSpan.FromMilliseconds(50)).And.BeLessThan(TimeSpan.FromSeconds(1));
                 e.Version.Should().Be(1 + ((i + 1) / 2));
             }
         }
