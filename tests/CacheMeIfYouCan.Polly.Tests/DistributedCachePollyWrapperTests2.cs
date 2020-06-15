@@ -18,6 +18,8 @@ namespace CacheMeIfYouCan.Polly.Tests
         [InlineData("getmany", false)]
         [InlineData("setmany", true)]
         [InlineData("setmany", false)]
+        [InlineData("tryremove", true)]
+        [InlineData("tryremove", false)]
         public async Task WhenPolicyIsSet_PolicyIsAppliedCorrectly(string action, bool applyPolicy)
         {
             var policy = Policy.Handle<Exception>().RetryAsync();
@@ -30,6 +32,7 @@ namespace CacheMeIfYouCan.Polly.Tests
             {
                 "getmany" => (Func<Task>)(() => cache.GetMany(1, new[] { 1 })),
                 "setmany" => () => cache.SetMany(1, new[] { new KeyValuePair<int, int>(1, 1) }, TimeSpan.FromSeconds(1)),
+                "tryremove" => () => cache.TryRemove(1, 1),
                 _ => throw new Exception()
             };
 

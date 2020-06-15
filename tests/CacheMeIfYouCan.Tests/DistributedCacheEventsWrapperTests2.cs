@@ -174,5 +174,82 @@ namespace CacheMeIfYouCan.Tests
                 failedResults.Should().BeEmpty();
             }
         }
+        
+        [Theory]
+        [MemberData(nameof(BoolGenerator.GetAllCombinations), 2, MemberType = typeof(BoolGenerator))]
+        public async Task TryRemove_EventsAreTriggeredSuccessfully(bool flag1, bool flag2)
+        {
+            var config = new DistributedCacheEventsWrapperConfig<int, int, int>();
+
+            var successfulResults = new List<(int, int, bool, TimeSpan)>();
+            var failedResults = new List<(int, int, TimeSpan, Exception)>();
+            
+            if (flag1)
+            {
+                config.OnTryRemoveCompletedSuccessfully = (outerKey, innerKey, wasRemoved, duration) =>
+                {
+                    successfulResults.Add((outerKey, innerKey, wasRemoved, duration));
+                };
+            }
+
+            if (flag2)
+            {
+                config.OnTryRemoveException = (outerKey, innerKey, duration, exception) =>
+                {
+                    failedResults.Add((outerKey, innerKey, duration, exception));
+                    return innerKey == 3;
+                };
+            }
+            
+            var innerCache = new MockDistributedCache<int, int, int>();
+            var cache = new DistributedCacheEventsWrapper<int, int, int>(config, innerCache);
+
+            await cache.TryRemove(1, 1).ConfigureAwait(false);
+
+            if (flag1)
+            {
+                successfulResults.Should().ContainSingle();
+                successfulResults.Last().Item1.Should().Be(1);
+                successfulResults.Last().Item2.Should().Be(1);
+                successfulResults.Last().Item3.Should().BeFalse();
+                successfulResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            }
+            else
+            {
+                successfulResults.Should().BeEmpty();
+            }
+
+            await cache.Set(1, 2, 3, TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+            await cache.TryRemove(1, 2).ConfigureAwait(false);
+            
+            if (flag1)
+            {
+                successfulResults.Should().HaveCount(2);
+                successfulResults.Last().Item1.Should().Be(1);
+                successfulResults.Last().Item2.Should().Be(2);
+                successfulResults.Last().Item3.Should().BeTrue();
+                successfulResults.Last().Item4.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            }
+            else
+            {
+                successfulResults.Should().BeEmpty();
+            }
+
+            innerCache.ThrowExceptionOnNextAction();
+            Func<Task> action = () => cache.TryRemove(1, 3);
+            if (flag2)
+            {
+                await action().ConfigureAwait(false);
+                failedResults.Should().ContainSingle();
+                failedResults.Last().Item1.Should().Be(1);
+                failedResults.Last().Item2.Should().Be(3);
+                failedResults.Last().Item3.Should().BePositive().And.BeCloseTo(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            }
+            else
+            {
+                await action.Should().ThrowAsync<Exception>().ConfigureAwait(false);
+                failedResults.Should().BeEmpty();
+            }
+        }
     }
 }

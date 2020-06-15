@@ -87,6 +87,20 @@ namespace CacheMeIfYouCan.Tests
         {
             exceptionHandled = _config.OnSetManyException?.Invoke(values.ToArray(), timeToLive, duration, exception) ?? false;
         }
+
+        protected override void OnTryRemoveCompletedSuccessfully(TKey key, bool wasRemoved, TimeSpan duration)
+        {
+            _config.OnTryRemoveCompletedSuccessfully?.Invoke(key, wasRemoved, duration);
+        }
+
+        protected override void OnTryRemoveException(
+            TKey key,
+            TimeSpan duration,
+            Exception exception,
+            out bool exceptionHandled)
+        {
+            exceptionHandled = _config.OnTryRemoveException?.Invoke(key, duration, exception) ?? false;
+        }
     }
     
     public class DistributedCacheEventsWrapper<TOuterKey, TInnerKey, TValue> : DistributedCacheEventsWrapperBase<TOuterKey, TInnerKey, TValue>
@@ -138,6 +152,25 @@ namespace CacheMeIfYouCan.Tests
             out bool exceptionHandled)
         {
             exceptionHandled = _config.OnSetManyException?.Invoke(outerKey, values.ToArray(), timeToLive, duration, exception) ?? false;
+        }
+
+        protected override void OnTryRemoveCompletedSuccessfully(
+            TOuterKey outerKey,
+            TInnerKey innerKey,
+            bool wasRemoved,
+            TimeSpan duration)
+        {
+            _config.OnTryRemoveCompletedSuccessfully?.Invoke(outerKey, innerKey, wasRemoved, duration);
+        }
+
+        protected override void OnTryRemoveException(
+            TOuterKey outerKey,
+            TInnerKey innerKey,
+            TimeSpan duration,
+            Exception exception,
+            out bool exceptionHandled)
+        {
+            exceptionHandled = _config.OnTryRemoveException?.Invoke(outerKey, innerKey, duration, exception) ?? false;
         }
     }
 }

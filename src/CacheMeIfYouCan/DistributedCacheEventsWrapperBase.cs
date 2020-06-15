@@ -183,6 +183,48 @@ namespace CacheMeIfYouCan
             exceptionHandled = false;
         }
         #endregion
+        
+        #region TryRemove
+        public async Task<bool> TryRemove(TKey key)
+        {
+            var stopwatch = StopwatchStruct.StartNew();
+
+            try
+            {
+                var wasRemoved = await _innerCache
+                    .TryRemove(key)
+                    .ConfigureAwait(false);
+
+                OnTryRemoveCompletedSuccessfully(key, wasRemoved, stopwatch.Elapsed);
+
+                return wasRemoved;
+            }
+            catch (Exception ex)
+            {
+                OnTryRemoveException(key, stopwatch.Elapsed, ex, out var exceptionHandled);
+                
+                if (!exceptionHandled)
+                    throw;
+
+                return false;
+            }
+        }
+
+        protected virtual void OnTryRemoveCompletedSuccessfully(
+            TKey key,
+            bool wasRemoved,
+            TimeSpan duration)
+        { }
+
+        protected virtual void OnTryRemoveException(
+            TKey key,
+            TimeSpan duration,
+            Exception exception,
+            out bool exceptionHandled)
+        {
+            exceptionHandled = false;
+        }
+        #endregion
     }
     
     public abstract class DistributedCacheEventsWrapperBase<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>
@@ -279,6 +321,50 @@ namespace CacheMeIfYouCan
             TOuterKey outerKey,
             ReadOnlySpan<KeyValuePair<TInnerKey, TValue>> values,
             TimeSpan timeToLive,
+            TimeSpan duration,
+            Exception exception,
+            out bool exceptionHandled)
+        {
+            exceptionHandled = false;
+        }
+        #endregion
+        
+        #region TryRemove
+        public async Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey)
+        {
+            var stopwatch = StopwatchStruct.StartNew();
+
+            try
+            {
+                var wasRemoved = await _innerCache
+                    .TryRemove(outerKey, innerKey)
+                    .ConfigureAwait(false);
+
+                OnTryRemoveCompletedSuccessfully(outerKey, innerKey, wasRemoved, stopwatch.Elapsed);
+
+                return wasRemoved;
+            }
+            catch (Exception ex)
+            {
+                OnTryRemoveException(outerKey, innerKey, stopwatch.Elapsed, ex, out var exceptionHandled);
+                
+                if (!exceptionHandled)
+                    throw;
+
+                return false;
+            }
+        }
+
+        protected virtual void OnTryRemoveCompletedSuccessfully(
+            TOuterKey outerKey,
+            TInnerKey innerKey,
+            bool wasRemoved,
+            TimeSpan duration)
+        { }
+
+        protected virtual void OnTryRemoveException(
+            TOuterKey outerKey,
+            TInnerKey innerKey,
             TimeSpan duration,
             Exception exception,
             out bool exceptionHandled)

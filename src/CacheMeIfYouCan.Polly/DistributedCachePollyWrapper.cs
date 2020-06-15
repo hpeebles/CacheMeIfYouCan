@@ -12,9 +12,10 @@ namespace CacheMeIfYouCan.Polly
         private readonly AsyncPolicy _setPolicy;
         private readonly AsyncPolicy _getManyPolicy;
         private readonly AsyncPolicy _setManyPolicy;
+        private readonly AsyncPolicy _tryRemovePolicy;
 
         public DistributedCachePollyWrapper(IDistributedCache<TKey, TValue> innerCache, AsyncPolicy policy)
-            : this(innerCache, policy, policy, policy, policy)
+            : this(innerCache, policy, policy, policy, policy, policy)
         { }
 
         public DistributedCachePollyWrapper(
@@ -22,13 +23,15 @@ namespace CacheMeIfYouCan.Polly
             AsyncPolicy tryGetPolicy = null,
             AsyncPolicy setPolicy = null,
             AsyncPolicy getManyPolicy = null,
-            AsyncPolicy setManyPolicy = null)
+            AsyncPolicy setManyPolicy = null,
+            AsyncPolicy tryRemovePolicy = null)
         {
             _innerCache = innerCache;
             _tryGetPolicy = tryGetPolicy;
             _setPolicy = setPolicy;
             _getManyPolicy = getManyPolicy;
             _setManyPolicy = setManyPolicy;
+            _tryRemovePolicy = tryRemovePolicy;
         }
         
         public Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
@@ -58,6 +61,13 @@ namespace CacheMeIfYouCan.Polly
                 ? _innerCache.SetMany(values, timeToLive)
                 : _setManyPolicy.ExecuteAsync(() => _innerCache.SetMany(values, timeToLive));
         }
+
+        public Task<bool> TryRemove(TKey key)
+        {
+            return _tryRemovePolicy is null
+                ? _innerCache.TryRemove(key)
+                : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(key));
+        }
     }
 
     public sealed class DistributedCachePollyWrapper<TOuterKey, TInnerKey, TValue> :
@@ -66,21 +76,24 @@ namespace CacheMeIfYouCan.Polly
         private readonly IDistributedCache<TOuterKey, TInnerKey, TValue> _innerCache;
         private readonly AsyncPolicy _getManyPolicy;
         private readonly AsyncPolicy _setManyPolicy;
+        private readonly AsyncPolicy _tryRemovePolicy;
 
         public DistributedCachePollyWrapper(
             IDistributedCache<TOuterKey, TInnerKey, TValue> innerCache,
             AsyncPolicy policy)
-            : this(innerCache, policy, policy)
+            : this(innerCache, policy, policy, policy)
         { }
 
         public DistributedCachePollyWrapper(
             IDistributedCache<TOuterKey, TInnerKey, TValue> innerCache,
             AsyncPolicy getManyPolicy = null,
-            AsyncPolicy setManyPolicy = null)
+            AsyncPolicy setManyPolicy = null,
+            AsyncPolicy tryRemovePolicy = null)
         {
             _innerCache = innerCache;
             _getManyPolicy = getManyPolicy;
             _setManyPolicy = setManyPolicy;
+            _tryRemovePolicy = tryRemovePolicy;
         }
 
         public Task<int> GetMany(
@@ -101,6 +114,13 @@ namespace CacheMeIfYouCan.Polly
             return _setManyPolicy is null
                 ? _innerCache.SetMany(outerKey, values, timeToLive)
                 : _setManyPolicy.ExecuteAsync(() => _innerCache.SetMany(outerKey, values, timeToLive));
+        }
+
+        public Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey)
+        {
+            return _tryRemovePolicy is null
+                ? _innerCache.TryRemove(outerKey, innerKey)
+                : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(outerKey, innerKey));
         }
     }
 }

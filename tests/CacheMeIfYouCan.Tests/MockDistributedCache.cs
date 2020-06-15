@@ -13,6 +13,7 @@ namespace CacheMeIfYouCan.Tests
         public int SetExecutionCount;
         public int GetManyExecutionCount;
         public int SetManyExecutionCount;
+        public int TryRemoveExecutionCount;
         public int HitsCount;
         public int MissesCount;
         private bool _throwExceptionOnNextAction;
@@ -21,11 +22,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref TryGetExecutionCount);
 
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+            ThrowIfRequested();
             
             if (_innerCache.TryGet(key, out var value))
             {
@@ -41,11 +38,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetExecutionCount);
             
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+            ThrowIfRequested();
             
             _innerCache.Set(key, (value, DateTime.UtcNow + timeToLive), timeToLive);
             
@@ -56,11 +49,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref GetManyExecutionCount);
             
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+            ThrowIfRequested();
             
             var resultsArray = new KeyValuePair<TKey, (TValue, DateTime)>[keys.Length];
             
@@ -86,11 +75,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref SetManyExecutionCount);
             
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+            ThrowIfRequested();
             
             var valuesInner = new KeyValuePair<TKey, (TValue, DateTime)>[values.Length];
             for (var i = 0; i < values.Length; i++)
@@ -104,7 +89,25 @@ namespace CacheMeIfYouCan.Tests
             return Task.CompletedTask;
         }
 
+        public Task<bool> TryRemove(TKey key)
+        {
+            Interlocked.Increment(ref SetManyExecutionCount);
+            
+            ThrowIfRequested();
+
+            return Task.FromResult(_innerCache.TryRemove(key, out _));
+        }
+
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
+
+        private void ThrowIfRequested()
+        {
+            if (!_throwExceptionOnNextAction)
+                return;
+            
+            _throwExceptionOnNextAction = false;
+            throw new Exception();
+        }
     }
     
     public class MockDistributedCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>
@@ -124,11 +127,7 @@ namespace CacheMeIfYouCan.Tests
         {
             Interlocked.Increment(ref GetManyExecutionCount);
 
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+            ThrowIfRequested();
 
             var resultsArray = new KeyValuePair<TInnerKey, (TValue, DateTime)>[innerKeys.Length];
             
@@ -157,12 +156,8 @@ namespace CacheMeIfYouCan.Tests
             ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive)
         {
             Interlocked.Increment(ref SetManyExecutionCount);
-            
-            if (_throwExceptionOnNextAction)
-            {
-                _throwExceptionOnNextAction = false;
-                throw new Exception();
-            }
+
+            ThrowIfRequested();
 
             var valuesInner = new KeyValuePair<TInnerKey, (TValue, DateTime)>[values.Length];
             for (var i = 0; i < values.Length; i++)
@@ -176,6 +171,24 @@ namespace CacheMeIfYouCan.Tests
             return Task.CompletedTask;
         }
 
+        public Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey)
+        {
+            Interlocked.Increment(ref SetManyExecutionCount);
+            
+            ThrowIfRequested();
+
+            return Task.FromResult(_innerCache.TryRemove(outerKey, innerKey, out _));
+        }
+
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
+        
+        private void ThrowIfRequested()
+        {
+            if (!_throwExceptionOnNextAction)
+                return;
+            
+            _throwExceptionOnNextAction = false;
+            throw new Exception();
+        }
     }
 }

@@ -170,6 +170,31 @@ namespace CacheMeIfYouCan.Redis.Tests
             rawValueInRedis.Should().Be(nullValue);
         }
 
+        [Fact]
+        public async Task TryRemove_WorksAsExpected()
+        {
+            var cache = BuildRedisCache();
+
+            var keys = Enumerable
+                .Range(0, 10)
+                .ToArray();
+            
+            var values = keys
+                .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
+                .ToArray();
+
+            await cache.SetMany(values, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+            for (var i = 5; i < 15; i++)
+                (await cache.TryRemove(i).ConfigureAwait(false)).Should().Be(i < 10);
+
+            var fromCache = await cache
+                .GetMany(keys)
+                .ConfigureAwait(false);
+
+            fromCache.Select(kv => kv.Key).Should().BeEquivalentTo(keys.Take(5));
+        }
+
         private static RedisCache<int, TestClass> BuildRedisCache(
             bool useFireAndForget = false,
             string keyPrefix = null,

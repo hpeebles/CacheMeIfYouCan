@@ -245,6 +245,19 @@ namespace CacheMeIfYouCan.Redis
             }
         }
 
+        public async Task<bool> TryRemove(TKey key)
+        {
+            CheckDisposed();
+            
+            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            
+            var redisKey = _keySerializer(key);
+
+            return await redisDb
+                .KeyDeleteAsync(redisKey)
+                .ConfigureAwait(false);
+        }
+
         public void Dispose()
         {
             _disposed = true;
@@ -482,6 +495,21 @@ namespace CacheMeIfYouCan.Redis
                 
                 return new ArraySegment<Task>(pooledTasksArray, 0, index);
             }
+        }
+        
+        public async Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey)
+        {
+            CheckDisposed();
+            
+            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            
+            var redisKey = _outerKeySerializer(outerKey)
+                .Append(_keySeparator)
+                .Append(_innerKeySerializer(innerKey));
+
+            return await redisDb
+                .KeyDeleteAsync(redisKey)
+                .ConfigureAwait(false);
         }
 
         public void Dispose()

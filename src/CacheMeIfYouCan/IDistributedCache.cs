@@ -14,6 +14,8 @@ namespace CacheMeIfYouCan
         Task<int> GetMany(ReadOnlyMemory<TKey> keys, Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination);
 
         Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
+
+        Task<bool> TryRemove(TKey key);
     }
     
     public interface IDistributedCache<in TOuterKey, TInnerKey, TValue>
@@ -21,6 +23,8 @@ namespace CacheMeIfYouCan
         Task<int> GetMany(TOuterKey outerKey, ReadOnlyMemory<TInnerKey> innerKeys, Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination);
         
         Task SetMany(TOuterKey outerKey, ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
+
+        Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey);
     }
     
     public static class IDistributedCacheExtensions
