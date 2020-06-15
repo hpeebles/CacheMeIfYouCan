@@ -127,7 +127,7 @@ namespace CacheMeIfYouCan.Redis.Tests
             value.Value.Should().BeNull();
             value.TimeToLive.Should().BePositive().And.BeLessThan(TimeSpan.FromSeconds(1));
 
-            var rawValueInRedis = await redisDb.StringGetAsync(keyPrefix + "11");
+            var rawValueInRedis = await redisDb.StringGetAsync(keyPrefix + "1_1");
             rawValueInRedis.Should().Be(nullValue);
         }
         
