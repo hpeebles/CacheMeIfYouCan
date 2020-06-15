@@ -288,7 +288,7 @@ namespace CacheMeIfYouCan.Tests
             using var cachedObject = CachedObjectFactory
                 .ConfigureFor(() => 1)
                 .WithUpdates(_ => 1, (current, input) => current + input)
-                .WithUpdateInterval(TimeSpan.FromMilliseconds(100))
+                .WithUpdateInterval(TimeSpan.FromMilliseconds(200))
                 .OnValueUpdate(_ => updateCount++)
                 .Build();
             
@@ -303,7 +303,7 @@ namespace CacheMeIfYouCan.Tests
 
             updateCount.Should().Be(100);
 
-            await Task.Delay(TimeSpan.FromMilliseconds(200)).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
 
             updateCount.Should().BeGreaterThan(100);
         }
