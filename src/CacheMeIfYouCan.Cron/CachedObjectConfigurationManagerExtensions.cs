@@ -85,7 +85,7 @@ namespace CacheMeIfYouCan.Cron
             public void Start(Func<Task> job)
             {
                 _job = job;
-                _timer = new Timer(_ => RunJob());
+                _timer = new Timer(async _ => await RunJob().ConfigureAwait(false));
                 UpdateTimer();
             }
 

@@ -36,7 +36,7 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             var updateInterval = _updateIntervalFactory();
             
             _updateTimer = new Timer(
-                _ => UpdateValueFromTimer(),
+                async _ => await UpdateValueFromTimer().ConfigureAwait(false),
                 null,
                 (long)updateInterval.TotalMilliseconds,
                 -1);

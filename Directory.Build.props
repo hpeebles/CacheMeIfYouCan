@@ -9,5 +9,6 @@
     <LangVersion>latest</LangVersion>
     <AssemblyOriginatorKeyFile>../../CacheMeIfYouCan.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>

@@ -168,7 +168,7 @@ namespace CacheMeIfYouCan.Internal.CachedObjects
             var refreshInterval = _refreshIntervalFactory();
 
             _refreshTimer = new Timer(
-                _ => RefreshValueFromTimer(),
+                async _ => await RefreshValueFromTimer().ConfigureAwait(false),
                 null,
                 (long)refreshInterval.TotalMilliseconds,
                 -1);
