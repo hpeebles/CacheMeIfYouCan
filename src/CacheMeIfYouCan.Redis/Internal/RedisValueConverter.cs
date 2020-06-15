@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.IO;
 using StackExchange.Redis;
 
-namespace CacheMeIfYouCan.Redis
+namespace CacheMeIfYouCan.Redis.Internal
 {
     internal sealed class RedisValueConverter<T>
     {

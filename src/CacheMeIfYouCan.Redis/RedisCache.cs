@@ -2,9 +2,12 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CacheMeIfYouCan.Redis.Internal;
 using Microsoft.IO;
 using StackExchange.Redis;
 
@@ -12,24 +15,37 @@ namespace CacheMeIfYouCan.Redis
 {
     public sealed class RedisCache<TKey, TValue> : IDistributedCache<TKey, TValue>, IDisposable
     {
-        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        private readonly IRedisConnection _connection;
         private readonly Func<TKey, RedisKey> _keySerializer;
         private readonly int _dbIndex;
         private readonly CommandFlags _setValueFlags;
         private readonly RedisValueConverter<TValue> _redisValueConverter;
         private readonly bool _serializeValuesToStreams;
+        private readonly Subject<(string Key, KeyEventType EventType)> _keysChangedRemotely;
+        private readonly RecentlySetOrRemovedKeysManager _recentlySetKeysManager;
+        private readonly RecentlySetOrRemovedKeysManager _recentlyRemovedKeysManager;
+        private readonly int _keyPrefixLength;
         private bool _disposed;
 
         public RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
+            IRedisConnection connection,
             Func<TKey, RedisKey> keySerializer,
             ISerializer<TValue> valueSerializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
             RedisKey keyPrefix = default,
             RedisValue nullValue = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None,
             RecyclableMemoryStreamManager recyclableMemoryStreamManager = default)
-            : this(connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
+            : this(
+                connection,
+                keySerializer,
+                dbIndex,
+                useFireAndForgetWherePossible,
+                keyPrefix,
+                subscriber,
+                keyEventTypesToSubscribeTo)
         {
             _redisValueConverter = new RedisValueConverter<TValue>(
                 valueSerializer,
@@ -40,15 +56,24 @@ namespace CacheMeIfYouCan.Redis
         }
 
         public RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
+            IRedisConnection connection,
             Func<TKey, RedisKey> keySerializer,
             Func<TValue, RedisValue> valueSerializer,
             Func<RedisValue, TValue> valueDeserializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
             RedisKey keyPrefix = default,
-            RedisValue nullValue = default)
-            : this(connectionMultiplexer, keySerializer, dbIndex, useFireAndForgetWherePossible, keyPrefix)
+            RedisValue nullValue = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
+            : this(
+                connection,
+                keySerializer,
+                dbIndex,
+                useFireAndForgetWherePossible,
+                keyPrefix,
+                subscriber,
+                keyEventTypesToSubscribeTo)
         {
             _redisValueConverter = new RedisValueConverter<TValue>(
                 valueSerializer,
@@ -58,13 +83,16 @@ namespace CacheMeIfYouCan.Redis
             _serializeValuesToStreams = false;
         }
         
-        private RedisCache(IConnectionMultiplexer connectionMultiplexer,
+        private RedisCache(
+            IRedisConnection connection,
             Func<TKey, RedisKey> keySerializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
-            RedisKey keyPrefix = default)
+            RedisKey keyPrefix = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
         {
-            _connectionMultiplexer = connectionMultiplexer;
+            _connection = connection;
             _keySerializer = keyPrefix == default(RedisKey)
                 ? keySerializer
                 : k => keySerializer(k).Prepend(keyPrefix);
@@ -72,13 +100,29 @@ namespace CacheMeIfYouCan.Redis
             _setValueFlags = useFireAndForgetWherePossible
                 ? CommandFlags.FireAndForget
                 : CommandFlags.None;
+            _keyPrefixLength = keyPrefix.ToString().Length;
+
+            if (keyEventTypesToSubscribeTo != KeyEventType.None)
+            {
+                if (subscriber is null)
+                    throw new ArgumentNullException(nameof(subscriber));
+                
+                _keysChangedRemotely = new Subject<(string, KeyEventType)>();
+                
+                if (keyEventTypesToSubscribeTo.HasFlag(KeyEventType.Set))
+                    _recentlySetKeysManager = new RecentlySetOrRemovedKeysManager();
+                
+                _recentlyRemovedKeysManager = new RecentlySetOrRemovedKeysManager();
+                
+                subscriber.SubscribeToKeyChanges(dbIndex, keyEventTypesToSubscribeTo, OnKeyChanged, keyPrefix);
+            }
         }
 
         public async Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
 
             var redisKey = _keySerializer(key);
             
@@ -98,7 +142,7 @@ namespace CacheMeIfYouCan.Redis
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
 
             var redisKey = _keySerializer(key);
 
@@ -107,6 +151,8 @@ namespace CacheMeIfYouCan.Redis
             {
                 var redisValue = _redisValueConverter.ConvertToRedisValue(value, out stream);
 
+                _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
+                
                 var task = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
 
                 if (!task.IsCompleted)
@@ -124,7 +170,7 @@ namespace CacheMeIfYouCan.Redis
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
 
             var valuesFoundCount = 0;
             
@@ -197,7 +243,7 @@ namespace CacheMeIfYouCan.Redis
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
 
             var pooledTasksArray = ArrayPool<Task>.Shared.Rent(values.Length);
             var toDispose = _serializeValuesToStreams
@@ -237,7 +283,9 @@ namespace CacheMeIfYouCan.Redis
 
                     if (!(toDispose is null))
                         toDispose[index] = stream;
-                    
+
+                    _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
+
                     pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
                 }
                 
@@ -249,19 +297,29 @@ namespace CacheMeIfYouCan.Redis
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
             
             var redisKey = _keySerializer(key);
 
+            _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
+            
             return await redisDb
                 .KeyDeleteAsync(redisKey)
                 .ConfigureAwait(false);
         }
 
+        public IObservable<(string Key, KeyEventType EventType)> KeysChangedRemotely =>
+            _keysChangedRemotely?.AsObservable() ?? Observable.Empty<(string, KeyEventType)>();
+        
         public void Dispose()
         {
+            if (_disposed)
+                return;
+            
+            _keysChangedRemotely?.Dispose();
+            _recentlySetKeysManager?.Dispose();
+            _recentlyRemovedKeysManager?.Dispose();
             _disposed = true;
-            _connectionMultiplexer.Dispose();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -270,11 +328,30 @@ namespace CacheMeIfYouCan.Redis
             if (_disposed)
                 throw new ObjectDisposedException(this.GetType().ToString());
         }
+        
+        private void OnKeyChanged(string redisKey, KeyEventType eventType)
+        {
+            bool wasLocalChange;
+            if (eventType == KeyEventType.Set)
+                _recentlySetKeysManager.HandleKeyChangedNotification(redisKey, out wasLocalChange);
+            else if (eventType == KeyEventType.Del)
+                _recentlyRemovedKeysManager.HandleKeyChangedNotification(redisKey, out wasLocalChange);
+            else
+                wasLocalChange = false;
+
+            if (wasLocalChange)
+                return;
+            
+            _keysChangedRemotely.OnNext((redisKey, eventType));
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IDatabase GetDatabase() => _connection.Get().GetDatabase(_dbIndex);
     }
     
     public sealed class RedisCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>, IDisposable
     {
-        private readonly IConnectionMultiplexer _connectionMultiplexer;
+        private readonly IRedisConnection _connection;
         private readonly Func<TOuterKey, RedisKey> _outerKeySerializer;
         private readonly Func<TInnerKey, RedisKey> _innerKeySerializer;
         private readonly int _dbIndex;
@@ -282,10 +359,14 @@ namespace CacheMeIfYouCan.Redis
         private readonly RedisKey _keySeparator;
         private readonly RedisValueConverter<TValue> _redisValueConverter;
         private readonly bool _serializeValuesToStreams;
+        private readonly Subject<(string OuterKey, string InnerKey, KeyEventType EventType)> _keysChangedRemotely;
+        private readonly RecentlySetOrRemovedKeysManager _recentlySetKeysManager;
+        private readonly RecentlySetOrRemovedKeysManager _recentlyRemovedKeysManager;
+        private readonly int _keyPrefixLength;
         private bool _disposed;
 
         public RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
+            IRedisConnection connection,
             Func<TOuterKey, RedisKey> outerKeySerializer,
             Func<TInnerKey, RedisKey> innerKeySerializer,
             ISerializer<TValue> valueSerializer,
@@ -294,15 +375,19 @@ namespace CacheMeIfYouCan.Redis
             RedisKey keySeparator = default,
             RedisKey keyPrefix = default,
             RedisValue nullValue = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None,
             RecyclableMemoryStreamManager recyclableMemoryStreamManager = default)
             : this(
-                connectionMultiplexer,
+                connection,
                 outerKeySerializer,
                 innerKeySerializer,
                 dbIndex,
                 useFireAndForgetWherePossible,
                 keySeparator,
-                keyPrefix)
+                keyPrefix,
+                subscriber,
+                keyEventTypesToSubscribeTo)
         {
             _redisValueConverter = new RedisValueConverter<TValue>(
                 valueSerializer,
@@ -313,7 +398,7 @@ namespace CacheMeIfYouCan.Redis
         }
         
         public RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
+            IRedisConnection connection,
             Func<TOuterKey, RedisKey> outerKeySerializer,
             Func<TInnerKey, RedisKey> innerKeySerializer,
             Func<TValue, RedisValue> valueSerializer,
@@ -322,15 +407,19 @@ namespace CacheMeIfYouCan.Redis
             bool useFireAndForgetWherePossible = false,
             RedisKey keySeparator = default,
             RedisKey keyPrefix = default,
-            RedisValue nullValue = default)
+            RedisValue nullValue = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
             : this(
-                connectionMultiplexer,
+                connection,
                 outerKeySerializer,
                 innerKeySerializer,
                 dbIndex,
                 useFireAndForgetWherePossible,
                 keySeparator,
-                keyPrefix)
+                keyPrefix,
+                subscriber,
+                keyEventTypesToSubscribeTo)
         {
             _redisValueConverter = new RedisValueConverter<TValue>(
                 valueSerializer,
@@ -341,15 +430,17 @@ namespace CacheMeIfYouCan.Redis
         }
         
         private RedisCache(
-            IConnectionMultiplexer connectionMultiplexer,
+            IRedisConnection connection,
             Func<TOuterKey, RedisKey> outerKeySerializer,
             Func<TInnerKey, RedisKey> innerKeySerializer,
             int dbIndex = 0,
             bool useFireAndForgetWherePossible = false,
             RedisKey keySeparator = default,
-            RedisKey keyPrefix = default)
+            RedisKey keyPrefix = default,
+            IRedisSubscriber subscriber = null,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
         {
-            _connectionMultiplexer = connectionMultiplexer;
+            _connection = connection;
             _outerKeySerializer = keyPrefix == default(RedisKey)
                 ? outerKeySerializer
                 : k => outerKeySerializer(k).Prepend(keyPrefix);
@@ -357,6 +448,22 @@ namespace CacheMeIfYouCan.Redis
             _dbIndex = dbIndex;
             _setValueFlags = useFireAndForgetWherePossible ? CommandFlags.FireAndForget : CommandFlags.None;
             _keySeparator = keySeparator;
+            _keyPrefixLength = keyPrefix.ToString().Length;
+            
+            if (keyEventTypesToSubscribeTo != KeyEventType.None)
+            {
+                if (subscriber is null)
+                    throw new ArgumentNullException(nameof(subscriber));
+                
+                _keysChangedRemotely = new Subject<(string, string, KeyEventType)>();
+                
+                if (keyEventTypesToSubscribeTo.HasFlag(KeyEventType.Set))
+                    _recentlySetKeysManager = new RecentlySetOrRemovedKeysManager();
+                
+                _recentlyRemovedKeysManager = new RecentlySetOrRemovedKeysManager();
+                
+                subscriber.SubscribeToKeyChanges(dbIndex, keyEventTypesToSubscribeTo, OnKeyChanged, keyPrefix);
+            }
         }
         
         public async Task<int> GetMany(
@@ -365,8 +472,8 @@ namespace CacheMeIfYouCan.Redis
             Memory<KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
-            
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+
+            var redisDb = GetDatabase();
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
 
@@ -445,8 +552,8 @@ namespace CacheMeIfYouCan.Redis
             TimeSpan timeToLive)
         {
             CheckDisposed();
-            
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+
+            var redisDb = GetDatabase();
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
             
@@ -490,6 +597,8 @@ namespace CacheMeIfYouCan.Redis
                     if (!(toDispose is null))
                         toDispose[streamIndex++] = stream;
 
+                    _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
+                    
                     pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
                 }
                 
@@ -501,21 +610,31 @@ namespace CacheMeIfYouCan.Redis
         {
             CheckDisposed();
             
-            var redisDb = _connectionMultiplexer.GetDatabase(_dbIndex);
+            var redisDb = GetDatabase();
             
             var redisKey = _outerKeySerializer(outerKey)
                 .Append(_keySeparator)
                 .Append(_innerKeySerializer(innerKey));
 
+            _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
+            
             return await redisDb
                 .KeyDeleteAsync(redisKey)
                 .ConfigureAwait(false);
         }
 
+        public IObservable<(string OuterKey, string InnerKey, KeyEventType EventType)> KeysChangedRemotely =>
+            _keysChangedRemotely?.AsObservable() ?? Observable.Empty<(string, string, KeyEventType)>();
+
         public void Dispose()
         {
+            if (_disposed)
+                return;
+            
+            _keysChangedRemotely?.Dispose();
+            _recentlySetKeysManager?.Dispose();
+            _recentlyRemovedKeysManager?.Dispose();
             _disposed = true;
-            _connectionMultiplexer.Dispose();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -524,5 +643,37 @@ namespace CacheMeIfYouCan.Redis
             if (_disposed)
                 throw new ObjectDisposedException(this.GetType().ToString());
         }
+        
+        private void OnKeyChanged(string redisKey, KeyEventType eventType)
+        {
+            bool wasLocalChange;
+            if (eventType == KeyEventType.Set)
+                _recentlySetKeysManager.HandleKeyChangedNotification(redisKey, out wasLocalChange);
+            else if (eventType == KeyEventType.Del)
+                _recentlyRemovedKeysManager.HandleKeyChangedNotification(redisKey, out wasLocalChange);
+            else
+                wasLocalChange = false;
+
+            if (wasLocalChange)
+                return;
+
+            string outerKey, innerKey;
+            if (_keySeparator.Equals(default))
+            {
+                outerKey = redisKey;
+                innerKey = null;
+            }
+            else
+            {
+                var index = redisKey.IndexOf(_keySeparator);
+                outerKey = redisKey.Substring(0, index);
+                innerKey = redisKey.Substring(index + 1);
+            }
+
+            _keysChangedRemotely.OnNext((outerKey, innerKey, eventType));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IDatabase GetDatabase() => _connection.Get().GetDatabase(_dbIndex);
     }
 }

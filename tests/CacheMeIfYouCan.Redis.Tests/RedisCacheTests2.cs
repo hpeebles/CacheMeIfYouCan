@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -20,7 +21,8 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(false)]
         public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully(bool useSerializer)
         {
-            var cache = BuildRedisCache(useSerializer: useSerializer);
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection, useSerializer: useSerializer);
 
             var tasks = Enumerable
                 .Range(1, 5)
@@ -50,7 +52,8 @@ namespace CacheMeIfYouCan.Redis.Tests
         [Fact]
         public async Task GetMany_WithSomeKeysNotSet_ReturnsAllKeysWhichHaveValues()
         {
-            var cache = BuildRedisCache();
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection);
 
             var keys = Enumerable.Range(1, 10).ToArray();
             var values = keys.Where(k => k % 2 == 0).Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i))).ToArray();
@@ -67,7 +70,8 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(1000)]
         public async Task WithTimeToLive_DataExpiredCorrectly(int timeToLiveMs)
         {
-            var cache = BuildRedisCache();
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection);
             
             await cache.SetMany(1, new[] { new KeyValuePair<int, TestClass>(1, new TestClass(1)) }, TimeSpan.FromMilliseconds(timeToLiveMs));
             (await cache.GetMany(1, new[] { 1 })).Should().ContainSingle();
@@ -82,7 +86,8 @@ namespace CacheMeIfYouCan.Redis.Tests
         [InlineData(false)]
         public void WhenFireAndForgetEnabled_SetOperationsCompleteImmediately(bool useFireAndForget)
         {
-            var cache = BuildRedisCache(useFireAndForget);
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection, useFireAndForget);
 
             var task = cache.SetMany(1, new[] { new KeyValuePair<int, TestClass>(1, new TestClass(1)) }, TimeSpan.FromSeconds(1));
 
@@ -90,15 +95,16 @@ namespace CacheMeIfYouCan.Redis.Tests
         }
         
         [Fact]
-        public async Task WhenDisposed_ThrowsObjectDisposedException()
+        public async Task WhenConnectionDisposed_ThrowsObjectDisposedException()
         {
-            var cache = BuildRedisCache();
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection);
             
-            cache.Dispose();
+            connection.Dispose();
 
             Func<Task> task = () => cache.GetMany(1, new[] { 1 });
 
-            await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* '{cache.GetType()}'.");
+            await task.Should().ThrowExactlyAsync<ObjectDisposedException>().WithMessage($"* '{connection.GetType()}'.");
         }
         
         [Theory]
@@ -107,10 +113,11 @@ namespace CacheMeIfYouCan.Redis.Tests
         public async Task Nulls_StoredAsChosenNullValue(string nullValue)
         {
             var keyPrefix = Guid.NewGuid().ToString();
-            
-            var cache = BuildRedisCache(keyPrefix: keyPrefix, nullValue: nullValue);
 
-            var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection, keyPrefix: keyPrefix, nullValue: nullValue);
+
+            using var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
             var redisDb = connectionMultiplexer.GetDatabase();
             
             await cache.SetMany(1, new[] { new KeyValuePair<int, TestClass>(1, null) }, TimeSpan.FromSeconds(1));
@@ -123,60 +130,163 @@ namespace CacheMeIfYouCan.Redis.Tests
             var rawValueInRedis = await redisDb.StringGetAsync(keyPrefix + "11");
             rawValueInRedis.Should().Be(nullValue);
         }
-        [Fact]
-        public async Task TryRemove_WorksAsExpected()
+        
+        [Theory]
+        [InlineData(KeyEventType.None)]
+        [InlineData(KeyEventType.Set)]
+        [InlineData(KeyEventType.Del)]
+        [InlineData(KeyEventType.All)]
+        public async Task SubscriberEnabled_OnKeyChangedExternally_NotificationRaisedAsExpected(KeyEventType eventTypes)
         {
-            var cache = BuildRedisCache();
-
-            var keys = Enumerable
-                .Range(0, 10)
-                .ToArray();
+            var keyPrefix = Guid.NewGuid().ToString();
             
-            var values = keys
+            using var connection = BuildConnection();
+            using var cache1 = BuildRedisCache(connection, keyPrefix: keyPrefix, keyEventTypesToSubscribeTo: eventTypes);
+            using var cache2 = BuildRedisCache(connection, keyPrefix: keyPrefix);
+
+            var values = Enumerable
+                .Range(0, 10)
                 .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
                 .ToArray();
 
-            await cache.SetMany(0, values, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            var expectedEvents = new List<(string, string, KeyEventType)>();
+            
+            if (eventTypes.HasFlag(KeyEventType.Set))
+                expectedEvents.AddRange(values.Select(kv => ("1", kv.Key.ToString(), KeyEventType.Set)));
+            
+            if (eventTypes.HasFlag(KeyEventType.Del))
+                expectedEvents.Add(("1", "1", KeyEventType.Del));
+            
+            if (eventTypes.HasFlag(KeyEventType.Expired))
+                expectedEvents.AddRange(values.Skip(2).Select(kv => ("1", kv.Key.ToString(), KeyEventType.Expired)));
 
-            for (var i = 5; i < 15; i++)
-                (await cache.TryRemove(0, i).ConfigureAwait(false)).Should().Be(i < 10);
+            expectedEvents = expectedEvents
+                .OrderBy(t => t.Item1)
+                .ThenBy(t => t.Item2)
+                .ToList();
+            
+            using var countdown = new CountdownEvent(expectedEvents.Count);
+            var keysChangedRemotely = new ConcurrentBag<(string, string, KeyEventType)>();
 
-            var fromCache = await cache
-                .GetMany(0, keys)
+            using var _ = cache1.KeysChangedRemotely.Subscribe(t =>
+            {
+                keysChangedRemotely.Add((t.OuterKey, t.InnerKey, t.EventType));
+                countdown.Signal();
+            });
+            
+            await cache1
+                .SetMany(1, values, TimeSpan.FromSeconds(10))
                 .ConfigureAwait(false);
 
-            fromCache.Select(kv => kv.Key).Should().BeEquivalentTo(keys.Take(5));
-        }
+            await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
 
+            keysChangedRemotely.Should().BeEmpty();
+            
+            await cache2
+                .SetMany(1, values.ToArray(), TimeSpan.FromMilliseconds(500))
+                .ConfigureAwait(false);
+
+            await cache1.TryRemove(1, 0).ConfigureAwait(false);
+            await cache2.TryRemove(1, 1).ConfigureAwait(false);
+
+            countdown.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+
+            keysChangedRemotely.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents);
+        }
+        
+        [Fact]
+        public async Task MultipleSubscriptionsUsingSingleConnection_NotificationsAreSentToCorrectSubscriber()
+        {
+            var keyPrefix1 = Guid.NewGuid().ToString();
+            var keyPrefix2 = Guid.NewGuid().ToString();
+            
+            using var connection = BuildConnection();
+            using var cache1 = BuildRedisCache(connection, keyPrefix: keyPrefix1, keyEventTypesToSubscribeTo: KeyEventType.Set);
+            using var cache2 = BuildRedisCache(connection, keyPrefix: keyPrefix2, keyEventTypesToSubscribeTo: KeyEventType.Set);
+            using var cache3 = BuildRedisCache(connection, keyPrefix: keyPrefix1);
+            using var cache4 = BuildRedisCache(connection, keyPrefix: keyPrefix2);
+
+            using var countdown = new CountdownEvent(20); 
+            
+            var keysChangedRemotely1 = new ConcurrentBag<(string, string, KeyEventType)>(); 
+            var keysChangedRemotely2 = new ConcurrentBag<(string, string, KeyEventType)>(); 
+
+            using var _ = cache1.KeysChangedRemotely.Subscribe(t =>
+            {
+                keysChangedRemotely1.Add((t.OuterKey, t.InnerKey, t.EventType));
+                countdown.Signal();
+            });
+            
+            using var __ = cache2.KeysChangedRemotely.Subscribe(t =>
+            {
+                keysChangedRemotely2.Add((t.OuterKey, t.InnerKey, t.EventType));
+                countdown.Signal();
+            });
+            
+            var values1 = Enumerable
+                .Range(0, 10)
+                .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
+                .ToArray();
+
+            var values2 = Enumerable
+                .Range(10, 10)
+                .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
+                .ToArray();
+            
+            await cache3
+                .SetMany(1, values1, TimeSpan.FromSeconds(10))
+                .ConfigureAwait(false);
+
+            await cache4
+                .SetMany(2, values2, TimeSpan.FromSeconds(10))
+                .ConfigureAwait(false);
+
+            countdown.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+
+            var expectedEvents1 = values1.Select(kv => ("1", kv.Key.ToString(), KeyEventType.Set)).ToArray();
+            var expectedEvents2 = values2.Select(kv => ("2", kv.Key.ToString(), KeyEventType.Set)).ToArray();
+            
+            keysChangedRemotely1.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents1);
+            keysChangedRemotely2.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents2);
+        }
+        
+        private static RedisConnection BuildConnection() => new RedisConnection(TestConnectionString.Value);
+        
         private static RedisCache<int, int, TestClass> BuildRedisCache(
+            RedisConnection connection,
             bool useFireAndForget = false,
             string keyPrefix = null,
             string nullValue = null,
-            bool useSerializer = false)
+            bool useSerializer = false,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
         {
-            var connectionMultiplexer = ConnectionMultiplexer.Connect(TestConnectionString.Value);
-
             if (useSerializer)
             {
                 return new RedisCache<int, int, TestClass>(
-                    connectionMultiplexer,
+                    connection,
                     k => k.ToString(),
                     k => k.ToString(),
                     new ProtoBufSerializer<TestClass>(),
                     useFireAndForgetWherePossible: useFireAndForget,
+                    keySeparator: "_",
                     keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
-                    nullValue: nullValue);
+                    nullValue: nullValue,
+                    subscriber: connection,
+                    keyEventTypesToSubscribeTo: keyEventTypesToSubscribeTo);
             }
             
             return new RedisCache<int, int, TestClass>(
-                connectionMultiplexer,
+                connection,
                 k => k.ToString(),
                 k => k.ToString(),
                 v => v.ToString(),
                 v => TestClass.Parse(v),
                 useFireAndForgetWherePossible: useFireAndForget,
+                keySeparator: "_",
                 keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
-                nullValue: nullValue);
+                nullValue: nullValue,
+                subscriber: connection,
+                keyEventTypesToSubscribeTo: keyEventTypesToSubscribeTo);
         }
     }
 }
