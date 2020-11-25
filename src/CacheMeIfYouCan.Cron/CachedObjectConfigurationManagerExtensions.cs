@@ -76,6 +76,7 @@ namespace CacheMeIfYouCan.Cron
             private readonly CrontabSchedule _schedule;
             private Func<Task> _job;
             private Timer _timer;
+            private volatile bool _isDisposed;
 
             public Scheduler(CrontabSchedule schedule)
             {
@@ -89,7 +90,11 @@ namespace CacheMeIfYouCan.Cron
                 UpdateTimer();
             }
 
-            public void Dispose() => _timer.Dispose();
+            public void Dispose()
+            {
+                _timer.Dispose();
+                _isDisposed = true;
+            }
 
             private async Task RunJob()
             {
@@ -99,7 +104,8 @@ namespace CacheMeIfYouCan.Cron
                 }
                 finally
                 {
-                    UpdateTimer();
+                    if (!_isDisposed)
+                        UpdateTimer();
                 }
             }
             
@@ -108,7 +114,12 @@ namespace CacheMeIfYouCan.Cron
                 var now = DateTime.UtcNow;
                 var interval = _schedule.GetNextOccurrence(now) - now;
 
-                _timer.Change((long)interval.TotalMilliseconds, -1);
+                try
+                {
+                    _timer.Change((long)interval.TotalMilliseconds, -1);
+                }
+                catch (ObjectDisposedException)
+                { }
             }
         }
     }
