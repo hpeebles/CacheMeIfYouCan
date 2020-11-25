@@ -34,6 +34,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         public Func<TParams, TInnerKey, bool> SkipCacheGetInnerPredicate { get; set; }
         public Func<TParams, bool> SkipCacheSetOuterPredicate { get; set; }
         public Func<TParams, TInnerKey, TValue, bool> SkipCacheSetInnerPredicate { get; set; }
+        public Func<TParams, ReadOnlyMemory<TInnerKey>, int> MaxBatchSizeFactory { get; set; }
         public Action<SuccessfulRequestEvent<TParams, TOuterKey, TInnerKey, TValue>> OnSuccessAction { get; set; }
         public Action<ExceptionEvent<TParams, TOuterKey, TInnerKey>> OnExceptionAction { get; set; }
     }

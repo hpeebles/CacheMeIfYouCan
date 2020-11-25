@@ -110,6 +110,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             return DontStoreInCacheWhenInternal(predicate);
         }
+        
+        public CachedFunctionConfigurationManagerValueTask<TParam, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal(maxBatchSizeFactory, batchBehaviour);
+        }
 
         public Func<TParam, TInnerKeys, ValueTask<TResponse>> Build() => BuildInternal();
     }
@@ -156,6 +162,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             Func<TParam1, TParam2, TInnerKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, k, v));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_3Params<TParam1, TParam2, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, keys), batchBehaviour);
         }
 
         public Func<TParam1, TParam2, TInnerKeys, ValueTask<TResponse>> Build()
@@ -209,6 +221,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, k, v));
         }
+        
+        public CachedFunctionConfigurationManagerValueTask_4Params<TParam1, TParam2, TParam3, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, keys), batchBehaviour);
+        }
 
         public Func<TParam1, TParam2, TParam3, TInnerKeys, ValueTask<TResponse>> Build()
         {
@@ -260,6 +278,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TInnerKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, k, v));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_5Params<TParam1, TParam2, TParam3, TParam4, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, keys), batchBehaviour);
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TInnerKeys, ValueTask<TResponse>> Build()
@@ -314,6 +338,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, k, v));
         }
+        
+        public CachedFunctionConfigurationManagerValueTask_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, keys), batchBehaviour);
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TInnerKeys, ValueTask<TResponse>> Build()
         {
@@ -367,6 +397,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, k, v));
         }
+        
+        public CachedFunctionConfigurationManagerValueTask_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, keys), batchBehaviour);
+        }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TInnerKeys, ValueTask<TResponse>> Build()
         {
@@ -419,6 +455,12 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7, k, v));
+        }
+        
+        public CachedFunctionConfigurationManagerValueTask_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, TResponse, TOuterKey, TInnerKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, keys), batchBehaviour);
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TInnerKeys, ValueTask<TResponse>> Build()

@@ -14,6 +14,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions.Configuration
         public Func<TKey, TValue> FillMissingKeysValueFactory { get; set; }
         public Func<TKey, TValue, bool> FilterResponsePredicate { get; set; }
         public int MaxBatchSize { get; set; } = Int32.MaxValue;
+        public Func<TParams, ReadOnlyMemory<TKey>, int> MaxBatchSizeFactory { get; set; }
         public BatchBehaviour BatchBehaviour { get; set; }
         public Action<SuccessfulRequestEvent<TParams, TKey, TValue>> OnSuccessAction { get; set; }
         public Action<ExceptionEvent<TParams, TKey>> OnExceptionAction { get; set; }

@@ -167,6 +167,17 @@ namespace CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys
                 throw new ArgumentOutOfRangeException(nameof(maxBatchSize));
             
             _config.MaxBatchSize = maxBatchSize;
+            _config.MaxBatchSizeFactory = null;
+            _config.BatchBehaviour = batchBehaviour;
+            return (TConfig)this;
+        }
+        
+        private protected TConfig WithBatchedFetchesInternal(Func<TParams, ReadOnlyMemory<TInnerKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour)
+        {
+            if (maxBatchSizeFactory is null)
+                throw new ArgumentNullException(nameof(maxBatchSizeFactory));
+            
+            _config.MaxBatchSizeFactory = maxBatchSizeFactory;
             _config.BatchBehaviour = batchBehaviour;
             return (TConfig)this;
         }

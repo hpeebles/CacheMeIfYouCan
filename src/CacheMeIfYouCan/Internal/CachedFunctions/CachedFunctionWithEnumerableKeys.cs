@@ -20,6 +20,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         private readonly Func<TParams, bool> _skipCacheSetOuterPredicate;
         private readonly Func<TParams, TKey, TValue, bool> _skipCacheSetInnerPredicate;
         private readonly int _maxBatchSize;
+        private readonly Func<TParams, ReadOnlyMemory<TKey>, int> _maxBatchSizeFactory;
         private readonly BatchBehaviour _batchBehaviour;
         private readonly bool _shouldFillMissingKeys;
         private readonly bool _shouldFillMissingKeysWithConstantValue;
@@ -38,6 +39,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
         {
             _originalFunction = originalFunction;
             _maxBatchSize = config.MaxBatchSize;
+            _maxBatchSizeFactory = config.MaxBatchSizeFactory;
             _batchBehaviour = config.BatchBehaviour;
             _onSuccessAction = config.OnSuccessAction;
             _onExceptionAction = config.OnExceptionAction;
@@ -105,7 +107,8 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
 
                 try
                 {
-                    if (missingKeys.Length < _maxBatchSize)
+                    var maxBatchSize = _maxBatchSizeFactory?.Invoke(parameters, missingKeys) ?? _maxBatchSize;
+                    if (missingKeys.Length < maxBatchSize)
                     {
                         var resultsDictionaryTask = GetValuesFromFunc(
                             parameters,
@@ -119,7 +122,7 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     }
                     else
                     {
-                        var batchSizes = BatchingHelper.GetBatchSizes(missingKeys.Length, _maxBatchSize, _batchBehaviour);
+                        var batchSizes = BatchingHelper.GetBatchSizes(missingKeys.Length, maxBatchSize, _batchBehaviour);
 
                         resultsDictionary ??= new Dictionary<TKey, TValue>(_keyComparer);
                         

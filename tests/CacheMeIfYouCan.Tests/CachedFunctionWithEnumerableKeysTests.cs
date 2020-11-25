@@ -892,9 +892,11 @@ namespace CacheMeIfYouCan.Tests
         }
 
         [Theory]
-        [InlineData(BatchBehaviour.FillBatchesEvenly, 8, 8, 9)]
-        [InlineData(BatchBehaviour.FillEachBatchBeforeStartingNext, 10, 10, 5)]
-        public void WithBatchedFetches_BatchesFetchesCorrectly(BatchBehaviour batchBehaviour, params int[] expectedBatchSizes)
+        [InlineData(BatchBehaviour.FillBatchesEvenly, false, 8, 8, 9)]
+        [InlineData(BatchBehaviour.FillEachBatchBeforeStartingNext, false, 10, 10, 5)]
+        [InlineData(BatchBehaviour.FillBatchesEvenly, true, 8, 8, 9)]
+        [InlineData(BatchBehaviour.FillEachBatchBeforeStartingNext, true, 10, 10, 5)]
+        public void WithBatchedFetches_BatchesFetchesCorrectly(BatchBehaviour batchBehaviour, bool useFactoryFunction, params int[] expectedBatchSizes)
         {
             var batchSizes = new List<int>();
             
@@ -904,13 +906,18 @@ namespace CacheMeIfYouCan.Tests
                 return keys.ToDictionary(k => k);
             };
 
-            var cachedFunction = CachedFunctionFactory
+            var config = CachedFunctionFactory
                 .ConfigureFor(originalFunction)
                 .WithEnumerableKeys<IEnumerable<int>, Dictionary<int, int>, int, int>()
                 .WithLocalCache(new MockLocalCache<int, int>())
-                .WithTimeToLive(TimeSpan.FromSeconds(1))
-                .WithBatchedFetches(10, batchBehaviour)
-                .Build();
+                .WithTimeToLive(TimeSpan.FromSeconds(1));
+
+            if (useFactoryFunction)
+                config.WithBatchedFetches(_ => 10, batchBehaviour);
+            else
+                config.WithBatchedFetches(10, batchBehaviour);
+
+            var cachedFunction = config.Build();
 
             cachedFunction(Enumerable.Range(0, 25)).Keys.Should().BeEquivalentTo(Enumerable.Range(0, 25));
 

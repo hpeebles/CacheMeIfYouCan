@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Configuration.OuterKeyAndInnerEnumerableKeys;
@@ -94,6 +93,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
         {
             return DontStoreInCacheWhenInternal((_, k, v) => predicate(k, v));
         }
+        
+        public CachedFunctionConfigurationManagerAsync<TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((_, keys) => maxBatchSizeFactory(keys), batchBehaviour);
+        }
 
         public Func<TKeys, Task<TResponse>> Build()
         {
@@ -158,6 +163,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return DontStoreInCacheWhenInternal(predicate);
         }
         
+        public CachedFunctionConfigurationManagerAsync_2Params<TParam, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal(maxBatchSizeFactory, batchBehaviour);
+        }
+        
         public Func<TParam, TKeys, Task<TResponse>> Build() => BuildInternal();
     }
     
@@ -209,6 +220,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, k, v));
+        }
+
+        public CachedFunctionConfigurationManagerAsync_3Params<TParam1, TParam2, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, keys), batchBehaviour);
         }
         
         public Func<TParam1, TParam2, TKeys, Task<TResponse>> Build()
@@ -269,6 +286,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, k, v));
         }
 
+        public CachedFunctionConfigurationManagerAsync_4Params<TParam1, TParam2, TParam3, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, keys), batchBehaviour);
+        }
+
         public Func<TParam1, TParam2, TParam3, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -325,6 +348,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, k, v));
+        }
+
+        public CachedFunctionConfigurationManagerAsync_5Params<TParam1, TParam2, TParam3, TParam4, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, keys), batchBehaviour);
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TKeys, Task<TResponse>> Build()
@@ -385,6 +414,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, k, v));
         }
 
+        public CachedFunctionConfigurationManagerAsync_6Params<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, keys), batchBehaviour);
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -443,6 +478,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, k, v));
         }
 
+        public CachedFunctionConfigurationManagerAsync_7Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, keys), batchBehaviour);
+        }
+
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TKeys, Task<TResponse>> Build()
         {
             var cachedFunction = BuildInternal();
@@ -499,6 +540,12 @@ namespace CacheMeIfYouCan.Configuration.EnumerableKeys
             Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKey, TValue, bool> predicate)
         {
             return DontStoreInCacheWhenInternal((p, k, v) => predicate(p.Item1, p.Item2, p.Item3, p.Item4, p.Item5, p.Item6, p.Item7, k, v));
+        }
+
+        public CachedFunctionConfigurationManagerAsync_8Params<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, TResponse, TKey, TValue> WithBatchedFetches(
+            Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, ReadOnlyMemory<TKey>, int> maxBatchSizeFactory, BatchBehaviour batchBehaviour = BatchBehaviour.FillBatchesEvenly)
+        {
+            return WithBatchedFetchesInternal((t, keys) => maxBatchSizeFactory(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, keys), batchBehaviour);
         }
 
         public Func<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TKeys, Task<TResponse>> Build()
