@@ -13,7 +13,7 @@ namespace CacheMeIfYouCan.Redis.Tests
             foreach (var endpoint in connectionMultiplexer.GetEndPoints())
             {
                 var server = connectionMultiplexer.GetServer(endpoint);
-                server.ConfigSet("notify-keyspace-events", "A");
+                server.ConfigSet("notify-keyspace-events", "AE");
                 server.ConfigRewrite();
             }
         }
