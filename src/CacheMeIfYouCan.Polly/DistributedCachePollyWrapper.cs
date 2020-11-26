@@ -8,23 +8,23 @@ namespace CacheMeIfYouCan.Polly
     public sealed class DistributedCachePollyWrapper<TKey, TValue> : IDistributedCache<TKey, TValue>
     {
         private readonly IDistributedCache<TKey, TValue> _innerCache;
-        private readonly AsyncPolicy _tryGetPolicy;
-        private readonly AsyncPolicy _setPolicy;
-        private readonly AsyncPolicy _getManyPolicy;
-        private readonly AsyncPolicy _setManyPolicy;
-        private readonly AsyncPolicy _tryRemovePolicy;
+        private readonly IAsyncPolicy _tryGetPolicy;
+        private readonly IAsyncPolicy _setPolicy;
+        private readonly IAsyncPolicy _getManyPolicy;
+        private readonly IAsyncPolicy _setManyPolicy;
+        private readonly IAsyncPolicy _tryRemovePolicy;
 
-        public DistributedCachePollyWrapper(IDistributedCache<TKey, TValue> innerCache, AsyncPolicy policy)
+        public DistributedCachePollyWrapper(IDistributedCache<TKey, TValue> innerCache, IAsyncPolicy policy)
             : this(innerCache, policy, policy, policy, policy, policy)
         { }
 
         public DistributedCachePollyWrapper(
             IDistributedCache<TKey, TValue> innerCache,
-            AsyncPolicy tryGetPolicy = null,
-            AsyncPolicy setPolicy = null,
-            AsyncPolicy getManyPolicy = null,
-            AsyncPolicy setManyPolicy = null,
-            AsyncPolicy tryRemovePolicy = null)
+            IAsyncPolicy tryGetPolicy = null,
+            IAsyncPolicy setPolicy = null,
+            IAsyncPolicy getManyPolicy = null,
+            IAsyncPolicy setManyPolicy = null,
+            IAsyncPolicy tryRemovePolicy = null)
         {
             _innerCache = innerCache;
             _tryGetPolicy = tryGetPolicy;
