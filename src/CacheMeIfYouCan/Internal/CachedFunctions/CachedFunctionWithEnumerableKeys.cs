@@ -485,16 +485,25 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             Dictionary<TKey, TValue> FilterResultsInner(out int countExcluded)
             {
                 countExcluded = 0;
+                List<TKey> toRemove = null;
                 var filter = _filterResponsePredicate;
                 foreach (var kv in results)
                 {
                     if (!filter(kv.Key, kv.Value))
                     {
                         countExcluded++;
-                        results.Remove(kv.Key);
+                        
+                        toRemove ??= new List<TKey>();
+                        toRemove.Add(kv.Key);
                     }
                 }
 
+                if (toRemove != null)
+                {
+                    foreach (var key in toRemove)
+                        results.Remove(key);
+                }
+                
                 return results;
             }
         }
