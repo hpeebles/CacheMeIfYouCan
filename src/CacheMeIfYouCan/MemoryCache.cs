@@ -35,13 +35,16 @@ namespace CacheMeIfYouCan
                 return false;
             }
 
-            value = (TValue)fromCache;
+            value = ConvertValue(fromCache);
             return true;
         }
 
         public void Set(TKey key, TValue value, TimeSpan timeToLive)
         {
-            _memoryCache.Set(_keySerializer(key), value, DateTimeOffset.UtcNow.Add(timeToLive));
+            _memoryCache.Set(
+                _keySerializer(key),
+                (object)value ?? NullObj.Instance,
+                DateTimeOffset.UtcNow.Add(timeToLive));
         }
 
         public int GetMany(ReadOnlySpan<TKey> keys, Span<KeyValuePair<TKey, TValue>> destination)
@@ -55,7 +58,7 @@ namespace CacheMeIfYouCan
                 var fromCache = _memoryCache.Get(_keySerializer(key));
 
                 if (fromCache != null)
-                    destination[countFound++] = new KeyValuePair<TKey, TValue>(key, (TValue)fromCache); 
+                    destination[countFound++] = new KeyValuePair<TKey, TValue>(key, ConvertValue(fromCache)); 
             }
 
             return countFound;
@@ -66,24 +69,35 @@ namespace CacheMeIfYouCan
             var expirationDate = DateTimeOffset.UtcNow.Add(timeToLive);
             
             foreach (var kv in values)
-                _memoryCache.Set(_keySerializer(kv.Key), kv.Value, expirationDate);
+                _memoryCache.Set(_keySerializer(kv.Key), (object)kv.Value ?? NullObj.Instance, expirationDate);
         }
 
         public bool TryRemove(TKey key, out TValue value)
         {
             var valueRemoved = _memoryCache.Remove(_keySerializer(key));
 
-            if (valueRemoved is TValue returnValue)
+            switch (valueRemoved)
             {
-                value = returnValue;
-                return true;
+                case TValue returnValue:
+                    value = returnValue;
+                    return true;
+                case NullObj _:
+                    value = default;
+                    return true;
+                default:
+                    value = default;
+                    return false;
             }
-
-            value = default;
-            return false;
+        }
+    
+        private static TValue ConvertValue(object value)
+        {
+            return value is TValue v
+                ? v
+                : default;
         }
     }
-    
+
     public sealed class MemoryCache<TOuterKey, TInnerKey, TValue> : ILocalCache<TOuterKey, TInnerKey, TValue>
     {
         private MemoryCache _memoryCache;
@@ -121,7 +135,7 @@ namespace CacheMeIfYouCan
                 var fromCache = _memoryCache.Get(outerKeyString + _innerKeySerializer(key));
 
                 if (fromCache != null)
-                    destination[countFound++] = new KeyValuePair<TInnerKey, TValue>(key, (TValue)fromCache); 
+                    destination[countFound++] = new KeyValuePair<TInnerKey, TValue>(key, ConvertValue(fromCache));
             }
 
             return countFound;
@@ -134,7 +148,7 @@ namespace CacheMeIfYouCan
             var expirationDate = DateTimeOffset.UtcNow.Add(timeToLive);
             
             foreach (var kv in values)
-                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value, expirationDate);
+                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), (object)kv.Value ?? NullObj.Instance, expirationDate);
         }
 
         public void SetManyWithVaryingTimesToLive(
@@ -148,7 +162,7 @@ namespace CacheMeIfYouCan
             {
                 var expirationDate = now.Add(kv.Value.TimeToLive);
 
-                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), kv.Value.Value, expirationDate);
+                _memoryCache.Set(outerKeyString + _innerKeySerializer(kv.Key), (object)kv.Value.Value ?? NullObj.Instance, expirationDate);
             }
         }
 
@@ -158,15 +172,25 @@ namespace CacheMeIfYouCan
             var innerKeyString = _innerKeySerializer(innerKey);
 
             var valueRemoved = _memoryCache.Remove(outerKeyString + innerKeyString);
-
-            if (valueRemoved is TValue returnValue)
+            switch (valueRemoved)
             {
-                value = returnValue;
-                return true;
+                case TValue returnValue:
+                    value = returnValue;
+                    return true;
+                case NullObj _:
+                    value = default;
+                    return true;
+                default:
+                    value = default;
+                    return false;
             }
+        }
 
-            value = default;
-            return false;
+        private static TValue ConvertValue(object value)
+        {
+            return value is TValue v
+                ? v
+                : default;
         }
     }
 }

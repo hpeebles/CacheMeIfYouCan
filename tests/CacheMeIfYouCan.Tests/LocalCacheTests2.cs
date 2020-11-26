@@ -21,7 +21,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(DictionaryCache)]
         public void Concurrent_SetMany_GetMany_AllItemsReturnedSuccessfully(string cacheName)
         {
-            var cache = BuildCache(cacheName);
+            var cache = BuildCache<int, int, int>(cacheName);
 
             var tasks = Enumerable
                 .Range(0, 5)
@@ -49,7 +49,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(DictionaryCache, 1000)]
         public void WithTimeToLive_DataExpiredCorrectly(string cacheName, int timeToLiveMs)
         {
-            var cache = BuildCache(cacheName);
+            var cache = BuildCache<int, int, int>(cacheName);
             
             cache.SetMany(1, new[] { new KeyValuePair<int, int>(1, 1) }, TimeSpan.FromMilliseconds(timeToLiveMs));
             cache.GetMany(1, new[] { 1 }).Should().ContainSingle();
@@ -64,7 +64,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(DictionaryCache)]
         public void TryRemove_WorksAsExpected(string cacheName)
         {
-            var cache = BuildCache(cacheName);
+            var cache = BuildCache<int, int, int>(cacheName);
 
             for (var i = 0; i < 10; i++)
             {
@@ -80,7 +80,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(DictionaryCache)]
         public void Count_WorksAsExpected(string cacheName)
         {
-            var cache = BuildCache(cacheName);
+            var cache = BuildCache<int, int, int>(cacheName);
 
             cache.Count.Should().Be(0);
 
@@ -104,7 +104,7 @@ namespace CacheMeIfYouCan.Tests
         [InlineData(DictionaryCache)]
         public void Clear_WorksAsExpected(string cacheName)
         {
-            var cache = BuildCache(cacheName);
+            var cache = BuildCache<int, int, int>(cacheName);
 
             for (var i = 1; i < 10; i++)
                 cache.Set(0, i, i, TimeSpan.FromSeconds(1));
@@ -116,12 +116,28 @@ namespace CacheMeIfYouCan.Tests
                 cache.GetMany(0, new[] { i }).Should().BeEmpty();
         }
 
-        private static ILocalCache<int, int, int> BuildCache(string cacheName)
+        [Theory]
+        [InlineData(MemoryCache)]
+        [InlineData(DictionaryCache)]
+        public void SetMany_GetMany_TryRemove_WithNullValue_ValueIsCached(string cacheName)
+        {
+            var cache = BuildCache<int, int, string>(cacheName);
+
+            cache.SetMany(1, new[] { new KeyValuePair<int, string>(1, null) }, TimeSpan.FromSeconds(1));
+            cache.GetMany(1, new[] { 1 }).Single().Value.Should().BeNull();
+
+            cache.TryRemove(1, 1, out var value).Should().BeTrue();
+            value.Should().BeNull();
+            
+            cache.TryRemove(1, 1, out _).Should().BeFalse();
+        }
+
+        private static ILocalCache<TOuterKey, TInnerKey, TValue> BuildCache<TOuterKey, TInnerKey, TValue>(string cacheName)
         {
             return cacheName switch
             {
-                MemoryCache => new MemoryCache<int, int, int>(k => k.ToString(), k => k.ToString()),
-                DictionaryCache => new DictionaryCache<int, int, int>(),
+                MemoryCache => new MemoryCache<TOuterKey, TInnerKey, TValue>(k => k.ToString(), k => k.ToString()),
+                DictionaryCache => new DictionaryCache<TOuterKey, TInnerKey, TValue>(),
                 _ => throw new Exception($"No! Stop being silly! {cacheName} is not valid cache name")
             };
         }
