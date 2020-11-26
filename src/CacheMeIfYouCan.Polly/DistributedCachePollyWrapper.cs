@@ -74,21 +74,21 @@ namespace CacheMeIfYouCan.Polly
         IDistributedCache<TOuterKey, TInnerKey, TValue>
     {
         private readonly IDistributedCache<TOuterKey, TInnerKey, TValue> _innerCache;
-        private readonly AsyncPolicy _getManyPolicy;
-        private readonly AsyncPolicy _setManyPolicy;
-        private readonly AsyncPolicy _tryRemovePolicy;
+        private readonly IAsyncPolicy _getManyPolicy;
+        private readonly IAsyncPolicy _setManyPolicy;
+        private readonly IAsyncPolicy _tryRemovePolicy;
 
         public DistributedCachePollyWrapper(
             IDistributedCache<TOuterKey, TInnerKey, TValue> innerCache,
-            AsyncPolicy policy)
+            IAsyncPolicy policy)
             : this(innerCache, policy, policy, policy)
         { }
 
         public DistributedCachePollyWrapper(
             IDistributedCache<TOuterKey, TInnerKey, TValue> innerCache,
-            AsyncPolicy getManyPolicy = null,
-            AsyncPolicy setManyPolicy = null,
-            AsyncPolicy tryRemovePolicy = null)
+            IAsyncPolicy getManyPolicy = null,
+            IAsyncPolicy setManyPolicy = null,
+            IAsyncPolicy tryRemovePolicy = null)
         {
             _innerCache = innerCache;
             _getManyPolicy = getManyPolicy;
