@@ -9,6 +9,8 @@ namespace CacheMeIfYouCan.Internal.RequestConverters
         public static Func<ReadOnlyMemory<TKey>, TRequest> Get<TKey, TRequest>(IEqualityComparer<TKey> keyComparer)
             where TRequest : IEnumerable<TKey>
         {
+            keyComparer ??= EqualityComparer<TKey>.Default;
+            
             IRequestConverter<TKey, TRequest> converter;
             if (typeof(TRequest) == typeof(ArraySegment<TKey>))
                 converter = Unsafe.As<IRequestConverter<TKey, TRequest>>(new ArraySegmentConverter<TKey>());

@@ -29,7 +29,7 @@ namespace CacheMeIfYouCan.Internal
 
         private protected DictionaryCacheBase(IEqualityComparer<TKey> keyComparer, TimeSpan keyExpiryProcessorInterval)
         {
-            _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer);
+            _values = new ConcurrentDictionary<TKey, ValueAndExpiry>(keyComparer ?? EqualityComparer<TKey>.Default);
             _keysToExpireHeap = new MinHeap<KeyAndExpiry>(KeyAndExpiryComparer.Instance);
             _valueAndExpiryPool = new HighCapacityObjectPool<ValueAndExpiry>(() => new ValueAndExpiry(), 1000);
             

@@ -10,6 +10,8 @@ namespace CacheMeIfYouCan.Internal.ResponseConverters
         public static Func<Dictionary<TKey, TValue>, TResponse> Get<TKey, TValue, TResponse>(IEqualityComparer<TKey> keyComparer)
             where TResponse : IEnumerable<KeyValuePair<TKey, TValue>>
         {
+            keyComparer ??= EqualityComparer<TKey>.Default;
+            
             IResponseConverter<TKey, TValue, TResponse> converter;
             if (typeof(TResponse).IsAssignableFrom(typeof(Dictionary<TKey, TValue>)))
                 converter = Unsafe.As<IResponseConverter<TKey, TValue, TResponse>>(new DictionaryConverter<TKey, TValue>());

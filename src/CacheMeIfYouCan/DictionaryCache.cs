@@ -12,7 +12,7 @@ namespace CacheMeIfYouCan
             : this(null)
         { }
         
-        public DictionaryCache(IEqualityComparer<TKey> keyComparer = null)
+        public DictionaryCache(IEqualityComparer<TKey> keyComparer)
             : base(keyComparer, TimeSpan.FromSeconds(10))
         { }
         
