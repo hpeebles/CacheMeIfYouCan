@@ -591,7 +591,9 @@ namespace CacheMeIfYouCan.Redis
                 foreach (var kv in values.Span)
                 {
                     var redisKey = redisKeyPrefix.Append(_innerKeySerializer(kv.Key));
-
+                    if (redisKey == new RedisKey()) // Skip if the key is null
+                        continue;
+                    
                     var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
 
                     if (!(toDispose is null))
