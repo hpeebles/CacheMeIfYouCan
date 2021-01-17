@@ -334,11 +334,12 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
             if (valuesFromFuncMemory.Length == 0)
                 return resultsDictionary;
 
+            ValueTask setInCacheTask = default;
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var setInCacheTask = SetInCache(parameters, outerKey, innerKeys, valuesFromFuncMemory);
+                setInCacheTask = SetInCache(parameters, outerKey, innerKeys, valuesFromFuncMemory);
 
                 if (resultsDictionaryLock is null)
                 {
@@ -370,14 +371,14 @@ namespace CacheMeIfYouCan.Internal.CachedFunctions
                     if (lockTaken)
                         Monitor.Exit(resultsDictionaryLock);
                 }
-
-                if (!setInCacheTask.IsCompleted)
-                    await setInCacheTask.ConfigureAwait(false);
             }
             finally
             {
                 if (!(pooledArray is null))
                     ArrayPool<KeyValuePair<TInnerKey, TValue>>.Shared.Return(pooledArray);
+                
+                if (!setInCacheTask.IsCompleted)
+                    await setInCacheTask.ConfigureAwait(false);
             }
 
             return resultsDictionary;
