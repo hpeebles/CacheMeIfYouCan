@@ -579,7 +579,7 @@ namespace CacheMeIfYouCan.Redis
                 if (!(toDispose is null))
                 {
                     for (var i = 0; i < streamIndex; i++)
-                        toDispose[i].Dispose();
+                        toDispose[i]?.Dispose();
                     
                     ArrayPool<IDisposable>.Shared.Return(toDispose);
                 }
