@@ -210,6 +210,11 @@ namespace CacheMeIfYouCan
             }
         }
 
+        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        {
+            _innerCache.SetTelemetry(redisTelemetry);
+        }
+
         protected virtual void OnTryRemoveCompletedSuccessfully(
             TKey key,
             bool wasRemoved,
@@ -353,6 +358,11 @@ namespace CacheMeIfYouCan
 
                 return false;
             }
+        }
+
+        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        {
+            _innerCache.SetTelemetry(redisTelemetry);
         }
 
         protected virtual void OnTryRemoveCompletedSuccessfully(

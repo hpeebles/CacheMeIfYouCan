@@ -16,6 +16,8 @@ namespace CacheMeIfYouCan
         Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive);
 
         Task<bool> TryRemove(TKey key);
+
+        void SetTelemetry(IRedisTelemetry redisTelemetry);
     }
     
     public interface IDistributedCache<in TOuterKey, TInnerKey, TValue>
@@ -25,6 +27,8 @@ namespace CacheMeIfYouCan
         Task SetMany(TOuterKey outerKey, ReadOnlyMemory<KeyValuePair<TInnerKey, TValue>> values, TimeSpan timeToLive);
 
         Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey);
+
+        void SetTelemetry(IRedisTelemetry redisTelemetry);
     }
     
     public static class IDistributedCacheExtensions
@@ -67,5 +71,6 @@ namespace CacheMeIfYouCan
         {
             return cache.SetMany(outerKey, new[] { new KeyValuePair<TInnerKey, TValue>(innerKey , value) }, timeToLive);
         }
+
     }
 }

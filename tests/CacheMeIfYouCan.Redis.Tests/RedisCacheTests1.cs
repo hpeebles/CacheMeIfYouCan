@@ -336,7 +336,48 @@ namespace CacheMeIfYouCan.Redis.Tests
             keysChangedRemotely1.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents1);
             keysChangedRemotely2.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents2);
         }
-        
+
+        [Theory]
+        [InlineData(0, true)]
+        [InlineData(1000, false)]
+        public async Task TestTelemetryOnCommand(int threshold, bool anyTrace)
+        {
+            using var connection = BuildConnection();
+            using var cache = BuildRedisCache(connection, useSerializer: false);
+
+            var mockTelemetry = new MockTelemetryProcessor();
+            var config = new MockTelemetryConfig(threshold);
+
+            cache.WithAppInsightsTelemetry(mockTelemetry, config, "host", "TestCache1");
+
+            const int elementsToCache = 10;
+
+            var keys = Enumerable
+                .Range(1, elementsToCache)
+                .ToArray();
+
+            var values = keys
+                .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
+                .ToArray();
+
+            await cache.SetMany(values, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+            Task.WaitAll();
+
+            var trace = mockTelemetry.GetTrace();
+
+            trace.Should().NotBeNull();
+
+            if (anyTrace)
+            {
+                trace.Should().NotBeEmpty();
+                trace.Count.Should().BeLessOrEqualTo(elementsToCache);
+                trace.First().Command.Should().Contain("StringSetAsync");
+                trace.Last().Command.Should().Contain("StringSetAsync");
+            }
+        }
+
+
         private static RedisConnection BuildConnection() => new RedisConnection(TestConnectionString.Value);
 
         private static RedisCache<int, TestClass> BuildRedisCache(
