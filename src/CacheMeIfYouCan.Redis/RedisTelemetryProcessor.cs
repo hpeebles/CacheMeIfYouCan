@@ -6,20 +6,20 @@ namespace CacheMeIfYouCan.Redis
 {
     internal class RedisTelemetryProcessor : ITelemetryProcessor
     {
-        private readonly IRedisTelemetryConfig _redisTelemetryConfig;
+        private readonly ITelemetryConfig _telemetryConfig;
         private ITelemetryProcessor Next { get; }
 
         // next will point to the next RedisTelemetryProcessor in the chain.
-        public RedisTelemetryProcessor(ITelemetryProcessor next, IRedisTelemetryConfig redisTelemetryConfig)
+        public RedisTelemetryProcessor(ITelemetryProcessor next, ITelemetryConfig telemetryConfig)
         {
-            _redisTelemetryConfig = redisTelemetryConfig;
+            _telemetryConfig = telemetryConfig;
             Next = next;
         }
 
         public void Process(ITelemetry item)
         {
             if (item is DependencyTelemetry request 
-                && request.Duration.TotalMilliseconds > _redisTelemetryConfig?.MillisecondThreshold)
+                && request.Duration.TotalMilliseconds > _telemetryConfig?.MillisecondThreshold)
             {
                 Next.Process(item);
             }

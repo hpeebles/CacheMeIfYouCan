@@ -4,20 +4,20 @@ namespace CacheMeIfYouCan.Redis
 {
     public static class CachedObjectConfigurationManagerExtensions
     {
-        public static IDistributedCache<TKey, TValue> WithAppInsightsTelemetry<TKey, TValue>(this IDistributedCache<TKey, TValue> redisCache, 
-            ITelemetryProcessor telemetryProcessor, IRedisTelemetryConfig redisTelemetryConfig, string hostName, string cacheName)
+        public static IDistributedCache<TKey, TValue> WithApplicationInsightsTelemetry<TKey, TValue>(this IDistributedCache<TKey, TValue> distributedCache, 
+            ITelemetryProcessor telemetryProcessor, ITelemetryConfig telemetryConfig, string hostName, string cacheName)
         {
-            var redisTelemetry = new RedisTelemetry(telemetryProcessor, redisTelemetryConfig, hostName, cacheName);
-            redisCache.SetTelemetry(redisTelemetry);
-            return redisCache;
+            var redisTelemetry = new RedisCacheTelemetry(telemetryProcessor, telemetryConfig, hostName, cacheName);
+            distributedCache.SetTelemetry(redisTelemetry);
+            return distributedCache;
         }
 
-        public static IDistributedCache<TOuterKey, TInnerKey, TValue> WithAppInsightsTelemetry<TOuterKey, TInnerKey, TValue>(this IDistributedCache<TOuterKey, TInnerKey, TValue> redisCache,
-            ITelemetryProcessor telemetryProcessor, IRedisTelemetryConfig redisTelemetryConfig, string hostName, string cacheName)
+        public static IDistributedCache<TOuterKey, TInnerKey, TValue> WithApplicationInsightsTelemetry<TOuterKey, TInnerKey, TValue>(this IDistributedCache<TOuterKey, TInnerKey, TValue> distributedCache,
+            ITelemetryProcessor telemetryProcessor, ITelemetryConfig telemetryConfig, string hostName, string cacheName)
         {
-            var redisTelemetry = new RedisTelemetry(telemetryProcessor, redisTelemetryConfig, hostName, cacheName);
-            redisCache.SetTelemetry(redisTelemetry);
-            return redisCache;
+            var redisTelemetry = new RedisCacheTelemetry(telemetryProcessor, telemetryConfig, hostName, cacheName);
+            distributedCache.SetTelemetry(redisTelemetry);
+            return distributedCache;
         }
     }
 }

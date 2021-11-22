@@ -210,9 +210,9 @@ namespace CacheMeIfYouCan
             }
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _innerCache.SetTelemetry(redisTelemetry);
+            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
 
         protected virtual void OnTryRemoveCompletedSuccessfully(
@@ -360,9 +360,9 @@ namespace CacheMeIfYouCan
             }
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _innerCache.SetTelemetry(redisTelemetry);
+            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
 
         protected virtual void OnTryRemoveCompletedSuccessfully(

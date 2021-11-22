@@ -98,7 +98,7 @@ namespace CacheMeIfYouCan.Tests
             return Task.FromResult(_innerCache.TryRemove(key, out _));
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
         }
 
@@ -184,7 +184,7 @@ namespace CacheMeIfYouCan.Tests
             return Task.FromResult(_innerCache.TryRemove(outerKey, innerKey, out _));
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
         }
 

@@ -17,7 +17,7 @@ namespace CacheMeIfYouCan
 
         Task<bool> TryRemove(TKey key);
 
-        void SetTelemetry(IRedisTelemetry redisTelemetry);
+        void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry);
     }
     
     public interface IDistributedCache<in TOuterKey, TInnerKey, TValue>
@@ -28,7 +28,7 @@ namespace CacheMeIfYouCan
 
         Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey);
 
-        void SetTelemetry(IRedisTelemetry redisTelemetry);
+        void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry);
     }
     
     public static class IDistributedCacheExtensions

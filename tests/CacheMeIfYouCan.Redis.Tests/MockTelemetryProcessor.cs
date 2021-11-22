@@ -29,14 +29,4 @@ namespace CacheMeIfYouCan.Redis.Tests
             return _telemetry;
         }
     }
-
-    public class MockTelemetryConfig : IRedisTelemetryConfig
-    {
-        public MockTelemetryConfig(int millisecondThreshold)
-        {
-            MillisecondThreshold = millisecondThreshold;
-        }
-
-        public int MillisecondThreshold { get; }
-    }
 }

@@ -5,20 +5,20 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace CacheMeIfYouCan.Redis
 {
-    internal class RedisTelemetry : IRedisTelemetry
+    internal class RedisCacheTelemetry : IDistributedCacheTelemetry
     {
         private readonly ITelemetryProcessor _telemetryProcessor;
         private readonly string _host;
         private readonly string _cacheName;
 
-        public RedisTelemetry(ITelemetryProcessor telemetryProcessor, IRedisTelemetryConfig redisTelemetryConfig, string host, string cacheName)
+        public RedisCacheTelemetry(ITelemetryProcessor telemetryProcessor, ITelemetryConfig telemetryConfig, string host, string cacheName)
         {
-            _telemetryProcessor = new RedisTelemetryProcessor(telemetryProcessor, redisTelemetryConfig);
+            _telemetryProcessor = new RedisTelemetryProcessor(telemetryProcessor, telemetryConfig);
             _host = host;
             _cacheName = cacheName;
         }
 
-        public async Task<T> CallRedisAsync<T>(Func<Task<T>> func, string command, string key)
+        public async Task<T> CallAsync<T>(Func<Task<T>> func, string command, string key)
         {
             var success = false;
             var commandInfoText = $"Command {command}{Environment.NewLine}Key '{key}'";
@@ -43,9 +43,9 @@ namespace CacheMeIfYouCan.Redis
         }
     }
 
-    internal class NoTelemetry : IRedisTelemetry
+    internal class NoTelemetry : IDistributedCacheTelemetry
     {
-        public async Task<T> CallRedisAsync<T>(Func<Task<T>> func, string command, string key)
+        public async Task<T> CallAsync<T>(Func<Task<T>> func, string command, string key)
         {
             return await func().ConfigureAwait(false);
         }

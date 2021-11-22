@@ -348,7 +348,7 @@ namespace CacheMeIfYouCan.Redis.Tests
             var mockTelemetry = new MockTelemetryProcessor();
             var config = new MockTelemetryConfig(threshold);
 
-            cache.WithAppInsightsTelemetry(mockTelemetry, config, "host", "TestCache1");
+            cache.WithApplicationInsightsTelemetry(mockTelemetry, config, "host", "TestCache1");
 
             const int elementsToCache = 10;
 

@@ -69,9 +69,9 @@ namespace CacheMeIfYouCan.Polly
                 : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(key));
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _innerCache.SetTelemetry(redisTelemetry);
+            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
     }
 
@@ -128,9 +128,9 @@ namespace CacheMeIfYouCan.Polly
                 : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(outerKey, innerKey));
         }
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _innerCache.SetTelemetry(redisTelemetry);
+            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
     }
 }

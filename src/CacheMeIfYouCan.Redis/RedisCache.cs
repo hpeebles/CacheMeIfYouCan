@@ -26,11 +26,11 @@ using StackExchange.Redis;
         private readonly RecentlySetOrRemovedKeysManager _recentlyRemovedKeysManager;
         private readonly int _keyPrefixLength;
         private bool _disposed;
-        private IRedisTelemetry _redisTelemetry = new NoTelemetry();
+        private IDistributedCacheTelemetry _distributedCacheTelemetry = new NoTelemetry();
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _redisTelemetry = redisTelemetry;
+            _distributedCacheTelemetry = distributedCacheTelemetry;
         }
 
         public RedisCache(
@@ -130,7 +130,7 @@ using StackExchange.Redis;
 
             var redisKey = _keySerializer(key);
 
-            var fromRedis = await _redisTelemetry.CallRedisAsync(
+            var fromRedis = await _distributedCacheTelemetry.CallAsync(
                     () => GetDatabase().StringGetWithExpiryAsync(redisKey),
                     "StringGetWithExpiryAsync", redisKey)
                 .ConfigureAwait(false);
@@ -156,7 +156,7 @@ using StackExchange.Redis;
 
                 _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
                 
-                var task = _redisTelemetry.CallRedisAsync(
+                var task = _distributedCacheTelemetry.CallAsync(
                     () => GetDatabase().StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags),
                     "StringSetAsync",
                     redisKey);
@@ -209,7 +209,7 @@ using StackExchange.Redis;
             async Task<(TKey, RedisValueWithExpiry)> GetSingle(TKey key)
             {
                 var redisKey = _keySerializer(key);
-                var fromRedis = await _redisTelemetry.CallRedisAsync(
+                var fromRedis = await _distributedCacheTelemetry.CallAsync(
                         async () => await GetDatabase()
                             .StringGetWithExpiryAsync(redisKey)
                             .ConfigureAwait(false), "StringGetWithExpiryAsync", redisKey)
@@ -291,7 +291,7 @@ using StackExchange.Redis;
 
                     _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
 
-                    pooledTasksArray[index++] = _redisTelemetry.CallRedisAsync(
+                    pooledTasksArray[index++] = _distributedCacheTelemetry.CallAsync(
                         () => GetDatabase().StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags),
                         "StringSetAsync", redisKey);
                 }
@@ -308,7 +308,7 @@ using StackExchange.Redis;
 
             _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
 
-            return await _redisTelemetry.CallRedisAsync(
+            return await _distributedCacheTelemetry.CallAsync(
                     () => GetDatabase().KeyDeleteAsync(redisKey),
                     "KeyDeleteAsync", redisKey)
                 .ConfigureAwait(false);
@@ -370,11 +370,11 @@ using StackExchange.Redis;
         private readonly RecentlySetOrRemovedKeysManager _recentlyRemovedKeysManager;
         private readonly int _keyPrefixLength;
         private bool _disposed;
-        private IRedisTelemetry _redisTelemetry = new NoTelemetry();
+        private IDistributedCacheTelemetry _distributedCacheTelemetry = new NoTelemetry();
 
-        public void SetTelemetry(IRedisTelemetry redisTelemetry)
+        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
         {
-            _redisTelemetry = redisTelemetry;
+            _distributedCacheTelemetry = distributedCacheTelemetry;
         }
 
         public RedisCache(
@@ -521,7 +521,7 @@ using StackExchange.Redis;
             {
                 var redisKey = redisKeyPrefix.Append(_innerKeySerializer(innerKey));
 
-                var fromRedis = await _redisTelemetry.CallRedisAsync(
+                var fromRedis = await _distributedCacheTelemetry.CallAsync(
                     async () => await GetDatabase()
                         .StringGetWithExpiryAsync(redisKey)
                         .ConfigureAwait(false), "StringGetWithExpiryAsync", redisKey)
@@ -611,7 +611,7 @@ using StackExchange.Redis;
 
                     _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
                     
-                    pooledTasksArray[index++] = _redisTelemetry.CallRedisAsync(
+                    pooledTasksArray[index++] = _distributedCacheTelemetry.CallAsync(
                         () => GetDatabase().StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags),
                         "StringSetAsync", redisKey);
                 }
@@ -630,7 +630,7 @@ using StackExchange.Redis;
 
             _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
 
-            return await _redisTelemetry.CallRedisAsync(
+            return await _distributedCacheTelemetry.CallAsync(
                     async () => await GetDatabase()
                         .KeyDeleteAsync(redisKey)
                         .ConfigureAwait(false),
