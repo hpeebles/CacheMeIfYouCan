@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
@@ -51,7 +51,7 @@ namespace CacheMeIfYouCan.Redis
                 valueSerializer,
                 recyclableMemoryStreamManager,
                 nullValue);
-            
+
             _serializeValuesToStreams = true;
         }
 
@@ -79,10 +79,10 @@ namespace CacheMeIfYouCan.Redis
                 valueSerializer,
                 valueDeserializer,
                 nullValue);
-            
+
             _serializeValuesToStreams = false;
         }
-        
+
         private RedisCache(
             IRedisConnection connection,
             Func<TKey, RedisKey> keySerializer,
@@ -106,14 +106,14 @@ namespace CacheMeIfYouCan.Redis
             {
                 if (subscriber is null)
                     throw new ArgumentNullException(nameof(subscriber));
-                
+
                 _keysChangedRemotely = new Subject<(string, KeyEventType)>();
-                
+
                 if (keyEventTypesToSubscribeTo.HasFlag(KeyEventType.Set))
                     _recentlySetKeysManager = new RecentlySetOrRemovedKeysManager();
-                
+
                 _recentlyRemovedKeysManager = new RecentlySetOrRemovedKeysManager();
-                
+
                 subscriber.SubscribeToKeyChanges(dbIndex, keyEventTypesToSubscribeTo, OnKeyChanged, keyPrefix);
             }
         }
@@ -121,11 +121,11 @@ namespace CacheMeIfYouCan.Redis
         public async Task<(bool Success, ValueAndTimeToLive<TValue> Value)> TryGet(TKey key)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
 
             var redisKey = _keySerializer(key);
-            
+
             var fromRedis = await redisDb
                 .StringGetWithExpiryAsync(redisKey)
                 .ConfigureAwait(false);
@@ -141,7 +141,7 @@ namespace CacheMeIfYouCan.Redis
         public async Task Set(TKey key, TValue value, TimeSpan timeToLive)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
 
             var redisKey = _keySerializer(key);
@@ -152,7 +152,7 @@ namespace CacheMeIfYouCan.Redis
                 var redisValue = _redisValueConverter.ConvertToRedisValue(value, out stream);
 
                 _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
-                
+
                 var task = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
 
                 if (!task.IsCompleted)
@@ -169,11 +169,11 @@ namespace CacheMeIfYouCan.Redis
             Memory<KeyValuePair<TKey, ValueAndTimeToLive<TValue>>> destination)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
 
             var valuesFoundCount = 0;
-            
+
             var tasks = CreateTasks(out var pooledTasksArray);
 
             try
@@ -181,7 +181,7 @@ namespace CacheMeIfYouCan.Redis
                 await Task
                     .WhenAll(tasks)
                     .ConfigureAwait(false);
-                
+
                 return valuesFoundCount == 0
                     ? 0
                     : CopyResultsToDestinationArray();
@@ -190,11 +190,11 @@ namespace CacheMeIfYouCan.Redis
             {
                 ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Return(pooledTasksArray);
             }
-            
+
             IReadOnlyCollection<Task<(TKey, RedisValueWithExpiry)>> CreateTasks(out Task<(TKey, RedisValueWithExpiry)>[] pooledArray)
             {
                 pooledArray = ArrayPool<Task<(TKey, RedisValueWithExpiry)>>.Shared.Rent(keys.Length);
-                
+
                 var i = 0;
                 foreach (var innerKey in keys.Span)
                     pooledArray[i++] = GetSingle(innerKey);
@@ -226,7 +226,7 @@ namespace CacheMeIfYouCan.Redis
                         continue;
 
                     var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
-                    
+
                     span[index++] = new KeyValuePair<TKey, ValueAndTimeToLive<TValue>>(
                         key,
                         new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
@@ -242,7 +242,7 @@ namespace CacheMeIfYouCan.Redis
         public async Task SetMany(ReadOnlyMemory<KeyValuePair<TKey, TValue>> values, TimeSpan timeToLive)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
 
             var pooledTasksArray = ArrayPool<Task>.Shared.Rent(values.Length);
@@ -251,7 +251,7 @@ namespace CacheMeIfYouCan.Redis
                 : null;
 
             var tasks = CreateTasks();
-            
+
             try
             {
                 var waitForAllTasksTask = Task.WhenAll(tasks);
@@ -262,16 +262,16 @@ namespace CacheMeIfYouCan.Redis
             finally
             {
                 ArrayPool<Task>.Shared.Return(pooledTasksArray);
-                
+
                 if (!(toDispose is null))
                 {
                     for (var i = 0; i < values.Length; i++)
                         toDispose[i]?.Dispose();
-                    
+
                     ArrayPool<IDisposable>.Shared.Return(toDispose);
                 }
             }
-            
+
             IReadOnlyCollection<Task> CreateTasks()
             {
                 var index = 0;
@@ -288,7 +288,7 @@ namespace CacheMeIfYouCan.Redis
 
                     pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
                 }
-                
+
                 return new ArraySegment<Task>(pooledTasksArray, 0, index);
             }
         }
@@ -296,13 +296,13 @@ namespace CacheMeIfYouCan.Redis
         public async Task<bool> TryRemove(TKey key)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
-            
+
             var redisKey = _keySerializer(key);
 
             _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
-            
+
             return await redisDb
                 .KeyDeleteAsync(redisKey)
                 .ConfigureAwait(false);
@@ -310,12 +310,12 @@ namespace CacheMeIfYouCan.Redis
 
         public IObservable<(string Key, KeyEventType EventType)> KeysChangedRemotely =>
             _keysChangedRemotely?.AsObservable() ?? Observable.Empty<(string, KeyEventType)>();
-        
+
         public void Dispose()
         {
             if (_disposed)
                 return;
-            
+
             _keysChangedRemotely?.Dispose();
             _recentlySetKeysManager?.Dispose();
             _recentlyRemovedKeysManager?.Dispose();
@@ -328,7 +328,7 @@ namespace CacheMeIfYouCan.Redis
             if (_disposed)
                 throw new ObjectDisposedException(this.GetType().ToString());
         }
-        
+
         private void OnKeyChanged(string redisKey, KeyEventType eventType)
         {
             bool wasLocalChange;
@@ -341,14 +341,14 @@ namespace CacheMeIfYouCan.Redis
 
             if (wasLocalChange)
                 return;
-            
+
             _keysChangedRemotely.OnNext((redisKey, eventType));
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private IDatabase GetDatabase() => _connection.Get().GetDatabase(_dbIndex);
     }
-    
+
     public sealed class RedisCache<TOuterKey, TInnerKey, TValue> : IDistributedCache<TOuterKey, TInnerKey, TValue>, IDisposable
     {
         private readonly IRedisConnection _connection;
@@ -396,7 +396,7 @@ namespace CacheMeIfYouCan.Redis
 
             _serializeValuesToStreams = true;
         }
-        
+
         public RedisCache(
             IRedisConnection connection,
             Func<TOuterKey, RedisKey> outerKeySerializer,
@@ -428,7 +428,7 @@ namespace CacheMeIfYouCan.Redis
 
             _serializeValuesToStreams = false;
         }
-        
+
         private RedisCache(
             IRedisConnection connection,
             Func<TOuterKey, RedisKey> outerKeySerializer,
@@ -449,23 +449,23 @@ namespace CacheMeIfYouCan.Redis
             _setValueFlags = useFireAndForgetWherePossible ? CommandFlags.FireAndForget : CommandFlags.None;
             _keySeparator = keySeparator;
             _keyPrefixLength = keyPrefix.ToString().Length;
-            
+
             if (keyEventTypesToSubscribeTo != KeyEventType.None)
             {
                 if (subscriber is null)
                     throw new ArgumentNullException(nameof(subscriber));
-                
+
                 _keysChangedRemotely = new Subject<(string, string, KeyEventType)>();
-                
+
                 if (keyEventTypesToSubscribeTo.HasFlag(KeyEventType.Set))
                     _recentlySetKeysManager = new RecentlySetOrRemovedKeysManager();
-                
+
                 _recentlyRemovedKeysManager = new RecentlySetOrRemovedKeysManager();
-                
+
                 subscriber.SubscribeToKeyChanges(dbIndex, keyEventTypesToSubscribeTo, OnKeyChanged, keyPrefix);
             }
         }
-        
+
         public async Task<int> GetMany(
             TOuterKey outerKey,
             ReadOnlyMemory<TInnerKey> innerKeys,
@@ -478,7 +478,7 @@ namespace CacheMeIfYouCan.Redis
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
 
             var valuesFoundCount = 0;
-            
+
             var tasks = CreateTasks(out var pooledTasksArray);
 
             try
@@ -486,7 +486,7 @@ namespace CacheMeIfYouCan.Redis
                 await Task
                     .WhenAll(tasks)
                     .ConfigureAwait(false);
-                
+
                 return valuesFoundCount == 0
                     ? 0
                     : CopyResultsToDestinationArray();
@@ -499,7 +499,7 @@ namespace CacheMeIfYouCan.Redis
             IReadOnlyCollection<Task<(TInnerKey, RedisValueWithExpiry)>> CreateTasks(out Task<(TInnerKey, RedisValueWithExpiry)>[] pooledArray)
             {
                 pooledArray = ArrayPool<Task<(TInnerKey, RedisValueWithExpiry)>>.Shared.Rent(innerKeys.Length);
-                
+
                 var i = 0;
                 foreach (var innerKey in innerKeys.Span)
                     pooledArray[i++] = GetSingle(innerKey);
@@ -510,7 +510,7 @@ namespace CacheMeIfYouCan.Redis
             async Task<(TInnerKey, RedisValueWithExpiry)> GetSingle(TInnerKey innerKey)
             {
                 var redisKey = redisKeyPrefix.Append(_innerKeySerializer(innerKey));
-                
+
                 var fromRedis = await redisDb
                     .StringGetWithExpiryAsync(redisKey)
                     .ConfigureAwait(false);
@@ -520,7 +520,7 @@ namespace CacheMeIfYouCan.Redis
 
                 return (innerKey, fromRedis);
             }
-            
+
             int CopyResultsToDestinationArray()
             {
                 var span = destination.Span;
@@ -533,7 +533,7 @@ namespace CacheMeIfYouCan.Redis
                         continue;
 
                     var value = _redisValueConverter.ConvertFromRedisValue(fromRedis.Value);
-                    
+
                     span[index++] = new KeyValuePair<TInnerKey, ValueAndTimeToLive<TValue>>(
                         key,
                         new ValueAndTimeToLive<TValue>(value, fromRedis.Expiry ?? TimeSpan.FromDays(1)));
@@ -556,12 +556,12 @@ namespace CacheMeIfYouCan.Redis
             var redisDb = GetDatabase();
 
             var redisKeyPrefix = _outerKeySerializer(outerKey).Append(_keySeparator);
-            
+
             var pooledTasksArray = ArrayPool<Task>.Shared.Rent(values.Length);
             var toDispose = _serializeValuesToStreams
                 ? ArrayPool<IDisposable>.Shared.Rent(values.Length)
                 : null;
-            
+
             var streamIndex = 0;
             try
             {
@@ -575,12 +575,12 @@ namespace CacheMeIfYouCan.Redis
             finally
             {
                 ArrayPool<Task>.Shared.Return(pooledTasksArray);
-                
+
                 if (!(toDispose is null))
                 {
                     for (var i = 0; i < streamIndex; i++)
                         toDispose[i]?.Dispose();
-                    
+
                     ArrayPool<IDisposable>.Shared.Return(toDispose);
                 }
             }
@@ -593,33 +593,33 @@ namespace CacheMeIfYouCan.Redis
                     var redisKey = redisKeyPrefix.Append(_innerKeySerializer(kv.Key));
                     if (redisKey == new RedisKey()) // Skip if the key is null
                         continue;
-                    
+
                     var redisValue = _redisValueConverter.ConvertToRedisValue(kv.Value, out var stream);
 
                     if (!(toDispose is null))
                         toDispose[streamIndex++] = stream;
 
                     _recentlySetKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
-                    
+
                     pooledTasksArray[index++] = redisDb.StringSetAsync(redisKey, redisValue, timeToLive, flags: _setValueFlags);
                 }
-                
+
                 return new ArraySegment<Task>(pooledTasksArray, 0, index);
             }
         }
-        
+
         public async Task<bool> TryRemove(TOuterKey outerKey, TInnerKey innerKey)
         {
             CheckDisposed();
-            
+
             var redisDb = GetDatabase();
-            
+
             var redisKey = _outerKeySerializer(outerKey)
                 .Append(_keySeparator)
                 .Append(_innerKeySerializer(innerKey));
 
             _recentlyRemovedKeysManager?.Mark(((string)redisKey).Substring(_keyPrefixLength));
-            
+
             return await redisDb
                 .KeyDeleteAsync(redisKey)
                 .ConfigureAwait(false);
@@ -632,7 +632,7 @@ namespace CacheMeIfYouCan.Redis
         {
             if (_disposed)
                 return;
-            
+
             _keysChangedRemotely?.Dispose();
             _recentlySetKeysManager?.Dispose();
             _recentlyRemovedKeysManager?.Dispose();
@@ -645,7 +645,7 @@ namespace CacheMeIfYouCan.Redis
             if (_disposed)
                 throw new ObjectDisposedException(this.GetType().ToString());
         }
-        
+
         private void OnKeyChanged(string redisKey, KeyEventType eventType)
         {
             bool wasLocalChange;

@@ -1,32 +1,40 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan", "src\CacheMeIfYouCan\CacheMeIfYouCan.csproj", "{0E5C541F-0B77-4073-AEFE-0BA03EC3CA0A}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31829.152
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan", "src\CacheMeIfYouCan\CacheMeIfYouCan.csproj", "{0E5C541F-0B77-4073-AEFE-0BA03EC3CA0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Tests", "tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Tests", "tests\CacheMeIfYouCan.Tests\CacheMeIfYouCan.Tests.csproj", "{B4C0DCD9-FFE4-44B9-8457-37262FC5318E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.ILTemplates", "sandbox\CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.ILTemplates", "sandbox\CacheMeIfYouCan.ILTemplates\CacheMeIfYouCan.ILTemplates.csproj", "{42055B9A-138C-4114-AD06-6BAA3ABBC659}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis", "src\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{EB0E7F39-18FD-46F3-800B-EC98C38055A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Redis", "src\CacheMeIfYouCan.Redis\CacheMeIfYouCan.Redis.csproj", "{EB0E7F39-18FD-46F3-800B-EC98C38055A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Redis.Tests", "tests\CacheMeIfYouCan.Redis.Tests\CacheMeIfYouCan.Redis.Tests.csproj", "{09EB8E7F-EE8E-432F-8108-10255FE234EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Redis.Tests", "tests\CacheMeIfYouCan.Redis.Tests\CacheMeIfYouCan.Redis.Tests.csproj", "{09EB8E7F-EE8E-432F-8108-10255FE234EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Polly", "src\CacheMeIfYouCan.Polly\CacheMeIfYouCan.Polly.csproj", "{7A3AFBE2-4D42-4C20-BB75-C2F01D0C36D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Polly", "src\CacheMeIfYouCan.Polly\CacheMeIfYouCan.Polly.csproj", "{7A3AFBE2-4D42-4C20-BB75-C2F01D0C36D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Polly.Tests", "tests\CacheMeIfYouCan.Polly.Tests\CacheMeIfYouCan.Polly.Tests.csproj", "{AF8803FC-0559-40E6-A902-72C0A77DF380}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Polly.Tests", "tests\CacheMeIfYouCan.Polly.Tests\CacheMeIfYouCan.Polly.Tests.csproj", "{AF8803FC-0559-40E6-A902-72C0A77DF380}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.ProtoBuf", "src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj", "{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Serializers.ProtoBuf", "src\CacheMeIfYouCan.Serializers.ProtoBuf\CacheMeIfYouCan.Serializers.ProtoBuf.csproj", "{4B7C629B-F976-47F9-8721-5DC8DD60B8B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Benchmarks", "benchmarks\CacheMeIfYouCan.Benchmarks\CacheMeIfYouCan.Benchmarks.csproj", "{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Benchmarks", "benchmarks\CacheMeIfYouCan.Benchmarks\CacheMeIfYouCan.Benchmarks.csproj", "{C133ACD8-ABF2-4DBA-9907-49726AF4AF43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Cron", "src\CacheMeIfYouCan.Cron\CacheMeIfYouCan.Cron.csproj", "{3C906ADB-686F-46B4-859C-E425040F1CFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Cron", "src\CacheMeIfYouCan.Cron\CacheMeIfYouCan.Cron.csproj", "{3C906ADB-686F-46B4-859C-E425040F1CFE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Cron.Tests", "tests\CacheMeIfYouCan.Cron.Tests\CacheMeIfYouCan.Cron.Tests.csproj", "{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Cron.Tests", "tests\CacheMeIfYouCan.Cron.Tests\CacheMeIfYouCan.Cron.Tests.csproj", "{A0F382D8-3C5A-4955-A9CA-B558EEDBAD72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Json", "src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj", "{FC6B01A7-3049-44A4-833B-31B0961D50C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Serializers.Json", "src\CacheMeIfYouCan.Serializers.Json\CacheMeIfYouCan.Serializers.Json.csproj", "{FC6B01A7-3049-44A4-833B-31B0961D50C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.Tests", "tests\CacheMeIfYouCan.Serializers.Tests\CacheMeIfYouCan.Serializers.Tests.csproj", "{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Serializers.Tests", "tests\CacheMeIfYouCan.Serializers.Tests\CacheMeIfYouCan.Serializers.Tests.csproj", "{8A13A189-17C8-42A3-86DD-E1DC6BF23E56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheMeIfYouCan.Serializers.MessagePack", "src\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj", "{CDA877B2-5E3A-4D48-8650-D1B20AF773D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CacheMeIfYouCan.Serializers.MessagePack", "src\CacheMeIfYouCan.Serializers.MessagePack\CacheMeIfYouCan.Serializers.MessagePack.csproj", "{CDA877B2-5E3A-4D48-8650-D1B20AF773D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{200A2BA5-847A-46CD-80AF-5E09BCF5D57E}"
+	ProjectSection(SolutionItems) = preProject
+		test.runsettings = test.runsettings
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +99,10 @@ Global
 		{CDA877B2-5E3A-4D48-8650-D1B20AF773D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDA877B2-5E3A-4D48-8650-D1B20AF773D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {930E63DC-AC1E-4694-BE8E-3F268FBE9630}
 	EndGlobalSection
 EndGlobal

@@ -67,5 +67,6 @@ namespace CacheMeIfYouCan
         {
             return cache.SetMany(outerKey, new[] { new KeyValuePair<TInnerKey, TValue>(innerKey , value) }, timeToLive);
         }
+
     }
 }

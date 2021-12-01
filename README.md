@@ -30,6 +30,25 @@ var cachedFunction = CachedFunctionFactory
     .Build();
 ```
 
+You can either use an Application Insights telemtry processor or your own to gather performance metrics on the peformance of
+distributed cache commands, just implement the ITelemetryProcessor provided by Application Insights.
+If you implement an ITelemetryConfig you can provide a threshold so only slower cache calls get logged - useful to help when 
+diagnosing performance issues with your implementation.
+To use, extend the .ConfigureFor call with the .WithApplicationInsightsTelemetry
+
+```csharp
+Func<int, Task<int>> originalFunction = ...
+
+var cachedFunction = CachedFunctionFactory
+    .ConfigureFor(originalFunction)
+    .WithLocalCache(new DictionaryCache<int, int>())
+    .WithDistributedCache(new RedisCache<int, int>(...))
+    .WithTimeToLive(TimeSpan.FromHours(1))
+	.WithApplicationInsightsTelemetry(new MyTelemetryProcessor(), new MyTelemetryConfig(), "myRedisHost", "myCache");
+    .OnResult(r => logSuccess(r), ex => logException(ex))
+    .Build();
+```
+
 It is possible to create cached functions where the original function has up to 8 parameters (+ an optional
 cancellation token) and the cache key can be any function of the input parameters. The original function can be
 synchronous, asynchronous, or return a `ValueTask` (the underlying implementation uses ValueTasks). The resulting

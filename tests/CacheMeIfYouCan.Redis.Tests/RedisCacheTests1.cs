@@ -336,7 +336,60 @@ namespace CacheMeIfYouCan.Redis.Tests
             keysChangedRemotely1.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents1);
             keysChangedRemotely2.OrderBy(t => t.Item1).ThenBy(t => t.Item2).Should().BeEquivalentTo(expectedEvents2);
         }
-        
+
+        [Theory]
+        [InlineData(0, true)]
+        [InlineData(1000, false)]
+        public async Task TestTelemetryOnCommand(int threshold, bool anyTrace)
+        {
+            using var connection = BuildConnection();
+
+            var cacheConfig = new DistributedCacheConfig
+            {
+                CacheName = "Test1", 
+                CacheType = "Redis",
+                Host = "Here"
+            };
+            var mockTelemetryConfig = new TelemetryConfig {MillisecondThreshold = threshold};
+            var mockTelemetry = new TelemetryProcessor();
+            var cache = BuildDistributedCache(connection, useSerializer: false)
+                .WithApplicationInsightsTelemetry(cacheConfig, mockTelemetry, mockTelemetryConfig);
+
+            const int elementsToCache = 10;
+
+            var keys = Enumerable
+                .Range(1, elementsToCache)
+                .ToArray();
+
+            var values = keys
+                .Select(i => new KeyValuePair<int, TestClass>(i, new TestClass(i)))
+                .ToArray();
+
+            await cache.SetMany(values, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+            Task.WaitAll();
+
+            var trace = mockTelemetry.GetTrace();
+
+            trace.Should().NotBeNull();
+
+            if (anyTrace)
+            {
+                trace.Should().NotBeEmpty();
+                trace.Count.Should().Be(1);
+                var commandText = trace.First().Command;
+                commandText.Should().Contain("StringSetAsync");
+                commandText.Should().Contain("Keys");
+                commandText.Split("Keys ").Length.Should().Be(2);
+                var actualKeys = commandText.Split("Keys ")[1].Replace("'", "");
+                actualKeys.Should().Contain(",");
+                var actualKeyList = actualKeys.Split(",");
+                actualKeyList.Length.Should().Be(elementsToCache);
+                actualKeyList.First().Should().Be("1");
+                actualKeyList.Last().Should().Be("10");
+            }
+        }
+
         private static RedisConnection BuildConnection() => new RedisConnection(TestConnectionString.Value);
 
         private static RedisCache<int, TestClass> BuildRedisCache(
@@ -360,6 +413,39 @@ namespace CacheMeIfYouCan.Redis.Tests
                     keyEventTypesToSubscribeTo: keyEventTypesToSubscribeTo);
             }
             
+            return new RedisCache<int, TestClass>(
+                connection,
+                k => k.ToString(),
+                v => v.ToString(),
+                v => TestClass.Parse(v),
+                useFireAndForgetWherePossible: useFireAndForget,
+                keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
+                nullValue: nullValue,
+                subscriber: connection,
+                keyEventTypesToSubscribeTo: keyEventTypesToSubscribeTo);
+        }
+
+        private static IDistributedCache<int, TestClass> BuildDistributedCache(
+            RedisConnection connection,
+            bool useFireAndForget = false,
+            string keyPrefix = null,
+            string nullValue = null,
+            bool useSerializer = false,
+            KeyEventType keyEventTypesToSubscribeTo = KeyEventType.None)
+        {
+            if (useSerializer)
+            {
+                return new RedisCache<int, TestClass>(
+                    connection,
+                    k => k.ToString(),
+                    new ProtoBufSerializer<TestClass>(),
+                    useFireAndForgetWherePossible: useFireAndForget,
+                    keyPrefix: keyPrefix ?? Guid.NewGuid().ToString(),
+                    nullValue: nullValue,
+                    subscriber: connection,
+                    keyEventTypesToSubscribeTo: keyEventTypesToSubscribeTo);
+            }
+
             return new RedisCache<int, TestClass>(
                 connection,
                 k => k.ToString(),
