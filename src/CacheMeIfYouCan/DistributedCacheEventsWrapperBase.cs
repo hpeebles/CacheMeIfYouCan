@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using CacheMeIfYouCan.Internal;
 
@@ -210,11 +209,6 @@ namespace CacheMeIfYouCan
             }
         }
 
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
-            _innerCache.SetTelemetry(distributedCacheTelemetry);
-        }
-
         protected virtual void OnTryRemoveCompletedSuccessfully(
             TKey key,
             bool wasRemoved,
@@ -358,11 +352,6 @@ namespace CacheMeIfYouCan
 
                 return false;
             }
-        }
-
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
-            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
 
         protected virtual void OnTryRemoveCompletedSuccessfully(

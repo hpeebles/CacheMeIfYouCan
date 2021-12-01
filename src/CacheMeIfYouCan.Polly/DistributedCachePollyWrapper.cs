@@ -68,11 +68,6 @@ namespace CacheMeIfYouCan.Polly
                 ? _innerCache.TryRemove(key)
                 : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(key));
         }
-
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
-            _innerCache.SetTelemetry(distributedCacheTelemetry);
-        }
     }
 
     public sealed class DistributedCachePollyWrapper<TOuterKey, TInnerKey, TValue> :
@@ -126,11 +121,6 @@ namespace CacheMeIfYouCan.Polly
             return _tryRemovePolicy is null
                 ? _innerCache.TryRemove(outerKey, innerKey)
                 : _tryRemovePolicy.ExecuteAsync(() => _innerCache.TryRemove(outerKey, innerKey));
-        }
-
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
-            _innerCache.SetTelemetry(distributedCacheTelemetry);
         }
     }
 }

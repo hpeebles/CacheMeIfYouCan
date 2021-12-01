@@ -98,10 +98,6 @@ namespace CacheMeIfYouCan.Tests
             return Task.FromResult(_innerCache.TryRemove(key, out _));
         }
 
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
-        }
-
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;
 
         private void ThrowIfRequested()
@@ -182,10 +178,6 @@ namespace CacheMeIfYouCan.Tests
             ThrowIfRequested();
 
             return Task.FromResult(_innerCache.TryRemove(outerKey, innerKey, out _));
-        }
-
-        public void SetTelemetry(IDistributedCacheTelemetry distributedCacheTelemetry)
-        {
         }
 
         public void ThrowExceptionOnNextAction() => _throwExceptionOnNextAction = true;

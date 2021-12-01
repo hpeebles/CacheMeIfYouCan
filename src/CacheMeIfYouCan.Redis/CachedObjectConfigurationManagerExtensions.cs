@@ -4,20 +4,24 @@ namespace CacheMeIfYouCan.Redis
 {
     public static class CachedObjectConfigurationManagerExtensions
     {
-        public static IDistributedCache<TKey, TValue> WithApplicationInsightsTelemetry<TKey, TValue>(this IDistributedCache<TKey, TValue> distributedCache, 
-            ITelemetryProcessor telemetryProcessor, ITelemetryConfig telemetryConfig, string hostName, string cacheName)
+        public static IDistributedCache<TKey, TValue> WithApplicationInsightsTelemetry<TKey, TValue>(
+            this IDistributedCache<TKey, TValue> distributedCache,
+            IDistributedCacheConfig distributedCacheConfig,
+            ITelemetryProcessor telemetryProcessor,
+            ITelemetryConfig telemetryConfig)
         {
-            var redisTelemetry = new RedisCacheTelemetry(telemetryProcessor, telemetryConfig, hostName, cacheName);
-            distributedCache.SetTelemetry(redisTelemetry);
-            return distributedCache;
+            return new DistributedCacheApplicationInsightsWrapper<TKey, TValue>(distributedCache,
+                distributedCacheConfig, telemetryProcessor, telemetryConfig);
         }
 
-        public static IDistributedCache<TOuterKey, TInnerKey, TValue> WithApplicationInsightsTelemetry<TOuterKey, TInnerKey, TValue>(this IDistributedCache<TOuterKey, TInnerKey, TValue> distributedCache,
-            ITelemetryProcessor telemetryProcessor, ITelemetryConfig telemetryConfig, string hostName, string cacheName)
+        public static IDistributedCache<TOuterKey, TInnerKey, TValue> WithApplicationInsightsTelemetry<TOuterKey, TInnerKey, TValue>(
+            this IDistributedCache<TOuterKey, TInnerKey, TValue> distributedCache,
+            IDistributedCacheConfig distributedCacheConfig,
+            ITelemetryProcessor telemetryProcessor,
+            ITelemetryConfig telemetryConfig)
         {
-            var redisTelemetry = new RedisCacheTelemetry(telemetryProcessor, telemetryConfig, hostName, cacheName);
-            distributedCache.SetTelemetry(redisTelemetry);
-            return distributedCache;
+            return new DistributedCacheApplicationInsightsWrapper<TOuterKey, TInnerKey, TValue>(distributedCache,
+                distributedCacheConfig, telemetryProcessor, telemetryConfig);
         }
     }
 }

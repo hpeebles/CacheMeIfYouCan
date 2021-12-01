@@ -6,7 +6,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace CacheMeIfYouCan.Redis.Tests
 {
-    public class MockTelemetryProcessor : ITelemetryProcessor
+    public class TelemetryProcessor : ITelemetryProcessor
     {
         private readonly List<MockTelemetry> _telemetry = new List<MockTelemetry>();
         

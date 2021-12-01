@@ -14,7 +14,4 @@
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Telemetry\" />
-  </ItemGroup>
 </Project>
