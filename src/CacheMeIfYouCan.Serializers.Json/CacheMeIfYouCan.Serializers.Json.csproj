@@ -6,7 +6,7 @@
     <Description>Extends CacheMeIfYouCan by providing a System.Text.Json implementation of ISerializer</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="4.7.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CacheMeIfYouCan\CacheMeIfYouCan.csproj" />
